@@ -86,7 +86,7 @@
   function startGame() {
     if (state === "won" || state === "lost") resetGame();
     state = "playing";
-    ui.start.classList.remove("is-visible");
+    ui.start.hidden = true;
     ui.pause.hidden = true;
     ui.end.hidden = true;
     ui.pauseBtn.setAttribute("aria-pressed", "false");
