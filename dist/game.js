@@ -28,7 +28,7 @@
   const image = (src) => { const img = new Image(); img.src = src; return img; };
   const art = {
     background: image("assets/cherry-night.webp"),
-    hero: image("assets/pupa-hero.webp"),
+    hero: image("assets/pupa-hero-3d.webp"),
     enemy: image("assets/thorn-shroom.webp")
   };
 
