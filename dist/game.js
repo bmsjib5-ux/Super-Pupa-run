@@ -50,9 +50,18 @@
   ];
   const enemyLayout = [[690,536],[1230,536],[1740,536],[2150,536],[2730,536],[3280,536],[4080,536],[4560,536],[5040,536],[5400,291]];
 
+  // Mystery blocks: bump them from below for a random item.
+  const blockLayout = [[250,390],[1392,390],[1700,390],[2318,390],[3425,390],[4225,390],[4580,390],[5150,390]];
+  const STAR_TIME = 8;
+  const BOOST_TIME = 10;
+  const itemIcons = { heart: "❤️", star: "⭐", leaf: "🍃" };
+
   let player;
   let cherries;
   let enemies;
+  let blocks;
+  let solids;
+  let items = [];
   let particles = [];
   let cameraX = 0;
   let state = "menu";
@@ -66,9 +75,12 @@
   let announcementTimer = 0;
 
   function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1 };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0 };
     cherries = cherryLayout.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
     enemies = enemyLayout.map(([x, y], id) => ({ id, x, y, w: 70, h: 68, min: x - 95, max: x + 95, vx: id % 2 ? 58 : -58, alive: true, phase: id }));
+    blocks = blockLayout.map(([x, y], id) => ({ id, x, y, w: 56, h: 56, used: false, bump: 0 }));
+    solids = platforms.concat(blocks);
+    items = [];
     particles = [];
     cameraX = 0;
     checkpoint = 90;
@@ -111,14 +123,14 @@
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
     ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "สวนเชอร์รี่ยังรอการผจญภัยครั้งต่อไป";
     ui.endIcon.textContent = won ? "✦" : "☾";
-    ui.finalScore.textContent = `${player.score} / ${cherries.length}`;
-    announce(won ? `ชนะแล้ว เก็บเชอร์รี่ได้ ${player.score} ลูก` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
+    ui.finalScore.textContent = `${player.score} / ${cherries.length}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
+    announce(won ? `ชนะแล้ว เก็บเชอร์รี่ได้ ${player.score + player.bonus} ลูก` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
   }
 
   function updateHud() {
-    ui.score.textContent = String(player.score).padStart(2, "0");
+    ui.score.textContent = String(player.score + player.bonus).padStart(2, "0");
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${Math.min(100, Math.round((player.x / 5660) * 100))}%`;
   }
@@ -166,7 +178,7 @@
   }
 
   function hurtPlayer() {
-    if (player.hurt > 0) return;
+    if (player.hurt > 0 || player.star > 0) return;
     player.lives--;
     player.hurt = 1.3;
     player.vy = -700;
@@ -182,21 +194,95 @@
     player.y = 400;
     player.vx = 0;
     player.vy = 0;
+    player.star = 0;
     hurtPlayer();
+  }
+
+  function hitBlock(block) {
+    if (block.used) { tone(120, .06, "square", .04); return; }
+    block.used = true;
+    block.bump = .18;
+    const cx = block.x + block.w / 2;
+    const roll = Math.random();
+    let type = roll < .45 ? "cherry" : roll < .65 ? "heart" : roll < .82 ? "leaf" : "star";
+    if (type === "heart" && player.lives >= 3) type = "cherry";
+    burst(cx, block.y, "#ffd76a", 8);
+    tone(520, .07, "square", .05);
+    if (type === "cherry") {
+      // Like a coin: collected the moment it pops out.
+      player.bonus++;
+      items.push({ type, x: cx, y: block.y - 20, vx: 0, vy: -330, life: .65, popup: true });
+      tone(880, .09, "sine", .06, .06);
+      tone(1175, .12, "sine", .05, .12);
+      updateHud();
+      return;
+    }
+    items.push({ type, x: cx, y: block.y - 22, vx: (Math.random() < .5 ? -1 : 1) * 90, vy: -520, life: 9, age: 0, resting: false });
+    tone(392, .09, "triangle", .05, .06);
+    tone(587, .14, "triangle", .05, .13);
+  }
+
+  function collectItem(item) {
+    burst(item.x, item.y, item.type === "heart" ? "#ff6e99" : item.type === "star" ? "#ffe27a" : "#89f0c0", 16);
+    if (item.type === "heart") {
+      player.lives = Math.min(3, player.lives + 1);
+      announce("ได้หัวใจเพิ่ม 1 ดวง");
+      tone(659, .1, "sine", .06); tone(988, .16, "sine", .06, .09);
+    } else if (item.type === "star") {
+      player.star = STAR_TIME;
+      announce("ได้ดาว อมตะชั่วคราว ชนศัตรูได้เลย");
+      [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "square", .04, i * .07));
+    } else {
+      player.boost = BOOST_TIME;
+      announce("ได้ใบไม้วิเศษ กระโดดสูงขึ้นชั่วคราว");
+      tone(523, .1, "triangle", .06); tone(784, .18, "triangle", .06, .09);
+    }
+    updateHud();
+  }
+
+  function updateItems(dt) {
+    for (const block of blocks) block.bump = Math.max(0, block.bump - dt);
+    items = items.filter(item => {
+      item.life -= dt;
+      if (item.life <= 0) return false;
+      if (item.popup) { item.y += item.vy * dt; item.vy += 600 * dt; return true; }
+      item.age += dt;
+      if (!item.resting) {
+        const previousBottom = item.y + 20;
+        item.vy += 1500 * dt;
+        item.x += item.vx * dt;
+        item.y += item.vy * dt;
+        for (const p of platforms) {
+          if (item.x > p.x && item.x < p.x + p.w && item.vy >= 0 && previousBottom <= p.y + 10 && item.y + 20 >= p.y) {
+            item.y = p.y - 20;
+            item.resting = true;
+          }
+        }
+        if (item.y > 800) return false;
+      }
+      if (item.age > .3 && rectsOverlap(player, { x: item.x - 20, y: item.y - 20, w: 40, h: 40 })) {
+        collectItem(item);
+        return false;
+      }
+      return true;
+    });
   }
 
   function update(dt) {
     if (state !== "playing") return;
     player.hurt = Math.max(0, player.hurt - dt);
+    player.star = Math.max(0, player.star - dt);
+    player.boost = Math.max(0, player.boost - dt);
+    if (player.star > 0 && Math.random() < dt * 22) burst(player.x + player.w / 2, player.y + player.h / 2, "#ffe27a", 1);
     const move = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     const target = move * 330;
     player.vx += (target - player.vx) * Math.min(1, dt * (player.grounded ? 12 : 5));
     if (move) player.facing = move;
 
     if (keys.jump && player.grounded) {
-      player.vy = -810;
+      player.vy = player.boost > 0 ? -1080 : -900;
       player.grounded = false;
-      tone(360, .11, "triangle", .06);
+      tone(player.boost > 0 ? 480 : 360, .11, "triangle", .06);
     }
     keys.jump = false;
 
@@ -207,7 +293,18 @@
     player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
     player.grounded = false;
 
-    for (const p of platforms) {
+    const previousTop = previousBottom - player.h;
+    for (const block of blocks) {
+      const under = player.x + player.w - 12 > block.x && player.x + 12 < block.x + block.w;
+      const blockBottom = block.y + block.h;
+      if (under && player.vy < 0 && previousTop >= blockBottom - 10 && player.y <= blockBottom) {
+        player.y = blockBottom;
+        player.vy = 60;
+        hitBlock(block);
+      }
+    }
+
+    for (const p of solids) {
       const nextBottom = player.y + player.h;
       const horizontal = player.x + player.w - 12 > p.x && player.x + 12 < p.x + p.w;
       if (horizontal && player.vy >= 0 && previousBottom <= p.y + 10 && nextBottom >= p.y) {
@@ -237,6 +334,13 @@
       enemy.x += enemy.vx * dt;
       if (enemy.x < enemy.min || enemy.x > enemy.max) { enemy.vx *= -1; enemy.x = Math.max(enemy.min, Math.min(enemy.max, enemy.x)); }
       if (!rectsOverlap(player, enemy)) continue;
+      if (player.star > 0) {
+        enemy.alive = false;
+        burst(enemy.x + enemy.w / 2, enemy.y + 25, "#ffe27a", 18);
+        tone(330, .07, "square", .05);
+        tone(660, .1, "triangle", .05, .05);
+        continue;
+      }
       if (player.vy > 180 && previousBottom <= enemy.y + 22) {
         enemy.alive = false;
         player.vy = -560;
@@ -245,6 +349,8 @@
         tone(420, .11, "triangle", .05, .05);
       } else hurtPlayer();
     }
+
+    updateItems(dt);
 
     if (player.x > 2960 && checkpoint < 2960) {
       checkpoint = 3060;
@@ -332,6 +438,73 @@
     ctx.restore();
   }
 
+  function drawBlock(block, time) {
+    const x = block.x - cameraX;
+    if (x < -80 || x > viewWidth + 80) return;
+    const lift = Math.sin((block.bump / .18) * Math.PI) * 14;
+    ctx.save();
+    ctx.translate(x, block.y - lift);
+    ctx.shadowColor = block.used ? "rgba(5,2,20,.45)" : "rgba(255,215,106,.55)";
+    ctx.shadowBlur = block.used ? 12 : 16 + Math.sin(time * .005 + block.id) * 6;
+    const grad = ctx.createLinearGradient(0, 0, 0, block.h);
+    if (block.used) { grad.addColorStop(0, "#5a4a78"); grad.addColorStop(1, "#33284f"); }
+    else { grad.addColorStop(0, "#ffe58f"); grad.addColorStop(1, "#f2a23c"); }
+    ctx.fillStyle = grad; roundedRect(0, 0, block.w, block.h, 12); ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = block.used ? "#241a3d" : "#b8632a";
+    roundedRect(1.5, 1.5, block.w - 3, block.h - 3, 11); ctx.stroke();
+    ctx.fillStyle = block.used ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.55)";
+    roundedRect(7, 5, block.w - 14, 5, 3); ctx.fill();
+    ctx.fillStyle = block.used ? "#241a3d" : "#b8632a";
+    for (const [dx, dy] of [[8, 8], [block.w - 8, 8], [8, block.h - 8], [block.w - 8, block.h - 8]]) {
+      ctx.beginPath(); ctx.arc(dx, dy, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+    if (!block.used) {
+      ctx.font = "900 36px 'Trebuchet MS', system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#b8632a"; ctx.fillText("?", block.w / 2 + 2, block.h / 2 + 4);
+      ctx.fillStyle = "#fffaf0"; ctx.fillText("?", block.w / 2, block.h / 2 + 2);
+    }
+    ctx.restore();
+  }
+
+  function drawItem(item, time) {
+    const x = item.x - cameraX;
+    if (x < -60 || x > viewWidth + 60) return;
+    ctx.save();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (item.popup) {
+      ctx.globalAlpha = Math.min(1, item.life / .3);
+      ctx.translate(x, item.y);
+      ctx.shadowColor = "#ffd76a"; ctx.shadowBlur = 18;
+      ctx.font = "34px Apple Color Emoji, Segoe UI Emoji, sans-serif";
+      ctx.fillText("🍒", -12, 0);
+      ctx.font = "900 24px 'Trebuchet MS', system-ui, sans-serif";
+      ctx.fillStyle = "#ffe58f"; ctx.fillText("+1", 24, 0);
+    } else {
+      if (item.life < 2 && Math.floor(item.life * 10) % 2) ctx.globalAlpha = .3;
+      ctx.translate(x, item.y + (item.resting ? Math.sin(time * .006) * 4 : 0));
+      ctx.shadowColor = item.type === "heart" ? "#ff567f" : item.type === "star" ? "#ffe27a" : "#89f0c0";
+      ctx.shadowBlur = 22;
+      ctx.font = "36px Apple Color Emoji, Segoe UI Emoji, sans-serif";
+      ctx.fillText(itemIcons[item.type], 0, 0);
+    }
+    ctx.restore();
+  }
+
+  function drawPowerBars() {
+    const bars = [];
+    if (player.star > 0) bars.push([player.star / STAR_TIME, "#ffe27a"]);
+    if (player.boost > 0) bars.push([player.boost / BOOST_TIME, "#89f0c0"]);
+    const x = player.x - cameraX + player.w / 2 - 32;
+    bars.forEach(([amount, color], i) => {
+      const y = player.y - 44 - i * 11;
+      ctx.fillStyle = "rgba(13,8,36,.6)"; roundedRect(x, y, 64, 7, 4); ctx.fill();
+      ctx.fillStyle = color; roundedRect(x, y, Math.max(7, 64 * amount), 7, 4); ctx.fill();
+    });
+  }
+
   function drawEnemy(enemy, time) {
     if (!enemy.alive) return;
     const x = enemy.x - cameraX;
@@ -351,6 +524,20 @@
   function drawPlayer(time) {
     const x = player.x - cameraX;
     const speed = Math.abs(player.vx);
+    const model = window.Pupa3D;
+    if (model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
+      // The model's feet sit 1 unit below the camera centre; line them up with
+      // the bottom of the hitbox.
+      const size = 164;
+      const feet = size * (model.viewHalf + 1) / (model.viewHalf * 2);
+      ctx.save();
+      if (player.hurt > 0 && Math.floor(player.hurt * 12) % 2) ctx.globalAlpha = .35;
+      ctx.shadowColor = player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
+      ctx.shadowBlur = player.star > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
+      ctx.drawImage(model.canvas, x + player.w / 2 - size / 2, player.y + player.h - feet, size, size);
+      ctx.restore();
+      return;
+    }
     const isRunning = player.grounded && speed > 45;
     const frameRate = 7 + Math.min(5, speed / 70);
     const cycleFrame = Math.floor((time / 1000) * frameRate) % (art.runFrames.length * 2);
@@ -419,7 +606,9 @@
     platforms.forEach(drawPlatform);
     drawCheckpoint(time);
     drawGoal(time);
+    blocks.forEach(b => drawBlock(b, time));
     cherries.forEach(c => drawCherry(c, time));
+    items.forEach(item => drawItem(item, time));
     enemies.forEach(e => drawEnemy(e, time));
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
@@ -427,6 +616,7 @@
     }
     ctx.globalAlpha = 1;
     drawPlayer(time);
+    drawPowerBars();
   }
 
   function frame(time) {
