@@ -21,7 +21,10 @@
     endText: document.querySelector("#endText"),
     endIcon: document.querySelector("#endIcon"),
     announcer: document.querySelector("#announcer"),
-    levelName: document.querySelector("#levelName")
+    levelName: document.querySelector("#levelName"),
+    points: document.querySelector("#points"),
+    finalPoints: document.querySelector("#finalPoints"),
+    bestPoints: document.querySelector("#bestPoints")
   };
 
   const WORLD = { width: 6100, ground: 605, gravity: 2200 };
@@ -136,7 +139,7 @@
         [2100, 470, 220, 34], [2350, 380, 170, 34], [2800, 460, 200, 34], [3020, 370, 150, 34],
         [3290, 380, 140, 34, "y", 150, 60], [3500, 420, 130, 34],
         [3850, 470, 200, 34],
-        [4560, 440, 190, 34], [4955, 340, 190, 34], [5350, 440, 190, 34]
+        [4560, 440, 190, 34], [4955, 340, 190, 34], [5350, 440, 190, 34], [5590, 380, 120, 34]
       ]),
       cherries: [
         [310,420], [390,420], [585,330], [1010,410], [1100,410], [1320,320], [1650,430], [2160,410],
@@ -157,6 +160,12 @@
   // Add &checkpoint to also begin from that level's checkpoint flag.
   const startAtCheckpoint = new URLSearchParams(location.search).has("checkpoint");
   const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
+  // Each level ends with a flagpole just before the gate: the higher Pupa
+  // grabs it, the more points it pays.
+  const POLE_OFFSET = 150;
+  const POLE_HEIGHT = 370;
+  const BEST_KEY = "superPupaRunBest";
+  const formatPoints = (n) => n.toLocaleString("en-US");
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
   const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b" };
@@ -168,9 +177,10 @@
   let platforms = level.platforms;
   let bannerTime = 0;
   let bannerText = "";
-  let levelStart = { score: 0, bonus: 0 };
+  let levelStart = { score: 0, bonus: 0, points: 0 };
   let boss = null;
   let hazards = [];
+  let popups = [];
   let shake = 0;
   let player;
   let cherries;
@@ -222,8 +232,10 @@
       active: false, alive: true, hurt: 0, mode: "walk", timer: 1.6, spit: 1, facing: -1, fade: 0
     } : null;
     hazards = [];
+    popups = [];
     shake = 0;
-    levelStart = { score: player.score, bonus: player.bonus };
+    player.flag = null;
+    levelStart = { score: player.score, bonus: player.bonus, points: player.points };
     bannerText = level.name;
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
@@ -231,7 +243,7 @@
   }
 
   function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0, big: false, ride: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(startLevel);
   }
@@ -240,7 +252,7 @@
   // cherries Pupa had when she entered it.
   function retryLevel() {
     if (player.big) setBig(false);
-    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, hurt: 0, star: 0, boost: 0 });
+    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, points: levelStart.points, hurt: 0, star: 0, boost: 0 });
     state = "menu";
     loadLevel(levelIndex);
   }
@@ -280,7 +292,7 @@
     ui.pause.hidden = true;
     ui.end.hidden = true;
     ui.pauseBtn.setAttribute("aria-pressed", "false");
-    announce("เริ่มเกมแล้ว เดินทางไปทางขวาและเก็บเชอร์รี่");
+    announce("เริ่มเกมแล้ว เดินทางไปทางขวาและเก็บเหรียญทอง");
     tone(440, .08, "sine");
   }
 
@@ -301,7 +313,15 @@
     ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
     ui.endIcon.textContent = won ? "✦" : "☾";
     ui.finalScore.textContent = `${player.score} / ${totalCherries}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
-    announce(won ? `ชนะแล้ว เก็บเชอร์รี่ได้ ${player.score + player.bonus} ลูก` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
+    let best = 0;
+    let isNewBest = false;
+    try {
+      best = Number(localStorage.getItem(BEST_KEY)) || 0;
+      if (player.points > best) { best = player.points; isNewBest = true; localStorage.setItem(BEST_KEY, String(best)); }
+    } catch { best = Math.max(best, player.points); }
+    ui.finalPoints.textContent = formatPoints(player.points);
+    ui.bestPoints.textContent = isNewBest ? `สถิติใหม่! ${formatPoints(best)} คะแนน` : `สถิติสูงสุด ${formatPoints(best)} คะแนน`;
+    announce(won ? `ชนะแล้ว เก็บเหรียญได้ ${player.score + player.bonus} เหรียญ ได้ ${formatPoints(player.points)} คะแนน` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
   }
@@ -310,6 +330,54 @@
     ui.score.textContent = String(player.score + player.bonus).padStart(2, "0");
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
+    ui.points.textContent = formatPoints(player.points);
+  }
+
+  function addScore(amount, x, y, label = "") {
+    player.points += amount;
+    popups.push({ x, y, text: `${label}+${formatPoints(amount)}`, life: 1.1 });
+  }
+
+  function grabFlag(poleX) {
+    const top = WORLD.ground - POLE_HEIGHT;
+    const height = Math.max(0, Math.min(POLE_HEIGHT, WORLD.ground - (player.y + player.h / 2)));
+    const ratio = height / POLE_HEIGHT;
+    const points = ratio >= .9 ? 5000 : ratio >= .7 ? 2000 : ratio >= .5 ? 1000 : ratio >= .3 ? 500 : 100;
+    player.y = Math.max(player.y, top - player.h / 2);
+    player.x = poleX - player.w + 18;
+    player.vx = 0; player.vy = 0; player.facing = 1; player.ride = null;
+    player.flag = { phase: "slide", t: 0, poleX, flagY: Math.max(top + 8, player.y + player.h / 2 - 20) };
+    addScore(points, poleX + 10, player.y - 6);
+    if (player.lives > 0) addScore(player.lives * 500, poleX + 10, player.y + 34, "♥ ");
+    const notes = points >= 5000 ? [523, 659, 784, 1047, 1319] : points >= 1000 ? [523, 659, 784, 1047] : [523, 659, 784];
+    notes.forEach((note, i) => tone(note, .14, "square", .05, i * .08));
+    announce(`ดึงธงได้ ${formatPoints(points)} คะแนน`);
+    updateHud();
+  }
+
+  // Slide down the pole with the flag, then stroll to the gate.
+  function updateFlag(dt) {
+    const flag = player.flag;
+    const floor = WORLD.ground - player.h;
+    flag.t += dt;
+    if (flag.phase === "slide") {
+      player.grounded = false;
+      player.vy = 120;
+      player.y = Math.min(floor, player.y + 300 * dt);
+      flag.flagY = Math.min(WORLD.ground - 64, flag.flagY + 300 * dt);
+      if (player.y >= floor && flag.t > .6) { flag.phase = "walk"; flag.t = 0; }
+      return;
+    }
+    player.grounded = true;
+    player.vy = 0;
+    player.y = floor;
+    player.vx = 210;
+    player.x += player.vx * dt;
+    if (player.x > level.goalX - 110) {
+      player.flag = null;
+      if (levelIndex < levels.length - 1) nextLevel();
+      else finish(true);
+    }
   }
 
   function announce(message) {
@@ -401,6 +469,7 @@
   function damageBoss() {
     boss.hp--;
     boss.hurt = 1.1;
+    addScore(boss.hp > 0 ? 1000 : 5000, boss.x + boss.w / 2, boss.y - 20);
     shake = .25;
     burst(boss.x + boss.w / 2, boss.y + 30, "#ffd166", 22);
     tone(180, .12, "square", .07); tone(360, .16, "triangle", .06, .07);
@@ -506,6 +575,7 @@
     if (type === "cherry") {
       // Like a coin: collected the moment it pops out.
       player.bonus++;
+      addScore(200, cx, block.y - 58);
       items.push({ type, x: cx, y: block.y - 20, vx: 0, vy: -330, life: .65, popup: true });
       tone(880, .09, "sine", .06, .06);
       tone(1175, .12, "sine", .05, .12);
@@ -524,6 +594,7 @@
 
   function collectItem(item) {
     burst(item.x, item.y, itemGlow[item.type], 16);
+    addScore(500, item.x, item.y - 30);
     if (item.type === "heart") {
       player.lives = Math.min(3, player.lives + 1);
       announce("ได้หัวใจเพิ่ม 1 ดวง");
@@ -575,6 +646,7 @@
   function update(dt) {
     if (state !== "playing") return;
     bannerTime = Math.max(0, bannerTime - dt);
+    if (player.flag) { updateFlag(dt); if (state === "playing") finishFrame(dt); return; }
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
@@ -642,6 +714,7 @@
       if (rectsOverlap(player, box)) {
         cherry.taken = true;
         player.score++;
+        addScore(100, cherry.x, cherry.y - 26);
         burst(cherry.x, cherry.y, "#ffd76a", 12);
         tone(740, .09, "sine", .06);
         tone(988, .1, "sine", .04, .05);
@@ -671,6 +744,7 @@
       if (!rectsOverlap(player, enemy)) continue;
       if (player.star > 0) {
         enemy.alive = false;
+        addScore(200, enemy.x + enemy.w / 2, enemy.y - 10);
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#ffe27a", 18);
         tone(330, .07, "square", .05);
         tone(660, .1, "triangle", .05, .05);
@@ -678,6 +752,7 @@
       }
       if (player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
         enemy.alive = false;
+        addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
         player.vy = -560;
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff", 15);
         tone(210, .08, "square", .05);
@@ -696,11 +771,17 @@
       tone(523, .12, "sine", .05);
       tone(659, .15, "sine", .05, .08);
     }
-    if (player.x > level.goalX - 110) {
+    const poleX = level.goalX - POLE_OFFSET;
+    if (!boss?.alive && player.x + player.w - 14 >= poleX && player.x < poleX + 30) grabFlag(poleX);
+    else if (player.x > level.goalX - 110) {
       if (levelIndex < levels.length - 1) nextLevel();
       else finish(true);
     }
 
+    finishFrame(dt);
+  }
+
+  function finishFrame(dt) {
     const maxCamera = Math.max(0, WORLD.width - viewWidth);
     let desired = Math.max(0, Math.min(maxCamera, player.x - viewWidth * .34));
     if (boss?.active && boss.alive) {
@@ -713,6 +794,7 @@
       p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt;
       return p.life > 0;
     });
+    popups = popups.filter(p => { p.life -= dt; p.y -= 55 * dt; return p.life > 0; });
     updateHud();
   }
 
@@ -805,14 +887,27 @@
   }
 
   const pickupArt = {
-    cherry() {
-      ctx.strokeStyle = "#3f8f3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(-9, 4); ctx.quadraticCurveTo(-6, -12, 5, -18);
-      ctx.moveTo(10, 6); ctx.quadraticCurveTo(10, -8, 5, -18); ctx.stroke();
-      ctx.fillStyle = "#6fcf5a";
-      ctx.beginPath(); ctx.moveTo(5, -18); ctx.quadraticCurveTo(16, -27, 22, -15); ctx.quadraticCurveTo(12, -11, 5, -18); ctx.fill();
-      drawBall(-9, 9, 10.5, "#ff8fa8", "#d81f4f");
-      drawBall(10, 11, 10.5, "#ff8fa8", "#c2143f");
+    // spin is an angle: the coin's width follows its cosine so it appears to turn.
+    coin(spin = 0) {
+      const turn = Math.cos(spin);
+      ctx.save();
+      ctx.scale(Math.max(.16, Math.abs(turn)), 1);
+      ctx.fillStyle = "#b8741a"; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill();
+      const face = ctx.createLinearGradient(-12, -15, 12, 15);
+      face.addColorStop(0, "#fff6b8"); face.addColorStop(.5, "#ffd24a"); face.addColorStop(1, "#f0a01e");
+      ctx.fillStyle = face; ctx.beginPath(); ctx.arc(0, 0, 14.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#d98f1c"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 10.5, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#fff8d0";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 ? 3 : 7;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      ctx.beginPath(); ctx.ellipse(-6, -8, 4, 2.2, -.7, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     },
     heart() {
       const fill = ctx.createLinearGradient(0, -16, 0, 18);
@@ -878,8 +973,8 @@
     const y = cherry.y + Math.sin(time * .004 + cherry.phase) * 7;
     ctx.save();
     ctx.translate(x, y);
-    drawGlow("#ff567f", 30);
-    pickupArt.cherry();
+    drawGlow("#ffd24a", 30);
+    pickupArt.coin(time * .005 + cherry.phase);
     ctx.restore();
   }
 
@@ -924,7 +1019,7 @@
       ctx.save();
       ctx.translate(-14, 0); ctx.scale(.85, .85);
       drawGlow("#ffd76a", 28);
-      pickupArt.cherry();
+      pickupArt.coin();
       ctx.restore();
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "900 24px 'Trebuchet MS', system-ui, sans-serif";
@@ -1170,6 +1265,50 @@
     ctx.restore();
   }
 
+  function drawFlagpole(time) {
+    const x = level.goalX - POLE_OFFSET - cameraX;
+    if (x < -120 || x > viewWidth + 120) return;
+    const top = WORLD.ground - POLE_HEIGHT;
+    const flagY = player.flag ? player.flag.flagY : top + 8;
+    ctx.save();
+    ctx.translate(x, 0);
+    if (boss?.alive) ctx.globalAlpha = .22;
+    ctx.fillStyle = "#5a4a78"; roundedRect(-22, WORLD.ground - 26, 44, 26, 6); ctx.fill();
+    ctx.fillStyle = "#3a2d57"; roundedRect(-22, WORLD.ground - 8, 44, 8, 3); ctx.fill();
+    const pole = ctx.createLinearGradient(-5, 0, 5, 0);
+    pole.addColorStop(0, "#fff3c4"); pole.addColorStop(.5, "#ffd76a"); pole.addColorStop(1, "#c98a2a");
+    ctx.fillStyle = pole; roundedRect(-5, top, 10, POLE_HEIGHT - 20, 5); ctx.fill();
+    ctx.translate(0, top);
+    drawGlow("#ffe27a", 28);
+    drawBall(0, -4, 12, "#fff6c9", "#f2a23c");
+    ctx.translate(0, flagY - top);
+    const wave = Math.sin(time * .006) * 5;
+    // The flag flies on the far side of the pole so Pupa never hides it.
+    const cloth = ctx.createLinearGradient(0, 0, 74, 0);
+    cloth.addColorStop(0, "#fff6d8"); cloth.addColorStop(1, "#ff8fb4");
+    ctx.fillStyle = cloth; ctx.strokeStyle = "rgba(60,16,50,.7)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(5, 0);
+    ctx.quadraticCurveTo(38, 6 + wave, 76, 26);
+    ctx.quadraticCurveTo(38, 42 - wave, 5, 52);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.save(); ctx.translate(30, 26); ctx.scale(.62, .62); pickupArt.star(); ctx.restore();
+    ctx.restore();
+  }
+
+  function drawPopups() {
+    if (!popups.length) return;
+    ctx.save();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "900 26px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+    ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(30,10,45,.85)";
+    for (const p of popups) {
+      ctx.globalAlpha = Math.min(1, p.life / .35);
+      ctx.strokeText(p.text, p.x - cameraX, p.y);
+      ctx.fillStyle = "#ffe58f"; ctx.fillText(p.text, p.x - cameraX, p.y);
+    }
+    ctx.restore();
+  }
+
   function drawGoal(time) {
     const x = level.goalX - cameraX;
     if (x < -200 || x > viewWidth + 200) return;
@@ -1215,6 +1354,7 @@
     drawBackground(time);
     platforms.forEach(drawPlatform);
     drawCheckpoint(time);
+    drawFlagpole(time);
     drawGoal(time);
     blocks.forEach(b => drawBlock(b, time));
     cherries.forEach(c => drawCherry(c, time));
@@ -1228,6 +1368,7 @@
     }
     ctx.globalAlpha = 1;
     drawPlayer(time);
+    drawPopups();
     drawPowerBars();
     drawBossBar();
     drawBanner();

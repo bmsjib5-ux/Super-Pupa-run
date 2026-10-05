@@ -37,11 +37,12 @@
         </header>
 
         <div class="stage-wrap">
-          <canvas id="gameCanvas" width="1280" height="720" aria-label="เกม Super Pupa Run เดินทางไปทางขวา เก็บเชอร์รี่ กระโดดข้ามศัตรู และไปให้ถึงประตูแสงจันทร์"></canvas>
+          <canvas id="gameCanvas" width="1280" height="720" aria-label="เกม Super Pupa Run เดินทางไปทางขวา เก็บเหรียญทอง กระโดดข้ามศัตรู และไปให้ถึงประตูแสงจันทร์"></canvas>
 
           <div class="hud" aria-hidden="true">
             <div class="hud-card hearts"><span>ชีวิต</span><b id="hearts">♥ ♥ ♥</b></div>
-            <div class="hud-card score"><span>เชอร์รี่</span><b><i>●</i> <span id="score">00</span></b></div>
+            <div class="hud-card score"><span>เหรียญ</span><b><i>●</i> <span id="score">00</span></b></div>
+            <div class="hud-card points"><span>คะแนน</span><b id="points">0</b></div>
             <div class="hud-card distance"><span>ระยะทาง</span><b id="distance">0%</b></div>
           </div>
 
@@ -76,7 +77,9 @@
               <span id="endIcon" class="moon-icon" aria-hidden="true">✦</span>
               <h2 id="endTitle">ถึงรังไหมแล้ว!</h2>
               <p id="endText">Pupa กลับถึงบ้านอย่างปลอดภัย</p>
-              <div class="final-score"><span>เชอร์รี่ที่เก็บได้</span><b id="finalScore">0 / 40</b></div>
+              <div class="final-score tight"><span>เหรียญที่เก็บได้</span><b id="finalScore">0 / 86</b></div>
+              <div class="final-score tight"><span>คะแนนรวม</span><b id="finalPoints">0</b></div>
+              <p id="bestPoints" class="best-line"></p>
               <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
             </div>
           </div>

@@ -131,7 +131,7 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .hud-card > span { display: block; color: #bdb0d2; font-size: .7rem; letter-spacing: .08em; }
 .hud-card b { display: block; margin-top: .14rem; font-size: .98rem; letter-spacing: .05em; }
 .hearts b { color: #ff79a9; }
-.score i { color: #ff537e; font-style: normal; }
+.score i { color: var(--gold); font-style: normal; }
 
 .overlay {
   position: absolute;
@@ -207,6 +207,9 @@ kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .
 .moon-icon { display: block; color: var(--gold); font-size: 3.5rem; filter: drop-shadow(0 0 1rem rgba(255,215,106,.55)); }
 .final-score { display: flex; justify-content: space-between; margin: 0 auto 1.3rem; padding: .8rem 1rem; border-radius: .8rem; color: var(--muted); background: rgba(255,255,255,.07); }
 .final-score b { color: white; }
+.final-score.tight { margin-bottom: .45rem; }
+.message-card .best-line { margin: .1rem auto 1.1rem; color: var(--gold); font-size: .82rem; }
+.points b { color: var(--gold); }
 
 .mobile-controls {
   position: absolute;
@@ -316,7 +319,7 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .icon-button { width: 2.2rem; border-radius: .65rem; background: rgba(13, 8, 36, .62); }
 
   .hud { top: max(.4rem, env(safe-area-inset-top)); width: auto; gap: .35rem; }
-  .hud-card { flex: none; min-width: 4.6rem; max-width: none; padding: .25rem .6rem; border-radius: .75rem; }
+  .hud-card { flex: none; min-width: 4rem; max-width: none; padding: .25rem .5rem; border-radius: .75rem; }
   .hud-card > span { font-size: .58rem; }
   .hud-card b { margin-top: 0; font-size: .85rem; }
 
@@ -339,7 +342,10 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .title-card .install-hint { margin-top: .5rem; font-size: .75rem; }
   .moon-icon { display: none; }
   .message-card h2 { margin: 0; font-size: 1.5rem; }
-  .final-score { margin-bottom: .8rem; padding: .5rem .9rem; }
+  .final-score { margin-bottom: .8rem; padding: .3rem .9rem; }
+  .final-score.tight { margin-bottom: .3rem; }
+  .message-card .best-line { margin: 0 auto .5rem; font-size: .72rem; }
+  .message-card p { margin: .3rem auto .5rem; }
 }
 
 /* On touch screens nothing on the page is selectable, not just the game. */
