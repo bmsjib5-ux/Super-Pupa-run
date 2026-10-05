@@ -231,7 +231,10 @@ kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .
 }
 .touch-button.is-pressed { background: rgba(255,95,150,.7); transform: scale(.94); }
 .touch-button.jump { display: grid; place-items: center; color: #2c1030; background: rgba(255,215,106,.82); }
-.touch-button.jump span { display: block; margin-top: -.8rem; font-size: .55rem; font-weight: 900; }
+/* The button faces are generated content: there is no real text inside the
+   buttons for a long press to select or offer to copy. */
+.touch-button::before { content: attr(data-icon); pointer-events: none; }
+.touch-button.jump::after { content: "JUMP"; display: block; margin-top: -.8rem; font-size: .55rem; font-weight: 900; pointer-events: none; }
 
 .statusbar { min-height: 2.7rem; color: #a99cbc; font-size: .72rem; letter-spacing: .03em; }
 .status-dot { display: inline-block; width: .48rem; height: .48rem; margin-right: .35rem; border-radius: 50%; background: var(--mint); box-shadow: 0 0 .7rem var(--mint); }
@@ -337,4 +340,9 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .moon-icon { display: none; }
   .message-card h2 { margin: 0; font-size: 1.5rem; }
   .final-score { margin-bottom: .8rem; padding: .5rem .9rem; }
+}
+
+/* On touch screens nothing on the page is selectable, not just the game. */
+@media (pointer: coarse) {
+  html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 }

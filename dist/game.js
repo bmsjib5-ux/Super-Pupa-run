@@ -120,11 +120,42 @@
         ["walker",6250,536], ["hopper",6400,553]
       ],
       blocks: [[60,390],[1070,390],[1840,390],[3520,390],[4560,390],[6100,390]]
+    },
+    {
+      name: "ด่าน 4 · รังราชาเห็ดหนาม",
+      width: 6200, goalX: 5960, checkpointX: 4230,
+      theme: { tint: "#e0355e", top: "#d1345b", shine: "#ff9fb5", body: ["#5a1f3a", "#3a1430", "#150a1f"], sparks: ["#ff7b9c", "#ffd166"] },
+      // The boss wakes when Pupa walks into its arena and the goal stays
+      // sealed until it is beaten.
+      boss: { name: "ราชาเห็ดหนาม", x: 5300, left: 4350, right: 5750, hp: 5 },
+      platforms: rects([
+        [0, 605, 700, 140], [860, 605, 640, 140], [2000, 605, 560, 140], [2720, 605, 500, 140],
+        [3740, 605, 2460, 140],
+        [250, 480, 200, 34], [500, 390, 170, 34], [950, 470, 210, 34], [1230, 380, 180, 34],
+        [1570, 490, 150, 34, "x", 170, 75],
+        [2100, 470, 220, 34], [2350, 380, 170, 34], [2800, 460, 200, 34], [3020, 370, 150, 34],
+        [3290, 380, 140, 34, "y", 150, 60], [3500, 420, 130, 34],
+        [3850, 470, 200, 34],
+        [4560, 440, 190, 34], [4955, 340, 190, 34], [5350, 440, 190, 34]
+      ]),
+      cherries: [
+        [310,420], [390,420], [585,330], [1010,410], [1100,410], [1320,320], [1650,430], [2160,410],
+        [2260,410], [2435,320], [2860,400], [3095,310], [3360,330], [3565,360], [3910,410], [3990,410],
+        [4655,380], [5050,280], [5445,380]
+      ],
+      enemies: [
+        ["hopper",430,553], ["bat",780,440], ["walker",1050,536], ["hopper",1380,553], ["bat",1750,260],
+        ["walker",2150,536], ["hopper",2460,553], ["bat",2640,450], ["walker",2900,536], ["hopper",3100,553],
+        ["bat",3450,200], ["walker",3950,536], ["hopper",4150,553]
+      ],
+      blocks: [[120,390],[2020,390],[2740,390],[4180,390],[4820,390],[5220,390]]
     }
   ];
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
   // Open the page with ?level=2 to start on a later level.
   const startLevel = Math.min(levels.length, Math.max(1, Number(new URLSearchParams(location.search).get("level")) || 1)) - 1;
+  // Add &checkpoint to also begin from that level's checkpoint flag.
+  const startAtCheckpoint = new URLSearchParams(location.search).has("checkpoint");
   const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
@@ -136,6 +167,11 @@
   let level = levels[0];
   let platforms = level.platforms;
   let bannerTime = 0;
+  let bannerText = "";
+  let levelStart = { score: 0, bonus: 0 };
+  let boss = null;
+  let hazards = [];
+  let shake = 0;
   let player;
   let cherries;
   let enemies;
@@ -177,6 +213,18 @@
     cameraX = 0;
     checkpoint = 90;
     Object.assign(player, { x: 90, y: 420, vx: 0, vy: 0, grounded: false, facing: 1, ride: null });
+    if (startAtCheckpoint && index === startLevel) {
+      checkpoint = level.checkpointX + 50;
+      player.x = checkpoint;
+    }
+    boss = level.boss ? {
+      ...level.boss, w: 170, h: 180, y: WORLD.ground - 180, vx: 0, vy: 0, maxHp: level.boss.hp,
+      active: false, alive: true, hurt: 0, mode: "walk", timer: 1.6, spit: 1, facing: -1, fade: 0
+    } : null;
+    hazards = [];
+    shake = 0;
+    levelStart = { score: player.score, bonus: player.bonus };
+    bannerText = level.name;
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
     updateHud();
@@ -184,7 +232,17 @@
 
   function resetGame() {
     player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0, big: false, ride: null };
+    if (state !== "playing") state = "menu";
     loadLevel(startLevel);
+  }
+
+  // After a game over, try the same level again with full hearts and the
+  // cherries Pupa had when she entered it.
+  function retryLevel() {
+    if (player.big) setBig(false);
+    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, hurt: 0, star: 0, boost: 0 });
+    state = "menu";
+    loadLevel(levelIndex);
   }
 
   function nextLevel() {
@@ -215,7 +273,8 @@
   }
 
   function startGame() {
-    if (state === "won" || state === "lost") resetGame();
+    if (state === "lost") retryLevel();
+    else if (state === "won") resetGame();
     state = "playing";
     ui.start.hidden = true;
     ui.pause.hidden = true;
@@ -239,7 +298,7 @@
     state = won ? "won" : "lost";
     ui.end.hidden = false;
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
-    ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "สวนเชอร์รี่ยังรอการผจญภัยครั้งต่อไป";
+    ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
     ui.endIcon.textContent = won ? "✦" : "☾";
     ui.finalScore.textContent = `${player.score} / ${totalCherries}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
     announce(won ? `ชนะแล้ว เก็บเชอร์รี่ได้ ${player.score + player.bonus} ลูก` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
@@ -337,6 +396,100 @@
     player.ride = null;
     if (player.big) setBig(false);
     hurtPlayer();
+  }
+
+  function damageBoss() {
+    boss.hp--;
+    boss.hurt = 1.1;
+    shake = .25;
+    burst(boss.x + boss.w / 2, boss.y + 30, "#ffd166", 22);
+    tone(180, .12, "square", .07); tone(360, .16, "triangle", .06, .07);
+    if (boss.hp > 0) return;
+    boss.alive = false;
+    boss.fade = 1;
+    hazards = [];
+    shake = .6;
+    for (let i = 0; i < 4; i++) burst(boss.x + 30 + i * 36, boss.y + 30 + (i % 2) * 60, i % 2 ? "#ff7b9c" : "#ffd166", 18);
+    [392, 523, 659, 784, 1047].forEach((note, i) => tone(note, .2, "triangle", .07, i * .1));
+    bannerText = "ชนะบอสแล้ว! · ประตูแสงจันทร์เปิดแล้ว";
+    bannerTime = 3;
+    announce(`${boss.name}พ่ายแพ้แล้ว ประตูแสงจันทร์เปิดแล้ว`);
+  }
+
+  function updateBoss(dt, previousBottom) {
+    if (!boss) return;
+    boss.fade = Math.max(0, boss.fade - dt * 1.4);
+    if (!boss.alive) return;
+    if (!boss.active) {
+      if (player.x < boss.left + 40) return;
+      boss.active = true;
+      bannerText = `บอส · ${boss.name}`;
+      bannerTime = 3;
+      announce(`${boss.name}ปรากฏตัว เหยียบหัวมันให้ครบ ${boss.maxHp} ครั้ง`);
+      [196, 185, 175, 147].forEach((note, i) => tone(note, .22, "sawtooth", .05, i * .14));
+    }
+    boss.hurt = Math.max(0, boss.hurt - dt);
+    const rage = boss.maxHp - boss.hp;
+    const floor = WORLD.ground - boss.h;
+    const aim = player.x + player.w / 2 - (boss.x + boss.w / 2);
+    if (boss.mode === "walk") {
+      boss.facing = aim < 0 ? -1 : 1;
+      if (Math.abs(aim) > 30) boss.x += boss.facing * (70 + rage * 14) * dt;
+      boss.timer -= dt;
+      if (boss.timer <= 0) { boss.mode = "windup"; boss.timer = .5; tone(110, .3, "sawtooth", .05); }
+      // From half health on it also lobs thorn spores between leaps.
+      boss.spit -= dt;
+      if (rage >= 2 && boss.spit <= 0) {
+        boss.spit = 1.5;
+        hazards.push({ type: "spore", x: boss.x + boss.w / 2 - 16, y: boss.y + 30, w: 32, h: 32, vx: Math.max(-380, Math.min(380, aim * .95)), vy: -620, life: 4 });
+        tone(300, .1, "square", .04);
+      }
+    } else if (boss.mode === "windup") {
+      boss.timer -= dt;
+      if (boss.timer <= 0) {
+        boss.mode = "jump";
+        boss.vy = -940;
+        boss.vx = Math.max(-430, Math.min(430, aim / .9));
+        boss.y -= 1;
+      }
+    } else {
+      boss.vy += 2100 * dt;
+      boss.x += boss.vx * dt;
+      boss.y += boss.vy * dt;
+      if (boss.y >= floor) {
+        boss.y = floor;
+        boss.mode = "walk";
+        boss.timer = Math.max(1.1, 2.3 - rage * .22);
+        shake = .3;
+        tone(70, .3, "sawtooth", .08);
+        burst(boss.x + boss.w / 2, WORLD.ground, "#ff7b9c", 14);
+        for (const side of [-1, 1]) {
+          hazards.push({ type: "wave", x: boss.x + boss.w / 2 - 23 + side * 70, y: WORLD.ground - 34, w: 46, h: 34, vx: side * (290 + rage * 22), vy: 0, life: 2.4 });
+        }
+      }
+    }
+    boss.x = Math.max(boss.left, Math.min(boss.right - boss.w, boss.x));
+
+    hazards = hazards.filter(h => {
+      h.life -= dt;
+      h.x += h.vx * dt;
+      if (h.type === "spore") {
+        h.vy += 1100 * dt;
+        h.y += h.vy * dt;
+        if (h.y + h.h >= WORLD.ground) { burst(h.x + 16, WORLD.ground - 6, "#c68cff", 8); return false; }
+      }
+      if (h.life <= 0 || h.x < boss.left - 60 || h.x > boss.right + 20) return false;
+      if (rectsOverlap(player, { x: h.x + 6, y: h.y + 6, w: h.w - 12, h: h.h - 6 })) { hurtPlayer(); return h.type === "wave"; }
+      return true;
+    });
+
+    const body = { x: boss.x + 16, y: boss.y + 8, w: boss.w - 32, h: boss.h - 8 };
+    if (boss.hurt > 0 || !rectsOverlap(player, body)) return;
+    if (player.star > 0) { damageBoss(); return; }
+    if (player.vy > 120 && previousBottom <= boss.y + 44) {
+      player.vy = -820;
+      damageBoss();
+    } else hurtPlayer();
   }
 
   function hitBlock(block) {
@@ -454,6 +607,8 @@
     player.x += player.vx * dt;
     player.y += player.vy * dt;
     player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
+    // The arena seals behind Pupa until the boss falls.
+    if (boss?.active && boss.alive) player.x = Math.max(boss.left, Math.min(boss.right - player.w, player.x));
     player.grounded = false;
     player.ride = null;
 
@@ -531,6 +686,9 @@
     }
 
     updateItems(dt);
+    updateBoss(dt, previousBottom);
+    shake = Math.max(0, shake - dt);
+    if (state !== "playing") return;
 
     if (player.x > level.checkpointX - 50 && checkpoint < level.checkpointX) {
       checkpoint = level.checkpointX + 50;
@@ -544,7 +702,11 @@
     }
 
     const maxCamera = Math.max(0, WORLD.width - viewWidth);
-    const desired = Math.max(0, Math.min(maxCamera, player.x - viewWidth * .34));
+    let desired = Math.max(0, Math.min(maxCamera, player.x - viewWidth * .34));
+    if (boss?.active && boss.alive) {
+      const low = boss.left - 60;
+      desired = Math.max(low, Math.min(Math.max(low, boss.right + 60 - viewWidth), desired));
+    }
     cameraX += (desired - cameraX) * Math.min(1, dt * 4.5);
 
     particles = particles.filter(p => {
@@ -927,10 +1089,92 @@
     ctx.restore();
   }
 
+  function drawBoss(time) {
+    if (!boss || (!boss.alive && boss.fade <= 0)) return;
+    const x = boss.x - cameraX;
+    if (x < -300 || x > viewWidth + 300) return;
+    const airborne = boss.mode === "jump";
+    const squash = boss.mode === "windup" ? .78 : airborne ? 1.1 : 1 + Math.sin(time * .006) * .025;
+    ctx.save();
+    ctx.translate(x + boss.w / 2, boss.y + boss.h);
+    if (!boss.alive) { ctx.globalAlpha = boss.fade; ctx.rotate((1 - boss.fade) * .5); ctx.scale(boss.fade, boss.fade); }
+    else if (boss.hurt > 0 && Math.floor(boss.hurt * 14) % 2) ctx.globalAlpha = .35;
+    ctx.scale(boss.facing > 0 ? -1 : 1, 1);
+    ctx.scale(1 / Math.sqrt(squash), squash);
+    const size = 236;
+    ctx.shadowColor = "rgba(255,60,110,.7)"; ctx.shadowBlur = 30;
+    if (art.enemy.complete && art.enemy.naturalWidth) ctx.drawImage(art.enemy, -size / 2, -size + 26, size, size);
+    else { ctx.fillStyle = "#8d4ec4"; ctx.beginPath(); ctx.arc(0, -80, 80, 0, Math.PI * 2); ctx.fill(); }
+    ctx.shadowColor = "transparent";
+    // Crown
+    const crown = ctx.createLinearGradient(0, -size + 4, 0, -size + 52);
+    crown.addColorStop(0, "#fff3a6"); crown.addColorStop(1, "#f2a23c");
+    ctx.fillStyle = crown; ctx.strokeStyle = "#a85a14"; ctx.lineWidth = 3; ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(-38, -size + 54); ctx.lineTo(-44, -size + 14); ctx.lineTo(-22, -size + 34); ctx.lineTo(0, -size + 2);
+    ctx.lineTo(22, -size + 34); ctx.lineTo(44, -size + 14); ctx.lineTo(38, -size + 54);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ff4f7d";
+    ctx.beginPath(); ctx.arc(0, -size + 38, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHazard(h, time) {
+    const x = h.x - cameraX;
+    ctx.save();
+    ctx.translate(x + h.w / 2, h.y + h.h);
+    if (h.type === "wave") {
+      ctx.globalAlpha = Math.min(1, h.life / .4);
+      ctx.scale(h.vx > 0 ? 1 : -1, 1);
+      const fill = ctx.createLinearGradient(0, -h.h - 8, 0, 0);
+      fill.addColorStop(0, "#ffd166"); fill.addColorStop(1, "#ff3c6e");
+      ctx.fillStyle = fill;
+      const wobble = Math.sin(time * .03) * 4;
+      ctx.beginPath(); ctx.moveTo(-26, 0);
+      ctx.lineTo(-16, -22 - wobble); ctx.lineTo(-8, -6); ctx.lineTo(4, -40 + wobble); ctx.lineTo(10, -8);
+      ctx.lineTo(22, -26 - wobble); ctx.lineTo(28, 0);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.translate(0, -h.h / 2);
+      ctx.rotate(time * .01);
+      drawGlow("#c68cff", 30);
+      ctx.fillStyle = "#7b3fc4";
+      ctx.beginPath();
+      for (let i = 0; i < 16; i++) {
+        const radius = i % 2 ? 10 : 18;
+        ctx.lineTo(Math.cos(i * Math.PI / 8) * radius, Math.sin(i * Math.PI / 8) * radius);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#e7c6ff"; ctx.beginPath(); ctx.arc(-3, -3, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawBossBar() {
+    if (!boss?.active || !boss.alive || state !== "playing") return;
+    const width = Math.min(420, viewWidth - 80);
+    const x = (viewWidth - width) / 2;
+    const y = 156;
+    ctx.save();
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.font = "800 20px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+    ctx.lineWidth = 4; ctx.strokeStyle = "rgba(13,8,36,.85)"; ctx.strokeText(boss.name, viewWidth / 2, y - 8);
+    ctx.fillStyle = "#ffe5a5"; ctx.fillText(boss.name, viewWidth / 2, y - 8);
+    ctx.fillStyle = "rgba(13,8,36,.75)"; roundedRect(x - 3, y - 3, width + 6, 20, 10); ctx.fill();
+    const gap = 4;
+    const cell = (width - gap * (boss.maxHp - 1)) / boss.maxHp;
+    for (let i = 0; i < boss.maxHp; i++) {
+      ctx.fillStyle = i < boss.hp ? "#ff4f7d" : "rgba(255,255,255,.12)";
+      roundedRect(x + i * (cell + gap), y, cell, 14, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawGoal(time) {
     const x = level.goalX - cameraX;
     if (x < -200 || x > viewWidth + 200) return;
     ctx.save(); ctx.translate(x, 485);
+    if (boss?.alive) ctx.globalAlpha = .22; // sealed until the boss is beaten
     const glow = .78 + Math.sin(time * .004) * .18;
     ctx.shadowColor = "#ffe797"; ctx.shadowBlur = 35;
     ctx.strokeStyle = `rgba(255,231,151,${glow})`; ctx.lineWidth = 12;
@@ -952,7 +1196,7 @@
 
   function drawBanner() {
     if (bannerTime <= 0 || state !== "playing") return;
-    const [title, subtitle] = level.name.split(" · ");
+    const [title, subtitle] = bannerText.split(" · ");
     ctx.save();
     ctx.globalAlpha = Math.min(1, bannerTime / .6, (3 - bannerTime) / .35);
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -967,6 +1211,7 @@
   function render(time) {
     ctx.setTransform(dpr * renderScale, 0, 0, dpr * renderScale, 0, 0);
     ctx.clearRect(0, 0, viewWidth, viewHeight);
+    if (shake > 0 && state === "playing") ctx.translate((Math.random() - .5) * 14 * Math.min(1, shake * 3), (Math.random() - .5) * 10 * Math.min(1, shake * 3));
     drawBackground(time);
     platforms.forEach(drawPlatform);
     drawCheckpoint(time);
@@ -975,6 +1220,8 @@
     cherries.forEach(c => drawCherry(c, time));
     items.forEach(item => drawItem(item, time));
     enemies.forEach(e => drawEnemy(e, time));
+    drawBoss(time);
+    hazards.forEach(h => drawHazard(h, time));
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI * 2); ctx.fill();
@@ -982,6 +1229,7 @@
     ctx.globalAlpha = 1;
     drawPlayer(time);
     drawPowerBars();
+    drawBossBar();
     drawBanner();
   }
 
@@ -1016,6 +1264,9 @@
     const action = button.dataset.key;
     const press = (event) => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); button.classList.add("is-pressed"); setKey(action, true); };
     const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "jump") setKey(action, false); };
+    // Cancelling touchstart is what stops the long-press copy/select menu on
+    // phones; the pointer events below still fire.
+    button.addEventListener("touchstart", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
     button.addEventListener("pointerdown", press);
     button.addEventListener("pointerup", release);
     button.addEventListener("pointercancel", release);
@@ -1035,6 +1286,16 @@
     if (now - lastTouchEnd < 350 && event.cancelable && !event.target.closest("button")) event.preventDefault();
     lastTouchEnd = now;
   }, { passive: false });
+  // Same for a long press on the playfield itself.
+  canvas.addEventListener("touchstart", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
+  // Last resort: if the system still starts a selection, drop it at once.
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    document.addEventListener("selectionchange", () => {
+      const selection = document.getSelection();
+      if (selection && !selection.isCollapsed) selection.removeAllRanges();
+    });
+    document.addEventListener("contextmenu", (event) => event.preventDefault());
+  }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
   // Install as an app. Chrome/Edge/Samsung hand us a prompt to trigger; iOS
@@ -1073,7 +1334,7 @@
   }
 
   ui.startBtn.addEventListener("click", startGame);
-  ui.restartBtn.addEventListener("click", () => { resetGame(); startGame(); });
+  ui.restartBtn.addEventListener("click", startGame);
   ui.resumeBtn.addEventListener("click", () => togglePause(false));
   ui.pauseBtn.addEventListener("click", () => togglePause());
   ui.soundBtn.addEventListener("click", () => {
