@@ -29,7 +29,7 @@
   const art = {
     background: image("assets/cherry-night.webp"),
     hero: image("assets/pupa-hero-3d.webp"),
-    runFrames: Array.from({ length: 6 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
+    runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
 
@@ -353,7 +353,9 @@
     const speed = Math.abs(player.vx);
     const isRunning = player.grounded && speed > 45;
     const frameRate = 7 + Math.min(5, speed / 70);
-    const runFrame = art.runFrames[Math.floor((time / 1000) * frameRate) % art.runFrames.length];
+    const cycleFrame = Math.floor((time / 1000) * frameRate) % (art.runFrames.length * 2);
+    const oppositeStride = cycleFrame >= art.runFrames.length;
+    const runFrame = art.runFrames[cycleFrame % art.runFrames.length];
     const sprite = isRunning && runFrame.complete && runFrame.naturalWidth ? runFrame : art.hero;
     const bob = isRunning ? 0 : (player.grounded ? Math.sin(time * .018) * Math.min(2, speed / 120) : 0);
     const squash = isRunning ? 1 : (player.grounded ? 1 + Math.sin(time * .018) * Math.min(.025, speed / 12000) : .94);
@@ -363,7 +365,23 @@
     ctx.scale(player.facing, 1);
     ctx.scale(1 / squash, squash);
     ctx.shadowColor = "rgba(255,92,150,.35)"; ctx.shadowBlur = 20;
-    if (sprite.complete && sprite.naturalWidth) ctx.drawImage(sprite, -52, -62, 104, 124);
+    if (sprite.complete && sprite.naturalWidth) {
+      if (isRunning && oppositeStride) {
+        // Mirror only the lower body for the second half of the run cycle. The
+        // head and torso keep facing forward while the leading/trailing legs
+        // visibly exchange sides.
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(sprite, -52, -62, 104, 124);
+        ctx.restore();
+
+        const upperBodyCut = Math.floor(sprite.naturalHeight * .66);
+        const upperBodyHeight = 124 * upperBodyCut / sprite.naturalHeight;
+        ctx.drawImage(sprite, 0, 0, sprite.naturalWidth, upperBodyCut, -52, -62, 104, upperBodyHeight);
+      } else {
+        ctx.drawImage(sprite, -52, -62, 104, 124);
+      }
+    }
     else {
       ctx.fillStyle = "#ff78a8"; ctx.beginPath(); ctx.ellipse(0, 0, 31, 41, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#17102f"; ctx.beginPath(); ctx.arc(-10, -8, 4, 0, Math.PI * 2); ctx.arc(10, -8, 4, 0, Math.PI * 2); ctx.fill();
