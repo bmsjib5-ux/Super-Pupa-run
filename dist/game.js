@@ -34,7 +34,9 @@
     enemy: image("assets/thorn-shroom.webp")
   };
 
-  const rects = (list) => list.map(([x, y, w, h]) => ({ x, y, w, h }));
+  // A platform may carry three extra values to make it glide back and forth:
+  // axis ("x" or "y"), travel distance and top speed.
+  const rects = (list) => list.map(([x, y, w, h, axis, range, speed]) => ({ x, y, w, h, ox: x, oy: y, axis, range, speed, t: 0, dx: 0, dy: 0 }));
   // Enemy types: "walker" patrols the ground, "bat" flies in a wave,
   // "hopper" waits and then leaps. Mystery blocks give a random item when
   // bumped from below.
@@ -88,6 +90,36 @@
         ["hopper",5500,553], ["walker",5850,536], ["hopper",6050,553]
       ],
       blocks: [[130,390],[885,390],[2690,390],[3800,390],[5250,390],[5600,390],[6000,390]]
+    },
+    {
+      name: "ด่าน 3 · ผาเมฆรุ่งอรุณ",
+      width: 7000, goalX: 6640, checkpointX: 3600,
+      theme: { tint: "#ff8a3c", top: "#f2a23c", shine: "#ffe08a", body: ["#7a3f4f", "#4e2647", "#1c1230"], sparks: ["#ffe9a8", "#ff9d6b"] },
+      platforms: rects([
+        [0, 605, 600, 140], [760, 605, 420, 140], [1800, 605, 560, 140], [2520, 605, 480, 140],
+        [3480, 605, 620, 140], [4260, 605, 400, 140], [5400, 605, 500, 140], [6060, 605, 940, 140],
+        [200, 480, 200, 34], [450, 390, 170, 34], [830, 470, 200, 34],
+        [1250, 500, 130, 34], [1450, 470, 150, 34, "x", 160, 70],
+        [1900, 470, 220, 34], [2150, 380, 180, 34], [2600, 460, 200, 34], [2820, 370, 160, 34],
+        [3080, 380, 150, 34, "y", 160, 60], [3290, 400, 130, 34],
+        [3600, 470, 220, 34], [3880, 380, 190, 34], [4330, 460, 200, 34],
+        [4720, 500, 150, 34, "x", 180, 70], [5080, 450, 130, 34], [5250, 380, 130, 34, "y", 140, 60],
+        [5480, 470, 200, 34], [5700, 380, 180, 34], [6200, 460, 230, 34]
+      ]),
+      cherries: [
+        [260,420], [340,420], [535,330], [890,410], [980,410], [1315,440], [1525,410], [1600,410],
+        [1960,410], [2060,410], [2240,320], [2660,400], [2900,310], [3155,330], [3355,340], [3660,410],
+        [3760,410], [3975,320], [4390,400], [4480,400], [4795,440], [5145,390], [5315,330], [5540,410],
+        [5790,320], [6260,400], [6370,400]
+      ],
+      enemies: [
+        ["hopper",380,553], ["bat",680,440], ["walker",950,536], ["bat",1500,250], ["walker",2000,536],
+        ["hopper",2230,553], ["bat",2440,450], ["walker",2700,536], ["hopper",2880,553], ["bat",3250,220],
+        ["walker",3780,536], ["hopper",3950,553], ["bat",4180,440], ["hopper",4400,553], ["walker",4560,536],
+        ["bat",4850,300], ["bat",5200,200], ["walker",5600,536], ["hopper",5780,553], ["bat",5980,450],
+        ["walker",6250,536], ["hopper",6400,553]
+      ],
+      blocks: [[60,390],[1070,390],[1840,390],[3520,390],[4560,390],[6100,390]]
     }
   ];
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
@@ -96,7 +128,10 @@
   const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
-  const itemIcons = { heart: "❤️", star: "⭐", leaf: "🍃" };
+  const itemIcons = { heart: "❤️", star: "⭐", leaf: "🍃", grow: "🍄" };
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b" };
+  const SMALL = { w: 70, h: 88 };
+  const BIG = { w: 92, h: 124 };
 
   let levelIndex = 0;
   let level = levels[0];
@@ -131,6 +166,7 @@
     levelIndex = index;
     level = levels[index];
     platforms = level.platforms;
+    for (const p of platforms) { p.x = p.ox; p.y = p.oy; p.t = 0; p.dx = 0; p.dy = 0; }
     WORLD.width = level.width;
     cherries = level.cherries.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
     enemies = level.enemies.map(([type, x, y], id) => makeEnemy(type, x, y, id));
@@ -140,14 +176,14 @@
     particles = [];
     cameraX = 0;
     checkpoint = 90;
-    Object.assign(player, { x: 90, y: 420, vx: 0, vy: 0, grounded: false, facing: 1 });
+    Object.assign(player, { x: 90, y: 420, vx: 0, vy: 0, grounded: false, facing: 1, ride: null });
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
     updateHud();
   }
 
   function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0 };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0, big: false, ride: null };
     loadLevel(startLevel);
   }
 
@@ -251,8 +287,29 @@
     }
   }
 
+  function setBig(big) {
+    // Resize around the feet so Pupa neither sinks into nor hovers above the floor.
+    const size = big ? BIG : SMALL;
+    player.x -= (size.w - player.w) / 2;
+    player.y -= size.h - player.h;
+    player.w = size.w;
+    player.h = size.h;
+    player.big = big;
+  }
+
   function hurtPlayer() {
     if (player.hurt > 0 || player.star > 0) return;
+    if (player.big) {
+      // Being big absorbs one hit: shrink instead of losing a heart.
+      setBig(false);
+      player.hurt = 1.3;
+      player.vy = -520;
+      player.vx = -player.facing * 220;
+      burst(player.x + player.w / 2, player.y + player.h / 2, "#ff9d6b", 16);
+      tone(520, .1, "square", .05); tone(390, .1, "square", .05, .09); tone(260, .16, "square", .05, .18);
+      announce("ตัวหดกลับเท่าเดิมแล้ว");
+      return;
+    }
     player.lives--;
     player.hurt = 1.3;
     player.vy = -700;
@@ -269,6 +326,8 @@
     player.vx = 0;
     player.vy = 0;
     player.star = 0;
+    player.ride = null;
+    if (player.big) setBig(false);
     hurtPlayer();
   }
 
@@ -278,8 +337,9 @@
     block.bump = .18;
     const cx = block.x + block.w / 2;
     const roll = Math.random();
-    let type = roll < .45 ? "cherry" : roll < .65 ? "heart" : roll < .82 ? "leaf" : "star";
+    let type = roll < .38 ? "cherry" : roll < .53 ? "heart" : roll < .68 ? "leaf" : roll < .83 ? "star" : "grow";
     if (type === "heart" && player.lives >= 3) type = "cherry";
+    if (type === "grow" && player.big) type = "cherry";
     burst(cx, block.y, "#ffd76a", 8);
     tone(520, .07, "square", .05);
     if (type === "cherry") {
@@ -297,7 +357,7 @@
   }
 
   function collectItem(item) {
-    burst(item.x, item.y, item.type === "heart" ? "#ff6e99" : item.type === "star" ? "#ffe27a" : "#89f0c0", 16);
+    burst(item.x, item.y, itemGlow[item.type], 16);
     if (item.type === "heart") {
       player.lives = Math.min(3, player.lives + 1);
       announce("ได้หัวใจเพิ่ม 1 ดวง");
@@ -306,6 +366,10 @@
       player.star = STAR_TIME;
       announce("ได้ดาว อมตะชั่วคราว ชนศัตรูได้เลย");
       [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "square", .04, i * .07));
+    } else if (item.type === "grow") {
+      if (!player.big) setBig(true);
+      announce("ได้เห็ดยักษ์ ตัวใหญ่ขึ้นและทนการโจมตีได้ 1 ครั้ง");
+      [262, 330, 392, 523, 659].forEach((note, i) => tone(note, .1, "square", .05, i * .06));
     } else {
       player.boost = BOOST_TIME;
       announce("ได้ใบไม้วิเศษ กระโดดสูงขึ้นชั่วคราว");
@@ -348,6 +412,17 @@
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
+    for (const p of platforms) {
+      if (!p.axis) continue;
+      p.t += dt;
+      const offset = p.range * (1 - Math.cos(p.t * p.speed * 2 / p.range)) / 2;
+      const nx = p.axis === "x" ? p.ox + offset : p.ox;
+      const ny = p.axis === "y" ? p.oy + offset : p.oy;
+      p.dx = nx - p.x; p.dy = ny - p.y;
+      p.x = nx; p.y = ny;
+    }
+    // Carry Pupa along with the moving platform she is standing on.
+    if (player.ride?.axis) { player.x += player.ride.dx; player.y += player.ride.dy; }
     if (player.star > 0 && Math.random() < dt * 22) burst(player.x + player.w / 2, player.y + player.h / 2, "#ffe27a", 1);
     const move = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     const target = move * 330;
@@ -367,6 +442,7 @@
     player.y += player.vy * dt;
     player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
     player.grounded = false;
+    player.ride = null;
 
     const previousTop = previousBottom - player.h;
     for (const block of blocks) {
@@ -386,6 +462,7 @@
         player.y = p.y - player.h;
         player.vy = 0;
         player.grounded = true;
+        player.ride = p;
       }
     }
 
@@ -523,6 +600,11 @@
     ctx.fillStyle = theme.shine; roundedRect(x + 8, p.y + 2, Math.max(0, p.w - 16), 5, 4); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,.08)";
     for (let i = 24; i < p.w; i += 64) { ctx.beginPath(); ctx.arc(x + i, p.y + 36 + (i % 3) * 14, 5, 0, Math.PI * 2); ctx.fill(); }
+    if (p.axis) {
+      // Glowing studs mark the platforms that move.
+      ctx.shadowColor = theme.shine; ctx.shadowBlur = 12; ctx.fillStyle = "#fff6d8";
+      for (const dx of [16, p.w - 16]) { ctx.beginPath(); ctx.arc(x + dx, p.y + 23, 4, 0, Math.PI * 2); ctx.fill(); }
+    }
     ctx.restore();
   }
 
@@ -587,7 +669,7 @@
     } else {
       if (item.life < 2 && Math.floor(item.life * 10) % 2) ctx.globalAlpha = .3;
       ctx.translate(x, item.y + (item.resting ? Math.sin(time * .006) * 4 : 0));
-      ctx.shadowColor = item.type === "heart" ? "#ff567f" : item.type === "star" ? "#ffe27a" : "#89f0c0";
+      ctx.shadowColor = itemGlow[item.type];
       ctx.shadowBlur = 22;
       ctx.font = "36px Apple Color Emoji, Segoe UI Emoji, sans-serif";
       ctx.fillText(itemIcons[item.type], 0, 0);
@@ -697,7 +779,7 @@
     if (model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
       // The model's feet sit 1 unit below the camera centre; line them up with
       // the bottom of the hitbox.
-      const size = 164;
+      const size = 164 * player.h / SMALL.h;
       const feet = size * (model.viewHalf + 1) / (model.viewHalf * 2);
       ctx.save();
       if (player.hurt > 0 && Math.floor(player.hurt * 12) % 2) ctx.globalAlpha = .35;
@@ -718,7 +800,7 @@
     ctx.save();
     if (player.hurt > 0 && Math.floor(player.hurt * 12) % 2) ctx.globalAlpha = .35;
     ctx.translate(x + player.w / 2, player.y + player.h / 2 + bob);
-    ctx.scale(player.facing, 1);
+    ctx.scale(player.facing * player.h / SMALL.h, player.h / SMALL.h);
     ctx.scale(1 / squash, squash);
     ctx.shadowColor = "rgba(255,92,150,.35)"; ctx.shadowBlur = 20;
     if (sprite.complete && sprite.naturalWidth) {
@@ -832,13 +914,28 @@
 
   document.querySelectorAll(".touch-button").forEach(button => {
     const action = button.dataset.key;
-    const press = (event) => { event.preventDefault(); button.classList.add("is-pressed"); setKey(action, true); };
+    const press = (event) => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); button.classList.add("is-pressed"); setKey(action, true); };
     const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "jump") setKey(action, false); };
     button.addEventListener("pointerdown", press);
     button.addEventListener("pointerup", release);
     button.addEventListener("pointercancel", release);
     button.addEventListener("pointerleave", release);
   });
+
+  // Keep touch play clean: no long-press menu, text selection, pinch or
+  // double-tap zoom while fingers are on the game.
+  const shell = document.querySelector(".game-shell");
+  for (const type of ["contextmenu", "selectstart", "dragstart", "dblclick", "gesturestart", "gesturechange"]) {
+    shell.addEventListener(type, (event) => event.preventDefault());
+  }
+  shell.addEventListener("touchmove", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
+  let lastTouchEnd = 0;
+  shell.addEventListener("touchend", (event) => {
+    const now = performance.now();
+    if (now - lastTouchEnd < 350 && event.cancelable && !event.target.closest("button")) event.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
   ui.startBtn.addEventListener("click", startGame);
   ui.restartBtn.addEventListener("click", () => { resetGame(); startGame(); });
