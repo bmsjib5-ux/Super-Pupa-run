@@ -288,6 +288,8 @@
 
   function nextLevel() {
     bankCoins();
+    // Every new level starts with full hearts.
+    player.lives = 3;
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
     loadLevel(levelIndex + 1);
     announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
