@@ -20,7 +20,8 @@
     endTitle: document.querySelector("#endTitle"),
     endText: document.querySelector("#endText"),
     endIcon: document.querySelector("#endIcon"),
-    announcer: document.querySelector("#announcer")
+    announcer: document.querySelector("#announcer"),
+    levelName: document.querySelector("#levelName")
   };
 
   const WORLD = { width: 6100, ground: 605, gravity: 2200 };
@@ -33,29 +34,74 @@
     enemy: image("assets/thorn-shroom.webp")
   };
 
-  const platforms = [
-    [0, 605, 900, 140], [1010, 605, 820, 140], [1940, 605, 980, 140],
-    [3040, 605, 670, 140], [3820, 605, 860, 140], [4790, 605, 1310, 140],
-    [410, 480, 230, 34], [760, 405, 170, 34], [1130, 475, 220, 34],
-    [1490, 390, 190, 34], [2020, 465, 260, 34], [2410, 375, 220, 34],
-    [2740, 485, 170, 34], [3160, 445, 230, 34], [3520, 355, 180, 34],
-    [3970, 470, 210, 34], [4330, 390, 190, 34], [4850, 460, 240, 34],
-    [5260, 360, 210, 34]
-  ].map(([x, y, w, h]) => ({ x, y, w, h }));
-
-  const cherryLayout = [
-    [470,420], [570,420], [810,345], [1180,415], [1280,415], [1540,330],
-    [2090,405], [2200,405], [2460,315], [2790,425], [3210,385], [3320,385],
-    [3570,295], [4020,410], [4380,330], [4890,400], [5000,400], [5320,300]
+  const rects = (list) => list.map(([x, y, w, h]) => ({ x, y, w, h }));
+  // Enemy types: "walker" patrols the ground, "bat" flies in a wave,
+  // "hopper" waits and then leaps. Mystery blocks give a random item when
+  // bumped from below.
+  const levels = [
+    {
+      name: "ด่าน 1 · สวนเชอร์รี่เรืองแสง",
+      width: 6100, goalX: 5740, checkpointX: 3010,
+      theme: { tint: null, top: "#c5528a", shine: "#ef85ad", body: ["#5d346f", "#3a245b", "#161437"], sparks: ["#ffd978", "#ff8bc2"] },
+      platforms: rects([
+        [0, 605, 900, 140], [1010, 605, 820, 140], [1940, 605, 980, 140],
+        [3040, 605, 670, 140], [3820, 605, 860, 140], [4790, 605, 1310, 140],
+        [410, 480, 230, 34], [760, 405, 170, 34], [1130, 475, 220, 34],
+        [1490, 390, 190, 34], [2020, 465, 260, 34], [2410, 375, 220, 34],
+        [2740, 485, 170, 34], [3160, 445, 230, 34], [3520, 355, 180, 34],
+        [3970, 470, 210, 34], [4330, 390, 190, 34], [4850, 460, 240, 34],
+        [5260, 360, 210, 34]
+      ]),
+      cherries: [
+        [470,420], [570,420], [810,345], [1180,415], [1280,415], [1540,330],
+        [2090,405], [2200,405], [2460,315], [2790,425], [3210,385], [3320,385],
+        [3570,295], [4020,410], [4380,330], [4890,400], [5000,400], [5320,300]
+      ],
+      enemies: [
+        ["walker",690,536], ["walker",1230,536], ["walker",1740,536], ["walker",2150,536], ["walker",2730,536],
+        ["walker",3280,536], ["walker",4080,536], ["walker",4560,536], ["walker",5040,536], ["walker",5400,291]
+      ],
+      blocks: [[250,390],[1392,390],[1700,390],[2318,390],[3425,390],[4225,390],[4580,390],[5150,390]]
+    },
+    {
+      name: "ด่าน 2 · หุบเขาหิ่งห้อยคราม",
+      width: 6600, goalX: 6240, checkpointX: 3500,
+      theme: { tint: "#1fb6c9", top: "#2fb6a6", shine: "#8df5dc", body: ["#2d5a78", "#1c3557", "#0c1633"], sparks: ["#8ff5ff", "#c9ff9a"] },
+      platforms: rects([
+        [0, 605, 700, 140], [840, 605, 560, 140], [1560, 605, 520, 140], [2620, 605, 700, 140],
+        [3470, 605, 430, 140], [4050, 605, 640, 140], [5200, 605, 1400, 140],
+        [300, 480, 200, 34], [560, 390, 170, 34], [960, 470, 220, 34], [1250, 380, 180, 34],
+        [1650, 460, 220, 34], [1900, 370, 170, 34], [2150, 505, 150, 34], [2370, 440, 150, 34],
+        [2760, 470, 220, 34], [3050, 380, 200, 34], [3560, 450, 220, 34], [4150, 470, 200, 34],
+        [4420, 380, 190, 34], [4760, 500, 140, 34], [4960, 430, 140, 34], [5350, 460, 230, 34],
+        [5700, 370, 200, 34]
+      ]),
+      cherries: [
+        [350,420], [450,420], [640,330], [1020,410], [1120,410], [1340,320], [1700,400], [1810,400],
+        [1985,310], [2225,445], [2445,380], [2820,410], [2920,410], [3150,320], [3620,390], [3720,390],
+        [4250,410], [4515,320], [4830,440], [5030,370], [5420,400], [5800,310]
+      ],
+      enemies: [
+        ["hopper",520,553], ["bat",770,430], ["walker",1050,536], ["hopper",1300,553], ["bat",1480,440],
+        ["walker",1750,536], ["hopper",1950,553], ["bat",2330,255], ["walker",2900,536], ["hopper",3200,553],
+        ["bat",3400,450], ["hopper",3760,553], ["walker",4200,536], ["bat",4530,470], ["bat",4880,240],
+        ["hopper",5500,553], ["walker",5850,536], ["hopper",6050,553]
+      ],
+      blocks: [[130,390],[885,390],[2690,390],[3800,390],[5250,390],[5600,390],[6000,390]]
+    }
   ];
-  const enemyLayout = [[690,536],[1230,536],[1740,536],[2150,536],[2730,536],[3280,536],[4080,536],[4560,536],[5040,536],[5400,291]];
-
-  // Mystery blocks: bump them from below for a random item.
-  const blockLayout = [[250,390],[1392,390],[1700,390],[2318,390],[3425,390],[4225,390],[4580,390],[5150,390]];
+  const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
+  // Open the page with ?level=2 to start on a later level.
+  const startLevel = Math.min(levels.length, Math.max(1, Number(new URLSearchParams(location.search).get("level")) || 1)) - 1;
+  const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
   const itemIcons = { heart: "❤️", star: "⭐", leaf: "🍃" };
 
+  let levelIndex = 0;
+  let level = levels[0];
+  let platforms = level.platforms;
+  let bannerTime = 0;
   let player;
   let cherries;
   let enemies;
@@ -74,17 +120,45 @@
   let checkpoint = 90;
   let announcementTimer = 0;
 
-  function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0 };
-    cherries = cherryLayout.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
-    enemies = enemyLayout.map(([x, y], id) => ({ id, x, y, w: 70, h: 68, min: x - 95, max: x + 95, vx: id % 2 ? 58 : -58, alive: true, phase: id }));
-    blocks = blockLayout.map(([x, y], id) => ({ id, x, y, w: 56, h: 56, used: false, bump: 0 }));
+  function makeEnemy(type, x, y, id) {
+    const [w, h] = enemySizes[type];
+    const speed = type === "bat" ? 115 : type === "hopper" ? 70 : 58;
+    const reach = type === "bat" ? 150 : 95;
+    return { id, type, x, y, baseY: y, w, h, min: x - reach, max: x + reach, vx: id % 2 ? speed : -speed, vy: 0, wait: .6 + (id % 3) * .3, alive: true, phase: id };
+  }
+
+  function loadLevel(index) {
+    levelIndex = index;
+    level = levels[index];
+    platforms = level.platforms;
+    WORLD.width = level.width;
+    cherries = level.cherries.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
+    enemies = level.enemies.map(([type, x, y], id) => makeEnemy(type, x, y, id));
+    blocks = level.blocks.map(([x, y], id) => ({ id, x, y, w: 56, h: 56, used: false, bump: 0 }));
     solids = platforms.concat(blocks);
     items = [];
     particles = [];
     cameraX = 0;
     checkpoint = 90;
+    Object.assign(player, { x: 90, y: 420, vx: 0, vy: 0, grounded: false, facing: 1 });
+    bannerTime = 3;
+    if (ui.levelName) ui.levelName.textContent = level.name;
     updateHud();
+  }
+
+  function resetGame() {
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, star: 0, boost: 0 };
+    loadLevel(startLevel);
+  }
+
+  function nextLevel() {
+    [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
+    loadLevel(levelIndex + 1);
+    announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
+  }
+
+  function progress() {
+    return Math.min(100, Math.round((player.x / (level.goalX - 80)) * 100));
   }
 
   function resize() {
@@ -123,7 +197,7 @@
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
     ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "สวนเชอร์รี่ยังรอการผจญภัยครั้งต่อไป";
     ui.endIcon.textContent = won ? "✦" : "☾";
-    ui.finalScore.textContent = `${player.score} / ${cherries.length}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
+    ui.finalScore.textContent = `${player.score} / ${totalCherries}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
     announce(won ? `ชนะแล้ว เก็บเชอร์รี่ได้ ${player.score + player.bonus} ลูก` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
@@ -132,7 +206,7 @@
   function updateHud() {
     ui.score.textContent = String(player.score + player.bonus).padStart(2, "0");
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
-    ui.distance.textContent = `${Math.min(100, Math.round((player.x / 5660) * 100))}%`;
+    ui.distance.textContent = `${progress()}%`;
   }
 
   function announce(message) {
@@ -270,6 +344,7 @@
 
   function update(dt) {
     if (state !== "playing") return;
+    bannerTime = Math.max(0, bannerTime - dt);
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
@@ -331,7 +406,22 @@
 
     for (const enemy of enemies) {
       if (!enemy.alive) continue;
-      enemy.x += enemy.vx * dt;
+      if (enemy.type === "bat") {
+        enemy.phase += dt;
+        enemy.y = enemy.baseY + Math.sin(enemy.phase * 3) * 46;
+      } else if (enemy.type === "hopper") {
+        if (enemy.y >= enemy.baseY) {
+          enemy.y = enemy.baseY;
+          enemy.vy = 0;
+          enemy.wait -= dt;
+          if (enemy.wait <= 0) { enemy.vy = -780; enemy.y -= 1; enemy.wait = 1 + (enemy.id % 3) * .25; }
+        } else {
+          enemy.vy += 1900 * dt;
+          enemy.y = Math.min(enemy.baseY, enemy.y + enemy.vy * dt);
+        }
+      }
+      // Hoppers only travel while they are in the air.
+      if (enemy.type !== "hopper" || enemy.y < enemy.baseY) enemy.x += enemy.vx * dt;
       if (enemy.x < enemy.min || enemy.x > enemy.max) { enemy.vx *= -1; enemy.x = Math.max(enemy.min, Math.min(enemy.max, enemy.x)); }
       if (!rectsOverlap(player, enemy)) continue;
       if (player.star > 0) {
@@ -341,7 +431,7 @@
         tone(660, .1, "triangle", .05, .05);
         continue;
       }
-      if (player.vy > 180 && previousBottom <= enemy.y + 22) {
+      if (player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
         enemy.alive = false;
         player.vy = -560;
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff", 15);
@@ -352,13 +442,16 @@
 
     updateItems(dt);
 
-    if (player.x > 2960 && checkpoint < 2960) {
-      checkpoint = 3060;
-      announce("ถึงจุดพักกลางสวนแล้ว");
+    if (player.x > level.checkpointX - 50 && checkpoint < level.checkpointX) {
+      checkpoint = level.checkpointX + 50;
+      announce("ถึงจุดพักกลางทางแล้ว");
       tone(523, .12, "sine", .05);
       tone(659, .15, "sine", .05, .08);
     }
-    if (player.x > 5630) finish(true);
+    if (player.x > level.goalX - 110) {
+      if (levelIndex < levels.length - 1) nextLevel();
+      else finish(true);
+    }
 
     const maxCamera = Math.max(0, WORLD.width - viewWidth);
     const desired = Math.max(0, Math.min(maxCamera, player.x - viewWidth * .34));
@@ -393,6 +486,14 @@
       g.addColorStop(0, "#24114d"); g.addColorStop(.6, "#38215c"); g.addColorStop(1, "#0d1533");
       ctx.fillStyle = g; ctx.fillRect(0, 0, width, 720);
     }
+    if (level.theme.tint) {
+      // Recolour the shared backdrop for this level.
+      ctx.save();
+      ctx.globalCompositeOperation = "hue";
+      ctx.fillStyle = level.theme.tint; ctx.fillRect(0, 0, width, 720);
+      ctx.restore();
+      ctx.fillStyle = "rgba(4,10,34,.22)"; ctx.fillRect(0, 0, width, 720);
+    }
     const haze = ctx.createLinearGradient(0, 200, 0, 720);
     haze.addColorStop(0, "rgba(12,6,36,.04)"); haze.addColorStop(1, "rgba(6,7,26,.5)");
     ctx.fillStyle = haze; ctx.fillRect(0, 0, width, 720);
@@ -402,7 +503,7 @@
     for (let i = 0; i < 28; i++) {
       const x = ((i * 197 - cameraX * .15) % (width + 200) + width + 200) % (width + 200) - 100;
       const y = 90 + ((i * 83) % 430) + Math.sin(time * .0015 + i) * 12;
-      ctx.fillStyle = i % 3 ? "#ffd978" : "#ff8bc2";
+      ctx.fillStyle = level.theme.sparks[i % 3 ? 0 : 1];
       ctx.beginPath(); ctx.arc(x, y, 1.5 + (i % 3), 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
@@ -414,11 +515,12 @@
     ctx.save();
     ctx.shadowColor = "rgba(5,2,20,.45)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
     const grad = ctx.createLinearGradient(0, p.y, 0, p.y + Math.min(p.h, 110));
-    grad.addColorStop(0, "#5d346f"); grad.addColorStop(.16, "#3a245b"); grad.addColorStop(1, "#161437");
+    const theme = level.theme;
+    grad.addColorStop(0, theme.body[0]); grad.addColorStop(.16, theme.body[1]); grad.addColorStop(1, theme.body[2]);
     ctx.fillStyle = grad; roundedRect(x, p.y, p.w, p.h, 16); ctx.fill();
     ctx.shadowColor = "transparent";
-    ctx.fillStyle = "#c5528a"; roundedRect(x, p.y, p.w, 15, 12); ctx.fill();
-    ctx.fillStyle = "#ef85ad"; roundedRect(x + 8, p.y + 2, Math.max(0, p.w - 16), 5, 4); ctx.fill();
+    ctx.fillStyle = theme.top; roundedRect(x, p.y, p.w, 15, 12); ctx.fill();
+    ctx.fillStyle = theme.shine; roundedRect(x + 8, p.y + 2, Math.max(0, p.w - 16), 5, 4); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,.08)";
     for (let i = 24; i < p.w; i += 64) { ctx.beginPath(); ctx.arc(x + i, p.y + 36 + (i % 3) * 14, 5, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
@@ -505,10 +607,77 @@
     });
   }
 
+  function drawBat(enemy, x, time) {
+    const flap = Math.sin(time * .022 + enemy.id);
+    ctx.save();
+    ctx.translate(x + enemy.w / 2, enemy.y + enemy.h / 2);
+    ctx.scale(enemy.vx > 0 ? 1 : -1, 1);
+    ctx.shadowColor = "#7ad9ff"; ctx.shadowBlur = 16;
+    ctx.fillStyle = "#2b1d5c";
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * 8, -4);
+      ctx.quadraticCurveTo(side * 30, -26 - flap * 16, side * 52, -6 - flap * 20);
+      ctx.quadraticCurveTo(side * 42, 2 - flap * 6, side * 37, 13 - flap * 8);
+      ctx.quadraticCurveTo(side * 29, 2, side * 23, 13);
+      ctx.quadraticCurveTo(side * 16, 2, side * 8, 11);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(side * 5, -13); ctx.lineTo(side * 16, -30); ctx.lineTo(side * 15, -9);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.shadowColor = "transparent";
+    const body = ctx.createRadialGradient(-4, -6, 2, 0, 2, 22);
+    body.addColorStop(0, "#6a4fc0"); body.addColorStop(1, "#33226e");
+    ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 2, 17, 19, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowColor = "#9ff3ff"; ctx.shadowBlur = 10;
+    ctx.fillStyle = "#9ff3ff";
+    ctx.beginPath(); ctx.ellipse(-7, -2, 4.5, 5.5, .25, 0, Math.PI * 2); ctx.ellipse(7, -2, 4.5, 5.5, -.25, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#14093a";
+    ctx.beginPath(); ctx.arc(-6, -1, 2, 0, Math.PI * 2); ctx.arc(8, -1, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(-3.5, 15); ctx.lineTo(-1, 8); ctx.moveTo(1, 8); ctx.lineTo(3.5, 15); ctx.lineTo(6, 8); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHopper(enemy, x) {
+    const grounded = enemy.y >= enemy.baseY;
+    // Crouch just before a leap, stretch on the way up, flatten on the way down.
+    const stretch = grounded ? (enemy.wait < .25 ? .8 : 1) : 1 + Math.max(-.16, Math.min(.24, -enemy.vy / 2600));
+    ctx.save();
+    ctx.translate(x + enemy.w / 2, enemy.y + enemy.h);
+    ctx.scale((enemy.vx > 0 ? 1 : -1) / Math.sqrt(stretch), stretch);
+    ctx.shadowColor = "rgba(120,255,225,.55)"; ctx.shadowBlur = 16;
+    const body = ctx.createLinearGradient(0, -54, 0, 0);
+    body.addColorStop(0, "#a6ffe9"); body.addColorStop(.55, "#39c9b4"); body.addColorStop(1, "#167f86");
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(-31, 0);
+    ctx.bezierCurveTo(-38, -30, -21, -54, 0, -54);
+    ctx.bezierCurveTo(21, -54, 38, -30, 31, 0);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#1d6f4f";
+    ctx.beginPath(); ctx.moveTo(0, -52); ctx.quadraticCurveTo(-4, -70, 12, -72); ctx.quadraticCurveTo(10, -58, 0, -52); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+    ctx.beginPath(); ctx.ellipse(-13, -40, 8, 4.5, -.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#0c2a3a";
+    ctx.beginPath(); ctx.ellipse(-2, -24, 5, 7, 0, 0, Math.PI * 2); ctx.ellipse(16, -24, 5, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(-.5, -27, 2, 0, Math.PI * 2); ctx.arc(17.5, -27, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#0c2a3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(-9, -36); ctx.lineTo(1, -32); ctx.moveTo(23, -36); ctx.lineTo(13, -32); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(2, -11); ctx.quadraticCurveTo(7, -15, 12, -11); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawEnemy(enemy, time) {
     if (!enemy.alive) return;
     const x = enemy.x - cameraX;
     if (x < -100 || x > viewWidth + 100) return;
+    if (enemy.type === "bat") { drawBat(enemy, x, time); return; }
+    if (enemy.type === "hopper") { drawHopper(enemy, x); return; }
     const bob = Math.sin(time * .008 + enemy.phase) * 2;
     ctx.save();
     ctx.translate(x + enemy.w / 2, enemy.y + enemy.h / 2 + bob);
@@ -577,7 +746,7 @@
   }
 
   function drawGoal(time) {
-    const x = 5740 - cameraX;
+    const x = level.goalX - cameraX;
     if (x < -200 || x > viewWidth + 200) return;
     ctx.save(); ctx.translate(x, 485);
     const glow = .78 + Math.sin(time * .004) * .18;
@@ -590,12 +759,26 @@
   }
 
   function drawCheckpoint(time) {
-    const x = 3010 - cameraX;
+    const x = level.checkpointX - cameraX;
     if (x < -100 || x > viewWidth + 100) return;
     ctx.save(); ctx.translate(x, 490);
     ctx.strokeStyle = "#f8d37a"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 110); ctx.lineTo(0, 0); ctx.stroke();
-    ctx.fillStyle = checkpoint > 1000 ? "#8df0be" : "#ff7ead";
+    ctx.fillStyle = checkpoint > 90 ? "#8df0be" : "#ff7ead";
     ctx.beginPath(); ctx.moveTo(2, 8); ctx.quadraticCurveTo(58, 24 + Math.sin(time*.005)*6, 10, 52); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBanner() {
+    if (bannerTime <= 0 || state !== "playing") return;
+    const [title, subtitle] = level.name.split(" · ");
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, bannerTime / .6, (3 - bannerTime) / .35);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(8,4,28,.9)"; ctx.shadowBlur = 18;
+    ctx.font = "900 64px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+    ctx.fillStyle = "#fff6d8"; ctx.fillText(title, viewWidth / 2, 250);
+    ctx.font = "700 30px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+    ctx.fillStyle = level.theme.shine; ctx.fillText(subtitle, viewWidth / 2, 308);
     ctx.restore();
   }
 
@@ -617,6 +800,7 @@
     ctx.globalAlpha = 1;
     drawPlayer(time);
     drawPowerBars();
+    drawBanner();
   }
 
   function frame(time) {
@@ -691,7 +875,7 @@
         description: "อ่านสถานะ คะแนน ชีวิต และความคืบหน้าปัจจุบันของ Super Pupa Run",
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true, untrustedContentHint: false },
-        execute() { return { state, score: player.score, lives: player.lives, progressPercent: Math.min(100, Math.round((player.x / 5660) * 100)) }; }
+        execute() { return { state, score: player.score, lives: player.lives, level: levelIndex + 1, progressPercent: progress() }; }
       },
       {
         name: "restart_super_pupa_run",
