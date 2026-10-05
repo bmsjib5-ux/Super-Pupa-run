@@ -40,7 +40,12 @@
 
   // A platform may carry three extra values to make it glide back and forth:
   // axis ("x" or "y"), travel distance and top speed.
-  const rects = (list) => list.map(([x, y, w, h, axis, range, speed]) => ({ x, y, w, h, ox: x, oy: y, axis, range, speed, t: 0, dx: 0, dy: 0 }));
+  // A fifth value of "spring" makes a bounce pad instead, and "crumble" a
+  // platform that drops away shortly after Pupa lands on it.
+  const rects = (list) => list.map(([x, y, w, h, axis, range, speed]) => {
+    const kind = axis === "spring" || axis === "crumble" ? axis : undefined;
+    return { x, y, w, h, ox: x, oy: y, axis: kind ? undefined : axis, kind, range, speed, t: 0, dx: 0, dy: 0, state: "idle", timer: 0, bounce: 0, vy: 0 };
+  });
   // Enemy types: "walker" patrols the ground, "bat" flies in a wave,
   // "hopper" waits and then leaps, "urchin" patrols and is too spiky to
   // stomp, "spitter" stays put and fires seeds at Pupa. Mystery blocks give a random item when
@@ -184,6 +189,69 @@
         ["hopper",5850,553], ["spitter",6020,535], ["bat",6140,450], ["urchin",6400,549], ["spitter",6450,400]
       ],
       blocks: [[100,390],[1260,390],[1880,390],[2640,390],[3580,390],[4700,390],[5510,390],[6240,390]]
+    },
+    {
+      name: "ด่าน 6 · หอคอยจันทร์ดับ",
+      width: 6400, goalX: 6100, checkpointX: 4250,
+      theme: { tint: "#8b3dff", top: "#a06bff", shine: "#e2ccff", body: ["#3d2a6b", "#291b52", "#0d0820"], sparks: ["#d9b8ff", "#ffe27a"] },
+      // A flying boss: she rains moon orbs, then dives at Pupa and is left
+      // dazed on the ground for a moment.
+      boss: { kind: "queen", name: "ราชินีค้างคาวจันทร์", x: 5300, left: 4450, right: 5850, hp: 6 },
+      platforms: rects([
+        [0, 605, 620, 140], [780, 605, 500, 140], [1840, 605, 560, 140], [2560, 605, 440, 140],
+        [3520, 605, 2880, 140],
+        [230, 480, 190, 34], [470, 390, 160, 34], [860, 470, 200, 34], [1090, 380, 160, 34],
+        [1350, 380, 130, 34, "y", 160, 70], [1530, 440, 130, 34, "x", 150, 80],
+        [1930, 470, 200, 34], [2170, 380, 170, 34], [2640, 460, 180, 34], [2850, 370, 140, 34],
+        [3070, 490, 130, 34, "x", 130, 85], [3370, 420, 110, 34],
+        [3620, 470, 200, 34], [3860, 380, 170, 34], [4100, 470, 180, 34],
+        [4650, 440, 190, 34], [5050, 330, 200, 34], [5450, 440, 190, 34], [5700, 380, 120, 34]
+      ]),
+      cherries: [
+        [290,420], [370,420], [550,330], [920,410], [1000,410], [1170,320], [1415,320], [1600,380],
+        [1990,410], [2070,410], [2255,320], [2700,400], [2920,310], [3140,430], [3425,360], [3680,410],
+        [3760,410], [3945,320], [4190,410], [4745,380], [5150,270], [5545,380]
+      ],
+      enemies: [
+        ["urchin",420,549], ["bat",700,440], ["walker",950,536], ["spitter",1210,535], ["bat",1500,200],
+        ["urchin",2020,549], ["hopper",2280,553], ["bat",2480,450], ["walker",2720,536], ["spitter",2950,535],
+        ["bat",3250,260], ["urchin",3700,549], ["hopper",3950,553], ["walker",4200,536]
+      ],
+      blocks: [[90,390],[1220,390],[1860,390],[2580,390],[3540,390],[4040,390],[4900,390],[5300,390]]
+    },
+    {
+      name: "ด่าน 7 · ถ้ำคริสตัลมรกต",
+      width: 7000, goalX: 6660, checkpointX: 3500,
+      theme: { tint: "#3ddc84", top: "#5fe39a", shine: "#d6ffe6", body: ["#1f5a4a", "#143d3a", "#081a1f"], sparks: ["#b6ffcf", "#ffe27a"] },
+      platforms: rects([
+        [0, 605, 600, 140], [1100, 605, 480, 140], [1740, 605, 420, 140], [2760, 605, 500, 140],
+        [3420, 605, 600, 140], [4620, 605, 420, 140], [5640, 605, 1360, 140],
+        [200, 480, 190, 34], [430, 390, 150, 34],
+        [660, 520, 110, 30, "crumble"], [810, 500, 110, 30, "crumble"], [960, 520, 110, 30, "crumble"],
+        [1180, 470, 190, 34], [1400, 380, 150, 34], [1490, 585, 80, 20, "spring"],
+        [1820, 470, 180, 34],
+        [2230, 560, 90, 20, "spring"], [2380, 300, 180, 34], [2600, 400, 120, 34],
+        [2850, 460, 190, 34], [3060, 370, 140, 34],
+        [3520, 470, 200, 34], [3760, 380, 150, 34], [3820, 585, 80, 20, "spring"],
+        [4080, 500, 110, 30, "crumble"], [4230, 470, 110, 30, "crumble"], [4380, 450, 130, 34, "x", 100, 70],
+        [4700, 460, 180, 34],
+        [5100, 560, 90, 20, "spring"], [5250, 330, 120, 30, "crumble"], [5420, 360, 120, 30, "crumble"],
+        [5750, 470, 190, 34], [5980, 380, 160, 34], [6200, 470, 180, 34], [6340, 360, 140, 34]
+      ]),
+      cherries: [
+        [260,420], [330,420], [505,330], [715,460], [865,440], [1015,460], [1240,410], [1320,410],
+        [1475,320], [1530,290], [1530,220], [1880,410], [2275,340], [2275,260], [2470,240], [2660,340],
+        [2910,400], [3130,310], [3580,410], [3660,410], [3860,300], [3860,230], [4135,440], [4285,410],
+        [4445,390], [4760,400], [5145,330], [5310,270], [5480,300], [5810,410], [6060,320], [6260,410],
+        [6410,300]
+      ],
+      enemies: [
+        ["hopper",380,553], ["bat",850,300], ["urchin",1300,549], ["walker",1900,536], ["spitter",2100,535],
+        ["urchin",2950,549], ["hopper",3150,553], ["bat",3340,440], ["walker",3700,536], ["spitter",3985,535],
+        ["bat",4300,290], ["urchin",4800,549], ["hopper",4940,553], ["bat",5350,150], ["walker",5800,536],
+        ["urchin",6000,549], ["spitter",6130,535], ["hopper",6300,553]
+      ],
+      blocks: [[80,390],[1120,390],[1760,390],[2780,390],[3440,390],[4640,390],[5660,390],[6120,390]]
     }
   ];
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
@@ -200,10 +268,11 @@
   const HURT_TIME = 5;
   const BEST_KEY = "superPupaRunBest";
   const formatPoints = (n) => n.toLocaleString("en-US");
+  const QUEEN_HOVER = 200; // height the bat queen circles at
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
-  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e" };
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff" };
 
   // Progress kept on this device. Points and coins are running totals that
   // only ever grow: across levels, game overs, replays and visits.
@@ -272,7 +341,7 @@
     levelIndex = index;
     level = levels[index];
     platforms = level.platforms;
-    for (const p of platforms) { p.x = p.ox; p.y = p.oy; p.t = 0; p.dx = 0; p.dy = 0; }
+    for (const p of platforms) { p.x = p.ox; p.y = p.oy; p.t = 0; p.dx = 0; p.dy = 0; p.state = "idle"; p.timer = 0; p.bounce = 0; p.vy = 0; }
     WORLD.width = level.width;
     cherries = level.cherries.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
     enemies = level.enemies.map(([type, x, y], id) => makeEnemy(type, x, y, id));
@@ -286,11 +355,13 @@
     if (startAtCheckpoint && index === startLevel) {
       checkpoint = level.checkpointX + 50;
       player.x = checkpoint;
+      cameraX = Math.max(0, player.x - viewWidth * .34);
     }
     boss = level.boss ? {
       ...level.boss, w: 170, h: 180, y: WORLD.ground - 180, vx: 0, vy: 0, maxHp: level.boss.hp,
       active: false, alive: true, hurt: 0, mode: "walk", timer: 1.6, spit: 1, facing: -1, fade: 0
     } : null;
+    if (boss?.kind === "queen") Object.assign(boss, { w: 180, h: 100, y: QUEEN_HOVER, mode: "hover", timer: 2.4, spit: 1, t: 0 });
     hazards = [];
     popups = [];
     bombs = [];
@@ -306,7 +377,7 @@
   }
 
   function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, banked: 0, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(startLevel);
   }
@@ -316,13 +387,25 @@
   // opened stay that way so they cannot be collected twice.
   function retryLevel() {
     if (player.big) setBig(false);
-    Object.assign(player, { lives: 3, hurt: 0, star: 0, boost: 0, bomb: 0 });
+    // Coming back from a game over also starts with the 5 s grace period.
+    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, shield: false });
     const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
     const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
+    const reachedCheckpoint = checkpoint > 90;
+    const bossBefore = boss && { hp: boss.hp, alive: boss.alive };
     state = "menu";
     loadLevel(levelIndex);
     for (const cherry of cherries) cherry.taken = takenCoins.has(cherry.id);
-    for (const block of blocks) block.used = usedBlocks.has(block.id);
+    // On a boss level the item blocks refill, so there is always help for the
+    // rematch; elsewhere opened blocks stay opened.
+    if (!boss) for (const block of blocks) block.used = usedBlocks.has(block.id);
+    // Damage already dealt to the boss is kept.
+    if (boss && bossBefore) { boss.hp = bossBefore.hp; boss.alive = bossBefore.alive; }
+    if (reachedCheckpoint) {
+      checkpoint = level.checkpointX + 50;
+      player.x = checkpoint;
+      cameraX = Math.max(0, player.x - viewWidth * .34);
+    }
   }
 
   function nextLevel() {
@@ -509,6 +592,15 @@
 
   function hurtPlayer() {
     if (player.hurt > 0 || player.star > 0) return;
+    if (player.shield) {
+      // The shield takes the hit and breaks.
+      player.shield = false;
+      player.hurt = 1.5;
+      burst(player.x + player.w / 2, player.y + player.h / 2, "#7fd4ff", 22);
+      tone(880, .08, "triangle", .06); tone(587, .1, "triangle", .06, .07); tone(392, .16, "triangle", .06, .15);
+      announce("เกราะแตกแล้ว");
+      return;
+    }
     if (player.big) {
       // Being big absorbs one hit: shrink instead of losing a heart.
       setBig(false);
@@ -540,7 +632,11 @@
     // A fall always costs a heart, even during the post-hit grace period.
     player.hurt = 0;
     if (player.big) setBig(false);
+    // ...and neither the shield nor anything else softens it.
+    const shield = player.shield;
+    player.shield = false;
     hurtPlayer();
+    player.shield = shield;
   }
 
   function damageBoss() {
@@ -550,7 +646,11 @@
     shake = .25;
     burst(boss.x + boss.w / 2, boss.y + 30, "#ffd166", 22);
     tone(180, .12, "square", .07); tone(360, .16, "triangle", .06, .07);
-    if (boss.hp > 0) return;
+    if (boss.hp > 0) {
+      // A hit knocks the queen out of her daze and back into the air.
+      if (boss.kind === "queen" && (boss.mode === "rest" || boss.mode === "swoop")) boss.mode = "rise";
+      return;
+    }
     boss.alive = false;
     boss.fade = 1;
     hazards = [];
@@ -578,7 +678,8 @@
     const rage = boss.maxHp - boss.hp;
     const floor = WORLD.ground - boss.h;
     const aim = player.x + player.w / 2 - (boss.x + boss.w / 2);
-    if (boss.mode === "walk") {
+    if (boss.kind === "queen") updateQueen(dt, aim, rage);
+    else if (boss.mode === "walk") {
       boss.facing = aim < 0 ? -1 : 1;
       if (Math.abs(aim) > 30) boss.x += boss.facing * (70 + rage * 14) * dt;
       boss.timer -= dt;
@@ -619,10 +720,10 @@
     hazards = hazards.filter(h => {
       h.life -= dt;
       h.x += h.vx * dt;
-      if (h.type === "spore") {
-        h.vy += 1100 * dt;
+      if (h.type !== "wave") {
+        h.vy += (h.g ?? 1100) * dt;
         h.y += h.vy * dt;
-        if (h.y + h.h >= WORLD.ground) { burst(h.x + 16, WORLD.ground - 6, "#c68cff", 8); return false; }
+        if (h.y + h.h >= WORLD.ground) { burst(h.x + 16, WORLD.ground - 6, h.type === "orb" ? "#cfe0ff" : "#c68cff", 8); return false; }
       }
       if (h.life <= 0 || h.x < boss.left - 60 || h.x > boss.right + 20) return false;
       if (rectsOverlap(player, { x: h.x + 6, y: h.y + 6, w: h.w - 12, h: h.h - 6 })) { hurtPlayer(); return h.type === "wave"; }
@@ -689,15 +790,73 @@
     blasts = blasts.filter(blast => (blast.life -= dt) > 0);
   }
 
+  // Bat queen: hover and drop orbs -> wind up -> dive at Pupa -> sit dazed
+  // on the ground (the safe moment to stomp her) -> climb back up.
+  function updateQueen(dt, aim, rage) {
+    const floor = WORLD.ground - boss.h;
+    boss.t += dt;
+    if (boss.mode === "hover") {
+      boss.facing = aim < 0 ? -1 : 1;
+      if (Math.abs(aim) > 24) boss.x += boss.facing * (150 + rage * 18) * dt;
+      boss.y += (QUEEN_HOVER + Math.sin(boss.t * 3) * 14 - boss.y) * Math.min(1, dt * 4);
+      boss.spit -= dt;
+      if (boss.spit <= 0) {
+        boss.spit = Math.max(.6, 1.15 - rage * .09);
+        // From half health the orbs come three at a time, fanned out.
+        for (const drift of rage >= 3 ? [-130, 0, 130] : [0]) {
+          hazards.push({ type: "orb", x: boss.x + boss.w / 2 - 14, y: boss.y + boss.h - 14, w: 28, h: 28, vx: drift, vy: 110, g: 420, life: 5 });
+        }
+        tone(880, .06, "sine", .04);
+      }
+      boss.timer -= dt;
+      if (boss.timer <= 0) { boss.mode = "windup"; boss.timer = .6; tone(140, .35, "sawtooth", .05); }
+    } else if (boss.mode === "windup") {
+      boss.y += (QUEEN_HOVER - 40 - boss.y) * Math.min(1, dt * 5);
+      boss.timer -= dt;
+      if (boss.timer <= 0) {
+        boss.mode = "swoop";
+        boss.t = 0;
+        boss.fromX = boss.x;
+        boss.fromY = boss.y;
+        boss.toX = Math.max(boss.left, Math.min(boss.right - boss.w, player.x + player.w / 2 - boss.w / 2));
+        boss.facing = boss.toX < boss.x ? -1 : 1;
+      }
+    } else if (boss.mode === "swoop") {
+      boss.t += dt * (.8 + rage * .05);
+      const p = Math.min(1, boss.t / 1.05);
+      boss.x = boss.fromX + (boss.toX - boss.fromX) * p;
+      boss.y = boss.fromY + (floor - boss.fromY) * p * p;
+      if (p >= 1) {
+        boss.mode = "rest";
+        boss.timer = Math.max(1.1, 1.9 - rage * .12);
+        shake = .25;
+        tone(80, .25, "sawtooth", .07);
+        burst(boss.x + boss.w / 2, WORLD.ground, "#d9b8ff", 14);
+      }
+    } else if (boss.mode === "rest") {
+      boss.y = floor;
+      boss.timer -= dt;
+      if (boss.timer <= 0) boss.mode = "rise";
+    } else {
+      boss.y += (QUEEN_HOVER - boss.y) * Math.min(1, dt * 3);
+      if (Math.abs(boss.y - QUEEN_HOVER) < 10) {
+        boss.mode = "hover";
+        boss.timer = Math.max(1.5, 2.6 - rage * .16);
+        boss.spit = .5;
+      }
+    }
+  }
+
   function hitBlock(block) {
     if (block.used) { tone(120, .06, "square", .04); return; }
     block.used = true;
     block.bump = .18;
     const cx = block.x + block.w / 2;
     const roll = Math.random();
-    let type = roll < .32 ? "cherry" : roll < .46 ? "heart" : roll < .59 ? "leaf" : roll < .72 ? "star" : roll < .86 ? "grow" : "bomb";
+    let type = roll < .28 ? "cherry" : roll < .40 ? "heart" : roll < .52 ? "leaf" : roll < .64 ? "star" : roll < .76 ? "grow" : roll < .88 ? "bomb" : "shield";
     if (type === "heart" && player.lives >= 3) type = "cherry";
     if (type === "grow" && player.big) type = "cherry";
+    if (type === "shield" && player.shield) type = "cherry";
     burst(cx, block.y, "#ffd76a", 8);
     tone(520, .07, "square", .05);
     if (type === "cherry") {
@@ -735,6 +894,10 @@
       if (!player.big) setBig(true);
       announce("ได้เห็ดยักษ์ ตัวใหญ่ขึ้นและทนการโจมตีได้ 1 ครั้ง");
       [262, 330, 392, 523, 659].forEach((note, i) => tone(note, .1, "square", .05, i * .06));
+    } else if (item.type === "shield") {
+      player.shield = true;
+      announce("ได้เกราะป้องกัน กันการโจมตีได้ 1 ครั้ง");
+      tone(392, .1, "triangle", .06); tone(587, .1, "triangle", .06, .08); tone(880, .2, "triangle", .06, .16);
     } else if (item.type === "bomb") {
       player.bomb = BOMB_TIME;
       announce("ได้เชอร์รี่ระเบิด กดปุ่มโจมตีเพื่อขว้างได้ 10 วินาที");
@@ -784,6 +947,21 @@
     player.boost = Math.max(0, player.boost - dt);
     player.bomb = Math.max(0, player.bomb - dt);
     for (const p of platforms) {
+      p.bounce = Math.max(0, p.bounce - dt);
+      if (p.kind === "crumble" && p.state !== "idle") {
+        // shaking -> falling -> gone -> back in place
+        if (p.state === "shaking") {
+          p.timer -= dt;
+          if (p.timer <= 0) { p.state = "falling"; p.vy = 0; tone(160, .12, "sawtooth", .04); }
+        } else if (p.state === "falling") {
+          p.vy += 1800 * dt;
+          p.y += p.vy * dt;
+          if (p.y > 840) { p.state = "gone"; p.timer = 2.5; }
+        } else {
+          p.timer -= dt;
+          if (p.timer <= 0) { p.state = "idle"; p.y = p.oy; }
+        }
+      }
       if (!p.axis) continue;
       p.t += dt;
       const offset = p.range * (1 - Math.cos(p.t * p.speed * 2 / p.range)) / 2;
@@ -800,10 +978,16 @@
     player.vx += (target - player.vx) * Math.min(1, dt * (player.grounded ? 12 : 5));
     if (move) player.facing = move;
 
-    if (keys.jump && player.grounded) {
-      player.vy = player.boost > 0 ? -1080 : -900;
+    // Double jump: one extra jump in mid-air, refilled on landing.
+    if (keys.jump && (player.grounded || player.airJumps > 0)) {
+      const second = !player.grounded;
+      if (second) {
+        player.airJumps--;
+        burst(player.x + player.w / 2, player.y + player.h, "#ffffff", 7);
+      }
+      player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1);
       player.grounded = false;
-      tone(player.boost > 0 ? 480 : 360, .11, "triangle", .06);
+      tone((player.boost > 0 ? 480 : 360) * (second ? 1.35 : 1), .11, "triangle", .06);
     }
     keys.jump = false;
     if (keys.attack) throwBomb();
@@ -833,11 +1017,22 @@
     for (const p of solids) {
       const nextBottom = player.y + player.h;
       const horizontal = player.x + player.w - 12 > p.x && player.x + 12 < p.x + p.w;
+      if (p.state === "falling" || p.state === "gone") continue;
       if (horizontal && player.vy >= 0 && previousBottom <= p.y + 10 && nextBottom >= p.y) {
         player.y = p.y - player.h;
+        if (p.kind === "spring") {
+          // Bounce pads fling Pupa far higher than a normal jump.
+          player.vy = -1280;
+          player.airJumps = 1;
+          p.bounce = .3;
+          tone(330, .08, "triangle", .06); tone(660, .16, "triangle", .06, .06);
+          continue;
+        }
         player.vy = 0;
         player.grounded = true;
+        player.airJumps = 1;
         player.ride = p;
+        if (p.kind === "crumble" && p.state === "idle") { p.state = "shaking"; p.timer = .5; }
       }
     }
 
@@ -1001,9 +1196,59 @@
     ctx.restore();
   }
 
+  function drawSpring(p, x) {
+    const press = p.bounce > 0 ? Math.sin((p.bounce / .3) * Math.PI) : 0;
+    ctx.save();
+    ctx.translate(x + p.w / 2, p.y + p.h);
+    ctx.fillStyle = "#3a2d57"; roundedRect(-p.w / 2 + 8, -8, p.w - 16, 12, 5); ctx.fill();
+    ctx.strokeStyle = "#cfd6ff"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    const coil = p.h - 4 - press * 8;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i++) ctx.lineTo((i % 2 ? 1 : -1) * 14, -6 - (coil * i) / 4);
+    ctx.stroke();
+    ctx.translate(0, -p.h + press * 8);
+    ctx.shadowColor = "rgba(255,215,106,.7)"; ctx.shadowBlur = 14;
+    const cap = ctx.createLinearGradient(0, -14, 0, 8);
+    cap.addColorStop(0, "#ffe58f"); cap.addColorStop(1, "#ff7b9c");
+    ctx.fillStyle = cap;
+    ctx.beginPath(); ctx.ellipse(0, 0, p.w / 2, 13 - press * 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "rgba(255,255,255,.7)";
+    ctx.beginPath(); ctx.ellipse(-p.w / 5, -5, p.w / 7, 3, -.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#b8632a";
+    ctx.beginPath(); ctx.moveTo(-9, 2); ctx.lineTo(0, -7); ctx.lineTo(9, 2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCrumble(p, x) {
+    if (p.state === "gone") return;
+    const shaking = p.state === "shaking";
+    const jitter = shaking ? Math.sin(performance.now() * .09) * 3 : 0;
+    ctx.save();
+    ctx.translate(x + jitter, p.y);
+    if (p.state === "falling") ctx.globalAlpha = Math.max(0, 1 - (p.y - p.oy) / 220);
+    ctx.shadowColor = "rgba(5,2,20,.4)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
+    const slab = ctx.createLinearGradient(0, 0, 0, p.h);
+    slab.addColorStop(0, "#e9d7a8"); slab.addColorStop(1, "#9a7b4f");
+    ctx.fillStyle = slab; roundedRect(0, 0, p.w, p.h, 9); ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = shaking ? "#ff9d6b" : "#fff3d0"; roundedRect(5, 2, p.w - 10, 5, 3); ctx.fill();
+    // cracks: the hint that this one will not hold for long
+    ctx.strokeStyle = "rgba(70,45,20,.75)"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 1; i < 4; i++) {
+      const cx = (p.w * i) / 4;
+      ctx.moveTo(cx - 6, 4); ctx.lineTo(cx + 3, p.h * .45); ctx.lineTo(cx - 4, p.h * .7); ctx.lineTo(cx + 5, p.h - 3);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawPlatform(p) {
     const x = p.x - cameraX;
     if (x > viewWidth + 80 || x + p.w < -80) return;
+    if (p.kind === "spring") { drawSpring(p, x); return; }
+    if (p.kind === "crumble") { drawCrumble(p, x); return; }
     ctx.save();
     ctx.shadowColor = "rgba(5,2,20,.45)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
     const grad = ctx.createLinearGradient(0, p.y, 0, p.y + Math.min(p.h, 110));
@@ -1066,6 +1311,25 @@
       ctx.fillStyle = "rgba(255,255,255,.75)";
       ctx.beginPath(); ctx.ellipse(-6, -8, 4, 2.2, -.7, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+    },
+    shield() {
+      const fill = ctx.createLinearGradient(0, -20, 0, 20);
+      fill.addColorStop(0, "#c9f0ff"); fill.addColorStop(1, "#3f8fe0");
+      ctx.fillStyle = fill; ctx.strokeStyle = "#1f4f9a"; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(0, -20); ctx.lineTo(17, -13); ctx.quadraticCurveTo(17, 10, 0, 21);
+      ctx.quadraticCurveTo(-17, 10, -17, -13);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fff8d0";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 ? 3.2 : 8;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        ctx.lineTo(Math.cos(angle) * radius, -1 + Math.sin(angle) * radius);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.ellipse(-8, -11, 4, 2, -.5, 0, Math.PI * 2); ctx.fill();
     },
     // A pair of cherries with a lit fuse: the bomb pickup.
     bomb() {
@@ -1452,6 +1716,7 @@
     if (!boss || (!boss.alive && boss.fade <= 0)) return;
     const x = boss.x - cameraX;
     if (x < -300 || x > viewWidth + 300) return;
+    if (boss.kind === "queen") { drawQueen(x, time); return; }
     const airborne = boss.mode === "jump";
     const squash = boss.mode === "windup" ? .78 : airborne ? 1.1 : 1 + Math.sin(time * .006) * .025;
     ctx.save();
@@ -1478,6 +1743,72 @@
     ctx.restore();
   }
 
+  function drawQueen(x, time) {
+    const dazed = boss.mode === "rest";
+    const diving = boss.mode === "swoop";
+    const flap = dazed ? -.9 : diving ? .5 : Math.sin(time * (boss.mode === "windup" ? .04 : .018));
+    ctx.save();
+    ctx.translate(x + boss.w / 2, boss.y + boss.h / 2);
+    if (!boss.alive) { ctx.globalAlpha = boss.fade; ctx.rotate((1 - boss.fade) * .6); ctx.scale(boss.fade, boss.fade); }
+    else if (boss.hurt > 0 && Math.floor(boss.hurt * 14) % 2) ctx.globalAlpha = .35;
+    ctx.scale(boss.facing > 0 ? 1 : -1, 1);
+    if (diving) ctx.rotate(.25);
+    ctx.scale(2.7, 2.7);
+    ctx.shadowColor = boss.mode === "windup" ? "#ff5f96" : "#b88cff"; ctx.shadowBlur = 22;
+    // wings
+    ctx.fillStyle = "#2a1658";
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * 8, -4);
+      ctx.quadraticCurveTo(side * 30, -26 - flap * 16, side * 54, -6 - flap * 20);
+      ctx.quadraticCurveTo(side * 44, 2 - flap * 6, side * 39, 14 - flap * 8);
+      ctx.quadraticCurveTo(side * 30, 2, side * 24, 14);
+      ctx.quadraticCurveTo(side * 16, 2, side * 8, 11);
+      ctx.closePath(); ctx.fill();
+      // ears
+      ctx.beginPath(); ctx.moveTo(side * 5, -13); ctx.lineTo(side * 17, -31); ctx.lineTo(side * 15, -9); ctx.closePath(); ctx.fill();
+    }
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "rgba(210,180,255,.45)"; ctx.lineWidth = 1;
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(side * 9, -2); ctx.lineTo(side * 39, 13 - flap * 8);
+      ctx.moveTo(side * 9, -2); ctx.lineTo(side * 24, 13); ctx.stroke();
+    }
+    const body = ctx.createRadialGradient(-4, -6, 2, 0, 2, 22);
+    body.addColorStop(0, "#8a5fe0"); body.addColorStop(1, "#3a1f7a");
+    ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 2, 17, 19, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#e9dcff"; ctx.beginPath(); ctx.ellipse(0, 10, 9, 8, 0, 0, Math.PI * 2); ctx.fill();
+    // tiara
+    ctx.fillStyle = "#ffd76a"; ctx.strokeStyle = "#a85a14"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-10, -15); ctx.lineTo(-11, -25); ctx.lineTo(-5, -19); ctx.lineTo(0, -29); ctx.lineTo(5, -19); ctx.lineTo(11, -25); ctx.lineTo(10, -15);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#8ff5ff"; ctx.beginPath(); ctx.arc(0, -20, 2, 0, Math.PI * 2); ctx.fill();
+    // face
+    if (dazed) {
+      ctx.strokeStyle = "#14093a"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+      for (const ex of [-7, 7]) {
+        ctx.beginPath(); ctx.moveTo(ex - 3, -5); ctx.lineTo(ex + 3, 1); ctx.moveTo(ex + 3, -5); ctx.lineTo(ex - 3, 1); ctx.stroke();
+      }
+      ctx.fillStyle = "#ffe27a";
+      for (let i = 0; i < 3; i++) {
+        const angle = time * .006 + i * 2.1;
+        ctx.beginPath(); ctx.arc(Math.cos(angle) * 16, -34 + Math.sin(angle) * 4, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      ctx.shadowColor = "#ff9dd0"; ctx.shadowBlur = 8;
+      ctx.fillStyle = boss.mode === "windup" || diving ? "#ff5f96" : "#ffd0f0";
+      ctx.beginPath(); ctx.ellipse(-7, -2, 4.5, 5.5, .3, 0, Math.PI * 2); ctx.ellipse(7, -2, 4.5, 5.5, -.3, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = "transparent";
+      ctx.fillStyle = "#14093a";
+      ctx.beginPath(); ctx.arc(-6, -1, 2, 0, Math.PI * 2); ctx.arc(8, -1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#14093a"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-12, -9); ctx.lineTo(-3, -6); ctx.moveTo(12, -9); ctx.lineTo(3, -6); ctx.stroke();
+    }
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(-3.5, 15); ctx.lineTo(-1, 8); ctx.moveTo(1, 8); ctx.lineTo(3.5, 15); ctx.lineTo(6, 8); ctx.fill();
+    ctx.restore();
+  }
+
   function drawHazard(h, time) {
     const x = h.x - cameraX;
     ctx.save();
@@ -1493,6 +1824,12 @@
       ctx.lineTo(-16, -22 - wobble); ctx.lineTo(-8, -6); ctx.lineTo(4, -40 + wobble); ctx.lineTo(10, -8);
       ctx.lineTo(22, -26 - wobble); ctx.lineTo(28, 0);
       ctx.closePath(); ctx.fill();
+    } else if (h.type === "orb") {
+      ctx.translate(0, -h.h / 2);
+      drawGlow("#cfe0ff", 34);
+      drawBall(0, 0, 13, "#ffffff", "#8fb4ff");
+      ctx.fillStyle = "rgba(91,123,255,.5)";
+      ctx.beginPath(); ctx.arc(4, 3, 4, 0, Math.PI * 2); ctx.arc(-5, -2, 2.5, 0, Math.PI * 2); ctx.fill();
     } else {
       ctx.translate(0, -h.h / 2);
       ctx.rotate(time * .01);
@@ -1584,6 +1921,23 @@
     }
   }
 
+  function drawShield(time) {
+    if (!player.shield) return;
+    const pulse = Math.sin(time * .006);
+    ctx.save();
+    ctx.translate(player.x - cameraX + player.w / 2, player.y + player.h / 2);
+    const radius = player.h * .78 + pulse * 3;
+    const bubble = ctx.createRadialGradient(-radius * .3, -radius * .35, radius * .1, 0, 0, radius);
+    bubble.addColorStop(0, "rgba(255,255,255,.28)"); bubble.addColorStop(.7, "rgba(127,212,255,.1)"); bubble.addColorStop(1, "rgba(127,212,255,.42)");
+    ctx.fillStyle = bubble;
+    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(190,235,255,${.75 + pulse * .2})`; ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(0, 0, radius - 8, -2.4, -1.8); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawPopups() {
     if (!popups.length) return;
     ctx.save();
@@ -1659,6 +2013,7 @@
     }
     ctx.globalAlpha = 1;
     drawPlayer(time);
+    drawShield(time);
     drawPopups();
     drawPowerBars();
     drawBossBar();
