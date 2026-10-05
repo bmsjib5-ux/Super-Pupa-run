@@ -233,7 +233,7 @@ kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .
   touch-action: none;
 }
 .touch-button.is-pressed { background: rgba(255,95,150,.7); transform: scale(.94); }
-.action-pad { display: flex; align-items: flex-end; gap: .55rem; }
+.action-pad { display: flex; align-items: flex-end; gap: 1.75rem; }
 /* The attack button stays dim until Pupa is carrying cherry bombs. */
 .touch-button.attack { display: grid; place-items: center; opacity: .38; font-size: 1.4rem; }
 .touch-button.attack.is-ready { opacity: 1; color: #fff; background: rgba(226, 46, 86, .85); border-color: #ffd76a; box-shadow: 0 0 1.2rem rgba(255, 95, 110, .7); }
@@ -334,7 +334,8 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
     bottom: max(.6rem, env(safe-area-inset-bottom));
     padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
   }
-  .dpad, .action-pad { gap: .8rem; }
+  .dpad { gap: .8rem; }
+  .action-pad { gap: clamp(1.75rem, 6vw, 3rem); }
   .title-card .save-line { margin: -.3rem auto .55rem; font-size: .75rem; }
   .touch-button { width: clamp(3.6rem, 19vh, 4.8rem); font-size: 1.3rem; }
   .desktop-only, .controls-hint { display: none; }

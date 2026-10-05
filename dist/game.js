@@ -42,7 +42,8 @@
   // axis ("x" or "y"), travel distance and top speed.
   const rects = (list) => list.map(([x, y, w, h, axis, range, speed]) => ({ x, y, w, h, ox: x, oy: y, axis, range, speed, t: 0, dx: 0, dy: 0 }));
   // Enemy types: "walker" patrols the ground, "bat" flies in a wave,
-  // "hopper" waits and then leaps. Mystery blocks give a random item when
+  // "hopper" waits and then leaps, "urchin" patrols and is too spiky to
+  // stomp, "spitter" stays put and fires seeds at Pupa. Mystery blocks give a random item when
   // bumped from below.
   const levels = [
     {
@@ -153,6 +154,36 @@
         ["bat",3450,200], ["walker",3950,536], ["hopper",4150,553]
       ],
       blocks: [[120,390],[2020,390],[2740,390],[4180,390],[4820,390],[5220,390]]
+    },
+    {
+      name: "ด่าน 5 · ทะเลเมฆจันทร์เงิน",
+      width: 7200, goalX: 6860, checkpointX: 3600,
+      theme: { tint: "#5b7bff", top: "#8fb4ff", shine: "#e3eeff", body: ["#3b4a8a", "#262f66", "#0e1233"], sparks: ["#ffffff", "#a8c8ff"] },
+      platforms: rects([
+        [0, 605, 640, 140], [800, 605, 520, 140], [1860, 605, 600, 140], [2620, 605, 460, 140],
+        [3560, 605, 700, 140], [4420, 605, 380, 140], [5500, 605, 560, 140], [6220, 605, 980, 140],
+        [220, 480, 190, 34], [460, 390, 160, 34], [880, 470, 200, 34], [1120, 380, 170, 34],
+        [1390, 490, 140, 34, "x", 150, 80], [1720, 430, 110, 34],
+        [1950, 470, 210, 34], [2200, 380, 180, 34], [2700, 460, 190, 34], [2900, 370, 150, 34],
+        [3150, 360, 140, 34, "y", 170, 70], [3340, 400, 130, 34, "x", 70, 60],
+        [3650, 470, 210, 34], [3900, 380, 180, 34], [4480, 460, 190, 34],
+        [4870, 500, 140, 34, "x", 160, 80], [5210, 440, 110, 34], [5350, 370, 120, 34, "y", 150, 70],
+        [5580, 470, 200, 34], [5800, 380, 170, 34], [6320, 470, 200, 34], [6500, 380, 150, 34]
+      ]),
+      cherries: [
+        [280,420], [360,420], [540,330], [940,410], [1020,410], [1205,320], [1460,430], [1775,370],
+        [2010,410], [2100,410], [2290,320], [2760,400], [2975,310], [3220,300], [3405,340], [3710,410],
+        [3800,410], [3990,320], [4540,400], [4610,400], [4940,440], [5265,380], [5410,310], [5640,410],
+        [5885,320], [6380,410], [6575,320]
+      ],
+      enemies: [
+        ["urchin",400,549], ["bat",720,440], ["walker",950,536], ["spitter",1230,535], ["bat",1600,250],
+        ["urchin",2050,549], ["hopper",2250,553], ["spitter",2400,535], ["bat",2540,450], ["walker",2800,536],
+        ["spitter",3030,535], ["bat",3300,180], ["urchin",3850,549], ["hopper",4100,553], ["bat",4340,440],
+        ["urchin",4560,549], ["spitter",4750,535], ["bat",5000,280], ["bat",5300,185], ["walker",5650,536],
+        ["hopper",5850,553], ["spitter",6020,535], ["bat",6140,450], ["urchin",6400,549], ["spitter",6450,400]
+      ],
+      blocks: [[100,390],[1260,390],[1880,390],[2640,390],[3580,390],[4700,390],[5510,390],[6240,390]]
     }
   ];
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
@@ -160,7 +191,7 @@
   const startLevel = Math.min(levels.length, Math.max(1, Number(new URLSearchParams(location.search).get("level")) || 1)) - 1;
   // Add &checkpoint to also begin from that level's checkpoint flag.
   const startAtCheckpoint = new URLSearchParams(location.search).has("checkpoint");
-  const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
+  const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52], urchin: [64, 56], spitter: [60, 70] };
   // Each level ends with a flagpole just before the gate: the higher Pupa
   // grabs it, the more points it pays.
   const POLE_OFFSET = 150;
@@ -174,18 +205,20 @@
   const BOMB_TIME = 10;
   const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e" };
 
-  // Progress kept on this device: best score, lifetime coins and play counts.
+  // Progress kept on this device. Points and coins are running totals that
+  // only ever grow: across levels, game overs, replays and visits.
   const SAVE_KEY = "superPupaRunSave";
-  const save = { best: 0, coins: 0, plays: 0, wins: 0 };
+  const save = { best: 0, points: null, coins: 0, plays: 0, wins: 0 };
   try {
     Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"));
     save.best = Math.max(Number(save.best) || 0, Number(localStorage.getItem(BEST_KEY)) || 0);
-    for (const key of ["coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
-  } catch { /* storage unavailable: play on without saving */ }
+    if (save.points == null) save.points = save.best; // saves from before totals existed
+    for (const key of ["points", "coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
+  } catch { save.points = 0; /* storage unavailable: play on without saving */ }
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     const line = document.querySelector("#saveLine");
-    if (line) line.textContent = `สถิติสูงสุด ${formatPoints(save.best)} คะแนน · เหรียญสะสม ${formatPoints(save.coins)}`;
+    if (line) line.textContent = `คะแนนสะสม ${formatPoints(save.points)} · เหรียญสะสม ${formatPoints(save.coins)}`;
   }
   // Move coins picked up since the last call into the lifetime total.
   function bankCoins() {
@@ -206,6 +239,7 @@
   let hazards = [];
   let popups = [];
   let bombs = [];
+  let shots = [];
   let blasts = [];
   let shake = 0;
   let player;
@@ -229,9 +263,9 @@
 
   function makeEnemy(type, x, y, id) {
     const [w, h] = enemySizes[type];
-    const speed = type === "bat" ? 115 : type === "hopper" ? 70 : 58;
+    const speed = type === "bat" ? 115 : type === "hopper" ? 70 : type === "urchin" ? 80 : type === "spitter" ? 0 : 58;
     const reach = type === "bat" ? 150 : 95;
-    return { id, type, x, y, baseY: y, w, h, min: x - reach, max: x + reach, vx: id % 2 ? speed : -speed, vy: 0, wait: .6 + (id % 3) * .3, alive: true, phase: id };
+    return { id, type, x, y, baseY: y, w, h, min: x - reach, max: x + reach, vx: id % 2 ? speed : -speed, vy: 0, wait: .6 + (id % 3) * .3, alive: true, phase: id, dir: -1, puff: 0 };
   }
 
   function loadLevel(index) {
@@ -261,6 +295,7 @@
     popups = [];
     bombs = [];
     blasts = [];
+    shots = [];
     shake = 0;
     player.flag = null;
     levelStart = { score: player.score, bonus: player.bonus, points: player.points };
@@ -276,14 +311,18 @@
     loadLevel(startLevel);
   }
 
-  // After a game over, try the same level again with full hearts and the
-  // cherries Pupa had when she entered it.
+  // After a game over, try the same level again with full hearts. Coins and
+  // points are never taken away; coins already collected and blocks already
+  // opened stay that way so they cannot be collected twice.
   function retryLevel() {
     if (player.big) setBig(false);
-    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, points: levelStart.points, hurt: 0, star: 0, boost: 0, bomb: 0 });
-    player.banked = player.score + player.bonus;
+    Object.assign(player, { lives: 3, hurt: 0, star: 0, boost: 0, bomb: 0 });
+    const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
+    const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
     state = "menu";
     loadLevel(levelIndex);
+    for (const cherry of cherries) cherry.taken = takenCoins.has(cherry.id);
+    for (const block of blocks) block.used = usedBlocks.has(block.id);
   }
 
   function nextLevel() {
@@ -342,32 +381,35 @@
     state = won ? "won" : "lost";
     ui.end.hidden = false;
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
-    ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
+    ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "เหรียญและคะแนนยังอยู่ครบ กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
     ui.endIcon.textContent = won ? "✦" : "☾";
-    ui.finalScore.textContent = `${player.score} / ${totalCherries}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
+    ui.finalScore.textContent = formatPoints(save.coins);
     const isNewBest = player.points > save.best;
     if (isNewBest) save.best = player.points;
     save.plays++;
     if (won) save.wins++;
     bankCoins();
     writeSave();
-    ui.finalPoints.textContent = formatPoints(player.points);
-    ui.bestPoints.textContent = `${isNewBest ? "สถิติใหม่!" : "สถิติสูงสุด"} ${formatPoints(save.best)} คะแนน · เหรียญสะสม ${formatPoints(save.coins)}`;
-    announce(won ? `ชนะแล้ว เก็บเหรียญได้ ${player.score + player.bonus} เหรียญ ได้ ${formatPoints(player.points)} คะแนน` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
+    ui.finalPoints.textContent = formatPoints(save.points);
+    ui.bestPoints.textContent = `รอบนี้ได้ +${formatPoints(player.points)} คะแนน · +${player.score + player.bonus} เหรียญ`;
+    announce(won ? `ชนะแล้ว คะแนนสะสม ${formatPoints(save.points)} เหรียญสะสม ${formatPoints(save.coins)}` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
   }
 
   function updateHud() {
-    ui.score.textContent = String(player.score + player.bonus).padStart(2, "0");
+    ui.score.textContent = formatPoints(save.coins);
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
-    ui.points.textContent = formatPoints(player.points);
+    ui.points.textContent = formatPoints(save.points);
     ui.attackBtn?.classList.toggle("is-ready", player.bomb > 0);
   }
 
   function addScore(amount, x, y, label = "") {
     player.points += amount;
+    save.points += amount;
+    bankCoins();
+    writeSave();
     popups.push({ x, y, text: `${label}+${formatPoints(amount)}`, life: 1.1 });
   }
 
@@ -831,6 +873,19 @@
           enemy.y = Math.min(enemy.baseY, enemy.y + enemy.vy * dt);
         }
       }
+      else if (enemy.type === "spitter") {
+        const dx = player.x + player.w / 2 - (enemy.x + enemy.w / 2);
+        enemy.dir = dx < 0 ? -1 : 1;
+        enemy.puff = Math.max(0, enemy.puff - dt);
+        enemy.wait -= dt;
+        // Swell up for a moment as a warning, then fire along the ground line.
+        if (enemy.wait <= 0 && Math.abs(dx) < 760 && Math.abs(player.y - enemy.y) < 320) {
+          enemy.wait = 2.4;
+          enemy.puff = .35;
+          shots.push({ x: enemy.x + enemy.w / 2 + enemy.dir * 26 - 11, y: enemy.y + 14, w: 22, h: 22, vx: enemy.dir * 310, life: 3 });
+          tone(520, .07, "square", .035);
+        }
+      }
       // Hoppers only travel while they are in the air.
       if (enemy.type !== "hopper" || enemy.y < enemy.baseY) enemy.x += enemy.vx * dt;
       if (enemy.x < enemy.min || enemy.x > enemy.max) { enemy.vx *= -1; enemy.x = Math.max(enemy.min, Math.min(enemy.max, enemy.x)); }
@@ -843,7 +898,7 @@
         tone(660, .1, "triangle", .05, .05);
         continue;
       }
-      if (player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
+      if (enemy.type !== "urchin" && player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
         enemy.alive = false;
         addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
         player.vy = -560;
@@ -854,6 +909,15 @@
     }
 
     updateItems(dt);
+    shots = shots.filter(shot => {
+      shot.life -= dt;
+      shot.x += shot.vx * dt;
+      if (shot.life <= 0) return false;
+      if (!rectsOverlap(player, shot)) return true;
+      if (player.star > 0) burst(shot.x + 11, shot.y + 11, "#ffe27a", 8);
+      else hurtPlayer();
+      return false;
+    });
     updateBombs(dt);
     updateBoss(dt, previousBottom);
     shake = Math.max(0, shake - dt);
@@ -1221,12 +1285,102 @@
     ctx.restore();
   }
 
+  function drawUrchin(enemy, x, time) {
+    const step = Math.sin(time * .012 + enemy.id);
+    ctx.save();
+    ctx.translate(x + enemy.w / 2, enemy.y + enemy.h / 2 + 2);
+    ctx.scale(enemy.vx > 0 ? 1 : -1, 1);
+    // feet
+    ctx.fillStyle = "#1b2350";
+    ctx.beginPath(); ctx.ellipse(-12, 24 + step * 2, 9, 5, 0, 0, Math.PI * 2); ctx.ellipse(12, 24 - step * 2, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // spikes all round: the warning that this one cannot be stomped
+    ctx.shadowColor = "rgba(160,200,255,.7)"; ctx.shadowBlur = 12;
+    const spike = ctx.createLinearGradient(0, -38, 0, 20);
+    spike.addColorStop(0, "#f2f8ff"); spike.addColorStop(1, "#7fa8ff");
+    ctx.fillStyle = spike;
+    ctx.beginPath();
+    for (let i = 0; i < 22; i++) {
+      const angle = Math.PI + (i / 21) * Math.PI;
+      const radius = i % 2 ? 24 : 38 + Math.sin(time * .01 + i) * 2;
+      ctx.lineTo(Math.cos(angle) * radius, 4 + Math.sin(angle) * radius);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowColor = "transparent";
+    const body = ctx.createRadialGradient(-6, -4, 3, 0, 4, 28);
+    body.addColorStop(0, "#5a74d6"); body.addColorStop(1, "#27357f");
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.ellipse(0, 6, 27, 22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.ellipse(6, 3, 6, 7, 0, 0, Math.PI * 2); ctx.ellipse(19, 4, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#101642";
+    ctx.beginPath(); ctx.arc(8, 4, 3, 0, Math.PI * 2); ctx.arc(20, 5, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#101642"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(11, -2); ctx.moveTo(25, -3); ctx.lineTo(16, -1); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSpitter(enemy, x, time) {
+    const swell = 1 + (enemy.puff > 0 ? Math.sin((enemy.puff / .35) * Math.PI) * .22 : Math.sin(time * .005 + enemy.id) * .03);
+    // Tense up shortly before the next shot.
+    const charging = enemy.wait < .45;
+    ctx.save();
+    ctx.translate(x + enemy.w / 2, enemy.y + enemy.h);
+    ctx.scale(enemy.dir, 1);
+    // stem and leaves
+    ctx.strokeStyle = "#2f8f6a"; ctx.lineWidth = 8; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-8, -18, 0, -34); ctx.stroke();
+    ctx.fillStyle = "#3fb07f";
+    ctx.beginPath(); ctx.moveTo(-2, -6); ctx.quadraticCurveTo(-30, -16, -32, 0); ctx.quadraticCurveTo(-16, 4, -2, -6); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(2, -6); ctx.quadraticCurveTo(26, -18, 30, -2); ctx.quadraticCurveTo(14, 4, 2, -6); ctx.fill();
+    // head
+    ctx.translate(0, -44);
+    ctx.scale(swell, swell);
+    ctx.shadowColor = charging ? "rgba(255,255,255,.9)" : "rgba(150,190,255,.6)"; ctx.shadowBlur = charging ? 20 : 12;
+    ctx.fillStyle = "#cfe0ff";
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2 + .3;
+      ctx.beginPath(); ctx.ellipse(Math.cos(angle) * 22, Math.sin(angle) * 22, 12, 8, angle, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowColor = "transparent";
+    const head = ctx.createRadialGradient(-6, -6, 3, 0, 0, 24);
+    head.addColorStop(0, "#9db6ff"); head.addColorStop(1, "#4a5fc4");
+    ctx.fillStyle = head; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#141a4a";
+    ctx.beginPath(); ctx.ellipse(13, 3, charging ? 9 : 6, charging ? 10 : 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(-2, -8, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#141a4a";
+    ctx.beginPath(); ctx.arc(0, -8, 2.4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#141a4a"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-9, -16); ctx.lineTo(4, -13); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawShots(time) {
+    for (const shot of shots) {
+      ctx.save();
+      ctx.translate(shot.x + shot.w / 2 - cameraX, shot.y + shot.h / 2);
+      drawGlow("#bcd4ff", 24);
+      ctx.rotate(time * .012 * (shot.vx > 0 ? 1 : -1));
+      ctx.fillStyle = "#eef5ff"; ctx.strokeStyle = "#5b7bff"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) {
+        const radius = i % 2 ? 6 : 13;
+        ctx.lineTo(Math.cos(i * Math.PI / 6) * radius, Math.sin(i * Math.PI / 6) * radius);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   function drawEnemy(enemy, time) {
     if (!enemy.alive) return;
     const x = enemy.x - cameraX;
     if (x < -100 || x > viewWidth + 100) return;
     if (enemy.type === "bat") { drawBat(enemy, x, time); return; }
     if (enemy.type === "hopper") { drawHopper(enemy, x); return; }
+    if (enemy.type === "urchin") { drawUrchin(enemy, x, time); return; }
+    if (enemy.type === "spitter") { drawSpitter(enemy, x, time); return; }
     const bob = Math.sin(time * .008 + enemy.phase) * 2;
     ctx.save();
     ctx.translate(x + enemy.w / 2, enemy.y + enemy.h / 2 + bob);
@@ -1497,6 +1651,7 @@
     enemies.forEach(e => drawEnemy(e, time));
     drawBoss(time);
     hazards.forEach(h => drawHazard(h, time));
+    drawShots(time);
     drawBombs(time);
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
