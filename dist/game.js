@@ -23,12 +23,13 @@
     announcer: document.querySelector("#announcer"),
     levelName: document.querySelector("#levelName"),
     points: document.querySelector("#points"),
+    attackBtn: document.querySelector(".touch-button.attack"),
     finalPoints: document.querySelector("#finalPoints"),
     bestPoints: document.querySelector("#bestPoints")
   };
 
   const WORLD = { width: 6100, ground: 605, gravity: 2200 };
-  const keys = { left: false, right: false, jump: false };
+  const keys = { left: false, right: false, jump: false, attack: false };
   const image = (src) => { const img = new Image(); img.src = src; return img; };
   const art = {
     background: image("assets/cherry-night.webp"),
@@ -170,7 +171,28 @@
   const formatPoints = (n) => n.toLocaleString("en-US");
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
-  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b" };
+  const BOMB_TIME = 10;
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e" };
+
+  // Progress kept on this device: best score, lifetime coins and play counts.
+  const SAVE_KEY = "superPupaRunSave";
+  const save = { best: 0, coins: 0, plays: 0, wins: 0 };
+  try {
+    Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"));
+    save.best = Math.max(Number(save.best) || 0, Number(localStorage.getItem(BEST_KEY)) || 0);
+    for (const key of ["coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
+  } catch { /* storage unavailable: play on without saving */ }
+  function writeSave() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
+    const line = document.querySelector("#saveLine");
+    if (line) line.textContent = `สถิติสูงสุด ${formatPoints(save.best)} คะแนน · เหรียญสะสม ${formatPoints(save.coins)}`;
+  }
+  // Move coins picked up since the last call into the lifetime total.
+  function bankCoins() {
+    if (!player) return;
+    const held = player.score + player.bonus;
+    if (held > player.banked) { save.coins += held - player.banked; player.banked = held; writeSave(); }
+  }
   const SMALL = { w: 70, h: 88 };
   const BIG = { w: 92, h: 124 };
 
@@ -183,6 +205,8 @@
   let boss = null;
   let hazards = [];
   let popups = [];
+  let bombs = [];
+  let blasts = [];
   let shake = 0;
   let player;
   let cherries;
@@ -235,6 +259,8 @@
     } : null;
     hazards = [];
     popups = [];
+    bombs = [];
+    blasts = [];
     shake = 0;
     player.flag = null;
     levelStart = { score: player.score, bonus: player.bonus, points: player.points };
@@ -245,7 +271,7 @@
   }
 
   function resetGame() {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, banked: 0, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(startLevel);
   }
@@ -254,12 +280,14 @@
   // cherries Pupa had when she entered it.
   function retryLevel() {
     if (player.big) setBig(false);
-    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, points: levelStart.points, hurt: 0, star: 0, boost: 0 });
+    Object.assign(player, { lives: 3, score: levelStart.score, bonus: levelStart.bonus, points: levelStart.points, hurt: 0, star: 0, boost: 0, bomb: 0 });
+    player.banked = player.score + player.bonus;
     state = "menu";
     loadLevel(levelIndex);
   }
 
   function nextLevel() {
+    bankCoins();
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
     loadLevel(levelIndex + 1);
     announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
@@ -315,14 +343,14 @@
     ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
     ui.endIcon.textContent = won ? "✦" : "☾";
     ui.finalScore.textContent = `${player.score} / ${totalCherries}` + (player.bonus ? ` +${player.bonus} โบนัส` : "");
-    let best = 0;
-    let isNewBest = false;
-    try {
-      best = Number(localStorage.getItem(BEST_KEY)) || 0;
-      if (player.points > best) { best = player.points; isNewBest = true; localStorage.setItem(BEST_KEY, String(best)); }
-    } catch { best = Math.max(best, player.points); }
+    const isNewBest = player.points > save.best;
+    if (isNewBest) save.best = player.points;
+    save.plays++;
+    if (won) save.wins++;
+    bankCoins();
+    writeSave();
     ui.finalPoints.textContent = formatPoints(player.points);
-    ui.bestPoints.textContent = isNewBest ? `สถิติใหม่! ${formatPoints(best)} คะแนน` : `สถิติสูงสุด ${formatPoints(best)} คะแนน`;
+    ui.bestPoints.textContent = `${isNewBest ? "สถิติใหม่!" : "สถิติสูงสุด"} ${formatPoints(save.best)} คะแนน · เหรียญสะสม ${formatPoints(save.coins)}`;
     announce(won ? `ชนะแล้ว เก็บเหรียญได้ ${player.score + player.bonus} เหรียญ ได้ ${formatPoints(player.points)} คะแนน` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
@@ -333,6 +361,7 @@
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
     ui.points.textContent = formatPoints(player.points);
+    ui.attackBtn?.classList.toggle("is-ready", player.bomb > 0);
   }
 
   function addScore(amount, x, y, label = "") {
@@ -565,13 +594,64 @@
     } else hurtPlayer();
   }
 
+  function throwBomb() {
+    if (player.bomb <= 0 || player.bombCooldown > 0) return;
+    player.bombCooldown = .35;
+    bombs.push({ x: player.x + player.w / 2 + player.facing * 24, y: player.y + player.h * .35, vx: player.facing * 520 + player.vx * .4, vy: -360, life: 1.8, spin: 0 });
+    tone(300, .08, "square", .05);
+  }
+
+  function explode(x, y) {
+    blasts.push({ x, y, life: .35 });
+    burst(x, y, "#ff5f6e", 18);
+    burst(x, y, "#ffd76a", 10);
+    shake = Math.max(shake, .18);
+    tone(90, .25, "sawtooth", .08); tone(55, .3, "square", .06, .03);
+    for (const enemy of enemies) {
+      if (!enemy.alive) continue;
+      const dx = enemy.x + enemy.w / 2 - x;
+      const dy = enemy.y + enemy.h / 2 - y;
+      if (dx * dx + dy * dy > 105 * 105) continue;
+      enemy.alive = false;
+      addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
+      burst(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff", 12);
+    }
+    if (boss?.active && boss.alive && boss.hurt <= 0) {
+      const dx = Math.max(boss.x, Math.min(boss.x + boss.w, x)) - x;
+      const dy = Math.max(boss.y, Math.min(boss.y + boss.h, y)) - y;
+      if (dx * dx + dy * dy < 80 * 80) damageBoss();
+    }
+  }
+
+  function updateBombs(dt) {
+    player.bombCooldown = Math.max(0, player.bombCooldown - dt);
+    bombs = bombs.filter(bomb => {
+      const previousBottom = bomb.y + 12;
+      bomb.life -= dt;
+      bomb.vy += 1400 * dt;
+      bomb.x += bomb.vx * dt;
+      bomb.y += bomb.vy * dt;
+      bomb.spin += dt * 12;
+      let hit = bomb.life <= 0;
+      for (const p of solids) {
+        if (bomb.x > p.x && bomb.x < p.x + p.w && bomb.vy >= 0 && previousBottom <= p.y + 12 && bomb.y + 12 >= p.y) hit = true;
+      }
+      const box = { x: bomb.x - 12, y: bomb.y - 12, w: 24, h: 24 };
+      for (const enemy of enemies) if (enemy.alive && rectsOverlap(box, enemy)) hit = true;
+      if (boss?.active && boss.alive && rectsOverlap(box, boss)) hit = true;
+      if (hit) { explode(bomb.x, bomb.y); return false; }
+      return bomb.y < 820 && bomb.x > -60 && bomb.x < WORLD.width + 60;
+    });
+    blasts = blasts.filter(blast => (blast.life -= dt) > 0);
+  }
+
   function hitBlock(block) {
     if (block.used) { tone(120, .06, "square", .04); return; }
     block.used = true;
     block.bump = .18;
     const cx = block.x + block.w / 2;
     const roll = Math.random();
-    let type = roll < .38 ? "cherry" : roll < .53 ? "heart" : roll < .68 ? "leaf" : roll < .83 ? "star" : "grow";
+    let type = roll < .32 ? "cherry" : roll < .46 ? "heart" : roll < .59 ? "leaf" : roll < .72 ? "star" : roll < .86 ? "grow" : "bomb";
     if (type === "heart" && player.lives >= 3) type = "cherry";
     if (type === "grow" && player.big) type = "cherry";
     burst(cx, block.y, "#ffd76a", 8);
@@ -611,6 +691,10 @@
       if (!player.big) setBig(true);
       announce("ได้เห็ดยักษ์ ตัวใหญ่ขึ้นและทนการโจมตีได้ 1 ครั้ง");
       [262, 330, 392, 523, 659].forEach((note, i) => tone(note, .1, "square", .05, i * .06));
+    } else if (item.type === "bomb") {
+      player.bomb = BOMB_TIME;
+      announce("ได้เชอร์รี่ระเบิด กดปุ่มโจมตีเพื่อขว้างได้ 10 วินาที");
+      tone(196, .1, "square", .05); tone(294, .1, "square", .05, .08); tone(392, .16, "square", .05, .16);
     } else {
       player.boost = BOOST_TIME;
       announce("ได้ใบไม้วิเศษ กระโดดสูงขึ้นชั่วคราว");
@@ -654,6 +738,7 @@
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
+    player.bomb = Math.max(0, player.bomb - dt);
     for (const p of platforms) {
       if (!p.axis) continue;
       p.t += dt;
@@ -677,6 +762,8 @@
       tone(player.boost > 0 ? 480 : 360, .11, "triangle", .06);
     }
     keys.jump = false;
+    if (keys.attack) throwBomb();
+    keys.attack = false;
 
     const previousBottom = player.y + player.h;
     player.vy += WORLD.gravity * dt;
@@ -765,6 +852,7 @@
     }
 
     updateItems(dt);
+    updateBombs(dt);
     updateBoss(dt, previousBottom);
     shake = Math.max(0, shake - dt);
     if (state !== "playing") return;
@@ -913,6 +1001,21 @@
       ctx.beginPath(); ctx.ellipse(-6, -8, 4, 2.2, -.7, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     },
+    // A pair of cherries with a lit fuse: the bomb pickup.
+    bomb() {
+      ctx.strokeStyle = "#3f8f3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-9, 4); ctx.quadraticCurveTo(-6, -12, 5, -18);
+      ctx.moveTo(10, 6); ctx.quadraticCurveTo(10, -8, 5, -18); ctx.stroke();
+      drawBall(-9, 9, 10.5, "#ff8fa8", "#d81f4f");
+      drawBall(10, 11, 10.5, "#ff8fa8", "#c2143f");
+      ctx.fillStyle = "#ffe27a";
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const radius = i % 2 ? 2.5 : 7;
+        ctx.lineTo(5 + Math.cos(i * Math.PI / 4) * radius, -20 + Math.sin(i * Math.PI / 4) * radius);
+      }
+      ctx.closePath(); ctx.fill();
+    },
     heart() {
       const fill = ctx.createLinearGradient(0, -16, 0, 18);
       fill.addColorStop(0, "#ff9db8"); fill.addColorStop(1, "#e52462");
@@ -1042,6 +1145,7 @@
     const bars = [];
     if (player.star > 0) bars.push([player.star / STAR_TIME, "#ffe27a"]);
     if (player.boost > 0) bars.push([player.boost / BOOST_TIME, "#89f0c0"]);
+    if (player.bomb > 0) bars.push([player.bomb / BOMB_TIME, "#ff5f6e"]);
     const x = player.x - cameraX + player.w / 2 - 32;
     bars.forEach(([amount, color], i) => {
       const y = player.y - 44 - i * 11;
@@ -1299,6 +1403,31 @@
     ctx.restore();
   }
 
+  function drawBombs(time) {
+    for (const bomb of bombs) {
+      ctx.save();
+      ctx.translate(bomb.x - cameraX, bomb.y);
+      ctx.rotate(bomb.spin);
+      drawBall(0, 0, 12, "#ff8fa8", "#c2143f");
+      ctx.strokeStyle = "#3f8f3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(0, -11); ctx.quadraticCurveTo(4, -18, 9, -19); ctx.stroke();
+      ctx.fillStyle = Math.floor(time / 60) % 2 ? "#fff6b8" : "#ffb22e";
+      ctx.beginPath(); ctx.arc(10, -20, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    for (const blast of blasts) {
+      const grow = 1 - blast.life / .35;
+      ctx.save();
+      ctx.translate(blast.x - cameraX, blast.y);
+      ctx.globalAlpha = Math.max(0, 1 - grow);
+      const fire = ctx.createRadialGradient(0, 0, 4, 0, 0, 30 + grow * 80);
+      fire.addColorStop(0, "#fffbe0"); fire.addColorStop(.4, "#ffd24a"); fire.addColorStop(.75, "#ff5f6e"); fire.addColorStop(1, "transparent");
+      ctx.fillStyle = fire;
+      ctx.beginPath(); ctx.arc(0, 0, 30 + grow * 80, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawPopups() {
     if (!popups.length) return;
     ctx.save();
@@ -1366,6 +1495,7 @@
     enemies.forEach(e => drawEnemy(e, time));
     drawBoss(time);
     hazards.forEach(h => drawHazard(h, time));
+    drawBombs(time);
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI * 2); ctx.fill();
@@ -1387,11 +1517,11 @@
   }
 
   function setKey(action, value) {
-    if (action === "jump") { if (value) keys.jump = true; return; }
+    if (action === "jump" || action === "attack") { if (value) keys[action] = true; return; }
     keys[action] = value;
   }
 
-  const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump" };
+  const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack" };
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (event.key === "Enter" && state === "menu") { startGame(); return; }
@@ -1400,7 +1530,7 @@
   });
   window.addEventListener("keyup", (event) => {
     const action = keyMap[event.key];
-    if (action && action !== "jump") setKey(action, false);
+    if (action && action !== "jump" && action !== "attack") setKey(action, false);
   });
   window.addEventListener("blur", () => { keys.left = keys.right = false; if (state === "playing") togglePause(true); });
   window.addEventListener("resize", resize, { passive: true });
@@ -1408,7 +1538,7 @@
   document.querySelectorAll(".touch-button").forEach(button => {
     const action = button.dataset.key;
     const press = (event) => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); button.classList.add("is-pressed"); setKey(action, true); };
-    const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "jump") setKey(action, false); };
+    const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "jump" && action !== "attack") setKey(action, false); };
     // Cancelling touchstart is what stops the long-press copy/select menu on
     // phones; the pointer events below still fire.
     button.addEventListener("touchstart", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
@@ -1528,6 +1658,10 @@
   }
 
   resetGame();
+  writeSave();
+  // Bank coins if the tab is closed or backgrounded mid-level.
+  window.addEventListener("pagehide", bankCoins);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) bankCoins(); });
   resize();
   registerWebMcp();
   requestAnimationFrame(frame);

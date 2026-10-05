@@ -51,6 +51,7 @@
               <div class="eyebrow"><span></span> คืนจันทร์เชอร์รี่ <span></span></div>
               <h2>SUPER<br><em>PUPA</em> RUN</h2>
               <p>พา Pupa กลับรังไหมก่อนแสงจันทร์ลับฟ้า</p>
+              <p id="saveLine" class="save-line"></p>
               <div class="title-actions">
                 <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
                 <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
@@ -59,6 +60,7 @@
               <div class="controls-hint">
                 <span><kbd>A</kbd><kbd>D</kbd> เคลื่อนที่</span>
                 <span><kbd>SPACE</kbd> กระโดด</span>
+                <span><kbd>J</kbd> โจมตี</span>
               </div>
             </div>
           </div>
@@ -89,7 +91,10 @@
               <button class="touch-button" data-key="left" type="button" aria-label="เดินซ้าย" data-icon="◀"></button>
               <button class="touch-button" data-key="right" type="button" aria-label="เดินขวา" data-icon="▶"></button>
             </div>
-            <button class="touch-button jump" data-key="jump" type="button" aria-label="กระโดด" data-icon="↑"></button>
+            <div class="action-pad">
+              <button class="touch-button attack" data-key="attack" type="button" aria-label="ขว้างระเบิดเชอร์รี่" data-icon="✸"></button>
+              <button class="touch-button jump" data-key="jump" type="button" aria-label="กระโดด" data-icon="↑"></button>
+            </div>
           </div>
 
           <p id="announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
