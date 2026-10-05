@@ -163,7 +163,9 @@
   // Each level ends with a flagpole just before the gate: the higher Pupa
   // grabs it, the more points it pays.
   const POLE_OFFSET = 150;
-  const POLE_HEIGHT = 370;
+  const POLE_HEIGHT = 500;
+  // Seconds of invulnerability (shown as blinking) after taking a hit.
+  const HURT_TIME = 5;
   const BEST_KEY = "superPupaRunBest";
   const formatPoints = (n) => n.toLocaleString("en-US");
   const STAR_TIME = 8;
@@ -342,7 +344,7 @@
     const top = WORLD.ground - POLE_HEIGHT;
     const height = Math.max(0, Math.min(POLE_HEIGHT, WORLD.ground - (player.y + player.h / 2)));
     const ratio = height / POLE_HEIGHT;
-    const points = ratio >= .9 ? 5000 : ratio >= .7 ? 2000 : ratio >= .5 ? 1000 : ratio >= .3 ? 500 : 100;
+    const points = ratio >= .86 ? 5000 : ratio >= .65 ? 2000 : ratio >= .45 ? 1000 : ratio >= .25 ? 500 : 100;
     player.y = Math.max(player.y, top - player.h / 2);
     player.x = poleX - player.w + 18;
     player.vx = 0; player.vy = 0; player.facing = 1; player.ride = null;
@@ -363,8 +365,8 @@
     if (flag.phase === "slide") {
       player.grounded = false;
       player.vy = 120;
-      player.y = Math.min(floor, player.y + 300 * dt);
-      flag.flagY = Math.min(WORLD.ground - 64, flag.flagY + 300 * dt);
+      player.y = Math.min(floor, player.y + 380 * dt);
+      flag.flagY = Math.min(WORLD.ground - 64, flag.flagY + 380 * dt);
       if (player.y >= floor && flag.t > .6) { flag.phase = "walk"; flag.t = 0; }
       return;
     }
@@ -437,7 +439,7 @@
     if (player.big) {
       // Being big absorbs one hit: shrink instead of losing a heart.
       setBig(false);
-      player.hurt = 1.3;
+      player.hurt = HURT_TIME;
       player.vy = -520;
       player.vx = -player.facing * 220;
       burst(player.x + player.w / 2, player.y + player.h / 2, "#ff9d6b", 16);
@@ -446,7 +448,7 @@
       return;
     }
     player.lives--;
-    player.hurt = 1.3;
+    player.hurt = HURT_TIME;
     player.vy = -700;
     player.vx = -player.facing * 280;
     burst(player.x + player.w / 2, player.y + player.h / 2, "#ff6e99", 16);
@@ -462,6 +464,8 @@
     player.vy = 0;
     player.star = 0;
     player.ride = null;
+    // A fall always costs a heart, even during the post-hit grace period.
+    player.hurt = 0;
     if (player.big) setBig(false);
     hurtPlayer();
   }
