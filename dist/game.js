@@ -150,6 +150,7 @@
   let soundOn = true;
   let audio;
   let viewWidth = 1280;
+  let viewHeight = 720;
   let renderScale = 1;
   let dpr = 1;
   let checkpoint = 90;
@@ -203,7 +204,15 @@
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
     renderScale = rect.height / 720;
+    // With the touch buttons on screen, zoom out just enough for the ground
+    // line to sit above them, so they cover soil instead of Pupa.
+    const touchButton = document.querySelector(".mobile-controls .touch-button");
+    if (touchButton && touchButton.offsetParent) {
+      const buttonTop = touchButton.getBoundingClientRect().top - rect.top;
+      if (buttonTop > 0) renderScale = Math.max(renderScale * .72, Math.min(renderScale, (buttonTop - 8) / WORLD.ground));
+    }
     viewWidth = rect.width / renderScale;
+    viewHeight = rect.height / renderScale;
   }
 
   function startGame() {
@@ -551,29 +560,29 @@
     const parallax = cameraX * .08;
     if (art.background.complete && art.background.naturalWidth) {
       const img = art.background;
-      const coverScale = Math.max(width / img.width, 720 / img.height);
+      const coverScale = Math.max(width / img.width, viewHeight / img.height);
       const drawW = img.width * coverScale;
       const drawH = img.height * coverScale;
       const travel = Math.max(0, drawW - width);
       const sourceX = travel ? -((parallax % (travel + width * .15)) / (travel + width * .15)) * travel : 0;
-      ctx.drawImage(img, sourceX, (720 - drawH) / 2, drawW, drawH);
-      if (sourceX + drawW < width) ctx.drawImage(img, sourceX + drawW, (720 - drawH) / 2, drawW, drawH);
+      ctx.drawImage(img, sourceX, (viewHeight - drawH) / 2, drawW, drawH);
+      if (sourceX + drawW < width) ctx.drawImage(img, sourceX + drawW, (viewHeight - drawH) / 2, drawW, drawH);
     } else {
       const g = ctx.createLinearGradient(0, 0, 0, 720);
       g.addColorStop(0, "#24114d"); g.addColorStop(.6, "#38215c"); g.addColorStop(1, "#0d1533");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, width, 720);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, width, viewHeight);
     }
     if (level.theme.tint) {
       // Recolour the shared backdrop for this level.
       ctx.save();
       ctx.globalCompositeOperation = "hue";
-      ctx.fillStyle = level.theme.tint; ctx.fillRect(0, 0, width, 720);
+      ctx.fillStyle = level.theme.tint; ctx.fillRect(0, 0, width, viewHeight);
       ctx.restore();
-      ctx.fillStyle = "rgba(4,10,34,.22)"; ctx.fillRect(0, 0, width, 720);
+      ctx.fillStyle = "rgba(4,10,34,.22)"; ctx.fillRect(0, 0, width, viewHeight);
     }
     const haze = ctx.createLinearGradient(0, 200, 0, 720);
     haze.addColorStop(0, "rgba(12,6,36,.04)"); haze.addColorStop(1, "rgba(6,7,26,.5)");
-    ctx.fillStyle = haze; ctx.fillRect(0, 0, width, 720);
+    ctx.fillStyle = haze; ctx.fillRect(0, 0, width, viewHeight);
 
     ctx.save();
     ctx.globalAlpha = .5;
@@ -594,7 +603,9 @@
     const grad = ctx.createLinearGradient(0, p.y, 0, p.y + Math.min(p.h, 110));
     const theme = level.theme;
     grad.addColorStop(0, theme.body[0]); grad.addColorStop(.16, theme.body[1]); grad.addColorStop(1, theme.body[2]);
-    ctx.fillStyle = grad; roundedRect(x, p.y, p.w, p.h, 16); ctx.fill();
+    // Ground slabs run on to the bottom of the screen, however tall the view is.
+    const height = p.y >= WORLD.ground ? Math.max(p.h, viewHeight - p.y + 20) : p.h;
+    ctx.fillStyle = grad; roundedRect(x, p.y, p.w, height, 16); ctx.fill();
     ctx.shadowColor = "transparent";
     ctx.fillStyle = theme.top; roundedRect(x, p.y, p.w, 15, 12); ctx.fill();
     ctx.fillStyle = theme.shine; roundedRect(x + 8, p.y + 2, Math.max(0, p.w - 16), 5, 4); ctx.fill();
@@ -866,7 +877,7 @@
 
   function render(time) {
     ctx.setTransform(dpr * renderScale, 0, 0, dpr * renderScale, 0, 0);
-    ctx.clearRect(0, 0, viewWidth, 720);
+    ctx.clearRect(0, 0, viewWidth, viewHeight);
     drawBackground(time);
     platforms.forEach(drawPlatform);
     drawCheckpoint(time);
