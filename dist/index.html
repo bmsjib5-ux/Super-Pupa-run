@@ -7,6 +7,12 @@
     <meta name="description" content="Super Pupa Run เกมแพลตฟอร์มผจญภัยในสวนเชอร์รี่ยามค่ำ เล่นได้ทั้งคีย์บอร์ดและมือถือ">
     <title>Super Pupa Run</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='18' width='64' height='64' fill='%23150b35'/%3E%3Cellipse cx='32' cy='35' rx='18' ry='21' fill='%23ff6b9b'/%3E%3Ccircle cx='26' cy='32' r='3' fill='%23150b35'/%3E%3Ccircle cx='38' cy='32' r='3' fill='%23150b35'/%3E%3Cpath d='M25 42q7 6 14 0' fill='none' stroke='%23150b35' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M40 15q10 1 9 10-9 1-12-5' fill='%237ee081'/%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pupa Run">
     <link rel="stylesheet" href="styles.css">
     <script src="game.js" defer></script>
     <script type="module" src="pupa3d.js"></script>
@@ -44,7 +50,11 @@
               <div class="eyebrow"><span></span> คืนจันทร์เชอร์รี่ <span></span></div>
               <h2>SUPER<br><em>PUPA</em> RUN</h2>
               <p>พา Pupa กลับรังไหมก่อนแสงจันทร์ลับฟ้า</p>
-              <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
+              <div class="title-actions">
+                <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
+                <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
+              </div>
+              <p id="installHint" class="install-hint" hidden></p>
               <div class="controls-hint">
                 <span><kbd>A</kbd><kbd>D</kbd> เคลื่อนที่</span>
                 <span><kbd>SPACE</kbd> กระโดด</span>

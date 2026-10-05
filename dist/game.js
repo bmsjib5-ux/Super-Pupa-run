@@ -937,6 +937,41 @@
   }, { passive: false });
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
+  // Install as an app. Chrome/Edge/Samsung hand us a prompt to trigger; iOS
+  // Safari has no prompt, so the button explains the Share-menu route instead.
+  const installBtn = document.querySelector("#installBtn");
+  const installHint = document.querySelector("#installHint");
+  const installed = window.matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone === true;
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let installPrompt = null;
+  if (!installed && window.matchMedia("(pointer: coarse)").matches) installBtn.hidden = false;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    installBtn.hidden = false;
+  });
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installBtn.hidden = true;
+    installHint.hidden = true;
+  });
+  installBtn.addEventListener("click", async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const choice = await installPrompt.userChoice.catch(() => null);
+      installPrompt = null;
+      if (choice?.outcome === "accepted") installBtn.hidden = true;
+      return;
+    }
+    installHint.textContent = isIos
+      ? "บน iPhone/iPad: เปิดใน Safari แตะปุ่มแชร์ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”"
+      : "เปิดเมนูของเบราว์เซอร์ แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอหลัก”";
+    installHint.hidden = false;
+  });
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
   ui.startBtn.addEventListener("click", startGame);
   ui.restartBtn.addEventListener("click", () => { resetGame(); startGame(); });
   ui.resumeBtn.addEventListener("click", () => togglePause(false));

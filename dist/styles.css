@@ -184,6 +184,21 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .primary-button:hover { filter: brightness(1.06); transform: translateY(-2px); }
 .primary-button:active { transform: translateY(.2rem); box-shadow: 0 .15rem 0 #b34b54; }
 
+.title-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .9rem 1rem; }
+.secondary-button {
+  padding: .8rem 1.3rem;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 999px;
+  color: var(--ink);
+  font-weight: 700;
+  background: rgba(255,255,255,.1);
+  cursor: pointer;
+  transition: background .16s ease;
+}
+.secondary-button:hover { background: rgba(255,255,255,.18); }
+.secondary-button[hidden], .install-hint[hidden] { display: none; }
+.title-card .install-hint { margin: .9rem auto 0; color: #ffe5a5; font-size: .82rem; }
+
 .controls-hint { display: flex; justify-content: center; gap: 1rem; margin-top: 1.25rem; color: #bdb0d2; font-size: .73rem; }
 kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .2rem; place-items: center; border: 1px solid rgba(255,255,255,.25); border-radius: .35rem; color: white; background: rgba(255,255,255,.09); box-shadow: 0 .15rem 0 rgba(0,0,0,.35); font: 700 .68rem inherit; }
 
@@ -316,7 +331,9 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .title-card { width: min(30rem, 80%); }
   .title-card h2 { margin: .35rem 0 .4rem; font-size: clamp(2rem, 17vh, 4rem); }
   .title-card p, .message-card p { margin: .5rem auto .7rem; font-size: .9rem; }
-  .primary-button { padding: .6rem 1.4rem; }
+  .primary-button { min-width: 10rem; padding: .6rem 1.4rem; }
+  .secondary-button { padding: .55rem 1.1rem; }
+  .title-card .install-hint { margin-top: .5rem; font-size: .75rem; }
   .moon-icon { display: none; }
   .message-card h2 { margin: 0; font-size: 1.5rem; }
   .final-score { margin-bottom: .8rem; padding: .5rem .9rem; }
