@@ -128,7 +128,6 @@
   const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52] };
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
-  const itemIcons = { heart: "❤️", star: "⭐", leaf: "🍃", grow: "🍄" };
   const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b" };
   const SMALL = { w: 70, h: 88 };
   const BIG = { w: 92, h: 124 };
@@ -360,7 +359,12 @@
       updateHud();
       return;
     }
-    items.push({ type, x: cx, y: block.y - 22, vx: (Math.random() < .5 ? -1 : 1) * 90, vy: -520, life: 9, age: 0, resting: false });
+    // Toss the item toward a side that has ground under it, never into a pit
+    // or off the edge of the level.
+    const hasGround = (x) => platforms.some(p => p.y >= WORLD.ground && x > p.x + 24 && x < p.x + p.w - 24);
+    const sides = [-1, 1].filter(side => hasGround(cx + side * 95));
+    const side = sides.length ? sides[Math.floor(Math.random() * sides.length)] : 0;
+    items.push({ type, x: cx, y: block.y - 22, vx: side * 90, vy: -520, life: 9, age: 0, resting: false });
     tone(392, .09, "triangle", .05, .06);
     tone(587, .14, "triangle", .05, .13);
   }
@@ -619,6 +623,92 @@
     ctx.restore();
   }
 
+  // Pickups are drawn as shapes rather than emoji: phone browsers render
+  // glowing emoji on a canvas as a blurry smear.
+  function drawGlow(color, radius) {
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, radius);
+    glow.addColorStop(0, color); glow.addColorStop(1, "transparent");
+    ctx.save();
+    ctx.globalAlpha *= .5;
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBall(x, y, r, light, dark) {
+    const fill = ctx.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r);
+    fill.addColorStop(0, light); fill.addColorStop(1, dark);
+    ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    ctx.beginPath(); ctx.ellipse(x - r * .38, y - r * .42, r * .24, r * .15, -.6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  const pickupArt = {
+    cherry() {
+      ctx.strokeStyle = "#3f8f3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-9, 4); ctx.quadraticCurveTo(-6, -12, 5, -18);
+      ctx.moveTo(10, 6); ctx.quadraticCurveTo(10, -8, 5, -18); ctx.stroke();
+      ctx.fillStyle = "#6fcf5a";
+      ctx.beginPath(); ctx.moveTo(5, -18); ctx.quadraticCurveTo(16, -27, 22, -15); ctx.quadraticCurveTo(12, -11, 5, -18); ctx.fill();
+      drawBall(-9, 9, 10.5, "#ff8fa8", "#d81f4f");
+      drawBall(10, 11, 10.5, "#ff8fa8", "#c2143f");
+    },
+    heart() {
+      const fill = ctx.createLinearGradient(0, -16, 0, 18);
+      fill.addColorStop(0, "#ff9db8"); fill.addColorStop(1, "#e52462");
+      ctx.fillStyle = fill;
+      ctx.beginPath(); ctx.moveTo(0, 17);
+      ctx.bezierCurveTo(-26, -1, -18, -22, 0, -8);
+      ctx.bezierCurveTo(18, -22, 26, -1, 0, 17);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.7)";
+      ctx.beginPath(); ctx.ellipse(-8, -8, 5, 3, -.6, 0, Math.PI * 2); ctx.fill();
+    },
+    star() {
+      const fill = ctx.createLinearGradient(0, -20, 0, 20);
+      fill.addColorStop(0, "#fff6b0"); fill.addColorStop(1, "#ffb22e");
+      ctx.fillStyle = fill; ctx.strokeStyle = "#c9741a"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 ? 9 : 20;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#6b3a12";
+      ctx.beginPath(); ctx.ellipse(-4, 0, 1.8, 3.2, 0, 0, Math.PI * 2); ctx.ellipse(4, 0, 1.8, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    },
+    leaf() {
+      const fill = ctx.createLinearGradient(-14, 14, 14, -14);
+      fill.addColorStop(0, "#2f9d57"); fill.addColorStop(1, "#b6f58a");
+      ctx.fillStyle = fill;
+      ctx.beginPath(); ctx.moveTo(-15, 16);
+      ctx.bezierCurveTo(-22, -8, 0, -22, 18, -18);
+      ctx.bezierCurveTo(22, 2, 6, 20, -15, 16);
+      ctx.fill();
+      ctx.strokeStyle = "#1f7a45"; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-17, 18); ctx.quadraticCurveTo(-2, 2, 13, -13);
+      ctx.moveTo(-6, 7); ctx.lineTo(-9, -3); ctx.moveTo(1, 0); ctx.lineTo(-1, -10);
+      ctx.moveTo(-5, 6); ctx.lineTo(5, 9); ctx.moveTo(3, -2); ctx.lineTo(12, 1);
+      ctx.stroke();
+    },
+    grow() {
+      ctx.fillStyle = "#fff1d6";
+      ctx.beginPath(); ctx.roundRect(-10, -1, 20, 19, 7); ctx.fill();
+      const cap = ctx.createLinearGradient(0, -20, 0, 4);
+      cap.addColorStop(0, "#ff7b6b"); cap.addColorStop(1, "#d92b3c");
+      ctx.fillStyle = cap;
+      ctx.beginPath(); ctx.moveTo(-21, 3);
+      ctx.bezierCurveTo(-23, -14, -10, -21, 0, -21);
+      ctx.bezierCurveTo(10, -21, 23, -14, 21, 3);
+      ctx.quadraticCurveTo(0, 8, -21, 3);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(0, -11, 5.5, 0, Math.PI * 2); ctx.arc(-13, -4, 3.8, 0, Math.PI * 2); ctx.arc(13, -4, 3.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#3a1d2a";
+      ctx.beginPath(); ctx.ellipse(-4, 9, 1.7, 3, 0, 0, Math.PI * 2); ctx.ellipse(4, 9, 1.7, 3, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  };
+
   function drawCherry(cherry, time) {
     if (cherry.taken) return;
     const x = cherry.x - cameraX;
@@ -626,10 +716,8 @@
     const y = cherry.y + Math.sin(time * .004 + cherry.phase) * 7;
     ctx.save();
     ctx.translate(x, y);
-    ctx.shadowColor = "#ff567f"; ctx.shadowBlur = 20;
-    ctx.font = "38px Apple Color Emoji, Segoe UI Emoji, sans-serif";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("🍒", 0, 0);
+    drawGlow("#ff567f", 30);
+    pickupArt.cherry();
     ctx.restore();
   }
 
@@ -668,22 +756,23 @@
     const x = item.x - cameraX;
     if (x < -60 || x > viewWidth + 60) return;
     ctx.save();
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
     if (item.popup) {
       ctx.globalAlpha = Math.min(1, item.life / .3);
       ctx.translate(x, item.y);
-      ctx.shadowColor = "#ffd76a"; ctx.shadowBlur = 18;
-      ctx.font = "34px Apple Color Emoji, Segoe UI Emoji, sans-serif";
-      ctx.fillText("🍒", -12, 0);
+      ctx.save();
+      ctx.translate(-14, 0); ctx.scale(.85, .85);
+      drawGlow("#ffd76a", 28);
+      pickupArt.cherry();
+      ctx.restore();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "900 24px 'Trebuchet MS', system-ui, sans-serif";
+      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(48,16,45,.8)"; ctx.strokeText("+1", 24, 0);
       ctx.fillStyle = "#ffe58f"; ctx.fillText("+1", 24, 0);
     } else {
       if (item.life < 2 && Math.floor(item.life * 10) % 2) ctx.globalAlpha = .3;
       ctx.translate(x, item.y + (item.resting ? Math.sin(time * .006) * 4 : 0));
-      ctx.shadowColor = itemGlow[item.type];
-      ctx.shadowBlur = 22;
-      ctx.font = "36px Apple Color Emoji, Segoe UI Emoji, sans-serif";
-      ctx.fillText(itemIcons[item.type], 0, 0);
+      drawGlow(itemGlow[item.type], 34);
+      pickupArt[item.type]();
     }
     ctx.restore();
   }
