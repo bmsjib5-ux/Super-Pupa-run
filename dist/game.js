@@ -1010,13 +1010,15 @@
   // grows: across levels, game overs, replays and visits. Coins add up the
   // same way and are spent only in the market.
   const SAVE_KEY = "superPupaRunSave";
-  const save = { best: 0, points: null, coins: 0, plays: 0, wins: 0 };
+  const save = { best: 0, points: null, coins: 0, plays: 0, wins: 0, cleared: [] };
   try {
     Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"));
     save.best = Math.max(Number(save.best) || 0, Number(localStorage.getItem(BEST_KEY)) || 0);
     if (save.points == null) save.points = save.best; // saves from before totals existed
     for (const key of ["points", "coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
   } catch { save.points = 0; /* storage unavailable: play on without saving */ }
+  // Level numbers cleared at least once (for the level select).
+  save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
   normalizeShop();
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
@@ -1117,10 +1119,10 @@
     updateHud();
   }
 
-  function resetGame() {
+  function resetGame(index = startLevel) {
     player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
-    loadLevel(startLevel);
+    loadLevel(index);
   }
 
   // After a game over, try the same level again with full hearts. Coins and
@@ -1151,6 +1153,7 @@
 
   function nextLevel() {
     bankCoins();
+    markCleared(levelIndex + 1);
     // Every new level starts with full hearts.
     player.lives = 3;
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
@@ -1213,6 +1216,7 @@
   }
 
   function finish(won) {
+    if (won) markCleared(levelIndex + 1);
     state = won ? "won" : "lost";
     ui.end.hidden = false;
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
@@ -3114,11 +3118,14 @@
 
   function openShop(event) {
     if (!shopUi.screen) return;
+    if (levelsOpen) closeLevels(true);
+    // The game waits behind the market.
+    if (state === "playing") togglePause(true);
     shopOpener = event?.currentTarget || document.activeElement;
     shopOpen = true;
     shopTry = {};
     shopUi.screen.hidden = false;
-    document.body.classList.add("shop-is-open");
+    document.body.classList.add("dialog-open");
     renderShop();
     shopUi.close.focus();
     tone(587, .07, "triangle", .04);
@@ -3127,7 +3134,7 @@
   function closeShop() {
     shopOpen = false;
     shopUi.screen.hidden = true;
-    document.body.classList.remove("shop-is-open");
+    document.body.classList.remove("dialog-open");
     writeSave();
     updateHud();
     shopOpener?.focus?.();
@@ -4183,6 +4190,118 @@
     return false;
   }
 
+
+  // ---- Level select ----
+  // Level 1 is always open; any other level opens once the one before it has
+  // been cleared. Cleared levels can be replayed at any time.
+  const levelUi = {
+    screen: document.querySelector("#levelScreen"),
+    list: document.querySelector("#levelList"),
+    close: document.querySelector("#levelClose"),
+    progress: document.querySelector("#levelProgress")
+  };
+  let levelsOpen = false;
+  let levelsOpener = null;
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30]];
+
+  const isCleared = (num) => save.cleared.includes(num);
+  const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
+
+  function markCleared(num) {
+    if (isCleared(num)) return;
+    save.cleared.push(num);
+    save.cleared.sort((a, b) => a - b);
+    writeSave();
+  }
+
+  function openLevels(event) {
+    if (!levelUi.screen) return;
+    if (shopOpen) closeShop();
+    if (state === "playing") togglePause(true);
+    levelsOpener = event?.currentTarget || document.activeElement;
+    levelsOpen = true;
+    levelUi.screen.hidden = false;
+    document.body.classList.add("dialog-open");
+    renderLevels();
+    // Start with the newest open level in view.
+    const target = levelUi.list.querySelector(".is-next") || [...levelUi.list.querySelectorAll(".level-tile:not(.is-locked)")].pop();
+    if (target) {
+      // scroll the list only, never the page around the game
+      const list = levelUi.list, box = target.getBoundingClientRect(), view = list.getBoundingClientRect();
+      list.scrollTop += box.top - view.top - (list.clientHeight - box.height) / 2;
+    }
+    levelUi.close.focus();
+    tone(587, .07, "triangle", .04);
+  }
+
+  function closeLevels(quiet) {
+    levelsOpen = false;
+    levelUi.screen.hidden = true;
+    document.body.classList.remove("dialog-open");
+    if (!quiet) levelsOpener?.focus?.();
+  }
+
+  function chooseLevel(num) {
+    if (!isOpenLevel(num)) { tone(150, .12, "square", .05); announce(`ด่าน ${num} ยังล็อกอยู่ ผ่านด่าน ${num - 1} ก่อน`); return; }
+    closeLevels(true);
+    bankCoins();
+    resetGame(num - 1);
+    state = "menu";
+    ui.pauseBtn.textContent = "Ⅱ";
+    startGame();
+  }
+
+  function renderLevels() {
+    const cleared = save.cleared.length;
+    levelUi.progress.textContent = `ผ่านแล้ว ${cleared}/${levels.length}`;
+    levelUi.list.replaceChildren();
+    for (const [title, from, to] of WORLDS) {
+      if (from > levels.length) continue;
+      const section = document.createElement("section");
+      section.className = "shop-section";
+      const heading = document.createElement("h3");
+      heading.className = "shop-heading";
+      heading.textContent = title;
+      const grid = document.createElement("div");
+      grid.className = "level-grid";
+      for (let num = from; num <= Math.min(to, levels.length); num++) {
+        const entry = levels[num - 1];
+        const open = isOpenLevel(num), done = isCleared(num);
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = `level-tile${done ? " is-cleared" : open ? " is-next" : " is-locked"}${num - 1 === levelIndex && state !== "menu" ? " is-current" : ""}`;
+        tile.style.setProperty("--accent", entry.theme.top);
+        const name = entry.name.split(" · ")[1] || entry.name;
+        tile.setAttribute("aria-label", `ด่าน ${num} ${name}${done ? " ผ่านแล้ว" : open ? " เล่นได้" : " ล็อกอยู่"}${entry.boss ? " มีบอส" : ""}`);
+        tile.setAttribute("aria-disabled", String(!open));
+        const number = document.createElement("b");
+        number.textContent = open ? num : "🔒";
+        const label = document.createElement("span");
+        label.className = "level-name";
+        label.textContent = name;
+        const badge = document.createElement("span");
+        badge.className = "level-badge";
+        badge.textContent = done ? "✓ ผ่านแล้ว" : open ? "ด่านใหม่" : "ล็อก";
+        tile.append(number, label, badge);
+        if (entry.boss) {
+          const boss = document.createElement("i");
+          boss.className = "level-boss";
+          boss.textContent = "บอส";
+          tile.append(boss);
+        }
+        tile.addEventListener("click", () => chooseLevel(num));
+        grid.append(tile);
+      }
+      section.append(heading, grid);
+      levelUi.list.append(section);
+    }
+  }
+
+  if (levelUi.screen) {
+    levelUi.close.addEventListener("click", () => closeLevels());
+    document.querySelectorAll("[data-open-levels]").forEach(button => button.addEventListener("click", openLevels));
+  }
+
   function setKey(action, value) {
     if (action === "jump" || action === "attack") { if (value) keys[action] = true; return; }
     keys[action] = value;
@@ -4191,7 +4310,7 @@
   const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack" };
   window.addEventListener("keydown", (event) => {
     // The market takes the keyboard while it is open: Escape closes it.
-    if (shopOpen) { if (event.key === "Escape") { event.preventDefault(); closeShop(); } return; }
+    if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (event.key === "Enter" && state === "menu") { startGame(); return; }
     const action = keyMap[event.key];

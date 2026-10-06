@@ -30,6 +30,8 @@
             </div>
           </div>
           <div class="top-actions">
+            <button id="levelsBtn" class="icon-button accent" type="button" aria-label="เลือกด่าน" title="เลือกด่าน" data-open-levels><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M15 21v-7.5l5 2.2-5 2.3"/></svg></button>
+            <button id="shopBtn" class="icon-button accent" type="button" aria-label="ร้านค้า" title="ร้านค้า" data-open-shop><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1.2 12h-10.6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/><path d="M9.5 12.5a2.5 2.5 0 0 0 5 0"/></svg></button>
             <button id="soundBtn" class="icon-button" type="button" aria-label="ปิดเสียง" aria-pressed="false">♫</button>
             <button id="pauseBtn" class="icon-button" type="button" aria-label="หยุดเกมชั่วคราว" aria-pressed="false">Ⅱ</button>
             <button id="fullscreenBtn" class="icon-button" type="button" aria-label="เปิดเต็มหน้าจอ">⛶</button>
@@ -54,6 +56,7 @@
               <p id="saveLine" class="save-line"></p>
               <div class="title-actions">
                 <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
+                <button class="secondary-button shop-button" type="button" data-open-levels>เลือกด่าน</button>
                 <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
                 <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
               </div>
@@ -90,6 +93,18 @@
                 <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
                 <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
               </div>
+            </div>
+          </div>
+
+          <div id="levelScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="levelTitle" hidden>
+            <div class="shop-card level-card">
+              <header class="shop-head">
+                <h2 id="levelTitle">เลือกด่าน</h2>
+                <div id="levelProgress" class="shop-wallet">ผ่านแล้ว 0/30</div>
+                <button id="levelClose" class="icon-button" type="button" aria-label="ปิดหน้าเลือกด่าน">✕</button>
+              </header>
+              <p class="level-hint">ด่านที่ผ่านแล้วเล่นซ้ำได้ ด่านถัดไปจะปลดล็อกเมื่อผ่านด่านก่อนหน้า</p>
+              <div id="levelList" class="shop-list level-list"></div>
             </div>
           </div>
 

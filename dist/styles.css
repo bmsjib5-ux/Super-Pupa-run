@@ -444,7 +444,7 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
 }
 @media (orientation: landscape) and (max-height: 35rem) {
   /* the floating top buttons would sit on the market header */
-  .shop-is-open .topbar { display: none; }
+  .dialog-open .topbar { display: none; }
   .shop-overlay { padding: .3rem; }
   .shop-card { height: 100%; border-radius: 1rem; }
   .shop-head { padding: .35rem .6rem .35rem 1rem; }
@@ -454,6 +454,59 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .shop-tabs { padding: .4rem .7rem .3rem; }
   .shop-tabs button { padding: .35rem .5rem; }
   .shop-list { padding: .1rem .7rem .6rem; }
+}
+
+/* ---- Top-bar shortcuts and level select ---- */
+.icon-button svg { display: block; width: 1.3rem; height: 1.3rem; margin: auto; }
+.icon-button.accent { color: var(--gold); border-color: rgba(255,215,106,.35); background: rgba(255,215,106,.1); }
+.icon-button.accent:hover { background: rgba(255,215,106,.2); }
+.level-card { height: min(42rem, 100%); }
+.level-hint { margin: .5rem 1.3rem 0; color: #bdb0d2; font-size: .78rem; }
+.level-list { padding-top: .2rem; }
+.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.2rem, 1fr)); gap: .6rem; }
+.level-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .15rem;
+  min-height: 6.2rem;
+  padding: .6rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 45%);
+  border-radius: 1rem;
+  color: var(--ink);
+  text-align: left;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent), transparent 72%), rgba(13,8,36,.6) 70%);
+  cursor: pointer;
+  transition: transform .15s ease, filter .15s ease;
+}
+.level-tile:hover { transform: translateY(-2px); filter: brightness(1.12); }
+.level-tile b { font-size: 1.6rem; line-height: 1; text-shadow: 0 .1em 0 rgba(0,0,0,.35); }
+.level-tile .level-name { font-size: .74rem; line-height: 1.25; color: #e8dcff; }
+.level-tile .level-badge { margin-top: auto; font-size: .66rem; font-weight: 800; letter-spacing: .03em; color: var(--muted); }
+.level-tile.is-cleared .level-badge { color: var(--mint); }
+.level-tile.is-next { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255,215,106,.35), 0 0 1.2rem rgba(255,215,106,.25); }
+.level-tile.is-next .level-badge { color: var(--gold); }
+.level-tile.is-current::after { content: "กำลังเล่น"; position: absolute; top: .45rem; right: .5rem; font-size: .6rem; font-weight: 800; color: #30102d; padding: .1rem .4rem; border-radius: 999px; background: var(--mint); }
+.level-tile.is-locked { cursor: not-allowed; filter: grayscale(.85) brightness(.6); border-color: rgba(255,255,255,.12); }
+.level-tile.is-locked:hover { transform: none; filter: grayscale(.85) brightness(.6); }
+.level-tile.is-locked b { font-size: 1.25rem; }
+.level-boss { position: absolute; right: .5rem; bottom: .5rem; padding: .1rem .45rem; border-radius: 999px; font-size: .6rem; font-style: normal; font-weight: 800; color: #fff; background: rgba(226,46,86,.8); }
+
+/* Narrow screens: keep the brand mark, drop its text so the shortcut
+   buttons fit on one line. */
+@media (max-width: 30rem) {
+  .brand > div { display: none; }
+  .top-actions { gap: .4rem; }
+  .icon-button { width: 2.45rem; }
+}
+
+/* Phones held upright: keep the top bar clear of the front camera / notch
+   and the status bar, and the bottom bar clear of the home indicator. */
+@media (pointer: coarse) and (orientation: portrait), (max-width: 48rem) and (orientation: portrait) {
+  .topbar { padding-top: max(.75rem, calc(env(safe-area-inset-top) + .35rem)); padding-left: max(.85rem, env(safe-area-inset-left)); padding-right: max(.85rem, env(safe-area-inset-right)); }
+  .stage-wrap { min-height: calc(100svh - 7.3rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .statusbar { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
 }
 
 /* On touch screens nothing on the page is selectable, not just the game. */
