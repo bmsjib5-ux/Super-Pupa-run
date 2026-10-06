@@ -651,6 +651,296 @@
         ["urchin",3930,549], ["hopper",4190,553], ["walker",5600,536], ["spitter",6960,535], ["walker",8200,536]
       ],
       blocks: [[10,390],[1230,390],[2430,390],[3750,390],[5250,390],[6610,390],[7850,390],[9260,390],[9660,390],[10020,390]]
+    },
+    {
+      name: "ด่าน 21 · ถ้ำเห็ดเรืองแสง",
+      width: 6760, goalX: 6400, checkpointX: 3910,
+      theme: { scene: "cave", pal: "cave", seed: 21, top: "#3fd9b5", shine: "#b8fff0", body: ["#1d4a52", "#123238", "#061418"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1020, 605, 420, 140], [1880, 605, 380, 140], [2760, 605, 620, 140],
+        [3760, 605, 460, 140], [4840, 605, 420, 140], [5660, 605, 1100, 140], [220, 480, 170, 34],
+        [440, 390, 140, 34], [700, 470, 140, 34, "x", 120, 80], [1110, 470, 170, 34], [1510, 500, 110, 30, "crumble"],
+        [1670, 450, 110, 30, "crumble"], [1970, 470, 170, 34], [2340, 450, 140, 34, "y", 150, 60], [2560, 380, 140, 34],
+        [2840, 470, 170, 34], [3060, 380, 140, 34], [3460, 460, 150, 34, "y", 100, 60], [3850, 470, 170, 34],
+        [4300, 500, 110, 30, "crumble"], [4460, 440, 110, 30, "crumble"], [4630, 500, 120, 34, "x", 100, 70], [4930, 470, 170, 34],
+        [5340, 470, 140, 34, "x", 120, 80], [5740, 470, 170, 34], [5960, 380, 140, 34]
+      ]),
+      cherries: [
+        [770,410], [890,410], [1565,440], [1725,390], [2410,390], [2630,320], [3535,400], [4355,440],
+        [4515,380], [4690,440], [5410,410], [5530,410], [275,420], [345,420], [510,330], [1165,410],
+        [1235,410], [2025,410], [2095,410], [2895,410], [2965,410], [3130,320], [3905,410], [3975,410],
+        [4985,410], [5055,410], [5795,410], [5865,410], [6030,320]
+      ],
+      enemies: [
+        ["roller",480,550], ["walker",1260,536], ["jelly",1654,210], ["walker",2070,536], ["walker",2930,536],
+        ["jelly",3618,240], ["roller",5050,550], ["jelly",5482,210], ["roller",6560,550]
+      ],
+      blocks: [[10,390],[1030,390],[1890,390],[2770,390],[4850,390],[5670,390],[6220,390]]
+    },
+    {
+      name: "ด่าน 22 · ทะเลทรายดาวตก",
+      width: 7400, goalX: 7040, checkpointX: 4090,
+      theme: { scene: "desert", pal: "desert", seed: 22, top: "#f2a65a", shine: "#ffe2b0", body: ["#7a3a3a", "#4e2230", "#1c0c16"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1560, 605, 500, 140], [2960, 605, 580, 140], [3940, 605, 620, 140],
+        [5340, 605, 460, 140], [6300, 605, 1100, 140], [220, 480, 170, 34], [440, 390, 140, 34],
+        [700, 470, 150, 34], [920, 560, 90, 20, "spring"], [1060, 300, 170, 34], [1310, 400, 130, 34, "y", 150, 60],
+        [1650, 470, 170, 34], [2140, 470, 150, 34], [2340, 380, 130, 34, "y", 160, 70], [2540, 460, 130, 34, "x", 180, 80],
+        [3040, 470, 170, 34], [3260, 380, 140, 34], [3620, 470, 140, 34, "x", 120, 80], [4020, 470, 170, 34],
+        [4240, 380, 140, 34], [4640, 480, 120, 30, "crumble"], [4820, 430, 120, 30, "crumble"], [5000, 480, 140, 34, "x", 140, 90],
+        [5430, 470, 170, 34], [5880, 450, 140, 34, "y", 150, 60], [6100, 380, 140, 34], [6380, 470, 170, 34],
+        [6600, 380, 140, 34]
+      ]),
+      cherries: [
+        [775,410], [965,440], [965,360], [1100,240], [1180,240], [1375,340], [2215,410], [2405,320],
+        [2605,400], [3690,410], [3810,410], [4700,420], [4880,370], [5070,420], [5950,390], [6170,320],
+        [275,420], [345,420], [510,330], [1705,410], [1775,410], [3095,410], [3165,410], [3330,320],
+        [4075,410], [4145,410], [4310,320], [5485,410], [5555,410], [6435,410], [6505,410], [6670,320]
+      ],
+      enemies: [
+        ["crab",470,558], ["crab",1910,558], ["swooper",2533,140], ["crab",3240,558], ["swooper",3250,110],
+        ["crab",4430,558], ["bat",5060,190], ["spitter",5700,535], ["bat",6072,170], ["crab",6580,558],
+        ["spitter",7130,535]
+      ],
+      blocks: [[10,390],[1570,390],[2970,390],[5350,390],[6310,390],[6860,390]]
+    },
+    {
+      name: "ด่าน 23 · เมืองโคมลอยฟ้า",
+      width: 7620, goalX: 7260, checkpointX: 4250,
+      theme: { scene: "lanterns", pal: "lanterns", seed: 23, top: "#ff7a5a", shine: "#ffd3b0", body: ["#6a2240", "#44142e", "#1a0612"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1500, 605, 580, 140], [2980, 605, 500, 140], [4100, 605, 620, 140],
+        [5120, 605, 460, 140], [6520, 605, 1100, 140], [220, 480, 170, 34], [440, 390, 140, 34],
+        [700, 500, 140, 34, "x", 200, 80], [1060, 440, 170, 34], [1300, 500, 110, 30, "crumble"], [1580, 470, 170, 34],
+        [1800, 380, 140, 34], [2160, 470, 150, 34], [2360, 380, 130, 34, "y", 160, 70], [2560, 460, 130, 34, "x", 180, 80],
+        [3070, 470, 170, 34], [3560, 500, 110, 30, "crumble"], [3720, 440, 110, 30, "crumble"], [3890, 500, 120, 34, "x", 100, 70],
+        [4180, 470, 170, 34], [4400, 380, 140, 34], [4800, 470, 140, 34, "x", 120, 80], [5210, 470, 170, 34],
+        [5660, 470, 150, 34], [5880, 560, 90, 20, "spring"], [6020, 300, 170, 34], [6270, 400, 130, 34, "y", 150, 60],
+        [6600, 470, 170, 34], [6820, 380, 140, 34]
+      ]),
+      cherries: [
+        [770,440], [870,440], [1145,380], [1355,440], [2235,410], [2425,320], [2625,400], [3615,440],
+        [3775,380], [3950,440], [4870,410], [4990,410], [5735,410], [5925,440], [5925,360], [6060,240],
+        [6140,240], [6335,340], [275,420], [345,420], [510,330], [1635,410], [1705,410], [1870,320],
+        [3125,410], [3195,410], [4235,410], [4305,410], [4470,320], [5265,410], [5335,410], [6655,410],
+        [6725,410], [6890,320]
+      ],
+      enemies: [
+        ["crab",510,558], ["walker",1700,536], ["crab",1940,558], ["walker",3200,536], ["bat",3722,180],
+        ["walker",4590,536], ["swooper",4863,120], ["crab",5300,558], ["walker",6640,536], ["crab",7390,558]
+      ],
+      blocks: [[10,390],[1510,390],[2990,390],[5130,390],[6530,390],[7080,390]]
+    },
+    {
+      name: "ด่าน 24 · ถ้ำปะการังคริสตัล",
+      width: 8280, goalX: 7920, checkpointX: 5740,
+      theme: { scene: "sea", pal: "sea", seed: 24, top: "#5ad8ff", shine: "#d0f6ff", body: ["#1a4a6a", "#0f2e48", "#04121e"], sparks: ["#ffffff", "#ffd76a"] },
+      boss: { kind: "crab", name: "ปูยักษ์คริสตัล", x: 6940, left: 6040, right: 7760, hp: 8 },
+      platforms: rects([
+        [0, 605, 620, 140], [1240, 605, 380, 140], [2400, 605, 580, 140], [3860, 605, 380, 140],
+        [5140, 605, 3140, 140], [220, 480, 170, 34], [440, 390, 140, 34], [700, 500, 110, 30, "crumble"],
+        [860, 440, 110, 30, "crumble"], [1030, 500, 120, 34, "x", 100, 70], [1330, 470, 170, 34], [1700, 480, 120, 30, "crumble"],
+        [1880, 430, 120, 30, "crumble"], [2060, 480, 140, 34, "x", 140, 90], [2480, 470, 170, 34], [2700, 380, 140, 34],
+        [3060, 500, 140, 34, "x", 200, 80], [3420, 440, 170, 34], [3660, 500, 110, 30, "crumble"], [3950, 470, 170, 34],
+        [4320, 470, 150, 34], [4520, 380, 130, 34, "y", 160, 70], [4720, 460, 130, 34, "x", 180, 80], [5220, 470, 170, 34],
+        [5440, 380, 140, 34], [6300, 420, 190, 34], [6700, 320, 190, 34], [7100, 420, 190, 34],
+        [7400, 360, 120, 34]
+      ]),
+      cherries: [
+        [755,440], [915,380], [1090,440], [1760,420], [1940,370], [2130,420], [3130,440], [3230,440],
+        [3505,380], [3715,440], [4395,410], [4585,320], [4785,400], [6395,360], [6795,260], [7195,360],
+        [7460,300], [275,420], [345,420], [510,330], [1385,410], [1455,410], [2535,410], [2605,410],
+        [2770,320], [4005,410], [4075,410], [5275,410], [5345,410], [5510,320]
+      ],
+      enemies: [
+        ["crab",460,558], ["roller",1450,550], ["urchin",2560,549], ["roller",2780,550], ["jelly",3425,210],
+        ["urchin",4100,549], ["urchin",5340,549]
+      ],
+      blocks: [[10,390],[1250,390],[2410,390],[3870,390],[5150,390],[6560,390],[6960,390],[7320,390]]
+    },
+    {
+      name: "ด่าน 25 · ปราสาทน้ำแข็งแสงเหนือ",
+      width: 7840, goalX: 7480, checkpointX: 3690,
+      theme: { scene: "ice", pal: "ice", seed: 25, top: "#bfefff", shine: "#ffffff", body: ["#3a5f8a", "#25405e", "#0a1626"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1060, 605, 460, 140], [2140, 605, 620, 140], [3540, 605, 380, 140],
+        [4420, 605, 420, 140], [5720, 605, 620, 140], [6740, 605, 1100, 140], [220, 480, 170, 34],
+        [440, 390, 140, 34], [690, 500, 110, 30, "crumble"], [850, 450, 110, 30, "crumble"], [1150, 470, 170, 34],
+        [1600, 500, 110, 30, "crumble"], [1760, 440, 110, 30, "crumble"], [1930, 500, 120, 34, "x", 100, 70], [2220, 470, 170, 34],
+        [2440, 380, 140, 34], [2840, 480, 120, 30, "crumble"], [3020, 430, 120, 30, "crumble"], [3200, 480, 140, 34, "x", 140, 90],
+        [3630, 470, 170, 34], [4000, 450, 140, 34, "y", 150, 60], [4220, 380, 140, 34], [4510, 470, 170, 34],
+        [4920, 500, 140, 34, "x", 200, 80], [5280, 440, 170, 34], [5520, 500, 110, 30, "crumble"], [5800, 470, 170, 34],
+        [6020, 380, 140, 34], [6420, 470, 140, 34, "x", 120, 80], [6820, 470, 170, 34], [7040, 380, 140, 34]
+      ]),
+      cherries: [
+        [745,440], [905,390], [1655,440], [1815,380], [1990,440], [2900,420], [3080,370], [3270,420],
+        [4070,390], [4290,320], [4990,440], [5090,440], [5365,380], [5575,440], [6490,410], [6610,410],
+        [275,420], [345,420], [510,330], [1205,410], [1275,410], [2275,410], [2345,410], [2510,320],
+        [3685,410], [3755,410], [4565,410], [4635,410], [5855,410], [5925,410], [6090,320], [6875,410],
+        [6945,410], [7110,320]
+      ],
+      enemies: [
+        ["urchin",480,549], ["roller",1290,550], ["crab",2300,558], ["swooper",2450,100], ["urchin",2550,549],
+        ["swooper",3244,100], ["swooper",4237,140], ["crab",4590,558], ["bat",5337,230], ["urchin",5880,549],
+        ["roller",6140,550], ["roller",7050,550], ["roller",7720,550]
+      ],
+      blocks: [[10,390],[1070,390],[2150,390],[4430,390],[5730,390],[6750,390],[7300,390]]
+    },
+    {
+      name: "ด่าน 26 · หุบเห็ดยักษ์สีชมพู",
+      width: 8940, goalX: 8580, checkpointX: 4490,
+      theme: { scene: "cave", pal: "cave2", seed: 26, top: "#ff7ae0", shine: "#ffd6f5", body: ["#4a1e5a", "#30143e", "#12061a"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1560, 605, 420, 140], [2860, 605, 580, 140], [4340, 605, 580, 140],
+        [5540, 605, 500, 140], [6820, 605, 420, 140], [7840, 605, 1100, 140], [220, 480, 170, 34],
+        [440, 390, 140, 34], [700, 470, 150, 34], [920, 560, 90, 20, "spring"], [1060, 300, 170, 34],
+        [1310, 400, 130, 34, "y", 150, 60], [1650, 470, 170, 34], [2060, 500, 140, 34, "x", 200, 80], [2420, 440, 170, 34],
+        [2660, 500, 110, 30, "crumble"], [2940, 470, 170, 34], [3160, 380, 140, 34], [3520, 470, 150, 34],
+        [3720, 380, 130, 34, "y", 160, 70], [3920, 460, 130, 34, "x", 180, 80], [4420, 470, 170, 34], [4640, 380, 140, 34],
+        [5000, 500, 110, 30, "crumble"], [5160, 440, 110, 30, "crumble"], [5330, 500, 120, 34, "x", 100, 70], [5630, 470, 170, 34],
+        [6120, 480, 120, 30, "crumble"], [6300, 430, 120, 30, "crumble"], [6480, 480, 140, 34, "x", 140, 90], [6910, 470, 170, 34],
+        [7320, 560, 90, 20, "spring"], [7460, 300, 160, 34], [7470, 500, 110, 34], [7690, 420, 120, 30, "crumble"],
+        [7920, 470, 170, 34], [8140, 380, 140, 34]
+      ]),
+      cherries: [
+        [775,410], [965,440], [965,360], [1100,240], [1180,240], [1375,340], [2130,440], [2230,440],
+        [2505,380], [2715,440], [3595,410], [3785,320], [3985,400], [5055,440], [5215,380], [5390,440],
+        [6180,420], [6360,370], [6550,420], [7365,500], [7365,420], [7500,240], [7580,240], [7750,360],
+        [275,420], [345,420], [510,330], [1705,410], [1775,410], [2995,410], [3065,410], [3230,320],
+        [4475,410], [4545,410], [4710,320], [5685,410], [5755,410], [6965,410], [7035,410], [7975,410],
+        [8045,410], [8210,320]
+      ],
+      enemies: [
+        ["hopper",440,553], ["spitter",1740,535], ["jelly",2496,230], ["bat",3150,180], ["crab",3160,558],
+        ["bat",3998,180], ["bat",5227,220], ["roller",5910,550], ["jelly",6483,220], ["spitter",6970,535],
+        ["hopper",8200,553], ["crab",8740,558]
+      ],
+      blocks: [[10,390],[1570,390],[2870,390],[5550,390],[6830,390],[7850,390],[8400,390]]
+    },
+    {
+      name: "ด่าน 27 · ลานโคมมังกร",
+      width: 8440, goalX: 8140, checkpointX: 6040,
+      theme: { scene: "lanterns", pal: "lanterns2", seed: 27, top: "#ff4a4a", shine: "#ffc0a0", body: ["#4a1028", "#300a1c", "#12040a"], sparks: ["#ffffff", "#ffd76a"] },
+      boss: { kind: "dragon", name: "มังกรโคมแดง", x: 7040, left: 6340, right: 7890, hp: 9 },
+      platforms: rects([
+        [0, 605, 620, 140], [1220, 605, 460, 140], [2560, 605, 620, 140], [4080, 605, 580, 140],
+        [5440, 605, 3000, 140], [220, 480, 170, 34], [440, 390, 140, 34], [700, 560, 90, 20, "spring"],
+        [840, 300, 160, 34], [850, 500, 110, 34], [1070, 420, 120, 30, "crumble"], [1310, 470, 170, 34],
+        [1760, 500, 140, 34, "x", 200, 80], [2120, 440, 170, 34], [2360, 500, 110, 30, "crumble"], [2640, 470, 170, 34],
+        [2860, 380, 140, 34], [3260, 470, 150, 34], [3460, 380, 130, 34, "y", 160, 70], [3660, 460, 130, 34, "x", 180, 80],
+        [4160, 470, 170, 34], [4380, 380, 140, 34], [4740, 480, 120, 30, "crumble"], [4920, 430, 120, 30, "crumble"],
+        [5100, 480, 140, 34, "x", 140, 90], [5520, 470, 170, 34], [5740, 380, 140, 34], [6560, 440, 190, 34],
+        [6980, 330, 210, 34], [7400, 440, 190, 34], [7660, 380, 120, 34]
+      ]),
+      cherries: [
+        [745,500], [745,420], [880,240], [960,240], [1130,360], [1830,440], [1930,440], [2205,380],
+        [2415,440], [3335,410], [3525,320], [3725,400], [4800,420], [4980,370], [5170,420], [6655,380],
+        [7085,270], [7495,380], [275,420], [345,420], [510,330], [1365,410], [1435,410], [2695,410],
+        [2765,410], [2930,320], [4215,410], [4285,410], [4450,320], [5575,410], [5645,410], [5810,320]
+      ],
+      enemies: [
+        ["crab",430,558], ["swooper",996,110], ["roller",1480,550], ["swooper",2129,120], ["roller",2750,550],
+        ["spitter",3040,535], ["swooper",3607,130], ["crab",4270,558], ["swooper",4370,140], ["crab",4520,558],
+        ["swooper",4990,130], ["swooper",5730,140], ["crab",5770,558]
+      ],
+      blocks: [[10,390],[1230,390],[2570,390],[4090,390],[5450,390],[6810,390],[7230,390]]
+    },
+    {
+      name: "ด่าน 28 · ซากเมืองทรายจันทร์",
+      width: 9140, goalX: 8780, checkpointX: 4370,
+      theme: { scene: "desert", pal: "desert2", seed: 28, top: "#8fa8ff", shine: "#e0e8ff", body: ["#2c3a7a", "#1c2556", "#0a0e26"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1560, 605, 500, 140], [2940, 605, 380, 140], [4220, 605, 620, 140],
+        [5620, 605, 380, 140], [6620, 605, 540, 140], [8040, 605, 1100, 140], [220, 480, 170, 34],
+        [440, 390, 140, 34], [700, 470, 150, 34], [920, 560, 90, 20, "spring"], [1060, 300, 170, 34],
+        [1310, 400, 130, 34, "y", 150, 60], [1650, 470, 170, 34], [2140, 500, 140, 34, "x", 200, 80], [2500, 440, 170, 34],
+        [2740, 500, 110, 30, "crumble"], [3030, 470, 170, 34], [3400, 470, 150, 34], [3600, 380, 130, 34, "y", 160, 70],
+        [3800, 460, 130, 34, "x", 180, 80], [4300, 470, 170, 34], [4520, 380, 140, 34], [4920, 480, 120, 30, "crumble"],
+        [5100, 430, 120, 30, "crumble"], [5280, 480, 140, 34, "x", 140, 90], [5710, 470, 170, 34], [6080, 500, 110, 30, "crumble"],
+        [6240, 440, 110, 30, "crumble"], [6410, 500, 120, 34, "x", 100, 70], [6700, 470, 170, 34], [6920, 380, 140, 34],
+        [7240, 500, 140, 34, "x", 200, 80], [7600, 440, 170, 34], [7840, 500, 110, 30, "crumble"], [8120, 470, 170, 34],
+        [8340, 380, 140, 34]
+      ]),
+      cherries: [
+        [775,410], [965,440], [965,360], [1100,240], [1180,240], [1375,340], [2210,440], [2310,440],
+        [2585,380], [2795,440], [3475,410], [3665,320], [3865,400], [4980,420], [5160,370], [5350,420],
+        [6135,440], [6295,380], [6470,440], [7310,440], [7410,440], [7685,380], [7895,440], [275,420],
+        [345,420], [510,330], [1705,410], [1775,410], [3085,410], [3155,410], [4355,410], [4425,410],
+        [4590,320], [5765,410], [5835,410], [6755,410], [6825,410], [6990,320], [8175,410], [8245,410],
+        [8410,320]
+      ],
+      enemies: [
+        ["roller",490,550], ["swooper",1007,100], ["crab",1830,558], ["bat",2442,180], ["urchin",3210,549],
+        ["swooper",3654,110], ["urchin",4700,549], ["bat",5232,240], ["urchin",5810,549], ["bat",6280,170],
+        ["urchin",6750,549], ["crab",6970,558], ["bat",7483,250], ["roller",8210,550], ["spitter",9030,535]
+      ],
+      blocks: [[10,390],[1570,390],[2950,390],[5630,390],[6630,390],[8050,390],[8600,390]]
+    },
+    {
+      name: "ด่าน 29 · ร่องลึกแสงไฟ",
+      width: 10660, goalX: 10300, checkpointX: 5890,
+      theme: { scene: "sea", pal: "sea2", seed: 29, top: "#5affc8", shine: "#d6fff0", body: ["#0f3a48", "#08232e", "#020c12"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects([
+        [0, 605, 620, 140], [1500, 605, 580, 140], [2980, 605, 500, 140], [4420, 605, 540, 140],
+        [5740, 605, 580, 140], [6940, 605, 380, 140], [8200, 605, 460, 140], [9560, 605, 1100, 140],
+        [220, 480, 170, 34], [440, 390, 140, 34], [700, 500, 140, 34, "x", 200, 80], [1060, 440, 170, 34],
+        [1300, 500, 110, 30, "crumble"], [1580, 470, 170, 34], [1800, 380, 140, 34], [2160, 470, 150, 34],
+        [2360, 380, 130, 34, "y", 160, 70], [2560, 460, 130, 34, "x", 180, 80], [3070, 470, 170, 34], [3560, 470, 150, 34],
+        [3780, 560, 90, 20, "spring"], [3920, 300, 170, 34], [4170, 400, 130, 34, "y", 150, 60], [4500, 470, 170, 34],
+        [4720, 380, 140, 34], [5040, 480, 120, 30, "crumble"], [5220, 430, 120, 30, "crumble"], [5400, 480, 140, 34, "x", 140, 90],
+        [5820, 470, 170, 34], [6040, 380, 140, 34], [6400, 500, 110, 30, "crumble"], [6560, 440, 110, 30, "crumble"],
+        [6730, 500, 120, 34, "x", 100, 70], [7030, 470, 170, 34], [7400, 500, 140, 34, "x", 200, 80], [7760, 440, 170, 34],
+        [8000, 500, 110, 30, "crumble"], [8290, 470, 170, 34], [8740, 470, 150, 34], [8940, 380, 130, 34, "y", 160, 70],
+        [9140, 460, 130, 34, "x", 180, 80], [9640, 470, 170, 34], [9860, 380, 140, 34]
+      ]),
+      cherries: [
+        [770,440], [870,440], [1145,380], [1355,440], [2235,410], [2425,320], [2625,400], [3635,410],
+        [3825,440], [3825,360], [3960,240], [4040,240], [4235,340], [5100,420], [5280,370], [5470,420],
+        [6455,440], [6615,380], [6790,440], [7470,440], [7570,440], [7845,380], [8055,440], [8815,410],
+        [9005,320], [9205,400], [275,420], [345,420], [510,330], [1635,410], [1705,410], [1870,320],
+        [3125,410], [3195,410], [4555,410], [4625,410], [4790,320], [5875,410], [5945,410], [6110,320],
+        [7085,410], [7155,410], [8345,410], [8415,410], [9695,410], [9765,410], [9930,320]
+      ],
+      enemies: [
+        ["urchin",480,549], ["swooper",1057,110], ["crab",1690,558], ["crab",1930,558], ["urchin",3270,549],
+        ["swooper",3935,140], ["crab",4670,558], ["swooper",4690,160], ["jelly",5414,220], ["urchin",6220,549],
+        ["swooper",6672,110], ["crab",7150,558], ["jelly",7820,200], ["urchin",8430,549], ["roller",9900,550],
+        ["crab",10540,558]
+      ],
+      blocks: [[10,390],[1510,390],[2990,390],[4430,390],[6950,390],[8210,390],[9570,390],[10120,390]]
+    },
+    {
+      name: "ด่าน 30 · หอคอยสุริยคราส",
+      width: 11000, goalX: 10700, checkpointX: 8600,
+      theme: { scene: "eclipse", pal: "eclipse", seed: 30, top: "#ff6a3d", shine: "#ffd0a0", body: ["#4a1018", "#2c0810", "#100306"], sparks: ["#ffffff", "#ffd76a"] },
+      boss: { kind: "eclipse", name: "จอมเวทสุริยคราส", x: 9600, left: 8900, right: 10450, hp: 10 },
+      platforms: rects([
+        [0, 605, 620, 140], [1220, 605, 620, 140], [2460, 605, 580, 140], [3980, 605, 540, 140],
+        [5400, 605, 420, 140], [6720, 605, 500, 140], [8000, 605, 3000, 140], [220, 480, 170, 34],
+        [440, 390, 140, 34], [700, 560, 90, 20, "spring"], [840, 300, 160, 34], [850, 500, 110, 34],
+        [1070, 420, 120, 30, "crumble"], [1300, 470, 170, 34], [1520, 380, 140, 34], [1920, 500, 110, 30, "crumble"],
+        [2080, 440, 110, 30, "crumble"], [2250, 500, 120, 34, "x", 100, 70], [2540, 470, 170, 34], [2760, 380, 140, 34],
+        [3120, 470, 150, 34], [3340, 560, 90, 20, "spring"], [3480, 300, 170, 34], [3730, 400, 130, 34, "y", 150, 60],
+        [4060, 470, 170, 34], [4280, 380, 140, 34], [4600, 500, 140, 34, "x", 200, 80], [4960, 440, 170, 34],
+        [5200, 500, 110, 30, "crumble"], [5490, 470, 170, 34], [5900, 470, 150, 34], [6100, 380, 130, 34, "y", 160, 70],
+        [6300, 460, 130, 34, "x", 180, 80], [6810, 470, 170, 34], [7300, 480, 120, 30, "crumble"], [7480, 430, 120, 30, "crumble"],
+        [7660, 480, 140, 34, "x", 140, 90], [8080, 470, 170, 34], [8300, 380, 140, 34], [9120, 440, 190, 34],
+        [9540, 330, 210, 34], [9960, 440, 190, 34], [10220, 380, 120, 34]
+      ]),
+      cherries: [
+        [745,500], [745,420], [880,240], [960,240], [1130,360], [1975,440], [2135,380], [2310,440],
+        [3195,410], [3385,440], [3385,360], [3520,240], [3600,240], [3795,340], [4670,440], [4770,440],
+        [5045,380], [5255,440], [5975,410], [6165,320], [6365,400], [7360,420], [7540,370], [7730,420],
+        [9215,380], [9645,270], [10055,380], [275,420], [345,420], [510,330], [1355,410], [1425,410],
+        [1590,320], [2595,410], [2665,410], [2830,320], [4115,410], [4185,410], [4350,320], [5545,410],
+        [5615,410], [6865,410], [6935,410], [8135,410], [8205,410], [8370,320]
+      ],
+      enemies: [
+        ["roller",500,550], ["urchin",1440,549], ["roller",1740,550], ["swooper",2111,150], ["crab",2730,558],
+        ["swooper",2750,150], ["crab",4140,558], ["swooper",4250,160], ["roller",4370,550], ["swooper",4970,110],
+        ["roller",5580,550], ["spitter",6900,535], ["bat",7501,240], ["spitter",8190,535]
+      ],
+      blocks: [[10,390],[1230,390],[2470,390],[3990,390],[5410,390],[6730,390],[8010,390],[9370,390],[9790,390]]
     }
   ];
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
@@ -658,7 +948,7 @@
   const startLevel = Math.min(levels.length, Math.max(1, Number(new URLSearchParams(location.search).get("level")) || 1)) - 1;
   // Add &checkpoint to also begin from that level's checkpoint flag.
   const startAtCheckpoint = new URLSearchParams(location.search).has("checkpoint");
-  const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52], urchin: [64, 56], spitter: [60, 70] };
+  const enemySizes = { walker: [70, 68], bat: [66, 40], hopper: [62, 52], urchin: [64, 56], spitter: [60, 70], jelly: [56, 60], crab: [66, 46], roller: [64, 54], swooper: [70, 44] };
   // Each level ends with a flagpole just before the gate: the higher Pupa
   // grabs it, the more points it pays.
   const POLE_OFFSET = 150;
@@ -781,7 +1071,9 @@
     const [w, h] = enemySizes[type];
     const speed = type === "bat" ? 115 : type === "hopper" ? 70 : type === "urchin" ? 80 : type === "spitter" ? 0 : 58;
     const reach = type === "bat" ? 150 : 95;
-    return { id, type, x, y, baseY: y, w, h, min: x - reach, max: x + reach, vx: id % 2 ? speed : -speed, vy: 0, wait: .6 + (id % 3) * .3, alive: true, phase: id, dir: -1, puff: 0 };
+    const enemy = { id, type, x, y, baseY: y, w, h, min: x - reach, max: x + reach, vx: id % 2 ? speed : -speed, vy: 0, wait: .6 + (id % 3) * .3, alive: true, phase: id, dir: -1, puff: 0 };
+    FOES[type]?.init(enemy);
+    return enemy;
   }
 
   function loadLevel(index) {
@@ -809,6 +1101,7 @@
       active: false, alive: true, hurt: 0, mode: "walk", timer: 1.6, spit: 1, facing: -1, fade: 0
     } : null;
     if (boss?.kind === "queen") Object.assign(boss, { w: 180, h: 100, y: QUEEN_HOVER, mode: "hover", timer: 2.4, spit: 1, t: 0 });
+    if (BOSSES[boss?.kind]) BOSSES[boss.kind].init(boss);
     hazards = [];
     popups = [];
     bombs = [];
@@ -872,6 +1165,8 @@
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
+    // A hidden or not-yet-laid-out stage has no size; keep the last good view.
+    if (!rect.width || !rect.height) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
@@ -1106,6 +1401,7 @@
     if (boss.hp > 0) {
       // A hit knocks the queen out of her daze and back into the air.
       if (boss.kind === "queen" && (boss.mode === "rest" || boss.mode === "swoop")) boss.mode = "rise";
+      BOSSES[boss.kind]?.onHit?.(boss);
       return;
     }
     boss.alive = false;
@@ -1136,6 +1432,7 @@
     const floor = WORLD.ground - boss.h;
     const aim = player.x + player.w / 2 - (boss.x + boss.w / 2);
     if (boss.kind === "queen") updateQueen(dt, aim, rage);
+    else if (BOSSES[boss.kind]) BOSSES[boss.kind].update(dt, aim, rage);
     else if (boss.mode === "walk") {
       boss.facing = aim < 0 ? -1 : 1;
       if (Math.abs(aim) > 30) boss.x += boss.facing * (70 + rage * 14) * dt;
@@ -1540,6 +1837,7 @@
           tone(520, .07, "square", .035);
         }
       }
+      else if (FOES[enemy.type]) FOES[enemy.type].update(enemy, dt);
       // Hoppers only travel while they are in the air.
       if (enemy.type !== "hopper" || enemy.y < enemy.baseY) enemy.x += enemy.vx * dt;
       if (enemy.x < enemy.min || enemy.x > enemy.max) { enemy.vx *= -1; enemy.x = Math.max(enemy.min, Math.min(enemy.max, enemy.x)); }
@@ -1552,7 +1850,7 @@
         tone(660, .1, "triangle", .05, .05);
         continue;
       }
-      if (enemy.type !== "urchin" && player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
+      if (!spiky(enemy) && player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
         enemy.alive = false;
         addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
         player.vy = -560;
@@ -1616,6 +1914,7 @@
   }
 
   function drawBackground(time) {
+    if (level.theme.scene) { drawScene(level.theme, time); return; }
     const width = viewWidth;
     const parallax = cameraX * .08;
     if (art.background.complete && art.background.naturalWidth) {
@@ -2104,6 +2403,7 @@
     if (enemy.type === "hopper") { drawHopper(enemy, x); return; }
     if (enemy.type === "urchin") { drawUrchin(enemy, x, time); return; }
     if (enemy.type === "spitter") { drawSpitter(enemy, x, time); return; }
+    if (FOE_ART[enemy.type]) { FOE_ART[enemy.type](enemy, x, time); return; }
     const bob = Math.sin(time * .008 + enemy.phase) * 2;
     ctx.save();
     ctx.translate(x + enemy.w / 2, enemy.y + enemy.h / 2 + bob);
@@ -2184,6 +2484,16 @@
     const x = boss.x - cameraX;
     if (x < -300 || x > viewWidth + 300) return;
     if (boss.kind === "queen") { drawQueen(x, time); return; }
+    if (BOSSES[boss.kind]) {
+      ctx.save();
+      if (!boss.alive) {
+        const cx = x + boss.w / 2, cy = boss.y + boss.h / 2;
+        ctx.translate(cx, cy); ctx.globalAlpha = boss.fade; ctx.rotate((1 - boss.fade) * .5); ctx.scale(boss.fade, boss.fade); ctx.translate(-cx, -cy);
+      } else if (boss.hurt > 0 && Math.floor(boss.hurt * 14) % 2) ctx.globalAlpha = .35;
+      BOSSES[boss.kind].draw(boss, x, time);
+      ctx.restore();
+      return;
+    }
     const airborne = boss.mode === "jump";
     const squash = boss.mode === "windup" ? .78 : airborne ? 1.1 : 1 + Math.sin(time * .006) * .025;
     ctx.save();
@@ -2280,6 +2590,7 @@
     const x = h.x - cameraX;
     ctx.save();
     ctx.translate(x + h.w / 2, h.y + h.h);
+    if (drawWorld3Hazard(h, time)) { ctx.restore(); return; }
     if (h.type === "wave") {
       ctx.globalAlpha = Math.min(1, h.life / .4);
       ctx.scale(h.vx > 0 ? 1 : -1, 1);
@@ -3013,6 +3324,863 @@
       });
     });
     document.querySelectorAll("[data-open-shop]").forEach(button => button.addEventListener("click", openShop));
+  }
+
+
+  // ---- World 3 (levels 21-30): painted 2D scenes ----
+  // Each scene is a sky drawn live, three parallax layers painted once into
+  // seamless tiles, and a few animated details (spores, lanterns, bubbles...).
+  const SCENE_TILE = 1600;
+  const SCENE_RES = 1.25;
+  const TAU = Math.PI * 2;
+  let sceneCache = null;
+
+  function seeded(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+  // A smooth periodic curve in -1..1 that joins up across the tile edge.
+  function periodic(r, terms = 5, minK = 2, maxK = 13) {
+    const parts = [];
+    for (let i = 0; i < terms; i++) parts.push([minK + Math.floor(r() * (maxK - minK)), r() * TAU, (1 - i / (terms + 1)) * (.6 + r() * .4)]);
+    const total = parts.reduce((sum, p) => sum + p[2], 0);
+    return (x) => parts.reduce((sum, [k, ph, a]) => sum + Math.sin(x / SCENE_TILE * TAU * k + ph) * a, 0) / total;
+  }
+  // Silhouette from y(x) down to the bottom of the tile.
+  function ridge(fy, fill, step = 10) {
+    ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.moveTo(0, 760);
+    for (let x = 0; x <= SCENE_TILE; x += step) ctx.lineTo(x, fy(x));
+    ctx.lineTo(SCENE_TILE, 760); ctx.closePath(); ctx.fill();
+  }
+  const vgrad = (y0, y1, stops) => { const g = ctx.createLinearGradient(0, y0, 0, y1); stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c)); return g; };
+  function glowDot(x, y, r, color, alpha = 1) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, color); g.addColorStop(1, "rgba(0,0,0,0)");
+    const before = ctx.globalAlpha;
+    ctx.globalAlpha = before * alpha; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.globalAlpha = before;
+  }
+  // Stateless drifting particles: position is a function of time.
+  function drift(count, seed, t, fn) {
+    const r = seeded(seed);
+    for (let i = 0; i < count; i++) fn(r(), r(), r(), r(), i, t);
+  }
+  const wrapX = (x, w) => ((x % w) + w) % w;
+
+  // Shapes used by several scenes ------------------------------------------------
+  function mushroom(x, base, s, stem, cap, glow, r) {
+    const h = 120 * s, w = 110 * s;
+    ctx.fillStyle = stem;
+    ctx.beginPath(); ctx.moveTo(x - 9 * s, base); ctx.quadraticCurveTo(x - 14 * s, base - h * .5, x - 6 * s, base - h); ctx.lineTo(x + 6 * s, base - h);
+    ctx.quadraticCurveTo(x + 14 * s, base - h * .5, x + 9 * s, base); ctx.closePath(); ctx.fill();
+    if (glow) glowDot(x, base - h, w * 1.1, glow, .35);
+    ctx.fillStyle = cap;
+    ctx.beginPath(); ctx.ellipse(x, base - h, w / 2, 32 * s, 0, Math.PI, 0); ctx.quadraticCurveTo(x, base - h + 14 * s, x - w / 2, base - h); ctx.fill();
+    if (glow) {
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + (r() - .5) * w * .7, base - h - 6 * s - r() * 18 * s, (3 + r() * 4) * s, 0, TAU); ctx.fill(); }
+    }
+  }
+  function cactus(x, base, s, fill) {
+    ctx.fillStyle = fill; ctx.lineCap = "round";
+    const arm = (dx, y0, len, up) => { ctx.beginPath(); ctx.roundRect(x + dx - 7 * s, base - y0 - up, 14 * s, up, 7 * s); ctx.fill(); ctx.fillRect(Math.min(x, x + dx), base - y0 - 7 * s, Math.abs(dx), 14 * s); };
+    ctx.beginPath(); ctx.roundRect(x - 11 * s, base - 140 * s, 22 * s, 140 * s, 11 * s); ctx.fill();
+    arm(-30 * s, 60 * s, 0, 45 * s); arm(28 * s, 80 * s, 0, 38 * s);
+  }
+  function pagoda(x, base, s, fill, light) {
+    ctx.fillStyle = fill;
+    for (let i = 0; i < 3; i++) {
+      const y = base - i * 46 * s, w = (90 - i * 20) * s;
+      ctx.fillRect(x - w * .35, y - 34 * s, w * .7, 34 * s);
+      ctx.beginPath(); ctx.moveTo(x - w * .62, y - 30 * s); ctx.quadraticCurveTo(x, y - 54 * s, x + w * .62, y - 30 * s); ctx.lineTo(x + w * .5, y - 40 * s); ctx.quadraticCurveTo(x, y - 60 * s, x - w * .5, y - 40 * s); ctx.closePath(); ctx.fill();
+      if (light) { ctx.fillStyle = light; ctx.fillRect(x - 6 * s, y - 26 * s, 12 * s, 14 * s); ctx.fillStyle = fill; }
+    }
+    ctx.fillRect(x - 2 * s, base - 170 * s, 4 * s, 40 * s);
+  }
+  function lantern(x, y, s, color) {
+    glowDot(x, y, 34 * s, color, .55);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(x, y, 11 * s, 14 * s, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "rgba(60,20,10,.55)"; ctx.fillRect(x - 7 * s, y - 16 * s, 14 * s, 4 * s); ctx.fillRect(x - 7 * s, y + 12 * s, 14 * s, 4 * s);
+    ctx.fillStyle = "rgba(255,255,220,.75)"; ctx.beginPath(); ctx.ellipse(x - 3 * s, y - 3 * s, 3 * s, 6 * s, 0, 0, TAU); ctx.fill();
+  }
+  function pine(x, base, s, fill, snow) {
+    for (let i = 0; i < 4; i++) {
+      const y = base - i * 34 * s, w = (64 - i * 13) * s;
+      ctx.fillStyle = fill;
+      ctx.beginPath(); ctx.moveTo(x - w, y); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + w, y); ctx.closePath(); ctx.fill();
+      if (snow) { ctx.fillStyle = snow; ctx.beginPath(); ctx.moveTo(x - w * .45, y - 34 * s); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + w * .45, y - 34 * s); ctx.quadraticCurveTo(x, y - 40 * s, x - w * .45, y - 34 * s); ctx.fill(); }
+    }
+    ctx.fillStyle = fill; ctx.fillRect(x - 6 * s, base - 4, 12 * s, 30 * s);
+  }
+  function spire(x, base, s, fill, edge) {
+    ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.moveTo(x - 26 * s, base); ctx.lineTo(x - 18 * s, base - 160 * s); ctx.lineTo(x, base - 250 * s); ctx.lineTo(x + 18 * s, base - 160 * s); ctx.lineTo(x + 26 * s, base); ctx.closePath(); ctx.fill();
+    if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, base - 250 * s); ctx.lineTo(x + 18 * s, base - 160 * s); ctx.lineTo(x + 26 * s, base); ctx.stroke(); }
+  }
+  function kelp(x, base, s, fill, r) {
+    ctx.strokeStyle = fill; ctx.lineWidth = 9 * s; ctx.lineCap = "round";
+    const h = (180 + r() * 160) * s, bend = (r() - .5) * 60 * s;
+    ctx.beginPath(); ctx.moveTo(x, base); ctx.bezierCurveTo(x + bend, base - h * .3, x - bend, base - h * .7, x + bend * .5, base - h); ctx.stroke();
+    ctx.fillStyle = fill;
+    for (let i = 1; i < 6; i++) { const t = i / 6; ctx.beginPath(); ctx.ellipse(x + bend * (t < .5 ? t : 1 - t), base - h * t, 12 * s, 5 * s, (i % 2 ? .6 : -.6), 0, TAU); ctx.fill(); }
+  }
+  function coral(x, base, s, fill) {
+    ctx.strokeStyle = fill; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const branch = (x0, y0, angle, len, width, depth) => {
+      if (depth === 0) return;
+      const x1 = x0 + Math.cos(angle) * len, y1 = y0 + Math.sin(angle) * len;
+      ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      branch(x1, y1, angle - .45, len * .72, width * .72, depth - 1);
+      branch(x1, y1, angle + .4, len * .7, width * .72, depth - 1);
+    };
+    branch(x, base, -Math.PI / 2, 46 * s, 12 * s, 4);
+  }
+  function tower(x, base, s, fill, light) {
+    ctx.fillStyle = fill;
+    ctx.fillRect(x - 26 * s, base - 240 * s, 52 * s, 240 * s);
+    ctx.beginPath(); ctx.moveTo(x - 34 * s, base - 240 * s); ctx.lineTo(x, base - 320 * s); ctx.lineTo(x + 34 * s, base - 240 * s); ctx.closePath(); ctx.fill();
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 32 * s + i * 18 * s, base - 252 * s, 10 * s, 14 * s);
+    if (light) for (let i = 0; i < 3; i++) { glowDot(x, base - (70 + i * 55) * s, 16 * s, light, .7); ctx.fillStyle = light; ctx.fillRect(x - 4 * s, base - (78 + i * 55) * s, 8 * s, 14 * s); ctx.fillStyle = fill; }
+  }
+  function deadTree(x, base, s, fill) {
+    ctx.strokeStyle = fill; ctx.lineCap = "round";
+    const grow = (x0, y0, a, len, w, d) => {
+      if (d === 0) return;
+      const x1 = x0 + Math.cos(a) * len, y1 = y0 + Math.sin(a) * len;
+      ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      grow(x1, y1, a - .5, len * .7, w * .65, d - 1); grow(x1, y1, a + .35, len * .66, w * .65, d - 1);
+    };
+    grow(x, base, -Math.PI / 2 + .08, 70 * s, 12 * s, 5);
+  }
+
+  // Scenes: pal = colours, layers = painted tiles (far -> near), live = animation.
+  const SCENES = {
+    cave: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      layers: [
+        { parallax: .1, paint(r, p) {
+          ctx.fillStyle = p.far; ctx.fillRect(0, 0, SCENE_TILE, 26);
+          for (let i = 0; i < 16; i++) { const x = r() * SCENE_TILE, w = 40 + r() * 80, h = 80 + r() * 200; ctx.beginPath(); ctx.moveTo(x - w / 2, 0); ctx.quadraticCurveTo(x - w * .15, h * .7, x, h); ctx.quadraticCurveTo(x + w * .15, h * .7, x + w / 2, 0); ctx.fill(); }
+          const f = periodic(r); ridge(x => 560 - 60 * f(x), p.far);
+          for (let i = 0; i < 8; i++) mushroom(r() * SCENE_TILE, 600, .9 + r() * .9, p.far, p.farCap, p.glow, r);
+        } },
+        { parallax: .25, paint(r, p) {
+          const f = periodic(r); ridge(x => 610 - 50 * f(x), p.mid);
+          for (let i = 0; i < 10; i++) mushroom(r() * SCENE_TILE, 640, .7 + r() * .7, p.mid, p.midCap, p.glow, r);
+        } },
+        { parallax: .45, paint(r, p) {
+          for (let i = 0; i < 6; i++) { const x = r() * SCENE_TILE, w = 30 + r() * 50, h = 50 + r() * 120; ctx.fillStyle = p.near; ctx.beginPath(); ctx.moveTo(x - w / 2, 0); ctx.quadraticCurveTo(x, h * 1.3, x + w / 2, 0); ctx.fill(); }
+          for (let i = 0; i < 14; i++) { const x = r() * SCENE_TILE; glowDot(x, 690, 40, p.glow, .25); ctx.fillStyle = p.nearCap; ctx.beginPath(); ctx.ellipse(x, 690 - r() * 20, 10 + r() * 14, 7, 0, Math.PI, 0); ctx.fill(); }
+        } }
+      ],
+      live(p, t, w, h, top) {
+        drift(36, 7, t, (a, b, c, d) => {
+          const x = wrapX(a * w * 1.3 + Math.sin(t * .4 + c * 9) * 30 - cameraX * .3, w * 1.3) - w * .15;
+          const y = top + 720 - wrapX(b * 720 + t * (12 + d * 18), 760);
+          glowDot(x, y, 6 + c * 6, p.spore, .8);
+        });
+      }
+    },
+    desert: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        const x = w * .72 - cameraX * .015, y = top + 170;
+        glowDot(x, y, 240, p.moonGlow, .5);
+        ctx.fillStyle = p.moon; ctx.beginPath(); ctx.arc(x, y, 70, 0, TAU); ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,.08)"; ctx.beginPath(); ctx.arc(x - 18, y - 12, 16, 0, TAU); ctx.arc(x + 22, y + 18, 10, 0, TAU); ctx.fill();
+        drawStars(w, top + 380, 90, t, 21, p.star);
+        // a shooting star every few seconds
+        const cycle = t % 5.5;
+        if (cycle < .9) {
+          const k = cycle / .9, sx = w * (.15 + ((Math.floor(t / 5.5) * .37) % .6)), sy = top + 60;
+          const hx = sx + k * 420, hy = sy + k * 160;
+          const g = ctx.createLinearGradient(hx - 160, hy - 60, hx, hy);
+          g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, "rgba(255,255,255,.95)");
+          ctx.strokeStyle = g; ctx.lineWidth = 3; ctx.globalAlpha = 1 - k * .6;
+          ctx.beginPath(); ctx.moveTo(hx - 160, hy - 60); ctx.lineTo(hx, hy); ctx.stroke(); ctx.globalAlpha = 1;
+        }
+      },
+      layers: [
+        { parallax: .08, paint(r, p) { const f = periodic(r, 4, 1, 5); ridge(x => 470 - 70 * f(x), p.far); } },
+        { parallax: .2, paint(r, p) {
+          ctx.fillStyle = p.mid;
+          for (let i = 0; i < 5; i++) {   // mesas and arches
+            const x = r() * SCENE_TILE, w = 120 + r() * 160, h = 120 + r() * 120;
+            ctx.beginPath(); ctx.moveTo(x - w / 2 - 30, 620); ctx.lineTo(x - w / 2, 620 - h); ctx.lineTo(x + w / 2, 620 - h); ctx.lineTo(x + w / 2 + 30, 620); ctx.closePath(); ctx.fill();
+            if (r() < .5) { ctx.save(); ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.ellipse(x, 620, w * .28, h * .55, 0, Math.PI, 0); ctx.fill(); ctx.restore(); }
+          }
+          const f = periodic(r, 4, 2, 7); ridge(x => 560 - 40 * f(x), p.mid);
+        } },
+        { parallax: .4, paint(r, p) {
+          const f = periodic(r, 4, 2, 9); ridge(x => 640 - 34 * f(x), p.near);
+          for (let i = 0; i < 7; i++) { const x = r() * SCENE_TILE; cactus(x, 650 - 34 * f(x) + 20, .8 + r() * .6, p.near); }
+        } }
+      ],
+      live(p, t, w, h, top) {
+        drift(22, 11, t, (a, b, c) => {   // drifting sand glints
+          const x = wrapX(a * w + t * (40 + c * 50) - cameraX * .5, w), y = top + 500 + b * 200 + Math.sin(t * 2 + a * 9) * 6;
+          ctx.fillStyle = p.sand; ctx.globalAlpha = .5; ctx.fillRect(x, y, 3, 1.5); ctx.globalAlpha = 1;
+        });
+      }
+    },
+    lanterns: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        const x = w * .3 - cameraX * .01, y = top + 470;
+        glowDot(x, y, 380, p.sunGlow, .55);
+        ctx.fillStyle = vgrad(y - 110, y + 110, [p.sun0, p.sun1]); ctx.beginPath(); ctx.arc(x, y, 110, 0, TAU); ctx.fill();
+        ctx.fillStyle = p.band;
+        for (let i = 0; i < 4; i++) ctx.fillRect(x - 130, y + 20 + i * 22, 260, 6 + i * 2);
+      },
+      layers: [
+        { parallax: .07, paint(r, p) {
+          ctx.fillStyle = p.cloud;
+          for (let i = 0; i < 9; i++) { const x = r() * SCENE_TILE, y = 220 + r() * 220, w = 160 + r() * 260; ctx.beginPath(); ctx.ellipse(x, y, w, 18 + r() * 14, 0, 0, TAU); ctx.fill(); }
+          for (let i = 0; i < 4; i++) {   // floating islands with towers
+            const x = r() * SCENE_TILE, y = 300 + r() * 160, w = 90 + r() * 90;
+            ctx.fillStyle = p.far; ctx.beginPath(); ctx.moveTo(x - w, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w * .3, y + 70); ctx.lineTo(x, y + 120); ctx.lineTo(x - w * .4, y + 60); ctx.closePath(); ctx.fill();
+            pagoda(x, y, .6 + r() * .3, p.far, p.window);
+          }
+        } },
+        { parallax: .22, paint(r, p) {
+          const f = periodic(r, 4, 2, 8); ridge(x => 600 - 50 * f(x), p.mid);
+          for (let i = 0; i < 6; i++) { const x = r() * SCENE_TILE; pagoda(x, 610 - 50 * f(x), .9 + r() * .4, p.mid, p.window); }
+        } },
+        { parallax: .45, paint(r, p) {
+          ctx.strokeStyle = p.rope; ctx.lineWidth = 2;
+          for (let i = 0; i < 3; i++) {   // strings of lanterns
+            const x0 = r() * SCENE_TILE, x1 = x0 + 300 + r() * 300, y = 120 + r() * 140;
+            ctx.beginPath(); ctx.moveTo(x0, y); ctx.quadraticCurveTo((x0 + x1) / 2, y + 90, x1, y); ctx.stroke();
+            for (let k = 1; k < 7; k++) { const t = k / 7, lx = x0 + (x1 - x0) * t, ly = y + 90 * 2 * t * (1 - t) + 18; lantern(lx, ly, .9, k % 2 ? p.lantern0 : p.lantern1); }
+          }
+          const f = periodic(r, 4, 3, 10); ridge(x => 680 - 24 * f(x), p.near);
+        } }
+      ],
+      live(p, t, w, h, top) {
+        drift(16, 5, t, (a, b, c, d) => {   // sky lanterns rising
+          const x = wrapX(a * w * 1.2 + Math.sin(t * .5 + b * 7) * 18 - cameraX * .12, w * 1.2) - w * .1;
+          const y = top + 640 - wrapX(b * 700 + t * (10 + c * 12), 760);
+          lantern(x, y, .45 + d * .4, d > .5 ? p.lantern0 : p.lantern1);
+        });
+      }
+    },
+    sea: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 6; i++) {   // light shafts from the surface
+          const x = w * (i / 6 + .05) + Math.sin(t * .3 + i * 1.7) * 40 - cameraX * .03 % w;
+          const g = ctx.createLinearGradient(0, top - 40, 0, top + 560);
+          g.addColorStop(0, p.ray); g.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = g; ctx.globalAlpha = .35 + Math.sin(t * .8 + i) * .1;
+          ctx.beginPath(); ctx.moveTo(x - 30, top - 40); ctx.lineTo(x + 30, top - 40); ctx.lineTo(x + 140, top + 560); ctx.lineTo(x + 20, top + 560); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      },
+      layers: [
+        { parallax: .08, paint(r, p) { const f = periodic(r, 5, 2, 9); ridge(x => 540 - 80 * f(x), p.far); for (let i = 0; i < 10; i++) coral(r() * SCENE_TILE, 560 - r() * 30, .8 + r() * .6, p.far); } },
+        { parallax: .22, paint(r, p) { for (let i = 0; i < 16; i++) kelp(r() * SCENE_TILE, 660, .8 + r() * .5, p.kelp, r); const f = periodic(r, 4, 2, 8); ridge(x => 620 - 40 * f(x), p.mid); } },
+        { parallax: .45, paint(r, p) {
+          const f = periodic(r, 4, 3, 10); ridge(x => 680 - 26 * f(x), p.near);
+          for (let i = 0; i < 9; i++) coral(r() * SCENE_TILE, 690, .7 + r() * .5, i % 2 ? p.coral0 : p.coral1);
+          for (let i = 0; i < 12; i++) glowDot(r() * SCENE_TILE, 660 + r() * 40, 26, p.glow, .4);
+        } }
+      ],
+      live(p, t, w, h, top) {
+        drift(30, 9, t, (a, b, c) => {   // bubbles
+          const x = wrapX(a * w + Math.sin(t * 1.5 + b * 9) * 8 - cameraX * .35, w), y = top + 720 - wrapX(b * 760 + t * (30 + c * 40), 800);
+          ctx.strokeStyle = p.bubble; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 3 + c * 6, 0, TAU); ctx.stroke();
+        });
+        drift(5, 13, t, (a, b, c) => {   // fish shoals
+          const dir = c > .5 ? 1 : -1, x = wrapX(a * w + dir * t * (40 + c * 30) - cameraX * .15, w + 200) - 100, y = top + 160 + b * 260;
+          ctx.fillStyle = p.fish;
+          for (let k = 0; k < 5; k++) { const fx = x - dir * k * 16, fy = y + Math.sin(k * 1.3 + t * 3) * 6 + (k % 2) * 10; ctx.beginPath(); ctx.ellipse(fx, fy, 9, 4, 0, 0, TAU); ctx.moveTo(fx - dir * 8, fy); ctx.lineTo(fx - dir * 15, fy - 5); ctx.lineTo(fx - dir * 15, fy + 5); ctx.fill(); }
+        });
+      }
+    },
+    ice: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        drawStars(w, top + 300, 70, t, 33, "#ffffff");
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        for (let band = 0; band < 3; band++) {   // aurora curtains
+          const base = top + 90 + band * 50;
+          for (let x = -20; x < w + 20; x += 14) {
+            const y = base + Math.sin(x * .006 + t * .5 + band) * 40 + Math.sin(x * .013 - t * .3) * 18;
+            const len = 90 + Math.sin(x * .02 + t + band) * 40;
+            const g = ctx.createLinearGradient(0, y, 0, y + len);
+            g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(.3, band === 1 ? p.aurora1 : p.aurora0); g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = g; ctx.globalAlpha = .22; ctx.fillRect(x, y, 15, len);
+          }
+        }
+        ctx.restore();
+      },
+      layers: [
+        { parallax: .07, paint(r, p) { const f = periodic(r, 5, 2, 11); ridge(x => 470 - 120 * (1 - Math.abs(f(x))), p.far, 8); const g = periodic(r, 5, 2, 11); ridge(x => 520 - 60 * (1 - Math.abs(g(x))), p.far2, 8); } },
+        { parallax: .2, paint(r, p) {
+          const cx = r() * SCENE_TILE;   // the ice palace
+          for (let i = -3; i <= 3; i++) spire(cx + i * 46, 600, 1 - Math.abs(i) * .18, p.mid, p.edge);
+          for (let i = 0; i < 6; i++) spire(r() * SCENE_TILE, 610, .4 + r() * .4, p.mid, p.edge);
+          const f = periodic(r, 4, 2, 8); ridge(x => 600 - 30 * f(x), p.mid);
+        } },
+        { parallax: .42, paint(r, p) { const f = periodic(r, 4, 3, 9); ridge(x => 670 - 28 * f(x), p.near); for (let i = 0; i < 12; i++) { const x = r() * SCENE_TILE; pine(x, 680 - 28 * f(x), .7 + r() * .6, p.near, p.snow); } } }
+      ],
+      live(p, t, w, h, top) {
+        drift(60, 17, t, (a, b, c) => {
+          const x = wrapX(a * w + Math.sin(t * .8 + b * 10) * 20 - cameraX * .4, w), y = wrapX(b * (h + 40) + t * (30 + c * 40), h + 40) - 20;
+          ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.beginPath(); ctx.arc(x, y, 1.2 + c * 2.2, 0, TAU); ctx.fill();
+        });
+      }
+    },
+    eclipse: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        const x = w * .62 - cameraX * .012, y = top + 190, pulse = 1 + Math.sin(t * 1.4) * .04;
+        drawStars(w, top + 360, 60, t, 41, "#ffd8c0");
+        glowDot(x, y, 260 * pulse, p.corona, .7);
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        ctx.strokeStyle = p.ring; ctx.lineWidth = 6; ctx.globalAlpha = .9;
+        ctx.beginPath(); ctx.arc(x, y, 84 * pulse, 0, TAU); ctx.stroke();
+        for (let i = 0; i < 18; i++) { const a = i / 18 * TAU + t * .05; ctx.globalAlpha = .25; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * 86, y + Math.sin(a) * 86); ctx.lineTo(x + Math.cos(a) * (130 + (i % 3) * 30) * pulse, y + Math.sin(a) * (130 + (i % 3) * 30) * pulse); ctx.stroke(); }
+        ctx.restore();
+        ctx.fillStyle = "#07030c"; ctx.beginPath(); ctx.arc(x, y, 80, 0, TAU); ctx.fill();
+      },
+      layers: [
+        { parallax: .07, paint(r, p) { const f = periodic(r, 6, 3, 14); ridge(x => 500 - 110 * (1 - Math.abs(f(x))), p.far, 6); } },
+        { parallax: .2, paint(r, p) {
+          const f = periodic(r, 4, 2, 8); ridge(x => 600 - 40 * f(x), p.mid);
+          for (let i = 0; i < 5; i++) { const x = r() * SCENE_TILE; tower(x, 610 - 40 * f(x), .7 + r() * .5, p.mid, p.window); }
+        } },
+        { parallax: .42, paint(r, p) { const f = periodic(r, 4, 3, 9); ridge(x => 670 - 26 * f(x), p.near); for (let i = 0; i < 8; i++) { const x = r() * SCENE_TILE; deadTree(x, 680 - 26 * f(x), .8 + r() * .7, p.near); } } }
+      ],
+      live(p, t, w, h, top) {
+        drift(34, 19, t, (a, b, c, d) => {   // embers
+          const x = wrapX(a * w + Math.sin(t * 1.2 + b * 8) * 26 - cameraX * .45, w), y = top + 720 - wrapX(b * 760 + t * (40 + c * 60), 800);
+          glowDot(x, y, 5 + d * 5, p.ember, .9);
+        });
+      }
+    }
+  };
+
+  const SCENE_PALS = {
+    cave: { sky0: "#0b1f2a", sky1: "#0f3340", sky2: "#06141c", far: "#0f2e38", farCap: "#1f5a66", glow: "rgba(120,255,220,.9)", mid: "#0a222b", midCap: "#2fb5a0", near: "#05121a", nearCap: "#7affd6", spore: "rgba(160,255,230,.9)", haze: "rgba(4,20,26,.55)" },
+    cave2: { sky0: "#1c0b2a", sky1: "#3a1450", sky2: "#12061c", far: "#2a1240", farCap: "#6a2a8a", glow: "rgba(255,140,230,.9)", mid: "#1e0c30", midCap: "#d455c8", near: "#10061a", nearCap: "#ff9be8", spore: "rgba(255,190,240,.9)", haze: "rgba(20,6,28,.55)" },
+    desert: { sky0: "#1a1446", sky1: "#7a3a7a", sky2: "#f08a5d", moon: "#fff1d6", moonGlow: "rgba(255,220,180,.8)", star: "#ffffff", far: "#9a4a6a", mid: "#6a2a4a", near: "#3a1530", sand: "#ffd9a0", haze: "rgba(60,20,40,.4)" },
+    desert2: { sky0: "#070a24", sky1: "#1b2a6a", sky2: "#4a5aa8", moon: "#e8f0ff", moonGlow: "rgba(180,200,255,.8)", star: "#ffffff", far: "#2c3a7a", mid: "#1c2556", near: "#0e1230", sand: "#c0d0ff", haze: "rgba(8,10,30,.45)" },
+    lanterns: { sky0: "#2a0f4a", sky1: "#b4386a", sky2: "#ff9a5a", sunGlow: "rgba(255,170,90,.8)", sun0: "#fff0b0", sun1: "#ff7a4a", band: "rgba(180,56,106,.55)", cloud: "rgba(255,190,170,.35)", far: "#7a2a5a", window: "#ffd27a", mid: "#4a1840", rope: "rgba(40,10,30,.8)", lantern0: "#ff6a3d", lantern1: "#ffc14a", near: "#2a0c26", haze: "rgba(40,10,30,.4)" },
+    lanterns2: { sky0: "#05051a", sky1: "#1a1250", sky2: "#3a1a5a", sunGlow: "rgba(255,230,180,.5)", sun0: "#fffbe8", sun1: "#ffd9a0", band: "rgba(26,18,80,.5)", cloud: "rgba(160,140,255,.18)", far: "#1c1640", window: "#ffb347", mid: "#120e30", rope: "rgba(255,200,120,.5)", lantern0: "#ff3d3d", lantern1: "#ffb347", near: "#08061a", haze: "rgba(6,4,20,.45)" },
+    sea: { sky0: "#0a5a7a", sky1: "#063a5a", sky2: "#021628", ray: "rgba(180,240,255,.8)", far: "#0a3a56", kelp: "#0d5a4a", mid: "#072a40", near: "#03182a", coral0: "#ff7aa8", coral1: "#ffb347", glow: "rgba(255,160,220,.8)", bubble: "rgba(200,240,255,.6)", fish: "rgba(10,40,70,.7)", haze: "rgba(2,20,36,.5)" },
+    sea2: { sky0: "#08304a", sky1: "#041a30", sky2: "#010814", ray: "rgba(120,200,255,.5)", far: "#062238", kelp: "#0a3a3a", mid: "#041828", near: "#020c18", coral0: "#7affd6", coral1: "#b48cff", glow: "rgba(120,255,220,.8)", bubble: "rgba(160,255,230,.5)", fish: "rgba(120,255,220,.25)", haze: "rgba(1,8,16,.55)" },
+    ice: { sky0: "#050c2a", sky1: "#0c2a5a", sky2: "#1a5a7a", aurora0: "rgba(90,255,180,1)", aurora1: "rgba(160,120,255,1)", far: "#2a4a7a", far2: "#3a6a9a", mid: "#5a8ac0", edge: "rgba(220,245,255,.8)", near: "#1a2a4a", snow: "#e8f4ff", haze: "rgba(10,20,40,.45)" },
+    eclipse: { sky0: "#12030a", sky1: "#5a0f1e", sky2: "#b8321e", corona: "rgba(255,120,60,.9)", ring: "#ffd6a0", far: "#3a0a14", mid: "#22060e", window: "#ff9d3c", near: "#100308", ember: "rgba(255,140,60,.9)", haze: "rgba(20,4,8,.5)" }
+  };
+
+  function drawStars(w, maxY, count, t, seed, color) {
+    const r = seeded(seed);
+    ctx.fillStyle = color;
+    for (let i = 0; i < count; i++) {
+      const x = wrapX(r() * w * 1.5 - cameraX * .02, w * 1.5) - w * .25, y = r() * maxY, s = .6 + r() * 1.6, tw = .5 + .5 * Math.sin(t * (1 + r() * 2) + i);
+      ctx.globalAlpha = .35 + tw * .6; ctx.fillRect(x, y, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function buildScene(theme) {
+    const def = SCENES[theme.scene];
+    const layers = def.layers.map((layer, i) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(SCENE_TILE * SCENE_RES); canvas.height = Math.round(720 * SCENE_RES);
+      const g = canvas.getContext("2d");
+      g.scale(SCENE_RES, SCENE_RES);
+      paintOn(g, () => {
+        // paint three times, a tile apart, so shapes crossing an edge wrap round
+        for (const shift of [-SCENE_TILE, 0, SCENE_TILE]) {
+          ctx.save(); ctx.translate(shift, 0);
+          layer.paint(seeded((theme.seed || 1) * 97 + i * 13), SCENE_PALS[theme.pal]);
+          ctx.restore();
+        }
+      });
+      return { canvas, parallax: layer.parallax };
+    });
+    return { key: `${theme.scene}:${theme.seed}`, layers };
+  }
+
+  function drawScene(theme, time) {
+    const def = SCENES[theme.scene];
+    if (!Number.isFinite(viewWidth) || !Number.isFinite(viewHeight) || viewWidth <= 0) return;
+    const key = `${theme.scene}:${theme.seed}`;
+    if (!sceneCache || sceneCache.key !== key) sceneCache = buildScene(theme);
+    const t = time / 1000, w = viewWidth, h = viewHeight, top = worldOffsetY, p = SCENE_PALS[theme.pal];
+    ctx.fillStyle = vgrad(0, top + 720, def.sky(p)); ctx.fillRect(0, 0, w, h);
+    def.celestial?.(p, t, w, top);
+    for (const layer of sceneCache.layers) {
+      const offset = wrapX(cameraX * layer.parallax, SCENE_TILE);
+      for (let x = -offset; x < w; x += SCENE_TILE) ctx.drawImage(layer.canvas, Math.floor(x), top, SCENE_TILE + 1, 720);
+    }
+    def.live(p, t, w, h, top);
+    // a soft haze toward the ground keeps the playfield readable
+    ctx.fillStyle = vgrad(top + 300, top + 720, ["rgba(0,0,0,0)", p.haze]); ctx.fillRect(0, top + 300, w, Math.max(420, h - top - 300));
+  }
+
+  // ---- World 3 monsters ----
+  // jelly: floats up and down; crab: quick sidestepper; roller: walks, then
+  // curls into a spiked ball and rolls (no stomping while curled); swooper:
+  // a lantern bird that dives at Pupa when she passes underneath.
+  const FOES = {
+    jelly: {
+      init(e) { e.vx = (e.id % 2 ? 1 : -1) * 32; e.min = e.x - 80; e.max = e.x + 80; },
+      update(e, dt) { e.phase += dt; e.y = e.baseY + Math.sin(e.phase * 1.6) * 45; }
+    },
+    crab: {
+      init(e) { e.vx = (e.id % 2 ? 1 : -1) * 150; e.min = e.x - 120; e.max = e.x + 120; },
+      update(e, dt) { e.phase += dt; }
+    },
+    roller: {
+      init(e) { e.mode = "walk"; e.timer = 1.4 + (e.id % 3) * .5; e.vx = (e.id % 2 ? 1 : -1) * 45; e.min = e.x - 170; e.max = e.x + 170; e.spin = 0; e.dir = Math.sign(e.vx); },
+      update(e, dt) {
+        e.timer -= dt;
+        if (e.vx) e.dir = Math.sign(e.vx);
+        if (e.mode === "walk" && e.timer <= 0) { e.mode = "curl"; e.timer = .45; e.vx = 0; }
+        else if (e.mode === "curl" && e.timer <= 0) {
+          const toward = player.x + player.w / 2 < e.x + e.w / 2 ? -1 : 1;
+          e.mode = "roll"; e.timer = 1.8; e.vx = (Math.abs(player.x - e.x) < 520 ? toward : e.dir) * 320;
+        } else if (e.mode === "roll") {
+          e.spin += e.vx * dt / 27;
+          if (e.timer <= 0) { e.mode = "uncurl"; e.timer = .35; e.dir = Math.sign(e.vx); e.vx = 0; }
+        } else if (e.mode === "uncurl" && e.timer <= 0) { e.mode = "walk"; e.timer = 2.2; e.vx = e.dir * 45; }
+      }
+    },
+    swooper: {
+      init(e) { e.mode = "hover"; e.homeY = e.y; e.vx = (e.id % 2 ? 1 : -1) * 60; e.min = e.x - 230; e.max = e.x + 230; e.timer = 1.2; },
+      update(e, dt) {
+        e.phase += dt;
+        const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+        if (e.mode === "hover") {
+          e.y = e.homeY + Math.sin(e.phase * 2.2) * 10;
+          e.timer -= dt;
+          if (e.timer <= 0 && Math.abs(dx) < 170 && player.y > e.y + 60) {
+            e.mode = "dive"; e.t = 0; e.sx = e.x; e.sy = e.y; e.keepVx = e.vx || 60; e.vx = 0;
+            e.tx = Math.max(e.min, Math.min(e.max, player.x + player.w / 2 - e.w / 2));
+            e.ty = Math.min(WORLD.ground - e.h - 4, player.y + player.h * .35);
+            tone(740, .1, "triangle", .03);
+          }
+        } else if (e.mode === "dive") {
+          e.t = Math.min(1, e.t + dt * 1.5);
+          e.x = e.sx + (e.tx - e.sx) * e.t;
+          e.y = e.sy + (e.ty - e.sy) * Math.sin(e.t * Math.PI / 2);
+          if (e.t >= 1) { e.mode = "rise"; }
+        } else {
+          e.y -= 240 * dt;
+          if (e.y <= e.homeY) { e.y = e.homeY; e.mode = "hover"; e.timer = 2.2; e.vx = e.keepVx; }
+        }
+      }
+    }
+  };
+  // Can this enemy be stomped right now?
+  const spiky = (e) => e.type === "urchin" || (e.type === "roller" && (e.mode === "roll" || e.mode === "curl"));
+
+  function drawJelly(e, x, time) {
+    const pulse = Math.sin(time * .006 + e.id) * .08;
+    ctx.save();
+    ctx.translate(x + e.w / 2, e.y + 22);
+    glowDot(0, 0, 46, "rgba(150,230,255,.55)", .7);
+    ctx.strokeStyle = "rgba(190,150,255,.85)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    for (let i = 0; i < 5; i++) {   // tentacles
+      const tx = -16 + i * 8;
+      ctx.beginPath(); ctx.moveTo(tx, 10);
+      for (let k = 1; k <= 4; k++) ctx.lineTo(tx + Math.sin(time * .008 + i + k) * 4, 10 + k * 8);
+      ctx.stroke();
+    }
+    ctx.scale(1 + pulse, 1 - pulse);
+    const bell = ctx.createRadialGradient(-6, -10, 3, 0, 0, 30);
+    bell.addColorStop(0, "rgba(240,250,255,.95)"); bell.addColorStop(.6, "rgba(140,210,255,.85)"); bell.addColorStop(1, "rgba(160,110,255,.8)");
+    ctx.fillStyle = bell;
+    ctx.beginPath(); ctx.ellipse(0, 0, 27, 24, 0, Math.PI, 0);
+    ctx.lineTo(27, 10);
+    for (let i = 0; i < 6; i++) ctx.quadraticCurveTo(27 - i * 9 - 4.5, 17, 27 - (i + 1) * 9, 10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#2b1d5c";
+    ctx.beginPath(); ctx.arc(-8, -4, 3, 0, Math.PI * 2); ctx.arc(8, -4, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#2b1d5c"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 1, 4, .2, Math.PI - .2); ctx.stroke();
+    ctx.fillStyle = "rgba(255,150,200,.7)"; ctx.beginPath(); ctx.ellipse(-14, 2, 4, 2.5, 0, 0, Math.PI * 2); ctx.ellipse(14, 2, 4, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCrab(e, x, time) {
+    const step = Math.sin(time * .03 + e.id), snap = Math.abs(Math.sin(time * .012 + e.id));
+    ctx.save();
+    ctx.translate(x + e.w / 2, e.y + e.h - 6);
+    ctx.strokeStyle = "#a8321e"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {   // legs
+      ctx.beginPath(); ctx.moveTo(side * (10 + i * 6), -10); ctx.lineTo(side * (24 + i * 7), -16 + (i % 2 ? step : -step) * 3); ctx.lineTo(side * (30 + i * 6), 2); ctx.stroke();
+    }
+    for (const side of [-1, 1]) {   // claws held out in front, snapping
+      ctx.strokeStyle = "#c2412a"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(side * 18, -14); ctx.quadraticCurveTo(side * 30, -14, side * 34, -24); ctx.stroke();
+      ctx.save(); ctx.translate(side * 36, -30);
+      ctx.fillStyle = "#ff6a3d"; ctx.strokeStyle = "#a8321e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 9, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(side * 3, -6); ctx.quadraticCurveTo(side * 14, -14 - snap * 6, side * 18, -6 - snap * 4); ctx.quadraticCurveTo(side * 10, -4, side * 6, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(side * 5, 3); ctx.quadraticCurveTo(side * 14, 6, side * 17, 0 + snap * 3); ctx.quadraticCurveTo(side * 10, 1, side * 6, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    const shell = ctx.createRadialGradient(-8, -26, 3, 0, -16, 32);
+    shell.addColorStop(0, "#ffb27a"); shell.addColorStop(1, "#d8432a");
+    ctx.fillStyle = shell; ctx.beginPath(); ctx.ellipse(0, -16, 27, 17, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,240,220,.6)"; ctx.beginPath(); ctx.ellipse(-9, -24, 7, 3, -.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#a8321e"; ctx.lineWidth = 3;
+    for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 7, -30); ctx.lineTo(side * 9, -40); ctx.stroke(); }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-9, -42, 5, 0, Math.PI * 2); ctx.arc(9, -42, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#1c1030"; ctx.beginPath(); ctx.arc(-8, -42, 2.4, 0, Math.PI * 2); ctx.arc(10, -42, 2.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawRoller(e, x, time) {
+    ctx.save();
+    ctx.translate(x + e.w / 2, e.y + e.h / 2 + 2);
+    const curled = e.mode === "roll" || e.mode === "curl";
+    if (curled) {
+      if (e.mode === "roll" && Math.random() < .5) burst(e.x + e.w / 2 - Math.sign(e.vx) * 26, e.y + e.h, "#d8b27a", 1);
+      ctx.rotate(e.spin || 0);
+      ctx.fillStyle = "#f2e2c0";   // spikes: the warning not to stomp
+      ctx.beginPath();
+      for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r = i % 2 ? 22 : 31; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill();
+      const ball = ctx.createRadialGradient(-6, -8, 3, 0, 0, 24);
+      ball.addColorStop(0, "#c99a5e"); ball.addColorStop(1, "#7a5532");
+      ctx.fillStyle = ball; ctx.beginPath(); ctx.arc(0, 0, 23, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#5a3a1f"; ctx.lineWidth = 3;
+      for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.arc(0, 0, 23, -1.2 + i * .45, -1.0 + i * .45 + 1.6); ctx.stroke(); }
+    } else {
+      ctx.scale(e.dir > 0 ? 1 : -1, 1);
+      const step = Math.sin(time * .015 + e.id) * 3;
+      ctx.fillStyle = "#5a3a1f";
+      ctx.fillRect(-18, 12 + step * .3, 8, 12); ctx.fillRect(10, 12 - step * .3, 8, 12);
+      const shell = ctx.createLinearGradient(0, -24, 0, 18);
+      shell.addColorStop(0, "#d8ad6e"); shell.addColorStop(1, "#8a6038");
+      ctx.fillStyle = shell; ctx.beginPath(); ctx.ellipse(-2, 2, 28, 22, 0, Math.PI, 0); ctx.lineTo(26, 14); ctx.lineTo(-30, 14); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#6b4626"; ctx.lineWidth = 2.5;
+      for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(-2 + i * 10, -19 + Math.abs(i) * 3); ctx.lineTo(-2 + i * 11, 13); ctx.stroke(); }
+      ctx.fillStyle = "#e8c896";   // head and snout
+      ctx.beginPath(); ctx.ellipse(28, 6, 11, 9, .2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(40, 9, 7, 4, .2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(22, -4, 4, 7, -.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#1c1030"; ctx.beginPath(); ctx.arc(31, 3, 2.4, 0, Math.PI * 2); ctx.fill();
+      if (e.mode === "uncurl") { ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.font = "900 18px system-ui"; ctx.fillText("!", 8, -28); }
+    }
+    ctx.restore();
+  }
+
+  function drawSwooper(e, x, time) {
+    const diving = e.mode === "dive";
+    const flap = diving ? -.8 : Math.sin(time * .02 + e.id);
+    ctx.save();
+    ctx.translate(x + e.w / 2, e.y + e.h / 2);
+    ctx.scale(e.vx < 0 || (diving && e.tx < e.sx) ? -1 : 1, 1);
+    glowDot(0, 2, 50, "rgba(255,190,90,.6)", .6);
+    ctx.fillStyle = "#c2412a";
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(side * 8, -2);
+      ctx.quadraticCurveTo(side * 28, -24 - flap * 14, side * 44, -10 - flap * 18);
+      ctx.quadraticCurveTo(side * 30, 2, side * 10, 8); ctx.closePath(); ctx.fill();
+    }
+    const body = ctx.createRadialGradient(-4, -6, 2, 0, 0, 22);
+    body.addColorStop(0, "#fff3b0"); body.addColorStop(.5, "#ffb347"); body.addColorStop(1, "#e0602e");
+    ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(120,30,10,.5)"; ctx.fillRect(-14, -12, 28, 3); ctx.fillRect(-14, 9, 28, 3);
+    ctx.fillStyle = "#ffd76a"; ctx.beginPath(); ctx.moveTo(15, -2); ctx.lineTo(26, 2); ctx.lineTo(15, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#1c1030"; ctx.beginPath(); ctx.arc(8, -3, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(9, -4, 1.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#c2412a"; ctx.beginPath(); ctx.moveTo(-16, 2); ctx.lineTo(-30, -4 + flap * 4); ctx.lineTo(-28, 8); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  const FOE_ART = { jelly: drawJelly, crab: drawCrab, roller: drawRoller, swooper: drawSwooper };
+
+  // ---- World 3 bosses ----
+  // crab: sidesteps, charges into the arena wall and is left dazed (stomp it
+  // then), shaking crystals loose from the ceiling. dragon: a lantern dragon
+  // that weaves overhead dropping fire, then dives and rests its head on the
+  // ground. eclipse: the final sorcerer teleports between perches, fires
+  // aimed bolts and rings of bolts, then sinks down to rest.
+  const BOSSES = {
+    crab: {
+      init(b) { Object.assign(b, { w: 220, h: 128, y: WORLD.ground - 128, mode: "walk", timer: 2, spit: 2.5, claw: 0, vx: 0 }); },
+      update(dt, aim, rage) {
+        const b = boss;
+        b.claw += dt;
+        if (b.mode === "walk") {
+          b.facing = aim < 0 ? -1 : 1;
+          if (Math.abs(aim) > 40) b.x += b.facing * (90 + rage * 12) * dt;
+          b.timer -= dt; b.spit -= dt;
+          if (rage >= 2 && b.spit <= 0) {
+            b.spit = Math.max(1.6, 3 - rage * .2);
+            for (const vx of [-1, 1]) hazards.push({ type: "shard", x: b.x + b.w / 2 - 14, y: b.y + 10, w: 28, h: 28, vx: vx * (180 + Math.random() * 140), vy: -720, g: 1300, life: 4 });
+            tone(660, .08, "triangle", .04);
+          }
+          if (b.timer <= 0) { b.mode = "windup"; b.timer = .7; tone(120, .3, "sawtooth", .05); }
+        } else if (b.mode === "windup") {
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "charge"; b.vx = b.facing * (560 + rage * 35); }
+        } else if (b.mode === "charge") {
+          b.x += b.vx * dt;
+          if (b.x <= b.left || b.x + b.w >= b.right) {
+            b.x = Math.max(b.left, Math.min(b.right - b.w, b.x));
+            b.mode = "stunned"; b.timer = Math.max(1.3, 2.1 - rage * .08); shake = .4;
+            tone(70, .35, "sawtooth", .08); burst(b.facing > 0 ? b.right : b.left, WORLD.ground - 60, "#9ff5ff", 18);
+            // the crash shakes crystals loose from the ceiling
+            for (let i = 0; i < 2 + Math.min(3, Math.floor(rage / 2)); i++) hazards.push({ type: "shard", x: b.left + 80 + Math.random() * (b.right - b.left - 160), y: -60 - i * 90, w: 28, h: 28, vx: 0, vy: 0, g: 900, life: 5 });
+          }
+        } else if (b.mode === "stunned") {
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "walk"; b.timer = Math.max(1.4, 2.6 - rage * .15); }
+        }
+      },
+      onHit(b) { if (b.mode === "stunned") b.timer = Math.min(b.timer, .5); },
+      draw(b, x, time) {
+        const stunned = b.mode === "stunned", winding = b.mode === "windup";
+        const open = winding ? .9 : Math.abs(Math.sin(b.claw * (b.mode === "charge" ? 14 : 3))) * .6;
+        ctx.translate(x + b.w / 2, b.y + b.h);
+        ctx.scale(b.facing > 0 ? 1 : -1, 1);
+        ctx.strokeStyle = "#1d4f7a"; ctx.lineWidth = 9; ctx.lineCap = "round";
+        for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+          const lift = Math.sin(b.claw * (b.mode === "charge" ? 20 : 6) + i * 2 + side) * 6;
+          ctx.beginPath(); ctx.moveTo(side * (40 + i * 18), -40); ctx.lineTo(side * (78 + i * 16), -58 + lift); ctx.lineTo(side * (92 + i * 12), -4); ctx.stroke();
+        }
+        for (const side of [-1, 1]) {   // big claws
+          ctx.save(); ctx.translate(side * 96, -92 - (winding ? 20 : 0)); ctx.rotate(side * (-.4 - (winding ? .5 : 0)));
+          const claw = ctx.createLinearGradient(0, -40, 0, 30); claw.addColorStop(0, "#9ff5ff"); claw.addColorStop(1, "#2a7fb8");
+          ctx.fillStyle = claw; ctx.strokeStyle = "#164266"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.ellipse(0, 0, 30, 24, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(side * 10, -10); ctx.quadraticCurveTo(side * 44, -40 - open * 20, side * 52, -16 - open * 26); ctx.quadraticCurveTo(side * 34, -14, side * 18, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(side * 12, 8); ctx.quadraticCurveTo(side * 44, 12, side * 50, -4 + open * 10); ctx.quadraticCurveTo(side * 30, 0, side * 14, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
+        const shell = ctx.createRadialGradient(-30, -110, 10, 0, -70, 120);
+        shell.addColorStop(0, "#7fe0ff"); shell.addColorStop(.6, "#2f8cc8"); shell.addColorStop(1, "#16406e");
+        ctx.fillStyle = shell; ctx.strokeStyle = "#0f2c4d"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.ellipse(0, -62, 92, 56, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        for (let i = 0; i < 5; i++) {   // crystals on the back
+          const cx = -60 + i * 30, h = 34 + (i % 2) * 18 + (i === 2 ? 14 : 0);
+          ctx.fillStyle = i % 2 ? "#ffb3e6" : "#c9fbff"; ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(cx - 11, -104 + Math.abs(i - 2) * 6); ctx.lineTo(cx, -104 - h + Math.abs(i - 2) * 6); ctx.lineTo(cx + 11, -104 + Math.abs(i - 2) * 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+        glowDot(-20, -100, 60, "rgba(200,250,255,.6)", .35);
+        ctx.strokeStyle = "#0f2c4d"; ctx.lineWidth = 6;
+        for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 22, -100); ctx.lineTo(side * 26, -128); ctx.stroke(); }
+        for (const side of [-1, 1]) {
+          ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(side * 26, -134, 12, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#0b1630";
+          if (stunned) { ctx.strokeStyle = "#0b1630"; ctx.lineWidth = 2.5; ctx.beginPath(); for (let a = 0; a < 12; a += .4) ctx.lineTo(side * 26 + Math.cos(a + time * .01) * a * .7, -134 + Math.sin(a + time * .01) * a * .7); ctx.stroke(); }
+          else { ctx.beginPath(); ctx.arc(side * 26 + 4, -133, 5, 0, Math.PI * 2); ctx.fill(); }
+        }
+        ctx.strokeStyle = "#0f2c4d"; ctx.lineWidth = 4;
+        ctx.beginPath(); if (stunned) ctx.arc(0, -40, 12, Math.PI + .3, -.3); else ctx.arc(0, -52, 14, .3, Math.PI - .3); ctx.stroke();
+        if (stunned) for (let i = 0; i < 3; i++) { const a = time * .006 + i * 2.1; ctx.save(); ctx.translate(Math.cos(a) * 46, -170 + Math.sin(a) * 10); ctx.scale(.45, .45); pickupArt.star(); ctx.restore(); }
+      }
+    },
+    dragon: {
+      init(b) { Object.assign(b, { w: 124, h: 88, y: 170, mode: "fly", timer: 3.2, spit: 1, t: 0, trail: [], segs: [] }); },
+      update(dt, aim, rage) {
+        const b = boss, floor = WORLD.ground - b.h, span = b.right - b.left - b.w;
+        b.t += dt;
+        const ox = b.x, oy = b.y;
+        if (b.mode === "fly") {
+          const tx = b.left + span / 2 + Math.sin(b.t * (.55 + rage * .03)) * span * .46;
+          const ty = 150 + Math.sin(b.t * 1.7) * 55;
+          b.x += (tx - b.x) * Math.min(1, dt * 2.4); b.y += (ty - b.y) * Math.min(1, dt * 3);
+          b.spit -= dt;
+          if (b.spit <= 0) {
+            b.spit = Math.max(.55, 1.25 - rage * .08);
+            for (const vx of rage >= 3 ? [-120, 0, 120] : [0]) hazards.push({ type: "fire", x: b.x + b.w / 2 - 14 + b.facing * 40, y: b.y + b.h - 10, w: 28, h: 28, vx: vx + b.facing * 50, vy: 60, g: 560, life: 5 });
+            tone(200, .08, "sawtooth", .03);
+          }
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "windup"; b.timer = .6; tone(150, .35, "sawtooth", .05); }
+        } else if (b.mode === "windup") {
+          b.y += (110 - b.y) * Math.min(1, dt * 5);
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "dive"; b.k = 0; b.fromX = b.x; b.fromY = b.y; b.toX = Math.max(b.left, Math.min(b.right - b.w, player.x + player.w / 2 - b.w / 2)); }
+        } else if (b.mode === "dive") {
+          b.k = Math.min(1, b.k + dt * (.95 + rage * .05));
+          b.x = b.fromX + (b.toX - b.fromX) * b.k; b.y = b.fromY + (floor - b.fromY) * b.k * b.k;
+          if (b.k >= 1) { b.mode = "rest"; b.timer = Math.max(1.1, 1.9 - rage * .1); shake = .3; tone(80, .3, "sawtooth", .07); burst(b.x + b.w / 2, WORLD.ground, "#ffb347", 16); }
+        } else if (b.mode === "rest") {
+          b.y = floor; b.timer -= dt;
+          if (b.timer <= 0) b.mode = "rise";
+        } else {
+          b.y += (150 - b.y) * Math.min(1, dt * 3);
+          if (Math.abs(b.y - 150) < 12) { b.mode = "fly"; b.timer = Math.max(2, 3.4 - rage * .2); b.spit = .6; }
+        }
+        if (Math.abs(b.x - ox) > .2) b.facing = b.x > ox ? 1 : -1;
+        // the lantern body follows the path the head has taken
+        b.trail.unshift({ x: b.x + b.w / 2, y: b.y + b.h / 2 });
+        if (b.trail.length > 600) b.trail.length = 600;
+        b.segs = [];
+        let dist = 0, need = 56;
+        for (let i = 1; i < b.trail.length && b.segs.length < 9; i++) {
+          dist += Math.hypot(b.trail[i].x - b.trail[i - 1].x, b.trail[i].y - b.trail[i - 1].y);
+          if (dist >= need) { b.segs.push(b.trail[i]); need += 44; }
+        }
+        if (b.trail.length < 2 && oy) b.segs = [];
+        if (player.star <= 0 && b.hurt <= 0) for (const seg of b.segs) {
+          if (rectsOverlap(player, { x: seg.x - 18, y: seg.y - 18, w: 36, h: 36 })) { hurtPlayer(); break; }
+        }
+      },
+      onHit(b) { if (b.mode === "rest" || b.mode === "dive") b.mode = "rise"; },
+      draw(b, x, time) {
+        const shift = x - b.x;
+        for (let i = b.segs.length - 1; i >= 0; i--) {   // lantern body, tail first
+          const s = b.segs[i], r = 24 - i * 1.2;
+          ctx.save(); ctx.translate(s.x + shift, s.y);
+          if (i === b.segs.length - 1) {
+            ctx.strokeStyle = "#ffd76a"; ctx.lineWidth = 3;
+            for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-b.facing * 30, 20 + k * 8, -b.facing * 50, 30 + k * 14 + Math.sin(time * .01 + k) * 6); ctx.stroke(); }
+          }
+          glowDot(0, 0, r * 2, "rgba(255,120,60,.6)", .5);
+          const g = ctx.createRadialGradient(-r * .3, -r * .3, 2, 0, 0, r);
+          g.addColorStop(0, "#ffe08a"); g.addColorStop(.5, "#ff5a3d"); g.addColorStop(1, "#a3172c");
+          ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, r, r * .85, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffd76a"; ctx.fillRect(-r * .7, -r * .9, r * 1.4, 4); ctx.fillRect(-r * .7, r * .78, r * 1.4, 4);
+          ctx.strokeStyle = "rgba(120,20,20,.55)"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(0, 0, r * .45, r * .85, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = "#ffd76a"; ctx.beginPath(); ctx.moveTo(-6, -r * .9); ctx.lineTo(0, -r * 1.35); ctx.lineTo(6, -r * .9); ctx.fill();
+          ctx.restore();
+        }
+        const resting = b.mode === "rest";
+        ctx.translate(x + b.w / 2, b.y + b.h / 2);
+        ctx.scale(b.facing > 0 ? 1 : -1, 1);
+        if (resting) ctx.rotate(.15);
+        glowDot(0, 0, 90, "rgba(255,140,60,.55)", .5);
+        ctx.strokeStyle = "#ffd76a"; ctx.lineWidth = 3; ctx.lineCap = "round";   // whiskers
+        for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(48, 10 + k * 6); ctx.bezierCurveTo(80, 10 + k * 20, 70, 40 + k * 10, 96, 34 + k * 16 + Math.sin(time * .008 + k) * 8); ctx.stroke(); }
+        ctx.fillStyle = "#ffd76a";   // horns
+        for (const k of [0, 1]) { ctx.beginPath(); ctx.moveTo(-18 + k * 22, -30); ctx.quadraticCurveTo(-40 + k * 18, -66, -58 + k * 16, -62); ctx.quadraticCurveTo(-34 + k * 18, -54, -6 + k * 22, -26); ctx.closePath(); ctx.fill(); }
+        const head = ctx.createLinearGradient(0, -40, 0, 44);
+        head.addColorStop(0, "#ff7a4d"); head.addColorStop(1, "#b0182f");
+        ctx.fillStyle = head; ctx.strokeStyle = "#5c0c1c"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-50, -10); ctx.quadraticCurveTo(-40, -42, 10, -38); ctx.quadraticCurveTo(54, -32, 62, 0); ctx.quadraticCurveTo(66, 14, 54, 20);
+        ctx.lineTo(56, 30); ctx.quadraticCurveTo(20, 44, -30, 34); ctx.quadraticCurveTo(-56, 22, -50, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ffd76a"; ctx.beginPath(); ctx.moveTo(-40, -30); for (let i = 0; i < 5; i++) { ctx.lineTo(-44 - i * 8, -18 + i * 10); ctx.lineTo(-40 - i * 8, -10 + i * 10); } ctx.lineTo(-30, 30); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#fff"; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(20 + i * 9, 20); ctx.lineTo(24 + i * 9, 28); ctx.lineTo(28 + i * 9, 20); ctx.fill(); }
+        ctx.fillStyle = "#fff6c2"; ctx.beginPath(); ctx.ellipse(20, -14, 11, resting ? 3 : 9, -.2, 0, Math.PI * 2); ctx.fill();
+        if (!resting) { ctx.fillStyle = "#1c0a10"; ctx.beginPath(); ctx.ellipse(23, -14, 3.5, 7, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = "#5c0c1c"; ctx.beginPath(); ctx.arc(56, 4, 3, 0, Math.PI * 2); ctx.fill();
+        if (resting) for (let i = 0; i < 3; i++) { const a = time * .006 + i * 2.1; ctx.save(); ctx.translate(Math.cos(a) * 40, -70 + Math.sin(a) * 8); ctx.scale(.4, .4); pickupArt.star(); ctx.restore(); }
+      }
+    },
+    eclipse: {
+      init(b) { Object.assign(b, { w: 130, h: 170, y: 140, mode: "float", timer: 2.6, spit: 1.4, t: 0, perch: 1, cycle: 0, glow: 0 }); b.x = b.left + (b.right - b.left) / 2 - b.w / 2; },
+      update(dt, aim, rage) {
+        const b = boss, floor = WORLD.ground - b.h;
+        b.t += dt;
+        const perches = [b.left + 90, b.left + (b.right - b.left) / 2 - b.w / 2, b.right - b.w - 90];
+        const aimAt = (speed, spread = 0) => {
+          const cx = b.x + b.w / 2, cy = b.y + b.h * .4;
+          const a = Math.atan2(player.y + player.h / 2 - cy, player.x + player.w / 2 - cx) + spread;
+          hazards.push({ type: "bolt", x: cx - 13, y: cy - 13, w: 26, h: 26, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, g: 0, life: 5 });
+        };
+        if (b.mode === "float") {
+          b.x += (perches[b.perch] - b.x) * Math.min(1, dt * 2);
+          b.y += (150 + Math.sin(b.t * 1.6) * 16 - b.y) * Math.min(1, dt * 3);
+          b.facing = aim < 0 ? -1 : 1;
+          b.spit -= dt;
+          if (b.spit <= 0) {
+            b.spit = Math.max(.9, 1.6 - rage * .08);
+            for (const spread of rage >= 4 ? [-.22, 0, .22] : [0]) aimAt(250 + rage * 14, spread);
+            tone(990, .07, "sine", .04);
+          }
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "cast"; b.timer = .9; b.glow = 0; tone(220, .5, "sawtooth", .04); }
+        } else if (b.mode === "cast") {
+          b.glow = Math.min(1, b.glow + dt / .9);
+          b.timer -= dt;
+          if (b.timer <= 0) {
+            const count = 8 + Math.min(6, rage), cx = b.x + b.w / 2, cy = b.y + b.h * .4, turn = Math.random();
+            for (let i = 0; i < count; i++) { const a = (i + turn) / count * Math.PI * 2; hazards.push({ type: "bolt", x: cx - 13, y: cy - 13, w: 26, h: 26, vx: Math.cos(a) * 210, vy: Math.sin(a) * 210, g: 0, life: 5 }); }
+            shake = .25; tone(440, .2, "triangle", .06);
+            b.cycle++;
+            b.mode = b.cycle % 2 === 0 ? "sink" : "teleport"; b.timer = .35; b.glow = 0;
+          }
+        } else if (b.mode === "sink") {
+          b.y += (floor - b.y) * Math.min(1, dt * 3.5);
+          if (floor - b.y < 6) { b.y = floor; b.mode = "tired"; b.timer = Math.max(1.3, 2.2 - rage * .1); burst(b.x + b.w / 2, WORLD.ground, "#c68cff", 16); }
+        } else if (b.mode === "tired") {
+          b.timer -= dt;
+          if (b.timer <= 0) { b.mode = "teleport"; b.timer = .35; }
+        } else if (b.mode === "teleport") {
+          b.timer -= dt;
+          if (b.timer <= 0) {
+            burst(b.x + b.w / 2, b.y + b.h / 2, "#c68cff", 20);
+            let next = Math.floor(Math.random() * 3); if (next === b.perch) next = (next + 1) % 3;
+            b.perch = next; b.x = perches[next]; b.y = 150;
+            burst(b.x + b.w / 2, b.y + b.h / 2, "#ffd166", 20);
+            tone(1200, .08, "sine", .04); tone(600, .12, "sine", .04, .06);
+            b.mode = "float"; b.timer = Math.max(1.6, 2.8 - rage * .14); b.spit = .8;
+          }
+        }
+      },
+      onHit(b) { if (b.mode === "tired" || b.mode === "sink") { b.mode = "teleport"; b.timer = .3; } },
+      draw(b, x, time) {
+        const tired = b.mode === "tired", fading = b.mode === "teleport" ? Math.max(.15, b.timer / .35) : 1;
+        ctx.globalAlpha *= fading;
+        const base = ctx.globalAlpha;
+        ctx.translate(x + b.w / 2, b.y + b.h / 2);
+        // eclipse halo
+        const halo = 1 + Math.sin(time * .004) * .05 + b.glow * .3;
+        glowDot(0, -46, 120 * halo, "rgba(255,150,90,.7)", .6);
+        ctx.strokeStyle = "#ffd6a0"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, -46, 58 * halo, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = "#0a0410"; ctx.beginPath(); ctx.arc(0, -46, 54 * halo, 0, Math.PI * 2); ctx.fill();
+        if (tired) ctx.translate(0, 18);
+        const robe = ctx.createLinearGradient(0, -60, 0, 86);
+        robe.addColorStop(0, "#4a2a8a"); robe.addColorStop(1, "#140a2e");
+        ctx.fillStyle = robe; ctx.strokeStyle = "#d9b8ff"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-26, -40); ctx.quadraticCurveTo(-60, 30, -64 + Math.sin(time * .004) * 6, 86);
+        for (let i = 0; i <= 6; i++) ctx.lineTo(-64 + i * 21.3, 86 + (i % 2 ? -12 : 0) + Math.sin(time * .006 + i) * 3);
+        ctx.quadraticCurveTo(60, 30, 26, -40); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ffe9a8";   // stars woven into the robe
+        for (let i = 0; i < 9; i++) { const sx = Math.sin(i * 12.9) * 34, sy = 6 + (i * 37 % 70); ctx.globalAlpha = base * (.6 + .4 * Math.sin(time * .005 + i)); ctx.fillRect(sx, sy, 2.5, 2.5); }
+        ctx.globalAlpha = base;
+        ctx.fillStyle = "#2a1650"; ctx.beginPath(); ctx.moveTo(-34, -30); ctx.quadraticCurveTo(-36, -80, 0, -92); ctx.quadraticCurveTo(36, -80, 34, -30); ctx.quadraticCurveTo(0, -18, -34, -30); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#050208"; ctx.beginPath(); ctx.ellipse(0, -50, 20, 22, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = tired ? "#8a7aa8" : "#ffd166"; ctx.shadowColor = "#ffd166"; ctx.shadowBlur = tired ? 0 : 12;
+        if (tired) { ctx.fillRect(-11, -50, 8, 2.5); ctx.fillRect(4, -50, 8, 2.5); }
+        else { ctx.beginPath(); ctx.ellipse(-7, -52, 3.5, 5, 0, 0, Math.PI * 2); ctx.ellipse(8, -52, 3.5, 5, 0, 0, Math.PI * 2); ctx.fill(); }
+        ctx.shadowBlur = 0;
+        for (const side of [-1, 1]) {   // floating hands with orbs
+          const hx = side * 58, hy = -4 + Math.sin(time * .005 + side) * 6 + (tired ? 30 : 0);
+          ctx.fillStyle = "#d9b8ff"; ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.fill();
+          const r = 9 + b.glow * 10;
+          glowDot(hx, hy - 14, r * 2.4, "rgba(255,200,120,.8)", .7);
+          drawBall(hx, hy - 14, r, "#fff6d8", "#ff9d6b");
+        }
+        if (tired) for (let i = 0; i < 3; i++) { const a = time * .006 + i * 2.1; ctx.save(); ctx.translate(Math.cos(a) * 40, -110 + Math.sin(a) * 8); ctx.scale(.4, .4); pickupArt.star(); ctx.restore(); }
+      }
+    }
+  };
+
+  function drawWorld3Hazard(h, time) {
+    if (h.type === "shard") {
+      ctx.translate(0, -h.h / 2); ctx.rotate(Math.atan2(h.vy, h.vx || .001) + Math.PI / 2);
+      glowDot(0, 0, 30, "rgba(160,240,255,.8)", .6);
+      ctx.fillStyle = "#c9fbff"; ctx.strokeStyle = "#3aa0d8"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(9, 0); ctx.lineTo(0, 16); ctx.lineTo(-9, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      return true;
+    }
+    if (h.type === "fire") {
+      ctx.translate(0, -h.h / 2);
+      glowDot(0, 0, 40, "rgba(255,150,60,.9)", .7);
+      ctx.fillStyle = "#ff6a2d";
+      ctx.beginPath(); ctx.moveTo(0, -24 - Math.sin(time * .03) * 4); ctx.quadraticCurveTo(15, -4, 11, 8); ctx.arc(0, 6, 12, 0, Math.PI); ctx.quadraticCurveTo(-15, -4, 0, -24); ctx.fill();
+      ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(0, 6, 6, 0, Math.PI * 2); ctx.fill();
+      return true;
+    }
+    if (h.type === "bolt") {
+      ctx.translate(0, -h.h / 2); ctx.rotate(time * .012);
+      glowDot(0, 0, 32, "rgba(255,190,110,.9)", .75);
+      ctx.fillStyle = "#fff3d0";
+      ctx.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 5 : 13; ctx.lineTo(Math.cos(i * Math.PI / 4) * r, Math.sin(i * Math.PI / 4) * r); } ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ff9d6b"; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+      return true;
+    }
+    return false;
   }
 
   function setKey(action, value) {
