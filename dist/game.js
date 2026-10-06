@@ -662,6 +662,7 @@
   // Each level ends with a flagpole just before the gate: the higher Pupa
   // grabs it, the more points it pays.
   const POLE_OFFSET = 150;
+  const MIN_VIEW_WIDTH = 820;
   const POLE_HEIGHT = 500;
   // Seconds of invulnerability (shown as blinking) after taking a hit.
   const HURT_TIME = 5;
@@ -768,6 +769,9 @@
   let audio;
   let viewWidth = 1280;
   let viewHeight = 720;
+  // How far the world is pushed down the screen when the view is taller than
+  // the 720-unit world (phones held upright): the extra room becomes sky.
+  let worldOffsetY = 0;
   let renderScale = 1;
   let dpr = 1;
   let checkpoint = 90;
@@ -875,12 +879,19 @@
     // With the touch buttons on screen, zoom out just enough for the ground
     // line to sit above them, so they cover soil instead of Pupa.
     const touchButton = document.querySelector(".mobile-controls .touch-button");
+    let buttonTop = 0;
     if (touchButton && touchButton.offsetParent) {
-      const buttonTop = touchButton.getBoundingClientRect().top - rect.top;
+      buttonTop = touchButton.getBoundingClientRect().top - rect.top;
       if (buttonTop > 0) renderScale = Math.max(renderScale * .72, Math.min(renderScale, (buttonTop - 8) / WORLD.ground));
     }
+    // On a tall, narrow screen still show at least MIN_VIEW_WIDTH units ahead.
+    renderScale = Math.min(renderScale, rect.width / MIN_VIEW_WIDTH);
     viewWidth = rect.width / renderScale;
     viewHeight = rect.height / renderScale;
+    // Any height left over goes above the world, so the ground line sits just
+    // above the touch buttons (or near the bottom without them).
+    const groundTarget = buttonTop > 0 ? (buttonTop - 12) / renderScale : viewHeight - 115;
+    worldOffsetY = viewHeight > 720 ? Math.max(0, groundTarget - WORLD.ground) : 0;
   }
 
   function startGame() {
@@ -2451,6 +2462,7 @@
     ctx.clearRect(0, 0, viewWidth, viewHeight);
     if (shake > 0 && state === "playing") ctx.translate((Math.random() - .5) * 14 * Math.min(1, shake * 3), (Math.random() - .5) * 10 * Math.min(1, shake * 3));
     drawBackground(time);
+    ctx.translate(0, worldOffsetY);
     platforms.forEach(drawPlatform);
     drawCheckpoint(time);
     drawFlagpole(time);

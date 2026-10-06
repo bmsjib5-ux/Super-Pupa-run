@@ -105,6 +105,9 @@ main {
 }
 
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+/* The stage sets the size; the canvas always fills it (a percentage height
+   alone does not resolve when the stage only has a min-height). */
+.stage-wrap > canvas { position: absolute; inset: 0; }
 
 .hud {
   position: absolute;
