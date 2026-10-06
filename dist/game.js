@@ -1521,10 +1521,11 @@
         enemy.puff = Math.max(0, enemy.puff - dt);
         enemy.wait -= dt;
         // Swell up for a moment as a warning, then fire along the ground line.
-        if (enemy.wait <= 0 && Math.abs(dx) < 760 && Math.abs(player.y - enemy.y) < 320) {
+        // Range is kept short (half of what it was): it only fires when Pupa is close.
+        if (enemy.wait <= 0 && Math.abs(dx) < 380 && Math.abs(player.y - enemy.y) < 320) {
           enemy.wait = 2.4;
           enemy.puff = .35;
-          shots.push({ x: enemy.x + enemy.w / 2 + enemy.dir * 26 - 11, y: enemy.y + 14, w: 22, h: 22, vx: enemy.dir * 310, life: 3 });
+          shots.push({ x: enemy.x + enemy.w / 2 + enemy.dir * 26 - 11, y: enemy.y + 14, w: 22, h: 22, vx: enemy.dir * 310, life: 1.5 });
           tone(520, .07, "square", .035);
         }
       }
