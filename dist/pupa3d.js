@@ -11,7 +11,7 @@ const VIEW = 1.3; // half-height of the camera frustum in model units
 const canvas = document.createElement("canvas");
 canvas.width = canvas.height = SIZE;
 
-const api = { ready: false, canvas, viewHalf: VIEW, render };
+const api = { ready: false, canvas, viewHalf: VIEW, render, setSkin };
 window.Pupa3D = api;
 
 let renderer;
@@ -62,6 +62,40 @@ const LIMB_SHADER = `
   }
 `;
 
+// Outfit colours from the market: the pink suit (hues around 335 degrees,
+// reasonably saturated) is turned to another hue; face, scarf and eyes keep
+// their colours.
+const tint = { uHue: { value: 0 }, uSat: { value: 1 }, uBright: { value: 1 } };
+const TINT_SHADER = `
+  uniform float uHue; uniform float uSat; uniform float uBright;
+  vec3 tintRgb2hsv(vec3 c) {
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + 1e-10)), d / (q.x + 1e-10), q.x);
+  }
+  vec3 tintHsv2rgb(vec3 c) {
+    vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+    return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+  }
+  vec3 recolor(vec3 c) {
+    if (uHue == 0.0 && uSat == 1.0 && uBright == 1.0) return c;
+    vec3 h = tintRgb2hsv(c);
+    float d = abs(fract(h.x - 0.93 + 0.5) - 0.5);
+    float mask = (1.0 - smoothstep(0.07, 0.11, d)) * smoothstep(0.18, 0.3, h.y);
+    vec3 shifted = tintHsv2rgb(vec3(fract(h.x + uHue), clamp(h.y * uSat, 0.0, 1.0), h.z * uBright));
+    return mix(c, shifted, mask);
+  }
+`;
+
+// skin: { hue (turns), sat, bright } or nothing for the original colours
+function setSkin(skin) {
+  tint.uHue.value = skin?.hue || 0;
+  tint.uSat.value = skin?.sat ?? 1;
+  tint.uBright.value = skin?.bright ?? 1;
+}
+
 function projectTexture(geometry) {
   // Planar projection of the front-view artwork straight down the Z axis.
   geometry.computeBoundingBox();
@@ -90,10 +124,13 @@ if (renderer) {
       projectTexture(geometry);
       const material = new MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 });
       material.onBeforeCompile = (shader) => {
-        Object.assign(shader.uniforms, limbs);
+        Object.assign(shader.uniforms, limbs, tint);
         shader.vertexShader = shader.vertexShader
           .replace("#include <common>", `#include <common>\n${LIMB_SHADER}`)
           .replace("#include <begin_vertex>", "vec3 transformed = swingLimbs(position);");
+        shader.fragmentShader = shader.fragmentShader
+          .replace("#include <common>", `#include <common>\n${TINT_SHADER}`)
+          .replace("#include <map_fragment>", "#include <map_fragment>\n  diffuseColor.rgb = recolor(diffuseColor.rgb);");
       };
       turn.add(new Mesh(geometry, material));
     });

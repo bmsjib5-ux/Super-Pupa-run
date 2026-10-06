@@ -54,6 +54,7 @@
               <p id="saveLine" class="save-line"></p>
               <div class="title-actions">
                 <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
+                <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
                 <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
               </div>
               <p id="installHint" class="install-hint" hidden></p>
@@ -70,7 +71,10 @@
               <span class="moon-icon" aria-hidden="true">☾</span>
               <h2>พักหายใจก่อน</h2>
               <p>สวนเชอร์รี่จะรอคุณอยู่ตรงนี้</p>
-              <button id="resumeBtn" class="primary-button" type="button">เล่นต่อ</button>
+              <div class="title-actions">
+                <button id="resumeBtn" class="primary-button" type="button">เล่นต่อ</button>
+                <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+              </div>
             </div>
           </div>
 
@@ -82,7 +86,35 @@
               <div class="final-score tight"><span>เหรียญสะสม</span><b id="finalScore">0</b></div>
               <div class="final-score tight"><span>คะแนนสะสม</span><b id="finalPoints">0</b></div>
               <p id="bestPoints" class="best-line"></p>
-              <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
+              <div class="title-actions">
+                <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
+                <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="shopScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
+            <div class="shop-card">
+              <header class="shop-head">
+                <h2 id="shopTitle">ตลาดแสงจันทร์</h2>
+                <div class="shop-wallet" aria-label="เหรียญที่มี"><i>●</i> <b id="shopCoins">0</b></div>
+                <button id="shopClose" class="icon-button" type="button" aria-label="ปิดร้านค้า">✕</button>
+              </header>
+              <div class="shop-body">
+                <div class="shop-preview">
+                  <canvas id="shopPreview" width="320" height="320" aria-hidden="true"></canvas>
+                  <p id="shopPreviewName"></p>
+                  <p class="shop-tip">แตะการ์ดเพื่อลองสวมก่อนซื้อ</p>
+                </div>
+                <div class="shop-main">
+                  <div class="shop-tabs" role="tablist" aria-label="หมวดสินค้า">
+                    <button type="button" role="tab" data-tab="outfit" aria-selected="true">ชุดแต่งตัว</button>
+                    <button type="button" role="tab" data-tab="pet" aria-selected="false" tabindex="-1">สัตว์เลี้ยง</button>
+                    <button type="button" role="tab" data-tab="item" aria-selected="false" tabindex="-1">ไอเทม</button>
+                  </div>
+                  <div id="shopList" class="shop-list" role="tabpanel" aria-labelledby="shopTitle"></div>
+                </div>
+              </div>
             </div>
           </div>
 

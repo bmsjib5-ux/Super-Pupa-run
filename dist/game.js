@@ -2,7 +2,8 @@
   "use strict";
 
   const canvas = document.querySelector("#gameCanvas");
-  const ctx = canvas.getContext("2d", { alpha: false });
+  // `let` so the market can borrow the drawing helpers for its icons.
+  let ctx = canvas.getContext("2d", { alpha: false });
   const ui = {
     start: document.querySelector("#startScreen"),
     pause: document.querySelector("#pauseScreen"),
@@ -671,9 +672,52 @@
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
   const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff" };
+  // Where the top of the head sits in the drawn 3D model (fraction of its
+  // size from the top), and how far hats lean toward the facing side.
+  const HEAD_TOP = .2;
+  const HAT_SHIFT = 0;
 
-  // Progress kept on this device. Points and coins are running totals that
-  // only ever grow: across levels, game overs, replays and visits.
+  // Market: everything is bought with the coins in save.coins. Outfits and
+  // pets are bought once and kept; items are used up, one per level start.
+  const SHOP = {
+    skins: [
+      { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
+      { id: "mint", name: "ชุดใบมิ้นต์", desc: "เขียวสดชื่นเหมือนใบไม้ยามเช้า", price: 100, hue: .49, sat: .85, bright: 1, swatch: "#6fe3a8" },
+      { id: "ocean", name: "ชุดคลื่นคราม", desc: "ฟ้าครามเย็นตาแบบทะเลยามค่ำ", price: 150, hue: .66, sat: 1, bright: 1, swatch: "#5aa8ff" },
+      { id: "night", name: "ชุดราตรีม่วง", desc: "ม่วงลึกลับเข้ากับคืนจันทร์", price: 200, hue: .79, sat: 1, bright: .95, swatch: "#a070ff" },
+      { id: "sun", name: "ชุดตะวันทอง", desc: "ทองอร่ามเหมือนแดดยามเช้า", price: 250, hue: .13, sat: 1.15, bright: 1.05, swatch: "#ffc94a" },
+      { id: "shadow", name: "ชุดเงาจันทร์", desc: "สีเงินหม่นของเมืองร้าง", price: 300, hue: 0, sat: .08, bright: .92, swatch: "#c9c9d6" }
+    ],
+    hats: [
+      { id: "nohat", name: "ไม่สวมหมวก", desc: "ปล่อยหัวโล่ง ๆ", price: 0 },
+      { id: "flower", name: "ดอกซากุระ", desc: "ดอกไม้สีชมพูทัดหัว", price: 80 },
+      { id: "bunny", name: "หูกระต่าย", desc: "หูยาวกระดิกได้ตอนวิ่ง", price: 120 },
+      { id: "witch", name: "หมวกแม่มดจันทร์", desc: "หมวกทรงแหลมประดับจันทร์เสี้ยว", price: 180 },
+      { id: "crown", name: "มงกุฎทอง", desc: "สำหรับผู้พิชิตราชาเห็ดหนาม", price: 300 }
+    ],
+    pets: [
+      { id: "nopet", name: "ไม่พาสัตว์เลี้ยง", desc: "ผจญภัยคนเดียว", price: 0 },
+      { id: "firefly", name: "หิ่งห้อยน้อย", desc: "ดูดเหรียญที่อยู่ใกล้ ๆ เข้าหา Pupa", price: 120, magnet: 110 },
+      { id: "kitten", name: "ลูกแมวเชอร์รี่", desc: "ดูดเหรียญได้ไกลขึ้น", price: 250, magnet: 170 },
+      { id: "minibat", name: "ค้างคาวจิ๋ว", desc: "ดูดเหรียญ และพุ่งกัดศัตรูใกล้ ๆ ทุก 10 วินาที", price: 400, magnet: 130, bite: 10 },
+      { id: "starsprite", name: "ภูตดาว", desc: "ดูดเหรียญไกลมาก และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 600, magnet: 230, shield: true }
+    ],
+    items: [
+      { id: "shield", name: "เกราะฟองสบู่", desc: "เริ่มด่านพร้อมเกราะกันโจมตี 1 ครั้ง", price: 40 },
+      { id: "grow", name: "เห็ดยักษ์", desc: "เริ่มด่านตัวใหญ่ ทนโจมตีได้ 1 ครั้ง", price: 50 },
+      { id: "leaf", name: "ใบไม้วิเศษ", desc: "เริ่มด่านกระโดดสูง 10 วินาที", price: 25 },
+      { id: "bomb", name: "เชอร์รี่ระเบิด", desc: "เริ่มด่านพร้อมระเบิด ขว้างได้ 10 วินาที", price: 35 },
+      { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 8 วินาที", price: 60 },
+      { id: "revive", name: "หัวใจสำรอง", desc: "ฟื้นด้วยหัวใจ 1 ดวงเมื่อพลังหมด", price: 100 }
+    ]
+  };
+  const SHOP_INDEX = {};
+  for (const [group, list] of Object.entries(SHOP)) for (const entry of list) SHOP_INDEX[entry.id] = { ...entry, group };
+  const FREE_IDS = ["cherry", "nohat", "nopet"];
+
+  // Progress kept on this device. Points are a running total that only ever
+  // grows: across levels, game overs, replays and visits. Coins add up the
+  // same way and are spent only in the market.
   const SAVE_KEY = "superPupaRunSave";
   const save = { best: 0, points: null, coins: 0, plays: 0, wins: 0 };
   try {
@@ -682,6 +726,7 @@
     if (save.points == null) save.points = save.best; // saves from before totals existed
     for (const key of ["points", "coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
   } catch { save.points = 0; /* storage unavailable: play on without saving */ }
+  normalizeShop();
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     const line = document.querySelector("#saveLine");
@@ -767,6 +812,7 @@
     shots = [];
     shake = 0;
     player.flag = null;
+    resetPet();
     levelStart = { score: player.score, bonus: player.bonus, points: player.points };
     bannerText = level.name;
     bannerTime = 3;
@@ -813,6 +859,7 @@
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
     loadLevel(levelIndex + 1);
     announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
+    applyLoadout();
   }
 
   function progress() {
@@ -846,6 +893,7 @@
     ui.pauseBtn.setAttribute("aria-pressed", "false");
     announce("เริ่มเกมแล้ว เดินทางไปทางขวาและเก็บเหรียญทอง");
     tone(440, .08, "sine");
+    applyLoadout();
   }
 
   function togglePause(force) {
@@ -1017,7 +1065,7 @@
     burst(player.x + player.w / 2, player.y + player.h / 2, "#ff6e99", 16);
     tone(145, .28, "sawtooth", .06);
     updateHud();
-    if (player.lives <= 0) finish(false);
+    if (player.lives <= 0 && !tryRevive()) finish(false);
   }
 
   function respawn() {
@@ -1339,7 +1387,7 @@
   function update(dt) {
     if (state !== "playing") return;
     bannerTime = Math.max(0, bannerTime - dt);
-    if (player.flag) { updateFlag(dt); if (state === "playing") finishFrame(dt); return; }
+    if (player.flag) { updateFlag(dt); updatePet(dt); if (state === "playing") finishFrame(dt); return; }
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
@@ -1436,6 +1484,7 @@
 
     if (player.y > 780) respawn();
 
+    updatePet(dt);
     for (const cherry of cherries) {
       if (cherry.taken) continue;
       const box = { x: cherry.x - 18, y: cherry.y - 22, w: 36, h: 44 };
@@ -2059,6 +2108,8 @@
     const x = player.x - cameraX;
     const speed = Math.abs(player.vx);
     const model = window.Pupa3D;
+    const skin = SHOP_INDEX[save.shop.skin];
+    model?.setSkin?.(skin);
     if (model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
       // The model's feet sit 1 unit below the camera centre; line them up with
       // the bottom of the hitbox.
@@ -2069,6 +2120,7 @@
       ctx.shadowColor = player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
       ctx.shadowBlur = player.star > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
       ctx.drawImage(model.canvas, x + player.w / 2 - size / 2, player.y + player.h - feet, size, size);
+      drawHat(save.shop.hat, x + player.w / 2 + HAT_SHIFT * player.facing * size / 164, player.y + player.h - feet + size * HEAD_TOP, size / 164, player.facing, time);
       ctx.restore();
       return;
     }
@@ -2086,6 +2138,8 @@
     ctx.scale(player.facing * player.h / SMALL.h, player.h / SMALL.h);
     ctx.scale(1 / squash, squash);
     ctx.shadowColor = "rgba(255,92,150,.35)"; ctx.shadowBlur = 20;
+    // Without WebGL the outfit colour is an approximate filter on the sprite.
+    if (skin.hue || skin.sat !== 1) ctx.filter = `hue-rotate(${Math.round(skin.hue * 360)}deg) saturate(${skin.sat})`;
     if (sprite.complete && sprite.naturalWidth) {
       if (isRunning && oppositeStride) {
         // Mirror only the lower body for the second half of the run cycle. The
@@ -2107,6 +2161,9 @@
       ctx.fillStyle = "#ff78a8"; ctx.beginPath(); ctx.ellipse(0, 0, 31, 41, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#17102f"; ctx.beginPath(); ctx.arc(-10, -8, 4, 0, Math.PI * 2); ctx.arc(10, -8, 4, 0, Math.PI * 2); ctx.fill();
     }
+    ctx.filter = "none";
+    ctx.shadowColor = "transparent";
+    drawHat(save.shop.hat, 0, -60, 1, 1, time);
     ctx.restore();
   }
 
@@ -2410,6 +2467,7 @@
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
+    drawPet(time);
     drawPlayer(time);
     drawShield(time);
     drawPopups();
@@ -2423,7 +2481,525 @@
     last = time;
     update(dt);
     render(time);
+    drawShopPreview(time);
     requestAnimationFrame(frame);
+  }
+
+
+  // ---- Market: purchases, loadout, pets and accessories ----
+
+  // Draw with any 2D context through the stage's drawing helpers.
+  function paintOn(target, draw) {
+    const stage = ctx;
+    ctx = target;
+    try { draw(); } finally { ctx = stage; }
+  }
+
+  function normalizeShop() {
+    const raw = save.shop && typeof save.shop === "object" ? save.shop : {};
+    const owned = new Set((Array.isArray(raw.owned) ? raw.owned : []).filter(id => SHOP_INDEX[id] && SHOP_INDEX[id].group !== "items"));
+    for (const id of FREE_IDS) owned.add(id);
+    const pick = (value, group, fallback) => owned.has(value) && SHOP_INDEX[value].group === group ? value : fallback;
+    const items = {}, bring = {};
+    for (const { id } of SHOP.items) {
+      items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
+      bring[id] = raw.bring?.[id] !== false;
+    }
+    save.shop = { owned: [...owned], skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring };
+  }
+
+  const owns = (id) => save.shop.owned.includes(id);
+  const equippedPet = () => SHOP_INDEX[save.shop.pet]?.magnet ? SHOP_INDEX[save.shop.pet] : null;
+
+  function buy(id) {
+    const entry = SHOP_INDEX[id];
+    if (!entry || save.coins < entry.price) { tone(150, .12, "square", .05); return false; }
+    if (entry.group === "items") {
+      if (save.shop.items[id] >= 99) return false;
+      save.shop.items[id]++;
+    } else {
+      if (owns(id)) return false;
+      save.shop.owned.push(id);
+      equip(id, true);
+    }
+    save.coins -= entry.price;
+    writeSave();
+    updateHud();
+    [784, 988, 1319].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+    announce(`ซื้อ${entry.name}แล้ว เหลือ ${formatPoints(save.coins)} เหรียญ`);
+    return true;
+  }
+
+  function equip(id, quiet) {
+    const entry = SHOP_INDEX[id];
+    if (!entry || !owns(id)) return;
+    const slot = { skins: "skin", hats: "hat", pets: "pet" }[entry.group];
+    save.shop[slot] = id;
+    writeSave();
+    if (!quiet) { tone(660, .08, "triangle", .05); announce(`ใช้${entry.name}แล้ว`); }
+  }
+
+  // Items marked "bring" are used up when a level starts (or restarts).
+  function applyLoadout() {
+    const used = [];
+    const take = (id) => {
+      if (!save.shop.bring[id] || save.shop.items[id] <= 0) return false;
+      save.shop.items[id]--; used.push(SHOP_INDEX[id].name); return true;
+    };
+    if (!player.shield && take("shield")) player.shield = true;
+    if (!player.big && take("grow")) setBig(true);
+    if (take("leaf")) player.boost = BOOST_TIME;
+    if (take("bomb")) player.bomb = BOMB_TIME;
+    if (take("star")) player.star = STAR_TIME;
+    if (equippedPet()?.shield && !player.shield) player.shield = true;
+    if (!used.length) return;
+    writeSave();
+    used.forEach((name, i) => popups.push({ x: player.x + player.w / 2, y: player.y - 30 - i * 30, text: name, life: 1.8 }));
+    tone(523, .08, "triangle", .05); tone(784, .12, "triangle", .05, .08);
+    announce(`ใช้ไอเทม: ${used.join(" ")}`);
+    updateHud();
+  }
+
+  // A spare heart brings Pupa back instead of ending the run.
+  function tryRevive() {
+    if (!save.shop.bring.revive || save.shop.items.revive <= 0) return false;
+    save.shop.items.revive--;
+    writeSave();
+    player.lives = 1;
+    player.hurt = HURT_TIME;
+    burst(player.x + player.w / 2, player.y + player.h / 2, "#ffd76a", 30);
+    popups.push({ x: player.x + player.w / 2, y: player.y - 30, text: "ฟื้นคืนชีพ!", life: 1.6 });
+    [523, 659, 784, 1047].forEach((note, i) => tone(note, .14, "triangle", .06, i * .08));
+    announce(`หัวใจสำรองช่วยไว้ เหลืออีก ${save.shop.items.revive} ดวง`);
+    updateHud();
+    return true;
+  }
+
+  let pet = null;
+  function resetPet() {
+    pet = { x: player.x - 50, y: player.y - 30, cool: 3, target: null, facing: 1, t: 0 };
+  }
+
+  function updatePet(dt) {
+    const def = equippedPet();
+    if (!def || !pet) return;
+    pet.t += dt;
+    const cx = player.x + player.w / 2, cy = player.y + player.h / 2;
+    // Pull nearby coins in.
+    for (const cherry of cherries) {
+      if (cherry.taken) continue;
+      const dx = cx - cherry.x, dy = cy - cherry.y;
+      const d = Math.hypot(dx, dy);
+      if (d > def.magnet || d < 1) continue;
+      const pull = Math.min(d, (240 + (def.magnet - d) * 5) * dt);
+      cherry.x += dx / d * pull; cherry.y += dy / d * pull;
+    }
+    // The bat swoops on the closest enemy now and then.
+    pet.cool -= dt;
+    if (def.bite && !pet.target && pet.cool <= 0 && state === "playing") {
+      let best = null, bestD = 300;
+      for (const enemy of enemies) {
+        if (!enemy.alive) continue;
+        const d = Math.hypot(enemy.x + enemy.w / 2 - cx, enemy.y + enemy.h / 2 - cy);
+        if (d < bestD) { best = enemy; bestD = d; }
+      }
+      if (best) { pet.target = best; tone(990, .06, "square", .03); }
+    }
+    let tx = cx - player.facing * 64, ty = player.y - 14 + Math.sin(pet.t * 3) * 8;
+    if (pet.target) {
+      const enemy = pet.target;
+      tx = enemy.x + enemy.w / 2; ty = enemy.y + enemy.h / 2;
+      if (!enemy.alive) { pet.target = null; pet.cool = 1; }
+      else if (Math.hypot(tx - pet.x, ty - pet.y) < 30) {
+        enemy.alive = false;
+        addScore(enemy.type === "walker" ? 200 : 300, tx, enemy.y - 10);
+        burst(tx, ty, "#c68cff", 14);
+        tone(420, .08, "square", .05); tone(840, .1, "triangle", .04, .05);
+        pet.target = null; pet.cool = def.bite;
+      }
+    }
+    const rate = pet.target ? 10 : 4.5;
+    const nx = pet.x + (tx - pet.x) * Math.min(1, dt * rate);
+    if (Math.abs(nx - pet.x) > .3) pet.facing = nx > pet.x ? 1 : -1;
+    pet.x = nx;
+    pet.y += (ty - pet.y) * Math.min(1, dt * rate);
+  }
+
+  // Pets are drawn around (0, 0) at roughly 50 px across.
+  const petArt = {
+    firefly(t) {
+      drawGlow("#fff2a0", 38);
+      const flap = Math.sin(t * .04) * .5;
+      ctx.fillStyle = "rgba(225,240,255,.75)";
+      ctx.beginPath(); ctx.ellipse(-7, -11, 11, 6, -.7 - flap, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(7, -11, 11, 6, .7 + flap, 0, Math.PI * 2); ctx.fill();
+      drawBall(0, 0, 12, "#fff7c2", "#ffc83d");
+      ctx.fillStyle = "#3a2348";
+      ctx.beginPath(); ctx.arc(-4, -1, 2, 0, Math.PI * 2); ctx.arc(4, -1, 2, 0, Math.PI * 2); ctx.fill();
+    },
+    kitten(t) {
+      const tail = Math.sin(t * .006) * .4;
+      ctx.strokeStyle = "#ffb3cc"; ctx.lineWidth = 6; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-14, 10); ctx.quadraticCurveTo(-34, 8 + tail * 10, -30, -8 + tail * 14); ctx.stroke();
+      ctx.fillStyle = "#ffd9e6";
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(side * 6, -14); ctx.lineTo(side * 19, -30); ctx.lineTo(side * 20, -8); ctx.closePath(); ctx.fill();
+      }
+      drawBall(0, 0, 19, "#fff6fa", "#ffc2d6");
+      ctx.fillStyle = "#ff8fb1";
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 9, -17); ctx.lineTo(side * 16, -25); ctx.lineTo(side * 16, -13); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = "#3a2348";
+      ctx.beginPath(); ctx.ellipse(-7, -1, 2.6, 3.4, 0, 0, Math.PI * 2); ctx.ellipse(7, -1, 2.6, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ff6f9b"; ctx.beginPath(); ctx.moveTo(-2.5, 5); ctx.lineTo(2.5, 5); ctx.lineTo(0, 8); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "rgba(90,50,80,.55)"; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (const side of [-1, 1]) { ctx.moveTo(side * 8, 7); ctx.lineTo(side * 22, 4); ctx.moveTo(side * 8, 9); ctx.lineTo(side * 22, 11); }
+      ctx.stroke();
+    },
+    minibat(t) {
+      const flap = Math.sin(t * .03);
+      ctx.fillStyle = "#4b33a8";
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(side * 8, -2);
+        ctx.quadraticCurveTo(side * 26, -18 - flap * 10, side * 34, -4 - flap * 8);
+        ctx.quadraticCurveTo(side * 24, 0, side * 22, 8);
+        ctx.quadraticCurveTo(side * 15, 3, side * 8, 8);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = "#6a4fd8";
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * 4, -10); ctx.lineTo(side * 11, -22); ctx.lineTo(side * 12, -6); ctx.closePath(); ctx.fill(); }
+      drawBall(0, 0, 13, "#9b82ff", "#4b33a8");
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(-5, -2, 3.6, 0, Math.PI * 2); ctx.arc(5, -2, 3.6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#1c1235";
+      ctx.beginPath(); ctx.arc(-4, -1.5, 1.8, 0, Math.PI * 2); ctx.arc(6, -1.5, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(-3, 6); ctx.lineTo(-1, 10); ctx.lineTo(1, 6); ctx.closePath(); ctx.fill();
+    },
+    starsprite(t) {
+      drawGlow("#ffe27a", 40);
+      ctx.save();
+      ctx.rotate(Math.sin(t * .003) * .2);
+      const star = ctx.createRadialGradient(-5, -6, 2, 0, 0, 22);
+      star.addColorStop(0, "#fffbe0"); star.addColorStop(1, "#ffbf3c");
+      ctx.fillStyle = star; ctx.strokeStyle = "#e08a1e"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 9 : 21, a = -Math.PI / 2 + i * Math.PI / 5;
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#5a2a1a";
+      ctx.beginPath(); ctx.arc(-4, -1, 2, 0, Math.PI * 2); ctx.arc(4, -1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#5a2a1a"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(0, 3, 3.5, .2, Math.PI - .2); ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  function drawPet(time) {
+    const art = petArt[save.shop.pet];
+    if (!art || !pet) return;
+    const x = pet.x - cameraX;
+    if (x < -80 || x > viewWidth + 80) return;
+    ctx.save();
+    ctx.translate(x, pet.y);
+    ctx.scale(pet.facing, 1);
+    art(time);
+    ctx.restore();
+  }
+
+  // Accessories sit on the head: (0, 0) is the top of Pupa's head, drawn for
+  // a head about 90 px wide.
+  const hatArt = {
+    flower(t) {
+      ctx.save();
+      ctx.translate(26, 14); ctx.rotate(Math.sin(t * .002) * .1);
+      ctx.fillStyle = "#ffc2d9"; ctx.strokeStyle = "#ff7aa8"; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 5; i++) {
+        ctx.save(); ctx.rotate(i * Math.PI * 2 / 5);
+        ctx.beginPath(); ctx.ellipse(0, -9, 6, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+      drawBall(0, 0, 4.5, "#fff3a6", "#ffbd3c");
+      ctx.restore();
+    },
+    bunny(t) {
+      const wiggle = Math.sin(t * .008) * .08;
+      for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * 15, 8); ctx.rotate(side * (.22 + wiggle));
+        ctx.fillStyle = "#fff8fb"; ctx.strokeStyle = "rgba(120,70,110,.35)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(0, -26, 10, 28, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ffb0c8";
+        ctx.beginPath(); ctx.ellipse(0, -24, 5, 20, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    },
+    witch() {
+      ctx.fillStyle = "#3b2366"; ctx.strokeStyle = "#1e1038"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.ellipse(0, 10, 46, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      const cone = ctx.createLinearGradient(-26, 0, 26, 0);
+      cone.addColorStop(0, "#5b3a9a"); cone.addColorStop(1, "#2d1a52");
+      ctx.fillStyle = cone;
+      ctx.beginPath(); ctx.moveTo(-26, 8); ctx.quadraticCurveTo(-12, -30, 14, -60); ctx.quadraticCurveTo(8, -26, 26, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ffd76a"; ctx.fillRect(-25, -2, 50, 7);
+      ctx.fillStyle = "#fff3a6";
+      ctx.beginPath(); ctx.arc(0, -20, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#4a2d80";
+      ctx.beginPath(); ctx.arc(4, -22, 7, 0, Math.PI * 2); ctx.fill();
+    },
+    crown() {
+      ctx.translate(0, 16); // the crown sits low on the head
+      const gold = ctx.createLinearGradient(0, -30, 0, 10);
+      gold.addColorStop(0, "#fff3a6"); gold.addColorStop(1, "#f2a23c");
+      ctx.fillStyle = gold; ctx.strokeStyle = "#a85a14"; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(-28, 10); ctx.lineTo(-32, -18); ctx.lineTo(-15, -4); ctx.lineTo(0, -28);
+      ctx.lineTo(15, -4); ctx.lineTo(32, -18); ctx.lineTo(28, 10);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ff4f7d"; ctx.beginPath(); ctx.arc(0, -1, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#5ad0ff"; ctx.beginPath(); ctx.arc(-17, 3, 3.5, 0, Math.PI * 2); ctx.arc(17, 3, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+  };
+
+  function drawHat(id, x, top, scale, facing, time) {
+    const art = hatArt[id];
+    if (!art) return;
+    ctx.save();
+    ctx.translate(x, top);
+    ctx.scale(scale * facing, scale);
+    art(time);
+    ctx.restore();
+  }
+
+  // ---- Market screen ----
+  const shopUi = {
+    screen: document.querySelector("#shopScreen"),
+    list: document.querySelector("#shopList"),
+    coins: document.querySelector("#shopCoins"),
+    close: document.querySelector("#shopClose"),
+    preview: document.querySelector("#shopPreview"),
+    previewName: document.querySelector("#shopPreviewName"),
+    tabs: [...document.querySelectorAll("#shopScreen [role=tab]")]
+  };
+  let shopOpen = false;
+  let shopTab = "outfit";
+  let shopTry = {};          // what the preview is showing instead of the equipped look
+  let shopOpener = null;
+  const previewCtx = shopUi.preview?.getContext("2d");
+
+  function openShop(event) {
+    if (!shopUi.screen) return;
+    shopOpener = event?.currentTarget || document.activeElement;
+    shopOpen = true;
+    shopTry = {};
+    shopUi.screen.hidden = false;
+    document.body.classList.add("shop-is-open");
+    renderShop();
+    shopUi.close.focus();
+    tone(587, .07, "triangle", .04);
+  }
+
+  function closeShop() {
+    shopOpen = false;
+    shopUi.screen.hidden = true;
+    document.body.classList.remove("shop-is-open");
+    writeSave();
+    updateHud();
+    shopOpener?.focus?.();
+  }
+
+  function priceLabel(price) { return `● ${formatPoints(price)}`; }
+
+  function iconCanvas(paint) {
+    const icon = document.createElement("canvas");
+    icon.width = icon.height = 96;
+    icon.className = "shop-icon";
+    icon.setAttribute("aria-hidden", "true");
+    const g = icon.getContext("2d");
+    paintOn(g, () => { ctx.translate(48, 48); paint(); });
+    return icon;
+  }
+
+  function shopCard(entry) {
+    const card = document.createElement("article");
+    card.className = "shop-item";
+    const group = SHOP_INDEX[entry.id].group;
+    if (group === "skins") {
+      const swatch = document.createElement("span");
+      swatch.className = "shop-swatch";
+      swatch.style.setProperty("--swatch", entry.swatch);
+      card.append(swatch);
+    } else if (group === "hats") {
+      card.append(iconCanvas(() => {
+        ctx.fillStyle = "rgba(255,120,168,.35)"; ctx.beginPath(); ctx.arc(0, 30, 30, Math.PI, 0); ctx.fill();
+        if (hatArt[entry.id]) { ctx.translate(0, 6); ctx.scale(.62, .62); hatArt[entry.id](0); }
+        else { ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, -6, 16, 0, Math.PI * 2); ctx.moveTo(-11, 5); ctx.lineTo(11, -17); ctx.stroke(); }
+      }));
+    } else if (group === "pets") {
+      card.append(iconCanvas(() => {
+        if (petArt[entry.id]) { ctx.scale(1.15, 1.15); petArt[entry.id](0); }
+        else { ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.moveTo(-11, 11); ctx.lineTo(11, -11); ctx.stroke(); }
+      }));
+    } else {
+      card.append(iconCanvas(() => {
+        const art = entry.id === "revive" ? "heart" : entry.id;
+        drawGlow(entry.id === "revive" ? "#ffd76a" : itemGlow[art], 40);
+        pickupArt[art]();
+        if (entry.id === "revive") {
+          ctx.strokeStyle = "#ffd76a"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke();
+        }
+      }));
+    }
+    const info = document.createElement("div");
+    info.className = "shop-info";
+    const title = document.createElement("h3");
+    title.textContent = entry.name;
+    const desc = document.createElement("p");
+    desc.textContent = entry.desc;
+    info.append(title, desc);
+    const actions = document.createElement("div");
+    actions.className = "shop-actions";
+    const button = document.createElement("button");
+    button.type = "button";
+    const slot = { skins: "skin", hats: "hat", pets: "pet" }[group];
+
+    if (group === "items") {
+      const count = save.shop.items[entry.id];
+      const have = document.createElement("span");
+      have.className = "shop-count";
+      have.textContent = `มี ${count}`;
+      button.className = "shop-buy";
+      button.textContent = priceLabel(entry.price);
+      button.setAttribute("aria-label", `ซื้อ${entry.name} ${entry.price} เหรียญ`);
+      button.disabled = save.coins < entry.price || count >= 99;
+      button.addEventListener("click", () => { if (buy(entry.id)) renderShop(); });
+      const toggle = document.createElement("label");
+      toggle.className = "shop-toggle";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = save.shop.bring[entry.id];
+      box.addEventListener("change", () => { save.shop.bring[entry.id] = box.checked; writeSave(); });
+      toggle.append(box, document.createTextNode(entry.id === "revive" ? " พกติดตัว" : " ใช้ตอนเริ่มด่าน"));
+      actions.append(have, button, toggle);
+    } else if (!owns(entry.id)) {
+      button.className = "shop-buy";
+      button.textContent = priceLabel(entry.price);
+      button.setAttribute("aria-label", `ซื้อ${entry.name} ${entry.price} เหรียญ`);
+      button.disabled = save.coins < entry.price;
+      button.addEventListener("click", () => { if (buy(entry.id)) { shopTry = {}; renderShop(); } });
+      actions.append(button);
+    } else if (save.shop[slot] === entry.id) {
+      card.classList.add("is-equipped");
+      button.className = "shop-equip";
+      button.textContent = "ใช้อยู่ ✓";
+      button.disabled = true;
+      actions.append(button);
+    } else {
+      button.className = "shop-equip";
+      button.textContent = group === "pets" ? "พาไปด้วย" : "สวมใส่";
+      button.addEventListener("click", () => { equip(entry.id); shopTry = {}; renderShop(); });
+      actions.append(button);
+    }
+    card.append(info, actions);
+    if (slot) {
+      // Tapping a card tries it on in the preview, bought or not.
+      card.classList.add("can-try");
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("button, label")) return;
+        shopTry = { ...shopTry, [slot]: entry.id };
+        renderShop();
+      });
+      if (shopTry[slot] === entry.id) card.classList.add("is-trying");
+    }
+    return card;
+  }
+
+  function shopSection(title, entries) {
+    const section = document.createElement("section");
+    section.className = "shop-section";
+    const heading = document.createElement("h3");
+    heading.className = "shop-heading";
+    heading.textContent = title;
+    const grid = document.createElement("div");
+    grid.className = "shop-grid";
+    entries.forEach(entry => grid.append(shopCard(entry)));
+    section.append(heading, grid);
+    return section;
+  }
+
+  function renderShop() {
+    if (!shopOpen) return;
+    shopUi.coins.textContent = formatPoints(save.coins);
+    for (const tab of shopUi.tabs) {
+      const active = tab.dataset.tab === shopTab;
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    }
+    const scroll = shopUi.list.scrollTop;
+    shopUi.list.replaceChildren();
+    if (shopTab === "outfit") shopUi.list.append(shopSection("สีชุด", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
+    else if (shopTab === "pet") shopUi.list.append(shopSection("สัตว์เลี้ยงช่วยผจญภัย", SHOP.pets));
+    else shopUi.list.append(shopSection("ไอเทมติดตัว · ใช้ครั้งละ 1 ชิ้น", SHOP.items));
+    shopUi.list.scrollTop = scroll;
+    const look = previewLook();
+    const names = [SHOP_INDEX[look.skin].name];
+    if (look.hat !== "nohat") names.push(SHOP_INDEX[look.hat].name);
+    if (look.pet !== "nopet") names.push(SHOP_INDEX[look.pet].name);
+    shopUi.previewName.textContent = names.join(" · ");
+  }
+
+  const previewLook = () => ({ skin: shopTry.skin || save.shop.skin, hat: shopTry.hat || save.shop.hat, pet: shopTry.pet || save.shop.pet });
+
+  function drawShopPreview(time) {
+    if (!shopOpen || !previewCtx) return;
+    const g = previewCtx, size = shopUi.preview.width;
+    const look = previewLook();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const glow = g.createRadialGradient(size / 2, size * .62, 10, size / 2, size * .62, size * .5);
+    glow.addColorStop(0, "rgba(255,120,168,.35)"); glow.addColorStop(1, "rgba(255,120,168,0)");
+    g.fillStyle = glow; g.fillRect(0, 0, size, size);
+    g.fillStyle = "rgba(255,255,255,.08)";
+    g.beginPath(); g.ellipse(size / 2, size * .86, size * .26, size * .05, 0, 0, Math.PI * 2); g.fill();
+    const scale = size / 300;
+    const feetY = size * .86;
+    let head;
+    const model = window.Pupa3D;
+    if (model?.ready) {
+      model.setSkin?.(SHOP_INDEX[look.skin]);
+      model.render({ time, facing: 1, speed: 0, vy: 0, grounded: true });
+      const drawn = 230 * scale;
+      const feet = drawn * (model.viewHalf + 1) / (model.viewHalf * 2);
+      g.drawImage(model.canvas, size / 2 - drawn / 2, feetY - feet, drawn, drawn);
+      head = { x: size / 2, top: feetY - feet + drawn * HEAD_TOP, scale: drawn / 164 };
+    } else if (art.hero.complete && art.hero.naturalWidth) {
+      const h = 175 * scale, w = h * 104 / 124;
+      g.drawImage(art.hero, size / 2 - w / 2, feetY - h, w, h);
+      head = { x: size / 2, top: feetY - h + h * .02, scale: h / 124 };
+    }
+    paintOn(g, () => {
+      if (head) drawHat(look.hat, head.x + HAT_SHIFT * head.scale, head.top, head.scale, 1, time);
+      const petDraw = petArt[look.pet];
+      if (petDraw) {
+        ctx.save(); ctx.translate(size * .2, size * .32 + Math.sin(time * .003) * 6); ctx.scale(scale * 1.6, scale * 1.6);
+        petDraw(time); ctx.restore();
+      }
+    });
+  }
+
+  if (shopUi.screen) {
+    shopUi.close.addEventListener("click", closeShop);
+    shopUi.tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => { shopTab = tab.dataset.tab; renderShop(); shopUi.list.scrollTop = 0; });
+      tab.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+        const next = shopUi.tabs[(index + (event.key === "ArrowRight" ? 1 : shopUi.tabs.length - 1)) % shopUi.tabs.length];
+        shopTab = next.dataset.tab; renderShop(); next.focus();
+      });
+    });
+    document.querySelectorAll("[data-open-shop]").forEach(button => button.addEventListener("click", openShop));
   }
 
   function setKey(action, value) {
@@ -2433,6 +3009,8 @@
 
   const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack" };
   window.addEventListener("keydown", (event) => {
+    // The market takes the keyboard while it is open: Escape closes it.
+    if (shopOpen) { if (event.key === "Escape") { event.preventDefault(); closeShop(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (event.key === "Enter" && state === "menu") { startGame(); return; }
     const action = keyMap[event.key];
@@ -2464,7 +3042,7 @@
   for (const type of ["contextmenu", "selectstart", "dragstart", "dblclick", "gesturestart", "gesturechange"]) {
     shell.addEventListener(type, (event) => event.preventDefault());
   }
-  shell.addEventListener("touchmove", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
+  shell.addEventListener("touchmove", (event) => { if (event.cancelable && !event.target.closest(".shop-list")) event.preventDefault(); }, { passive: false });
   let lastTouchEnd = 0;
   shell.addEventListener("touchend", (event) => {
     const now = performance.now();

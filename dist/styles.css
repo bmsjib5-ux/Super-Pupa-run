@@ -356,6 +356,100 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .message-card p { margin: .3rem auto .5rem; }
 }
 
+/* ---- Market ---- */
+.shop-overlay { z-index: 10; padding: clamp(.4rem, 2vw, 1.2rem); text-align: left; }
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  width: min(60rem, 100%);
+  height: min(40rem, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 1.4rem;
+  background: linear-gradient(145deg, rgba(37,16,71,.94), rgba(13,8,36,.94));
+  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.1);
+}
+.shop-head { display: flex; align-items: center; gap: .8rem; padding: .8rem 1rem .6rem 1.3rem; border-bottom: 1px solid rgba(255,255,255,.1); }
+.shop-head h2 { flex: 1; margin: 0; font-size: clamp(1.15rem, 2.6vw, 1.6rem); letter-spacing: .02em; }
+.shop-wallet { padding: .4rem .9rem; border: 1px solid rgba(255,215,106,.4); border-radius: 999px; background: rgba(255,215,106,.1); font-size: 1rem; }
+.shop-wallet i { color: var(--gold); font-style: normal; }
+.shop-body { display: flex; flex: 1; min-height: 0; }
+.shop-preview { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 34%; min-width: 10rem; padding: .6rem; border-right: 1px solid rgba(255,255,255,.08); background: radial-gradient(circle at 50% 40%, rgba(255,120,168,.14), transparent 70%); }
+.shop-preview canvas { width: min(100%, 15rem); height: auto; aspect-ratio: 1; }
+.shop-preview p { margin: .3rem 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
+.shop-preview .shop-tip { color: #a99cbc; font-size: .72rem; }
+.shop-main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.shop-tabs { display: flex; gap: .4rem; padding: .7rem 1rem .5rem; }
+.shop-tabs button {
+  flex: 1;
+  padding: .55rem .6rem;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 700;
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
+}
+.shop-tabs button[aria-selected="true"] { color: #30102d; border-color: transparent; background: linear-gradient(180deg, #fff3a6, #ffbd63); }
+.shop-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: .2rem 1rem 1rem; touch-action: pan-y; }
+.shop-heading { margin: .6rem 0 .5rem; color: #ffe5a5; font-size: .8rem; letter-spacing: .08em; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: .6rem; }
+.shop-item {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  grid-template-rows: auto auto;
+  gap: .3rem .7rem;
+  align-items: center;
+  padding: .65rem .75rem;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.05);
+}
+.shop-item.can-try { cursor: pointer; }
+.shop-item.is-trying { border-color: rgba(255,215,106,.7); }
+.shop-item.is-equipped { border-color: rgba(137,240,192,.75); background: rgba(137,240,192,.08); }
+.shop-icon { width: 3rem; height: 3rem; grid-row: span 1; }
+.shop-swatch { width: 2.4rem; aspect-ratio: 1; margin: .3rem; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 12%, var(--swatch) 40%, color-mix(in srgb, var(--swatch), #000 35%)); box-shadow: 0 0 .8rem color-mix(in srgb, var(--swatch), transparent 50%); }
+.shop-info h3 { margin: 0; font-size: .92rem; }
+.shop-info p { margin: .15rem 0 0; color: #bdb0d2; font-size: .74rem; line-height: 1.35; }
+.shop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; grid-column: 1 / -1; }
+.shop-buy, .shop-equip {
+  padding: .42rem .9rem;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.shop-buy { color: #30102d; background: linear-gradient(180deg, #fff3a6, #ffbd63); box-shadow: 0 .2rem 0 #b34b54; }
+.shop-buy:disabled { color: #8e83a3; background: rgba(255,255,255,.08); box-shadow: none; cursor: not-allowed; }
+.shop-equip { color: var(--ink); border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); }
+.shop-equip:disabled { color: var(--mint); border-color: rgba(137,240,192,.5); background: transparent; cursor: default; }
+.shop-count { min-width: 2.6rem; color: var(--gold); font-size: .8rem; font-weight: 700; }
+.shop-toggle { display: inline-flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .74rem; cursor: pointer; }
+.shop-toggle input { width: 1rem; height: 1rem; accent-color: #ffbd63; }
+.title-actions .shop-button { min-width: 7rem; }
+
+@media (max-width: 40rem) {
+  .shop-body { flex-direction: column; }
+  .shop-preview { flex-direction: row; gap: .6rem; width: auto; min-width: 0; padding: .3rem .8rem; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .shop-preview canvas { width: 6rem; }
+  .shop-preview .shop-tip { display: none; }
+  .shop-grid { grid-template-columns: 1fr; }
+}
+@media (orientation: landscape) and (max-height: 35rem) {
+  /* the floating top buttons would sit on the market header */
+  .shop-is-open .topbar { display: none; }
+  .shop-overlay { padding: .3rem; }
+  .shop-card { height: 100%; border-radius: 1rem; }
+  .shop-head { padding: .35rem .6rem .35rem 1rem; }
+  .shop-head .icon-button { width: 2.2rem; }
+  .shop-preview { width: 28%; }
+  .shop-preview canvas { width: min(100%, 9rem); }
+  .shop-tabs { padding: .4rem .7rem .3rem; }
+  .shop-tabs button { padding: .35rem .5rem; }
+  .shop-list { padding: .1rem .7rem .6rem; }
+}
+
 /* On touch screens nothing on the page is selectable, not just the game. */
 @media (pointer: coarse) {
   html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
