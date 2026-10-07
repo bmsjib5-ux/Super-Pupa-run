@@ -48,6 +48,7 @@ main {
 }
 
 .game-shell {
+  position: relative; /* the market and level dialogs cover the whole shell */
   width: min(96rem, 100%);
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.16);
@@ -321,7 +322,7 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .topbar {
     position: absolute;
     z-index: 9;
-    top: max(.4rem, env(safe-area-inset-top));
+    top: max(.6rem, env(safe-area-inset-top));
     right: max(.5rem, env(safe-area-inset-right));
     min-height: 0;
     padding: 0;
@@ -363,7 +364,16 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
 }
 
 /* ---- Market ---- */
-.shop-overlay { z-index: 10; padding: clamp(.4rem, 2vw, 1.2rem); text-align: left; }
+/* The dialogs sit on the whole shell, above the top bar, and keep clear of
+   the notch, rounded corners and the very top edge of the screen. */
+.shop-overlay {
+  z-index: 20;
+  padding: max(.75rem, env(safe-area-inset-top)) max(.6rem, env(safe-area-inset-right)) max(.6rem, env(safe-area-inset-bottom)) max(.6rem, env(safe-area-inset-left));
+  text-align: left;
+  background: rgba(8,4,24,.62);
+}
+.shop-head .icon-button { width: 2.9rem; flex: none; }
+button { touch-action: manipulation; }
 .shop-card {
   display: flex;
   flex-direction: column;
@@ -445,10 +455,10 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
 @media (orientation: landscape) and (max-height: 35rem) {
   /* the floating top buttons would sit on the market header */
   .dialog-open .topbar { display: none; }
-  .shop-overlay { padding: .3rem; }
+  .shop-overlay { padding: max(.6rem, env(safe-area-inset-top)) max(.6rem, env(safe-area-inset-right)) max(.4rem, env(safe-area-inset-bottom)) max(.6rem, env(safe-area-inset-left)); }
   .shop-card { height: 100%; border-radius: 1rem; }
   .shop-head { padding: .35rem .6rem .35rem 1rem; }
-  .shop-head .icon-button { width: 2.2rem; }
+  .shop-head .icon-button { width: 2.6rem; }
   .shop-preview { width: 28%; }
   .shop-preview canvas { width: min(100%, 9rem); }
   .shop-tabs { padding: .4rem .7rem .3rem; }

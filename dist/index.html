@@ -13,9 +13,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css">
-    <script src="game.js" defer></script>
-    <script type="module" src="pupa3d.js"></script>
+    <link rel="stylesheet" href="styles.css?v=20261007">
+    <script src="game.js?v=20261007" defer></script>
+    <script type="module" src="pupa3d.js?v=20261007"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -96,43 +96,6 @@
             </div>
           </div>
 
-          <div id="levelScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="levelTitle" hidden>
-            <div class="shop-card level-card">
-              <header class="shop-head">
-                <h2 id="levelTitle">เลือกด่าน</h2>
-                <div id="levelProgress" class="shop-wallet">ผ่านแล้ว 0/30</div>
-                <button id="levelClose" class="icon-button" type="button" aria-label="ปิดหน้าเลือกด่าน">✕</button>
-              </header>
-              <p class="level-hint">ด่านที่ผ่านแล้วเล่นซ้ำได้ ด่านถัดไปจะปลดล็อกเมื่อผ่านด่านก่อนหน้า</p>
-              <div id="levelList" class="shop-list level-list"></div>
-            </div>
-          </div>
-
-          <div id="shopScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
-            <div class="shop-card">
-              <header class="shop-head">
-                <h2 id="shopTitle">ตลาดแสงจันทร์</h2>
-                <div class="shop-wallet" aria-label="เหรียญที่มี"><i>●</i> <b id="shopCoins">0</b></div>
-                <button id="shopClose" class="icon-button" type="button" aria-label="ปิดร้านค้า">✕</button>
-              </header>
-              <div class="shop-body">
-                <div class="shop-preview">
-                  <canvas id="shopPreview" width="320" height="320" aria-hidden="true"></canvas>
-                  <p id="shopPreviewName"></p>
-                  <p class="shop-tip">แตะการ์ดเพื่อลองสวมก่อนซื้อ</p>
-                </div>
-                <div class="shop-main">
-                  <div class="shop-tabs" role="tablist" aria-label="หมวดสินค้า">
-                    <button type="button" role="tab" data-tab="outfit" aria-selected="true">ชุดแต่งตัว</button>
-                    <button type="button" role="tab" data-tab="pet" aria-selected="false" tabindex="-1">สัตว์เลี้ยง</button>
-                    <button type="button" role="tab" data-tab="item" aria-selected="false" tabindex="-1">ไอเทม</button>
-                  </div>
-                  <div id="shopList" class="shop-list" role="tabpanel" aria-labelledby="shopTitle"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="mobile-controls" aria-label="ปุ่มควบคุมเกมบนหน้าจอ">
             <div class="dpad">
               <button class="touch-button" data-key="left" type="button" aria-label="เดินซ้าย" data-icon="◀"></button>
@@ -151,6 +114,45 @@
           <span><i class="status-dot"></i> <span id="levelName">ด่าน 1 · สวนเชอร์รี่เรืองแสง</span></span>
           <span class="desktop-only">เคล็ดลับ: เหยียบศัตรูจากด้านบน · โหม่งบล็อก ? เพื่อสุ่มไอเทม</span>
         </footer>
+
+        <!-- Market and level select cover the whole game, top bar included,
+             so nothing can sit on top of their close buttons. -->
+        <div id="levelScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="levelTitle" hidden>
+          <div class="shop-card level-card">
+            <header class="shop-head">
+              <h2 id="levelTitle">เลือกด่าน</h2>
+              <div id="levelProgress" class="shop-wallet">ผ่านแล้ว 0/30</div>
+              <button id="levelClose" class="icon-button" type="button" aria-label="ปิดหน้าเลือกด่าน">✕</button>
+            </header>
+            <p class="level-hint">ด่านที่ผ่านแล้วเล่นซ้ำได้ ด่านถัดไปจะปลดล็อกเมื่อผ่านด่านก่อนหน้า</p>
+            <div id="levelList" class="shop-list level-list"></div>
+          </div>
+        </div>
+
+        <div id="shopScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
+          <div class="shop-card">
+            <header class="shop-head">
+              <h2 id="shopTitle">ตลาดแสงจันทร์</h2>
+              <div class="shop-wallet" aria-label="เหรียญที่มี"><i>●</i> <b id="shopCoins">0</b></div>
+              <button id="shopClose" class="icon-button" type="button" aria-label="ปิดร้านค้า">✕</button>
+            </header>
+            <div class="shop-body">
+              <div class="shop-preview">
+                <canvas id="shopPreview" width="320" height="320" aria-hidden="true"></canvas>
+                <p id="shopPreviewName"></p>
+                <p class="shop-tip">แตะการ์ดเพื่อลองสวมก่อนซื้อ</p>
+              </div>
+              <div class="shop-main">
+                <div class="shop-tabs" role="tablist" aria-label="หมวดสินค้า">
+                  <button type="button" role="tab" data-tab="outfit" aria-selected="true">ชุดแต่งตัว</button>
+                  <button type="button" role="tab" data-tab="pet" aria-selected="false" tabindex="-1">สัตว์เลี้ยง</button>
+                  <button type="button" role="tab" data-tab="item" aria-selected="false" tabindex="-1">ไอเทม</button>
+                </div>
+                <div id="shopList" class="shop-list" role="tabpanel" aria-labelledby="shopTitle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   </body>
