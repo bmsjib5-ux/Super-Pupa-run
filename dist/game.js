@@ -1258,6 +1258,7 @@
   // can be cleared without the double jump. Levels 45 and 50 end in a boss
   // arena of flat ground.
   levels.push(...buildWorld5());
+  levels.push(...buildWorld6());
 
   function buildWorld5() {
     const LEVELS = [
@@ -1409,6 +1410,178 @@
     });
   }
 
+  // ---- World 6 (levels 51-60): Celestial Blossom Garden ----
+  // Ten fresh layouts share a dreamlike story arc: the player climbs from a
+  // cherry garden above the clouds into a crystal forest, crosses a lotus sea,
+  // and finally reaches the palace at the heart of the Milky Way. The gaps are
+  // intentionally readable and remain clearable with the normal jump.
+  function buildWorld6() {
+    const LEVELS = [
+      { name: "ด่าน 51 · สวนซากุระเหนือเมฆ", scene: "lanterns", pal: "sakura6", magic: "petals", style: "sakura", length: 8400 },
+      { name: "ด่าน 52 · ป่าคริสตัลแสงจันทร์", scene: "cave", pal: "crystal6", magic: "crystal", style: "crystal", length: 8700 },
+      { name: "ด่าน 53 · ทะเลดอกบัวดวงดาว", scene: "sea", pal: "lotus6", magic: "lotus", style: "lotus", length: 9000 },
+      { name: "ด่าน 54 · หุบเขาสายรุ้งนิรันดร์", scene: "desert", pal: "prism6", magic: "rainbow", style: "prism", length: 9200 },
+      { name: "ด่าน 55 · วิหารระฆังเมฆา", scene: "lanterns", pal: "cloud6", magic: "cloud", style: "cloud", length: 8600,
+        boss: { kind: "dragon", name: "มังกรระฆังนภา", hp: 14 } },
+      { name: "ด่าน 56 · ทุ่งหิ่งห้อยวิสทีเรีย", scene: "cave", pal: "wisteria6", magic: "fireflies", style: "wisteria", length: 9400 },
+      { name: "ด่าน 57 · นครแก้วออโรรา", scene: "ice", pal: "aurora6", magic: "aurora", style: "aurora", length: 9700 },
+      { name: "ด่าน 58 · ปะการังฟ้าแห่งความฝัน", scene: "sea", pal: "coral6", magic: "bubbles", style: "coral", length: 9900 },
+      { name: "ด่าน 59 · ทางช้างเผือกอธิษฐาน", scene: "eclipse", pal: "galaxy6", magic: "comets", style: "galaxy", length: 10200 },
+      { name: "ด่าน 60 · พระราชวังบุปผาจักรวาล", scene: "eclipse", pal: "cosmos6", magic: "crown", style: "cosmos", length: 9600,
+        boss: { kind: "eclipse", name: "จักรพรรดินีรัตติกาลบุปผา", hp: 16 } }
+    ];
+    const STYLES = {
+      sakura: { top: "#ff8fbe", shine: "#fff2fa", body: ["#7a315d", "#431d48", "#1b1029"], sparks: ["#fff7fb", "#ffd1e7"] },
+      crystal: { top: "#a993ff", shine: "#f3edff", body: ["#44358a", "#27225f", "#10102f"], sparks: ["#ffffff", "#80f7ff"] },
+      lotus: { top: "#66e6d1", shine: "#e8fffb", body: ["#216b73", "#163e5a", "#081b35"], sparks: ["#fff8cf", "#ff91cc"] },
+      prism: { top: "#82ddff", shine: "#fff4c8", body: ["#4d4f9e", "#34306f", "#17183d"], sparks: ["#ffffff", "#ffdd72"] },
+      cloud: { top: "#ffd36f", shine: "#fff9d9", body: ["#8f5a63", "#563a62", "#211f49"], sparks: ["#ffffff", "#8ff5ff"] },
+      wisteria: { top: "#c28cff", shine: "#f8edff", body: ["#59407d", "#312955", "#15132e"], sparks: ["#fff5d1", "#d7b0ff"] },
+      aurora: { top: "#73f4dc", shine: "#efffff", body: ["#265c78", "#203b68", "#0b1735"], sparks: ["#ffffff", "#a8ffec"] },
+      coral: { top: "#ff8fce", shine: "#fff0fb", body: ["#3b6887", "#23405f", "#0c1b38"], sparks: ["#bffaff", "#ffd379"] },
+      galaxy: { top: "#8d83ff", shine: "#f1eeff", body: ["#33276d", "#20194d", "#0b0924"], sparks: ["#ffffff", "#8eeeff"] },
+      cosmos: { top: "#ff77bd", shine: "#fff2c7", body: ["#5b245e", "#351541", "#14091f"], sparks: ["#ffffff", "#ffd768"] }
+    };
+    const ENEMY_Y = { walker: 536, hopper: 553, urchin: 549, spitter: 535, crab: 558, roller: 550 };
+    const GROUND_ENEMIES = ["walker", "hopper", "urchin", "spitter", "crab", "roller"];
+
+    return LEVELS.map((spec, index) => {
+      const number = 51 + index;
+      let state = (number * 2246822519 + 3266489917) >>> 0;
+      const rnd = () => {
+        state = (state + 0x6D2B79F5) >>> 0;
+        let t = state;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+      const between = (a, b) => Math.round(a + rnd() * (b - a));
+      const pick = (list) => list[Math.floor(rnd() * list.length)];
+      const hard = index / 9;
+      const platforms = [[0, 605, 680, 140], [230, 480, 170, 34], [455, 385, 145, 34]];
+      const cherries = [[280, 420], [350, 420], [515, 325]];
+      const enemies = [];
+      const blocks = [[95, 390]];
+      const grounds = [[0, 680]];
+      const coinRow = (x0, y, count, gap = 60) => {
+        for (let i = 0; i < count; i++) cherries.push([Math.round(x0 + i * gap), Math.round(y)]);
+      };
+      const coinArc = (x0, width, baseY, count = 5) => {
+        for (let i = 0; i < count; i++) {
+          const k = count === 1 ? .5 : i / (count - 1);
+          cherries.push([Math.round(x0 + width * k), Math.round(baseY - Math.sin(k * Math.PI) * 70)]);
+        }
+      };
+      const dress = (x0, length) => {
+        const foes = length > 700 ? 2 : 1;
+        for (let i = 0; i < foes; i++) {
+          const type = pick(GROUND_ENEMIES);
+          enemies.push([type, Math.round(x0 + length * (.34 + i * .34)), ENEMY_Y[type]]);
+        }
+        const ledgeX = Math.round(x0 + length * .16);
+        platforms.push([ledgeX, 475, 165, 32]);
+        coinRow(ledgeX + 48, 415, 2, 68);
+        if (length > 620) {
+          const highX = Math.round(x0 + length * .55);
+          const motion = rnd() < .28 + hard * .2 ? (rnd() < .5 ? "x" : "y") : null;
+          if (motion === "x") platforms.push([highX, 375, 145, 32, "x", 70, 58]);
+          else if (motion === "y") platforms.push([highX, 375, 145, 32, "y", 90, 52]);
+          else platforms.push([highX, 375, 145, 32]);
+          coinRow(highX + 40, 315, 2, 66);
+        }
+        if (length > 760 && rnd() < .72) blocks.push([Math.round(x0 + length * .82), 390]);
+        else coinRow(x0 + length * .72, 545, 3, 58);
+      };
+
+      let x = 680;
+      while (x < spec.length) {
+        const roll = rnd();
+        let gap;
+        if (roll < .25) {
+          gap = between(165, 225 + hard * 20);
+          coinArc(x + 25, gap - 50, 495, 4);
+        } else if (roll < .56) {
+          gap = between(560, 700 + hard * 100);
+          const count = gap > 670 ? 3 : 2;
+          const step = gap / (count + 1);
+          for (let i = 1; i <= count; i++) {
+            const px = Math.round(x + step * i - 65);
+            const y = between(430, 495);
+            const choices = hard > .45 ? ["still", "x", "y", "crumble", "crumble"] : ["still", "still", "x", "crumble"];
+            const type = pick(choices);
+            if (type === "x") platforms.push([px, y, 130, 32, "x", 76, 58]);
+            else if (type === "y") platforms.push([px, y - 25, 130, 32, "y", 95, 54]);
+            else if (type === "crumble") platforms.push([px, y, 124, 30, "crumble"]);
+            else platforms.push([px, y, 130, 32]);
+            coinRow(px + 35, y - 58, 2, 60);
+          }
+          if (rnd() < .58 + hard * .25) {
+            const flyer = pick(["bat", "swooper", "jelly"]);
+            enemies.push([flyer, Math.round(x + gap / 2), flyer === "swooper" ? 110 : flyer === "jelly" ? 225 : between(250, 390)]);
+          }
+        } else if (roll < .79) {
+          gap = between(530, 650);
+          const pad = Math.round(x + 105);
+          platforms.push([pad, 560, 92, 20, "spring"]);
+          platforms.push([pad + 175, 315, 175, 32]);
+          coinArc(pad + 35, 250, 465, 5);
+        } else {
+          gap = between(700, 830);
+          const ys = [500, 420, 470, 390];
+          const step = gap / 5;
+          for (let i = 0; i < 4; i++) {
+            const px = Math.round(x + step * (i + 1) - 60);
+            const y = ys[i] + between(-12, 12);
+            if (i === 2 && hard > .35) platforms.push([px, y, 120, 30, "crumble"]);
+            else platforms.push([px, y, 120, 30]);
+            cherries.push([px + 60, y - 58]);
+          }
+          if (hard > .3) enemies.push([pick(["bat", "jelly"]), Math.round(x + gap * .62), 215]);
+        }
+        x += gap;
+        const length = between(500, 850);
+        platforms.push([x, 605, length, 140]);
+        grounds.push([x, x + length]);
+        dress(x, length);
+        x += length;
+      }
+
+      x += between(175, 225);
+      const finish = spec.boss ? 2850 : 1200;
+      platforms.push([x, 605, finish, 140]);
+      const style = STYLES[spec.style];
+      const level = {
+        name: spec.name,
+        theme: {
+          scene: spec.scene, pal: spec.pal, magic: spec.magic, seed: number,
+          top: style.top, shine: style.shine, body: style.body, sparks: style.sparks
+        },
+        platforms: null, cherries, enemies, blocks,
+        width: x + finish
+      };
+      level.goalX = level.width - 330;
+      if (spec.boss) {
+        const right = level.goalX - 260;
+        const left = right - 1600;
+        level.boss = { ...spec.boss, left, right, x: Math.round(left + 940) };
+        platforms.push([left + 220, 440, 190, 32], [left + 670, 325, 210, 32], [left + 1130, 440, 190, 32]);
+        blocks.push([x + 160, 390], [left + 710, 165]);
+        coinRow(x + 250, 545, 5, 64);
+      } else {
+        platforms.push([level.goalX - 500, 470, 185, 32], [level.goalX - 310, 375, 155, 32]);
+        coinRow(level.goalX - 450, 410, 2, 70);
+        coinRow(level.goalX - 265, 315, 2, 64);
+        const type = pick(GROUND_ENEMIES);
+        enemies.push([type, x + 380, ENEMY_Y[type]]);
+        blocks.push([x + 130, 390]);
+      }
+      const middle = grounds.find(([g0]) => g0 > level.width * .45) || grounds[grounds.length - 1];
+      level.checkpointX = middle[0] + 120;
+      level.platforms = rects(platforms);
+      return level;
+    });
+  }
+
   // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
   function turnHue(colour, degrees) {
     let r, g, b, a = null;
@@ -1438,7 +1611,7 @@
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -4256,14 +4429,15 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-08d";
+  const NEWS_VERSION = "2026-10-08e";
   const NEWS_DATE = "8 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 6 · สวนสวรรค์จักรวาล", text: "ด่าน 51–60 กับฉากซากุระ คริสตัล ดอกบัว ออโรรา ทางช้างเผือก และบอสใหม่ 2 ตัว", image: "world6", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "Pupa V2", text: "Pupa ร่างใหม่แบบ 3 มิติ ผมยาวสีกุหลาบ ชุดนักผจญภัย ซื้อได้ในตลาด", image: "pupav2", open: () => openShopAt("outfit") },
     { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละคร 3 มิติใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
     { tag: "ด่านใหม่", title: "โลก 5 · ดินแดนดาวรุ่ง", text: "ด่าน 41–50 พร้อมบอสใหม่ มังกรโคมดาวรุ่ง และจอมเวทสุริยคราสทองคำ", image: "world5", open: () => { closeNews(); openLevels(); } },
-    { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 50 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
+    { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 60 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "จิ๊บจิ๊บแมน", text: "ลูกเจี๊ยบนักผจญภัยแบบ 3 มิติ เลือกเล่นแทน Pupa ได้ฟรี", image: "jibjib", open: () => openShopAt("outfit") },
     { tag: "สัตว์เลี้ยงใหม่", title: "มังกรน้อยเปลวแสง", text: "ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรู และให้เกราะทุกด่าน", image: "dragon", open: () => openShopAt("pet") },
     { tag: "ชุดใหม่", title: "หัวฟักทองเรืองแสง", text: "หมวกฟักทองแกะสลัก 3 มิติ ไฟวาบในตา", image: "pumpkin", open: () => openShopAt("outfit") },
@@ -4306,10 +4480,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world" || kind === "world5") {
+    if (kind === "world" || kind === "world5" || kind === "world6") {
       const scene = document.createElement("div");
-      scene.className = kind === "world5" ? "news-scene news-scene-5" : "news-scene";
-      scene.innerHTML = kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
+      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : ""}`;
+      scene.innerHTML = kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
     }
     if (kind === "boss") {
@@ -4790,6 +4964,20 @@
   for (const [name, from, degrees] of [["cave5", "cave", 150], ["desert5", "desert", 110], ["lanterns5", "lanterns", 200], ["sea5", "sea", 150], ["ice5", "ice", 60], ["eclipse5", "eclipse", 45]]) {
     SCENE_PALS[name] = Object.fromEntries(Object.entries(SCENE_PALS[from]).map(([key, value]) => [key, turnHue(value, degrees)]));
   }
+  // World 6 uses hand-painted palettes rather than hue shifts. Each one also
+  // exposes three magic colours used by the animated foreground overlay.
+  Object.assign(SCENE_PALS, {
+    sakura6: { sky0: "#1e113d", sky1: "#8a3f83", sky2: "#ffb7cf", sunGlow: "rgba(255,218,187,.85)", sun0: "#fff9dd", sun1: "#ff9fba", band: "rgba(255,160,196,.42)", cloud: "rgba(255,238,247,.42)", far: "#75426f", window: "#fff0a8", mid: "#47274f", rope: "rgba(56,22,58,.72)", lantern0: "#ff82b4", lantern1: "#ffd575", near: "#23172f", haze: "rgba(36,18,48,.4)", magic0: "#ffafd3", magic1: "#fff4fb", magicGlow: "rgba(255,157,207,.8)" },
+    crystal6: { sky0: "#10102f", sky1: "#282761", sky2: "#17133b", far: "#29265b", farCap: "#6255b8", glow: "rgba(111,244,255,.92)", mid: "#1a1945", midCap: "#8d76ff", near: "#0b0b26", nearCap: "#bdfaff", spore: "rgba(201,247,255,.95)", haze: "rgba(9,9,34,.55)", magic0: "#85f5ff", magic1: "#c3a5ff", magicGlow: "rgba(132,238,255,.9)" },
+    lotus6: { sky0: "#155c72", sky1: "#173e67", sky2: "#0b1839", ray: "rgba(211,255,244,.85)", far: "#1c5368", kelp: "#26766b", mid: "#12384f", near: "#071d35", coral0: "#ff9dca", coral1: "#ffe08a", glow: "rgba(255,166,215,.88)", bubble: "rgba(210,255,249,.68)", fish: "rgba(168,236,255,.32)", haze: "rgba(5,25,48,.5)", magic0: "#ff91c8", magic1: "#fff2b5", magicGlow: "rgba(255,142,201,.85)" },
+    prism6: { sky0: "#17275b", sky1: "#7050a7", sky2: "#ffb9a7", moon: "#fffbe5", moonGlow: "rgba(255,239,183,.9)", star: "#ffffff", far: "#7860ae", mid: "#4c417f", near: "#27274f", sand: "#fff0b6", haze: "rgba(35,29,73,.4)", magic0: "#75eaff", magic1: "#ff9fd8", magicGlow: "rgba(255,231,132,.9)" },
+    cloud6: { sky0: "#174064", sky1: "#6d79b3", sky2: "#ffd38f", sunGlow: "rgba(255,233,172,.95)", sun0: "#fffdf0", sun1: "#ffc76b", band: "rgba(133,105,170,.38)", cloud: "rgba(255,255,255,.52)", far: "#6574a0", window: "#fff0a2", mid: "#414b78", rope: "rgba(37,39,73,.68)", lantern0: "#ffe277", lantern1: "#85ebff", near: "#222a50", haze: "rgba(24,35,69,.36)", magic0: "#fff4c6", magic1: "#9beeff", magicGlow: "rgba(255,222,126,.9)" },
+    wisteria6: { sky0: "#190f35", sky1: "#3c2868", sky2: "#17102e", far: "#39295e", farCap: "#7656a1", glow: "rgba(207,158,255,.92)", mid: "#281d49", midCap: "#b87cff", near: "#120d28", nearCap: "#e4bdff", spore: "rgba(255,228,168,.95)", haze: "rgba(17,11,38,.54)", magic0: "#d3a0ff", magic1: "#fff0a5", magicGlow: "rgba(255,229,129,.88)" },
+    aurora6: { sky0: "#071534", sky1: "#163b69", sky2: "#287d8a", aurora0: "rgba(103,255,216,1)", aurora1: "rgba(185,132,255,1)", far: "#2b5e83", far2: "#3f82a0", mid: "#65adc0", edge: "rgba(225,255,255,.9)", near: "#173855", snow: "#efffff", haze: "rgba(8,27,52,.42)", magic0: "#74ffdf", magic1: "#bf94ff", magicGlow: "rgba(128,255,228,.88)" },
+    coral6: { sky0: "#126889", sky1: "#164368", sky2: "#0b1738", ray: "rgba(202,250,255,.84)", far: "#1b5871", kelp: "#27736f", mid: "#143b57", near: "#081d37", coral0: "#ff8dc8", coral1: "#ffd36e", glow: "rgba(255,141,204,.88)", bubble: "rgba(205,251,255,.72)", fish: "rgba(151,229,255,.35)", haze: "rgba(6,27,50,.5)", magic0: "#89f3ff", magic1: "#ff94cf", magicGlow: "rgba(132,242,255,.85)" },
+    galaxy6: { sky0: "#080824", sky1: "#231b58", sky2: "#593b79", corona: "rgba(143,129,255,.92)", ring: "#d9efff", far: "#2d245f", mid: "#1c1747", window: "#89e7ff", near: "#0a0926", ember: "rgba(172,159,255,.92)", haze: "rgba(7,6,28,.52)", magic0: "#8feaff", magic1: "#c6a2ff", magicGlow: "rgba(137,218,255,.9)" },
+    cosmos6: { sky0: "#16061f", sky1: "#561247", sky2: "#ba3c70", corona: "rgba(255,113,185,.95)", ring: "#ffe9a7", far: "#4d174d", mid: "#2e103b", window: "#ffd36a", near: "#12071e", ember: "rgba(255,160,207,.95)", haze: "rgba(18,5,27,.5)", magic0: "#ff82c0", magic1: "#ffe379", magicGlow: "rgba(255,127,191,.92)" }
+  });
 
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
@@ -4799,6 +4987,108 @@
       ctx.globalAlpha = .35 + tw * .6; ctx.fillRect(x, y, s, s);
     }
     ctx.globalAlpha = 1;
+  }
+
+  function drawWorld6Magic(theme, p, t, w, h, top) {
+    if (!theme.magic) return;
+    const seed = (theme.seed || 1) * 43;
+    const sparkle = (x, y, size, color, alpha = 1) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4); ctx.globalAlpha = alpha;
+      ctx.fillStyle = color; ctx.fillRect(-size * .5, -size * 2.5, size, size * 5); ctx.fillRect(-size * 2.5, -size * .5, size * 5, size);
+      ctx.restore();
+    };
+    const petal = (x, y, size, angle, color, alpha = 1) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.ellipse(0, 0, size * .45, size, 0, 0, TAU); ctx.fill(); ctx.restore();
+    };
+    ctx.save();
+    if (theme.magic === "petals") {
+      drift(30, seed, t, (a, b, c, d) => {
+        const x = wrapX(a * (w + 120) + t * (12 + c * 22) - cameraX * .16, w + 120) - 60;
+        const y = top + wrapX(b * 750 + t * (14 + d * 22), 760);
+        petal(x, y, 4 + c * 6, t * (1 + d) + a * 9, d > .52 ? p.magic0 : p.magic1, .45 + c * .45);
+      });
+    } else if (theme.magic === "crystal") {
+      drift(22, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * w - cameraX * .12, w), y = top + 80 + b * 510;
+        const pulse = .25 + .75 * (.5 + .5 * Math.sin(t * (1.5 + d * 2) + i));
+        glowDot(x, y, 12 + c * 20, p.magicGlow, pulse * .38);
+        sparkle(x, y, 1.2 + c * 2.2, i % 2 ? p.magic0 : p.magic1, pulse);
+      });
+    } else if (theme.magic === "lotus") {
+      for (let i = 0; i < 7; i++) {
+        const x = wrapX(i * (w / 5.3) + 80 - cameraX * .18, w + 180) - 90;
+        const y = top + 570 + Math.sin(t * .7 + i) * 7, s = .72 + (i % 3) * .12;
+        glowDot(x, y, 46 * s, p.magicGlow, .34);
+        for (let k = 0; k < 6; k++) petal(x + Math.cos(k / 6 * TAU) * 14 * s, y + Math.sin(k / 6 * TAU) * 5, 13 * s, k / 6 * TAU + Math.PI / 2, k % 2 ? p.magic0 : p.magic1, .78);
+        ctx.fillStyle = p.magic1; ctx.beginPath(); ctx.arc(x, y, 5 * s, 0, TAU); ctx.fill();
+      }
+    } else if (theme.magic === "rainbow") {
+      ctx.lineCap = "round"; ctx.globalAlpha = .18;
+      for (let band = 0; band < 4; band++) {
+        ctx.strokeStyle = band % 2 ? p.magic0 : p.magic1; ctx.lineWidth = 13 - band * 2;
+        ctx.beginPath(); ctx.moveTo(-80, top + 300 + band * 18);
+        ctx.bezierCurveTo(w * .28, top + 80 + Math.sin(t * .25) * 20, w * .72, top + 500, w + 80, top + 210 + band * 14); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      drift(18, seed, t, (a, b, c, d, i) => sparkle(wrapX(a * w - cameraX * .1, w), top + 90 + b * 470, 1 + c * 2, i % 2 ? p.magic0 : p.magic1, .35 + .5 * Math.sin(t * 1.6 + i) ** 2));
+    } else if (theme.magic === "cloud") {
+      for (let i = 0; i < 8; i++) {
+        const x = wrapX(i * 260 + t * (4 + i % 2) - cameraX * .08, w + 360) - 180;
+        const y = top + 120 + (i % 3) * 105 + Math.sin(t * .35 + i) * 12;
+        glowDot(x, y, 85, p.magicGlow, .12);
+        ctx.fillStyle = i % 2 ? "rgba(255,255,255,.18)" : "rgba(188,242,255,.16)";
+        ctx.beginPath(); ctx.arc(x - 34, y + 9, 28, 0, TAU); ctx.arc(x, y - 4, 42, 0, TAU); ctx.arc(x + 42, y + 11, 30, 0, TAU); ctx.fill();
+      }
+    } else if (theme.magic === "fireflies") {
+      drift(38, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * w + Math.sin(t * (.4 + c) + i) * 42 - cameraX * .22, w);
+        const y = top + 90 + b * 570 + Math.cos(t * (.5 + d) + i) * 18;
+        glowDot(x, y, 6 + c * 10, i % 3 ? p.magicGlow : p.magic0, .45 + .45 * Math.sin(t * 2 + i) ** 2);
+      });
+    } else if (theme.magic === "aurora") {
+      ctx.globalCompositeOperation = "lighter";
+      for (let band = 0; band < 3; band++) {
+        const y = top + 95 + band * 62;
+        ctx.strokeStyle = band === 1 ? p.magic1 : p.magic0; ctx.lineWidth = 20 - band * 4; ctx.globalAlpha = .13;
+        ctx.beginPath(); ctx.moveTo(-80, y);
+        ctx.bezierCurveTo(w * .25, y + Math.sin(t * .38 + band) * 85, w * .68, y - 70, w + 80, y + Math.cos(t * .3 + band) * 65); ctx.stroke();
+      }
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+    } else if (theme.magic === "bubbles") {
+      drift(28, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * w + Math.sin(t + i) * 12 - cameraX * .2, w);
+        const y = top + 700 - wrapX(b * 720 + t * (20 + c * 42), 760), r = 4 + d * 11;
+        ctx.strokeStyle = i % 3 ? p.magic0 : p.magic1; ctx.globalAlpha = .35 + c * .4; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+        if (i % 5 === 0) sparkle(x - r * .4, y - r * .45, 1.1, p.magic1, .7);
+      });
+      ctx.globalAlpha = 1;
+    } else if (theme.magic === "comets") {
+      drawStars(w, top + 510, 100, t, seed, p.magic1);
+      for (let i = 0; i < 5; i++) {
+        const cycle = wrapX(t * (95 + i * 14) + i * 280, w + 520) - 260;
+        const y = top + 90 + i * 82 + Math.sin(t * .35 + i) * 28;
+        const g = ctx.createLinearGradient(cycle - 120, y - 45, cycle, y);
+        g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, i % 2 ? p.magic0 : p.magic1);
+        ctx.strokeStyle = g; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cycle - 120, y - 45); ctx.lineTo(cycle, y); ctx.stroke();
+        sparkle(cycle, y, 2, p.magic1, .9);
+      }
+    } else if (theme.magic === "crown") {
+      const x = w * .5 - cameraX * .018, y = top + 205;
+      glowDot(x, y, 250, p.magicGlow, .28);
+      ctx.globalAlpha = .34; ctx.strokeStyle = p.magic1;
+      for (let i = 0; i < 3; i++) {
+        ctx.lineWidth = 2 + i; ctx.beginPath(); ctx.ellipse(x, y, 125 + i * 45, 38 + i * 16, t * .045 + i * .6, 0, TAU); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      drift(24, seed, t, (a, b, c, d, i) => {
+        const px = wrapX(a * w - cameraX * .1, w), py = top + 70 + b * 520;
+        if (i % 3 === 0) petal(px, py, 4 + c * 5, t + d * 8, p.magic0, .65);
+        else sparkle(px, py, 1.2 + c * 1.8, p.magic1, .45 + .45 * Math.sin(t * 1.7 + i) ** 2);
+      });
+    }
+    ctx.restore();
   }
 
   function buildScene(theme) {
@@ -4818,13 +5108,13 @@
       });
       return { canvas, parallax: layer.parallax };
     });
-    return { key: `${theme.scene}:${theme.seed}`, layers };
+    return { key: `${theme.scene}:${theme.pal}:${theme.magic || "none"}:${theme.seed}`, layers };
   }
 
   function drawScene(theme, time) {
     const def = SCENES[theme.scene];
     if (!Number.isFinite(viewWidth) || !Number.isFinite(viewHeight) || viewWidth <= 0) return;
-    const key = `${theme.scene}:${theme.seed}`;
+    const key = `${theme.scene}:${theme.pal}:${theme.magic || "none"}:${theme.seed}`;
     if (!sceneCache || sceneCache.key !== key) sceneCache = buildScene(theme);
     const t = time / 1000, w = viewWidth, h = viewHeight, top = worldOffsetY, p = SCENE_PALS[theme.pal];
     ctx.fillStyle = vgrad(0, top + 720, def.sky(p)); ctx.fillRect(0, 0, w, h);
@@ -4834,6 +5124,7 @@
       for (let x = -offset; x < w; x += SCENE_TILE) ctx.drawImage(layer.canvas, Math.floor(x), top, SCENE_TILE + 1, 720);
     }
     def.live(p, t, w, h, top);
+    drawWorld6Magic(theme, p, t, w, h, top);
     // a soft haze toward the ground keeps the playfield readable
     ctx.fillStyle = vgrad(top + 300, top + 720, ["rgba(0,0,0,0)", p.haze]); ctx.fillRect(0, top + 300, w, Math.max(420, h - top - 300));
   }
@@ -5313,7 +5604,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
@@ -5385,6 +5676,7 @@
         const name = entry.name.split(" · ")[1] || entry.name;
         tile.setAttribute("aria-label", `ด่าน ${num} ${name}${done ? " ผ่านแล้ว" : open ? " เล่นได้" : " ล็อกอยู่"}${entry.boss ? " มีบอส" : ""}`);
         tile.setAttribute("aria-disabled", String(!open));
+        tile.disabled = !open;
         const number = document.createElement("b");
         number.textContent = open ? num : "🔒";
         const label = document.createElement("span");
