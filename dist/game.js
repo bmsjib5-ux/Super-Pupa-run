@@ -35,6 +35,7 @@
   const art = {
     background: image("assets/cherry-night.webp"),
     hero: image("assets/pupa-hero-3d.webp"),
+    jibjib: image("assets/jibjib-hero.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1262,15 +1263,20 @@
   const STAR_TIME = 8;
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
+  const BLOCK_COINS = 2; // coins from a "?" block that pops a coin
   const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff" };
-  // Where the top of the head sits in the drawn 3D model (fraction of its
-  // size from the top), and how far hats lean toward the facing side.
-  const HEAD_TOP = .2;
+  // How far hats lean toward the facing side. (Where the head sits is each
+  // character's headTop in SHOP.heroes.)
   const HAT_SHIFT = 0;
 
   // Market: everything is bought with the coins in save.coins. Outfits and
   // pets are bought once and kept; items are used up, one per level start.
   const SHOP = {
+    // Playable characters. Outfit colours only recolour Pupa's pink suit.
+    heroes: [
+      { id: "pupa", name: "Pupa", desc: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่", price: 0, headTop: .2 },
+      { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 }
+    ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
       { id: "mint", name: "ชุดใบมิ้นต์", desc: "เขียวสดชื่นเหมือนใบไม้ยามเช้า", price: 100, hue: .49, sat: .85, bright: 1, swatch: "#6fe3a8" },
@@ -1304,7 +1310,8 @@
   };
   const SHOP_INDEX = {};
   for (const [group, list] of Object.entries(SHOP)) for (const entry of list) SHOP_INDEX[entry.id] = { ...entry, group };
-  const FREE_IDS = ["cherry", "nohat", "nopet"];
+  const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
+  const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
 
   // Progress kept on this device. Points are a running total that only ever
   // grows: across levels, game overs, replays and visits. Coins add up the
@@ -1325,6 +1332,17 @@
     const line = document.querySelector("#saveLine");
     if (line) line.textContent = `คะแนนสะสม ${formatPoints(save.points)} · เหรียญสะสม ${formatPoints(save.coins)}`;
   }
+  // If the game is open in another tab, follow that tab's character and
+  // outfit choice so neither tab writes an older choice back over it.
+  window.addEventListener("storage", (event) => {
+    if (event.key !== SAVE_KEY || !event.newValue) return;
+    try {
+      const incoming = JSON.parse(event.newValue);
+      if (!incoming?.shop) return;
+      save.shop = incoming.shop;
+      normalizeShop();
+    } catch { /* ignore */ }
+  });
   // Move coins picked up since the last call into the lifetime total.
   function bankCoins() {
     if (!player) return;
@@ -1918,9 +1936,9 @@
     burst(cx, block.y, "#ffd76a", 8);
     tone(520, .07, "square", .05);
     if (type === "cherry") {
-      // Like a coin: collected the moment it pops out.
-      player.bonus++;
-      addScore(200, cx, block.y - 58);
+      // Like a coin: collected the moment it pops out. A block pays double.
+      player.bonus += BLOCK_COINS;
+      addScore(200 * BLOCK_COINS, cx, block.y - 58);
       items.push({ type, x: cx, y: block.y - 20, vx: 0, vy: -330, life: .65, popup: true });
       tone(880, .09, "sine", .06, .06);
       tone(1175, .12, "sine", .05, .12);
@@ -2524,8 +2542,8 @@
       ctx.restore();
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "900 24px 'Trebuchet MS', system-ui, sans-serif";
-      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(48,16,45,.8)"; ctx.strokeText("+1", 24, 0);
-      ctx.fillStyle = "#ffe58f"; ctx.fillText("+1", 24, 0);
+      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(48,16,45,.8)"; ctx.strokeText(`x${BLOCK_COINS}`, 24, 0);
+      ctx.fillStyle = "#ffe58f"; ctx.fillText(`x${BLOCK_COINS}`, 24, 0);
     } else {
       if (item.life < 2 && Math.floor(item.life * 10) % 2) ctx.globalAlpha = .3;
       ctx.translate(x, item.y + (item.resting ? Math.sin(time * .006) * 4 : 0));
@@ -2726,7 +2744,9 @@
     const x = player.x - cameraX;
     const speed = Math.abs(player.vx);
     const model = window.Pupa3D;
+    const hero = SHOP_INDEX[save.shop.hero];
     const skin = SHOP_INDEX[save.shop.skin];
+    model?.setCharacter?.(hero.id);
     model?.setSkin?.(skin);
     if (model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
       // The model's feet sit 1 unit below the camera centre; line them up with
@@ -2738,7 +2758,7 @@
       ctx.shadowColor = player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
       ctx.shadowBlur = player.star > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
       ctx.drawImage(model.canvas, x + player.w / 2 - size / 2, player.y + player.h - feet, size, size);
-      drawHat(save.shop.hat, x + player.w / 2 + HAT_SHIFT * player.facing * size / 164, player.y + player.h - feet + size * HEAD_TOP, size / 164, player.facing, time);
+      drawHat(save.shop.hat, x + player.w / 2 + HAT_SHIFT * player.facing * size / 164, player.y + player.h - feet + size * hero.headTop, size / 164, player.facing, time);
       ctx.restore();
       return;
     }
@@ -2747,7 +2767,8 @@
     const cycleFrame = Math.floor((time / 1000) * frameRate) % (art.runFrames.length * 2);
     const oppositeStride = cycleFrame >= art.runFrames.length;
     const runFrame = art.runFrames[cycleFrame % art.runFrames.length];
-    const sprite = isRunning && runFrame.complete && runFrame.naturalWidth ? runFrame : art.hero;
+    const isPupa = hero.id === "pupa";
+    const sprite = !isPupa ? art[hero.id] : isRunning && runFrame.complete && runFrame.naturalWidth ? runFrame : art.hero;
     const bob = isRunning ? 0 : (player.grounded ? Math.sin(time * .018) * Math.min(2, speed / 120) : 0);
     const squash = isRunning ? 1 : (player.grounded ? 1 + Math.sin(time * .018) * Math.min(.025, speed / 12000) : .94);
     ctx.save();
@@ -2757,9 +2778,12 @@
     ctx.scale(1 / squash, squash);
     ctx.shadowColor = "rgba(255,92,150,.35)"; ctx.shadowBlur = 20;
     // Without WebGL the outfit colour is an approximate filter on the sprite.
-    if (skin.hue || skin.sat !== 1) ctx.filter = `hue-rotate(${Math.round(skin.hue * 360)}deg) saturate(${skin.sat})`;
+    if (isPupa && (skin.hue || skin.sat !== 1)) ctx.filter = `hue-rotate(${Math.round(skin.hue * 360)}deg) saturate(${skin.sat})`;
     if (sprite.complete && sprite.naturalWidth) {
-      if (isRunning && oppositeStride) {
+      if (!isPupa) {
+        const h = 124, w = h * sprite.naturalWidth / sprite.naturalHeight;
+        ctx.drawImage(sprite, -w / 2, -62, w, h);
+      } else if (isRunning && oppositeStride) {
         // Mirror only the lower body for the second half of the run cycle. The
         // head and torso keep facing forward while the leading/trailing legs
         // visibly exchange sides.
@@ -3135,7 +3159,7 @@
       items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
       bring[id] = raw.bring?.[id] !== false;
     }
-    save.shop = { owned: [...owned], skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring };
+    save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring };
   }
 
   const owns = (id) => save.shop.owned.includes(id);
@@ -3163,7 +3187,7 @@
   function equip(id, quiet) {
     const entry = SHOP_INDEX[id];
     if (!entry || !owns(id)) return;
-    const slot = { skins: "skin", hats: "hat", pets: "pet" }[entry.group];
+    const slot = SLOTS[entry.group];
     save.shop[slot] = id;
     writeSave();
     if (!quiet) { tone(660, .08, "triangle", .05); announce(`ใช้${entry.name}แล้ว`); }
@@ -3458,7 +3482,15 @@
     const card = document.createElement("article");
     card.className = "shop-item";
     const group = SHOP_INDEX[entry.id].group;
-    if (group === "skins") {
+    if (group === "heroes") {
+      card.append(iconCanvas(() => {
+        const img = entry.id === "pupa" ? art.hero : art[entry.id];
+        if (img.complete && img.naturalWidth) {
+          const h = 84, w = h * img.naturalWidth / img.naturalHeight;
+          ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        }
+      }));
+    } else if (group === "skins") {
       const swatch = document.createElement("span");
       swatch.className = "shop-swatch";
       swatch.style.setProperty("--swatch", entry.swatch);
@@ -3496,7 +3528,7 @@
     actions.className = "shop-actions";
     const button = document.createElement("button");
     button.type = "button";
-    const slot = { skins: "skin", hats: "hat", pets: "pet" }[group];
+    const slot = SLOTS[group];
 
     if (group === "items") {
       const count = save.shop.items[entry.id];
@@ -3531,17 +3563,21 @@
       actions.append(button);
     } else {
       button.className = "shop-equip";
-      button.textContent = group === "pets" ? "พาไปด้วย" : "สวมใส่";
+      button.textContent = group === "pets" ? "พาไปด้วย" : group === "heroes" ? "เลือกตัวนี้" : "สวมใส่";
       button.addEventListener("click", () => { equip(entry.id); shopTry = {}; renderShop(); });
       actions.append(button);
     }
     card.append(info, actions);
     if (slot) {
-      // Tapping a card tries it on in the preview, bought or not.
+      // Tapping a card picks it if it is already owned (and saves that
+      // choice); otherwise it is tried on in the preview before buying.
       card.classList.add("can-try");
       card.addEventListener("click", (event) => {
         if (event.target.closest("button, label")) return;
-        shopTry = { ...shopTry, [slot]: entry.id };
+        if (owns(entry.id)) {
+          if (save.shop[slot] !== entry.id) equip(entry.id);
+          shopTry = {};
+        } else shopTry = { ...shopTry, [slot]: entry.id };
         renderShop();
       });
       if (shopTry[slot] === entry.id) card.classList.add("is-trying");
@@ -3572,18 +3608,19 @@
     }
     const scroll = shopUi.list.scrollTop;
     shopUi.list.replaceChildren();
-    if (shopTab === "outfit") shopUi.list.append(shopSection("สีชุด", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
+    if (shopTab === "outfit") shopUi.list.append(shopSection("ตัวละคร", SHOP.heroes), shopSection("สีชุด · ใช้กับ Pupa", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
     else if (shopTab === "pet") shopUi.list.append(shopSection("สัตว์เลี้ยงช่วยผจญภัย", SHOP.pets));
     else shopUi.list.append(shopSection("ไอเทมติดตัว · ใช้ครั้งละ 1 ชิ้น", SHOP.items));
     shopUi.list.scrollTop = scroll;
     const look = previewLook();
-    const names = [SHOP_INDEX[look.skin].name];
+    const names = [SHOP_INDEX[look.hero].name];
+    if (look.hero === "pupa") names.push(SHOP_INDEX[look.skin].name);
     if (look.hat !== "nohat") names.push(SHOP_INDEX[look.hat].name);
     if (look.pet !== "nopet") names.push(SHOP_INDEX[look.pet].name);
     shopUi.previewName.textContent = names.join(" · ");
   }
 
-  const previewLook = () => ({ skin: shopTry.skin || save.shop.skin, hat: shopTry.hat || save.shop.hat, pet: shopTry.pet || save.shop.pet });
+  const previewLook = () => ({ hero: shopTry.hero || save.shop.hero, skin: shopTry.skin || save.shop.skin, hat: shopTry.hat || save.shop.hat, pet: shopTry.pet || save.shop.pet });
 
   function drawShopPreview(time) {
     if (!shopOpen || !previewCtx) return;
@@ -3600,16 +3637,18 @@
     const feetY = size * .86;
     let head;
     const model = window.Pupa3D;
+    model?.setCharacter?.(look.hero);
     if (model?.ready) {
       model.setSkin?.(SHOP_INDEX[look.skin]);
       model.render({ time, facing: 1, speed: 0, vy: 0, grounded: true });
       const drawn = 230 * scale;
       const feet = drawn * (model.viewHalf + 1) / (model.viewHalf * 2);
       g.drawImage(model.canvas, size / 2 - drawn / 2, feetY - feet, drawn, drawn);
-      head = { x: size / 2, top: feetY - feet + drawn * HEAD_TOP, scale: drawn / 164 };
-    } else if (art.hero.complete && art.hero.naturalWidth) {
-      const h = 175 * scale, w = h * 104 / 124;
-      g.drawImage(art.hero, size / 2 - w / 2, feetY - h, w, h);
+      head = { x: size / 2, top: feetY - feet + drawn * SHOP_INDEX[look.hero].headTop, scale: drawn / 164 };
+    } else if ((look.hero === "pupa" ? art.hero : art[look.hero]).complete) {
+      const img = look.hero === "pupa" ? art.hero : art[look.hero];
+      const h = 175 * scale, w = h * img.naturalWidth / img.naturalHeight;
+      g.drawImage(img, size / 2 - w / 2, feetY - h, w, h);
       head = { x: size / 2, top: feetY - h + h * .02, scale: h / 124 };
     }
     paintOn(g, () => {

@@ -1,5 +1,6 @@
-// 3D Pupa renderer. Draws the GLB model into a small transparent WebGL canvas
-// that game.js stamps onto the 2D stage in place of the sprite.
+// 3D hero renderer. Draws the chosen character's GLB model into a small
+// transparent WebGL canvas that game.js stamps onto the 2D stage in place of
+// the sprite.
 import {
   WebGLRenderer, Scene, OrthographicCamera, Group, Mesh, MeshStandardMaterial,
   HemisphereLight, DirectionalLight, TextureLoader, SRGBColorSpace,
@@ -11,7 +12,23 @@ const VIEW = 1.3; // half-height of the camera frustum in model units
 const canvas = document.createElement("canvas");
 canvas.width = canvas.height = SIZE;
 
-const api = { ready: false, canvas, viewHalf: VIEW, render, setSkin };
+// Each character is an untextured mesh coloured by projecting its front-view
+// artwork, with its limb regions measured on the model (see LIMB_SHADER).
+// "tintable" marks the pink suit the market outfits recolour.
+const CHARACTERS = {
+  pupa: {
+    model: "assets/pupa.glb", texture: "assets/pupa-texture.webp", tintable: true, yaw: .75,
+    legTop: -.50, armX: .44, armLow: -.46, armHigh: -.02, arms: 1
+  },
+  jibjib: {
+    // The artwork is painted at a slight angle, so this one turns less: the
+    // projected colours smear on the far side of the head.
+    model: "assets/jibjib.glb", texture: "assets/jibjib-texture.webp", tintable: false, yaw: .38,
+    legTop: -.62, armX: .40, armLow: -.58, armHigh: -.12, arms: 0
+  }
+};
+
+const api = { ready: false, canvas, viewHalf: VIEW, render, setSkin, setCharacter, character: "pupa" };
 window.Pupa3D = api;
 
 let renderer;
@@ -41,15 +58,14 @@ scene.add(rig);
 const limbs = { uPhase: { value: 0 }, uSwing: { value: 0 }, uFlap: { value: 0 } };
 const LIMB_SHADER = `
   uniform float uPhase; uniform float uSwing; uniform float uFlap;
-  const float LEG_TOP = -0.50; const float ARM_X = 0.44;
-  const float ARM_LOW = -0.46; const float ARM_HIGH = -0.02;
+  uniform float LEG_TOP; uniform float ARM_X; uniform float ARM_LOW; uniform float ARM_HIGH; uniform float ARMS;
   vec3 swingLimbs(vec3 p) {
     float side = p.x < 0.0 ? -1.0 : 1.0;
     float leg = 1.0 - smoothstep(LEG_TOP - 0.14, LEG_TOP + 0.02, p.y);
     float la = side * sin(uPhase) * uSwing * 0.85 * leg;
     float ly = p.y - LEG_TOP;
     p.yz = mix(p.yz, vec2(LEG_TOP + ly * cos(la) - p.z * sin(la), ly * sin(la) + p.z * cos(la)), step(0.001, leg));
-    float arm = smoothstep(ARM_X, ARM_X + 0.14, abs(p.x))
+    float arm = ARMS * smoothstep(ARM_X, ARM_X + 0.14, abs(p.x))
       * smoothstep(ARM_LOW - 0.06, ARM_LOW + 0.04, p.y) * (1.0 - smoothstep(ARM_HIGH - 0.06, ARM_HIGH + 0.05, p.y));
     float aa = -sin(uPhase) * uSwing * 0.75 * arm;
     float ax = p.x - side * ARM_X;
@@ -89,11 +105,15 @@ const TINT_SHADER = `
   }
 `;
 
-// skin: { hue (turns), sat, bright } or nothing for the original colours
+// skin: { hue (turns), sat, bright } or nothing for the original colours.
+// Outfits only apply to characters with a tintable suit.
+let skinWanted = null;
 function setSkin(skin) {
-  tint.uHue.value = skin?.hue || 0;
-  tint.uSat.value = skin?.sat ?? 1;
-  tint.uBright.value = skin?.bright ?? 1;
+  skinWanted = skin;
+  const on = CHARACTERS[api.character].tintable;
+  tint.uHue.value = on ? skin?.hue || 0 : 0;
+  tint.uSat.value = on ? skin?.sat ?? 1 : 1;
+  tint.uBright.value = on ? skin?.bright ?? 1 : 1;
 }
 
 function projectTexture(geometry) {
@@ -113,18 +133,27 @@ function projectTexture(geometry) {
   geometry.computeVertexNormals();
 }
 
-if (renderer) {
-  const texture = new TextureLoader().load("assets/pupa-texture.webp");
+// Models are loaded the first time a character is picked.
+const meshes = {};
+function load(id) {
+  const spec = CHARACTERS[id];
+  meshes[id] = null;
+  const texture = new TextureLoader().load(spec.texture);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 4;
-  new GLTFLoader().load("assets/pupa.glb", (gltf) => {
+  const shape = {
+    LEG_TOP: { value: spec.legTop }, ARM_X: { value: spec.armX },
+    ARM_LOW: { value: spec.armLow }, ARM_HIGH: { value: spec.armHigh }, ARMS: { value: spec.arms }
+  };
+  new GLTFLoader().load(spec.model, (gltf) => {
+    const group = new Group();
     gltf.scene.traverse((node) => {
       if (!node.isMesh) return;
       const geometry = node.geometry;
       projectTexture(geometry);
       const material = new MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 });
       material.onBeforeCompile = (shader) => {
-        Object.assign(shader.uniforms, limbs, tint);
+        Object.assign(shader.uniforms, limbs, tint, shape);
         shader.vertexShader = shader.vertexShader
           .replace("#include <common>", `#include <common>\n${LIMB_SHADER}`)
           .replace("#include <begin_vertex>", "vec3 transformed = swingLimbs(position);");
@@ -132,11 +161,28 @@ if (renderer) {
           .replace("#include <common>", `#include <common>\n${TINT_SHADER}`)
           .replace("#include <map_fragment>", "#include <map_fragment>\n  diffuseColor.rgb = recolor(diffuseColor.rgb);");
       };
-      turn.add(new Mesh(geometry, material));
+      group.add(new Mesh(geometry, material));
     });
-    api.ready = turn.children.length > 0;
-  }, undefined, (error) => console.warn("Pupa3D: model failed to load", error));
+    meshes[id] = group;
+    if (api.character === id) show(id);
+  }, undefined, (error) => console.warn(`Pupa3D: ${id} model failed to load`, error));
 }
+
+function show(id) {
+  turn.clear();
+  if (meshes[id]) turn.add(meshes[id]);
+  api.ready = Boolean(meshes[id]);
+  setSkin(skinWanted);
+}
+
+function setCharacter(id) {
+  if (!CHARACTERS[id] || (id === api.character && id in meshes)) return;
+  api.character = id;
+  if (!(id in meshes)) load(id);
+  show(id);
+}
+
+if (renderer) load("pupa");
 
 let yaw = .75;
 let lean = 0;
@@ -156,7 +202,7 @@ function render(pose) {
   const running = pose.grounded && pose.speed > 45;
   const airborne = !pose.grounded;
 
-  yaw += (pose.facing * .75 - yaw) * ease(11);
+  yaw += (pose.facing * CHARACTERS[api.character].yaw - yaw) * ease(11);
   const rising = airborne && pose.vy < 0;
   // Jump pose: arms thrown up and legs in a wide stride on the way up, then
   // arms fluttering out and the body tipping back on the way down.
