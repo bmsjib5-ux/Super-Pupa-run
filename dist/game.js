@@ -1838,15 +1838,21 @@
     const height = Math.max(0, Math.min(POLE_HEIGHT, WORLD.ground - (player.y + player.h / 2)));
     const ratio = height / POLE_HEIGHT;
     const points = ratio >= .86 ? 5000 : ratio >= .65 ? 2000 : ratio >= .45 ? 1000 : ratio >= .25 ? 500 : 100;
+    // Coins too, 10 at the foot of the pole up to 50 at the top.
+    const coins = 10 + Math.round(ratio * 40);
     player.y = Math.max(player.y, top - player.h / 2);
     player.x = poleX - player.w + 18;
     player.vx = 0; player.vy = 0; player.facing = 1; player.ride = null;
     player.flag = { phase: "slide", t: 0, poleX, flagY: Math.max(top + 8, player.y + player.h / 2 - 20) };
     addScore(points, poleX + 10, player.y - 6);
     if (player.lives > 0) addScore(player.lives * 500, poleX + 10, player.y + 34, "♥ ");
+    player.bonus += coins;
+    bankCoins();
+    popups.push({ x: poleX + 10, y: player.y + 70, text: `+${coins} เหรียญ`, life: 2 });
+    [988, 1175, 1568].forEach((note, i) => tone(note, .1, "sine", .05, .5 + i * .07));
     const notes = points >= 5000 ? [523, 659, 784, 1047, 1319] : points >= 1000 ? [523, 659, 784, 1047] : [523, 659, 784];
     notes.forEach((note, i) => tone(note, .14, "square", .05, i * .08));
-    announce(`ดึงธงได้ ${formatPoints(points)} คะแนน`);
+    announce(`ดึงธงได้ ${formatPoints(points)} คะแนน และ ${coins} เหรียญ`);
     updateHud();
   }
 
