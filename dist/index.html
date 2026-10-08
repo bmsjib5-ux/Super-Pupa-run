@@ -13,9 +13,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261008f">
-    <script src="game.js?v=20261008f" defer></script>
-    <script type="module" src="pupa3d.js?v=20261008f"></script>
+    <link rel="stylesheet" href="styles.css?v=20261008h">
+    <script src="game.js?v=20261008h" defer></script>
+    <script type="module" src="pupa3d.js?v=20261008h"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -58,6 +58,7 @@
                 <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
                 <button class="secondary-button shop-button" type="button" data-open-levels>เลือกด่าน</button>
                 <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+                <button id="newsBtn" class="secondary-button shop-button" type="button">มีอะไรใหม่</button>
                 <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
               </div>
               <p id="installHint" class="install-hint" hidden></p>
@@ -114,6 +115,24 @@
           <span><i class="status-dot"></i> <span id="levelName">ด่าน 1 · สวนเชอร์รี่เรืองแสง</span></span>
           <span class="desktop-only">เคล็ดลับ: เหยียบศัตรูจากด้านบน · โหม่งบล็อก ? เพื่อสุ่มไอเทม</span>
         </footer>
+
+        <!-- "What's new" page, shown when the game opens. -->
+        <div id="newsScreen" class="overlay shop-overlay news-overlay" role="dialog" aria-modal="true" aria-labelledby="newsTitle" hidden>
+          <div class="shop-card news-card">
+            <header class="shop-head">
+              <div class="news-titles">
+                <p class="news-eyebrow">✦ อัปเดตเกม <span id="newsDate"></span></p>
+                <h2 id="newsTitle">มีอะไรใหม่ล่าสุด</h2>
+              </div>
+              <button id="newsClose" class="icon-button" type="button" aria-label="ปิดหน้าอัปเดต">✕</button>
+            </header>
+            <div id="newsList" class="news-list"></div>
+            <footer class="news-foot">
+              <label class="shop-toggle"><input id="newsHide" type="checkbox"> ไม่ต้องแสดงอีกจนกว่าจะมีอัปเดตใหม่</label>
+              <button id="newsGo" class="primary-button" type="button">ไปเล่นเลย</button>
+            </footer>
+          </div>
+        </div>
 
         <!-- Market and level select cover the whole game, top bar included,
              so nothing can sit on top of their close buttons. -->

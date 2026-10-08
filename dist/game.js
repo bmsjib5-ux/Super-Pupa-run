@@ -3990,7 +3990,153 @@
         shopTab = next.dataset.tab; renderShop(); next.focus();
       });
     });
-    document.querySelectorAll("[data-open-shop]").forEach(button => button.addEventListener("click", openShop));
+    document.querySelectorAll("[data-open-shop]").forEach(button => onTap(button, openShop));
+  }
+
+  // ---- What's new ----
+  // Shown each time the game opens until the player ticks "don't show"; a
+  // new NEWS_VERSION brings it back. Each card jumps to where the new thing
+  // lives. Add new entries at the top and bump NEWS_VERSION.
+  const NEWS_VERSION = "2026-10-08";
+  const NEWS_DATE = "8 ต.ค. 2569";
+  const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
+  const NEWS = [
+    { tag: "ตัวละครใหม่", title: "จิ๊บจิ๊บแมน", text: "ลูกเจี๊ยบนักผจญภัยแบบ 3 มิติ เลือกเล่นแทน Pupa ได้ฟรี", image: "jibjib", open: () => openShopAt("outfit") },
+    { tag: "สัตว์เลี้ยงใหม่", title: "มังกรน้อยเปลวแสง", text: "ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรู และให้เกราะทุกด่าน", image: "dragon", open: () => openShopAt("pet") },
+    { tag: "ชุดใหม่", title: "หัวฟักทองเรืองแสง", text: "หมวกฟักทองแกะสลัก 3 มิติ ไฟวาบในตา", image: "pumpkin", open: () => openShopAt("outfit") },
+    { tag: "ไอเทมใหม่", title: "เลเซอร์ · ดาวกระจาย · แม่เหล็ก", text: "ยิงทะลุทั้งแถว ยิงดาว 5 ทิศ และดูดเหรียญรอบตัว", image: "items", open: () => openShopAt("item") },
+    { tag: "ด่านใหม่", title: "โลก 4 · ฟ้าสีใหม่", text: "ด่าน 31–40 สีใหม่ทั้งโลก พร้อมบอสที่ดุกว่าเดิม", image: "world", open: () => { closeNews(); openLevels(); } },
+    { tag: "ระบบใหม่", title: "สัตว์เลี้ยงอัปเลเวล", text: "ใช้เหรียญอัปได้ถึง Lv.5 ดูดเหรียญไกลขึ้นทุกเลเวล", image: "petlevel", open: () => openShopAt("pet") }
+  ];
+  const newsUi = {
+    screen: document.querySelector("#newsScreen"),
+    list: document.querySelector("#newsList"),
+    date: document.querySelector("#newsDate"),
+    hide: document.querySelector("#newsHide")
+  };
+  let newsOpen = false;
+
+  function openShopAt(tab) {
+    closeNews();
+    shopTab = tab;
+    openShop();
+  }
+
+  // Pictures for the cards: artwork where there is some, otherwise the same
+  // canvas drawings the game uses.
+  function newsPicture(kind) {
+    if (kind === "jibjib" || kind === "dragon") {
+      const img = document.createElement("img");
+      img.src = kind === "jibjib" ? "assets/jibjib-hero.webp" : "assets/dragon-pet.webp";
+      img.alt = "";
+      return img;
+    }
+    if (kind === "world") {
+      const scene = document.createElement("div");
+      scene.className = "news-scene";
+      scene.innerHTML = "<b>31–40</b>";
+      return scene;
+    }
+    const icon = document.createElement("canvas");
+    icon.width = icon.height = 160;
+    const g = icon.getContext("2d");
+    const paint = (time) => {
+      g.clearRect(0, 0, 160, 160);
+      paintOn(g, () => {
+        ctx.save();
+        if (kind === "pumpkin") { ctx.translate(80, 112); ctx.scale(1.55, 1.55); hatArt.pumpkin(time); }
+        else if (kind === "items") {
+          [["laser", 40, 64], ["spread", 120, 64], ["magnet", 80, 118]].forEach(([art, x, y]) => {
+            ctx.save(); ctx.translate(x, y); ctx.scale(1.5, 1.5); drawGlow(itemGlow[art], 26); pickupArt[art](); ctx.restore();
+          });
+        } else {
+          ctx.translate(80, 86); ctx.scale(2.1, 2.1); petArt.minibat(time);
+          ctx.restore(); ctx.save();
+          ctx.font = "900 26px 'Trebuchet MS', system-ui, sans-serif"; ctx.textAlign = "center";
+          ctx.lineWidth = 5; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText("Lv.5", 80, 36);
+          ctx.fillStyle = "#ffe58f"; ctx.fillText("Lv.5", 80, 36);
+        }
+        ctx.restore();
+      });
+    };
+    paint(1000);
+    // The 3D pumpkin arrives a moment later; repaint until it shows.
+    if (kind === "pumpkin") {
+      let tries = 0;
+      const wait = setInterval(() => {
+        paint(1000);
+        if (window.Pupa3D?.pumpkin?.ready || ++tries > 40) clearInterval(wait);
+      }, 150);
+    }
+    return icon;
+  }
+
+  function renderNews() {
+    newsUi.date.textContent = NEWS_DATE;
+    newsUi.list.replaceChildren(...NEWS.map(entry => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "news-item";
+      const picture = document.createElement("div");
+      picture.className = "news-picture";
+      picture.append(newsPicture(entry.image));
+      const tag = document.createElement("span");
+      tag.className = "news-tag";
+      tag.textContent = entry.tag;
+      const title = document.createElement("h3");
+      title.textContent = entry.title;
+      const text = document.createElement("p");
+      text.textContent = entry.text;
+      card.append(picture, tag, title, text);
+      card.addEventListener("click", entry.open);
+      return card;
+    }));
+  }
+
+  function openNews() {
+    if (!newsUi.screen) return;
+    if (state === "playing") togglePause(true);
+    newsOpen = true;
+    renderNews();
+    newsUi.hide.checked = false;
+    try { newsUi.hide.checked = localStorage.getItem(NEWS_SEEN_KEY) === NEWS_VERSION; } catch { /* ignore */ }
+    newsUi.screen.hidden = false;
+    document.body.classList.add("dialog-open");
+    document.querySelector("#newsGo")?.focus();
+  }
+
+  function closeNews() {
+    if (!newsOpen) return;
+    newsOpen = false;
+    newsUi.screen.hidden = true;
+    document.body.classList.remove("dialog-open");
+    try {
+      if (newsUi.hide.checked) localStorage.setItem(NEWS_SEEN_KEY, NEWS_VERSION);
+      else localStorage.removeItem(NEWS_SEEN_KEY);
+    } catch { /* ignore */ }
+  }
+
+  if (newsUi.screen) {
+    onTap(document.querySelector("#newsClose"), () => closeNews());
+    onTap(document.querySelector("#newsGo"), () => { closeNews(); ui.startBtn?.focus(); });
+    onTap(document.querySelector("#newsBtn"), () => openNews());
+    let seen = null;
+    try { seen = localStorage.getItem(NEWS_SEEN_KEY); } catch { /* ignore */ }
+    // Not when a test link jumps straight into a level.
+    if (seen !== NEWS_VERSION && !new URLSearchParams(location.search).has("level")) openNews();
+  }
+
+  // Open a dialog straight from the finger lifting, not from the click a
+  // phone may or may not send afterwards (it can be swallowed while the game
+  // is busy cancelling touch gestures). Cancelling the touchend also stops
+  // that late click from landing on the dialog that just opened.
+  function onTap(button, handler) {
+    button.addEventListener("touchend", (event) => {
+      if (!event.cancelable) return;
+      event.preventDefault();
+      handler(event);
+    }, { passive: false });
+    button.addEventListener("click", handler);
   }
 
 
@@ -4970,7 +5116,7 @@
 
   if (levelUi.screen) {
     levelUi.close.addEventListener("click", () => closeLevels());
-    document.querySelectorAll("[data-open-levels]").forEach(button => button.addEventListener("click", openLevels));
+    document.querySelectorAll("[data-open-levels]").forEach(button => onTap(button, openLevels));
   }
 
   function setKey(action, value) {
