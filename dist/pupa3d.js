@@ -25,6 +25,19 @@ const CHARACTERS = {
     // projected colours smear on the far side of the head.
     model: "assets/jibjib.glb", texture: "assets/jibjib-texture.webp", tintable: false, yaw: .38,
     legTop: -.62, armX: .40, armLow: -.58, armHigh: -.12, arms: 0
+  },
+  // Leg regions estimated from where the legs start in each picture.
+  baitoey: {
+    model: "assets/baitoey.glb", texture: "assets/baitoey-texture.webp", tintable: false, yaw: .55,
+    legTop: -.34, armX: .5, armLow: -.4, armHigh: -.05, arms: 0
+  },
+  ikuya: {
+    model: "assets/ikuya.glb", texture: "assets/ikuya-texture.webp", tintable: false, yaw: .35,
+    legTop: -.32, armX: .5, armLow: -.4, armHigh: -.05, arms: 0
+  },
+  pangji: {
+    model: "assets/pangji.glb", texture: "assets/pangji-texture.webp", tintable: false, yaw: .4,
+    legTop: -.56, armX: .5, armLow: -.5, armHigh: -.2, arms: 0
   }
 };
 

@@ -1502,9 +1502,9 @@
     heroes: [
       { id: "pupa", name: "Pupa", desc: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่", price: 0, headTop: .2 },
       { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 },
-      { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, flat: true, spriteHead: .03 },
-      { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, flat: true, spriteHead: .02 },
-      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, flat: true, spriteHead: .04 }
+      { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, headTop: .2, spriteHead: .03 },
+      { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, headTop: .2, spriteHead: .02 },
+      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04 }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -1608,6 +1608,9 @@
   let hazards = [];
   let popups = [];
   let bombs = [];
+  // Where Pupa last stood firmly: on ground or a still platform, well in
+  // from its edges. A fall into a pit puts her back here, not at the flag.
+  let lastSafe = null;
   let beams = [];       // laser flashes (visual only)
   let starShots = [];   // scatter stars thrown by Pupa
   let shots = [];
@@ -1658,6 +1661,7 @@
     particles = [];
     cameraX = 0;
     checkpoint = 90;
+    lastSafe = null;
     Object.assign(player, { x: 90, y: 420, vx: 0, vy: 0, grounded: false, facing: 1, ride: null });
     if (startAtCheckpoint && index === startLevel) {
       checkpoint = level.checkpointX + 50;
@@ -1956,8 +1960,13 @@
   }
 
   function respawn() {
-    player.x = checkpoint;
-    player.y = 400;
+    if (lastSafe) {
+      player.x = lastSafe.x;
+      player.y = lastSafe.y - 6;
+    } else {
+      player.x = checkpoint;
+      player.y = 400;
+    }
     player.vx = 0;
     player.vy = 0;
     player.star = 0;
@@ -2463,6 +2472,7 @@
         player.airJumps = 1;
         player.ride = p;
         if (p.kind === "crumble" && p.state === "idle") { p.state = "shaking"; p.timer = .5; }
+        else if (!p.kind && !p.axis && player.x >= p.x + 24 && player.x + player.w <= p.x + p.w - 24) lastSafe = { x: player.x, y: p.y - player.h };
       }
     }
 
@@ -4242,7 +4252,7 @@
   const NEWS_DATE = "8 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
-    { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละครใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
+    { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละคร 3 มิติใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
     { tag: "ด่านใหม่", title: "โลก 5 · ดินแดนดาวรุ่ง", text: "ด่าน 41–50 พร้อมบอสใหม่ มังกรโคมดาวรุ่ง และจอมเวทสุริยคราสทองคำ", image: "world5", open: () => { closeNews(); openLevels(); } },
     { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 50 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "จิ๊บจิ๊บแมน", text: "ลูกเจี๊ยบนักผจญภัยแบบ 3 มิติ เลือกเล่นแทน Pupa ได้ฟรี", image: "jibjib", open: () => openShopAt("outfit") },
