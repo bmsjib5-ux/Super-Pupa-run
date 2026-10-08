@@ -243,7 +243,7 @@ kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .
 /* The attack button stays dim until Pupa is carrying cherry bombs. */
 .touch-button.attack { display: grid; place-items: center; opacity: .38; font-size: 1.4rem; }
 .touch-button.attack.is-ready { opacity: 1; color: #fff; background: rgba(226, 46, 86, .85); border-color: #ffd76a; box-shadow: 0 0 1.2rem rgba(255, 95, 110, .7); }
-.touch-button.attack::after { content: "BOMB"; display: block; margin-top: -.8rem; font-size: .55rem; font-weight: 900; pointer-events: none; }
+.touch-button.attack::after { content: attr(data-label); display: block; margin-top: -.8rem; font-size: .55rem; font-weight: 900; pointer-events: none; }
 .title-card .save-line { margin: -.6rem auto 1rem; color: var(--gold); font-size: .85rem; }
 .touch-button.jump { display: grid; place-items: center; color: #2c1030; background: rgba(255,215,106,.82); }
 /* The button faces are generated content: there is no real text inside the
@@ -440,6 +440,8 @@ button { touch-action: manipulation; }
 .shop-buy:disabled { color: #8e83a3; background: rgba(255,255,255,.08); box-shadow: none; cursor: not-allowed; }
 .shop-equip { color: var(--ink); border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); }
 .shop-equip:disabled { color: var(--mint); border-color: rgba(137,240,192,.5); background: transparent; cursor: default; }
+.pet-level { display: inline-block; margin-left: .25rem; padding: .05rem .45rem; border-radius: 999px; color: #30102d; font-size: .72rem; font-weight: 900; background: linear-gradient(180deg, #fff3a6, #ffbd63); vertical-align: middle; }
+.shop-info .pet-stats { margin-top: .2rem; color: var(--mint); font-size: .74rem; }
 .shop-count { min-width: 2.6rem; color: var(--gold); font-size: .8rem; font-weight: 700; }
 .shop-toggle { display: inline-flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .74rem; cursor: pointer; }
 .shop-toggle input { width: 1rem; height: 1rem; accent-color: #ffbd63; }

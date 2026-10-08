@@ -1265,7 +1265,19 @@
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
   const BLOCK_COINS = 2; // coins from a "?" block that pops a coin
-  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff" };
+  // Timed power-ups. The attack button uses the best weapon Pupa holds:
+  // laser, then scatter stars, then cherry bombs.
+  const LASER_TIME = 10;
+  const SPREAD_TIME = 10;
+  const MAGNET_TIME = 15;
+  const MAGNET_RANGE = 280;
+  const LASER_LENGTH = 780;
+  // Chance weights for what a "?" block holds.
+  const BLOCK_DROPS = [
+    ["cherry", 24], ["heart", 9], ["leaf", 8], ["star", 8], ["grow", 9],
+    ["bomb", 8], ["shield", 9], ["laser", 8], ["spread", 8], ["magnet", 9]
+  ];
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff", laser: "#ff4fd8", spread: "#ffe27a", magnet: "#ff6464" };
   // How far hats lean toward the facing side. (Where the head sits is each
   // character's headTop in SHOP.heroes.)
   const HAT_SHIFT = 0;
@@ -1305,12 +1317,16 @@
       { id: "grow", name: "เห็ดยักษ์", desc: "เริ่มด่านตัวใหญ่ ทนโจมตีได้ 1 ครั้ง", price: 50 },
       { id: "leaf", name: "ใบไม้วิเศษ", desc: "เริ่มด่านกระโดดสูง 10 วินาที", price: 25 },
       { id: "bomb", name: "เชอร์รี่ระเบิด", desc: "เริ่มด่านพร้อมระเบิด ขว้างได้ 10 วินาที", price: 35 },
+      { id: "laser", name: "ปืนเลเซอร์", desc: "เริ่มด่านพร้อมเลเซอร์ ยิงทะลุศัตรูทั้งแถว 10 วินาที", price: 70 },
+      { id: "spread", name: "ดาวกระจาย", desc: "เริ่มด่านพร้อมดาวกระจาย ยิงดาว 5 ทิศ 10 วินาที", price: 55 },
+      { id: "magnet", name: "แม่เหล็ก", desc: "เริ่มด่านพร้อมแม่เหล็ก ดูดเหรียญรอบตัว 15 วินาที", price: 45 },
       { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 10 วินาที", price: 60 },
       { id: "revive", name: "หัวใจสำรอง", desc: "ฟื้นด้วยหัวใจ 1 ดวงเมื่อพลังหมด", price: 100 }
     ]
   };
   const SHOP_INDEX = {};
   for (const [group, list] of Object.entries(SHOP)) for (const entry of list) SHOP_INDEX[entry.id] = { ...entry, group };
+  const PET_MAX_LEVEL = 5;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
   const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
 
@@ -1363,6 +1379,8 @@
   let hazards = [];
   let popups = [];
   let bombs = [];
+  let beams = [];       // laser flashes (visual only)
+  let starShots = [];   // scatter stars thrown by Pupa
   let shots = [];
   let blasts = [];
   let shake = 0;
@@ -1426,6 +1444,8 @@
     hazards = [];
     popups = [];
     bombs = [];
+    beams = [];
+    starShots = [];
     blasts = [];
     shots = [];
     shake = 0;
@@ -1439,7 +1459,7 @@
   }
 
   function resetGame(index = startLevel) {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(index);
   }
@@ -1450,7 +1470,7 @@
   function retryLevel() {
     if (player.big) setBig(false);
     // Coming back from a game over also starts with the 5 s grace period.
-    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, shield: false });
+    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, shield: false });
     const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
     const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
     const reachedCheckpoint = checkpoint > 90;
@@ -1560,7 +1580,9 @@
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
     ui.points.textContent = formatPoints(save.points);
-    ui.attackBtn?.classList.toggle("is-ready", player.bomb > 0);
+    const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : "";
+    ui.attackBtn?.classList.toggle("is-ready", Boolean(weapon));
+    if (ui.attackBtn && ui.attackBtn.dataset.label !== (weapon || "ATK")) ui.attackBtn.dataset.label = weapon || "ATK";
   }
 
   function addScore(amount, x, y, label = "") {
@@ -1816,6 +1838,77 @@
     } else hurtPlayer();
   }
 
+  function attack() {
+    if (player.laser > 0) fireLaser();
+    else if (player.spread > 0) throwStars();
+    else throwBomb();
+  }
+
+  function defeatEnemy(enemy, color) {
+    enemy.alive = false;
+    addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
+    burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, color, 12);
+  }
+
+  // The laser hits everything in a straight line in front of Pupa at once,
+  // spiky enemies included.
+  function fireLaser() {
+    if (player.bombCooldown > 0) return;
+    player.bombCooldown = .45;
+    const dir = player.facing;
+    const y = player.y + player.h * .42;
+    const x0 = player.x + player.w / 2 + dir * 20;
+    const band = { x: dir > 0 ? x0 : x0 - LASER_LENGTH, y: y - 14, w: LASER_LENGTH, h: 28 };
+    beams.push({ x: x0, y, dir, life: .2 });
+    for (const enemy of enemies) if (enemy.alive && rectsOverlap(band, enemy)) defeatEnemy(enemy, "#ff4fd8");
+    if (boss?.active && boss.alive && boss.hurt <= 0 && rectsOverlap(band, boss)) damageBoss();
+    tone(1320, .08, "sawtooth", .04); tone(880, .1, "square", .03, .03);
+  }
+
+  // Five little stars fanned out ahead of Pupa.
+  function throwStars() {
+    if (player.bombCooldown > 0) return;
+    player.bombCooldown = .4;
+    const cx = player.x + player.w / 2 + player.facing * 22, cy = player.y + player.h * .4;
+    for (const spread of [-.5, -.25, 0, .25, .5]) {
+      starShots.push({ x: cx, y: cy, vx: Math.cos(spread) * 640 * player.facing, vy: Math.sin(spread) * 640, life: .85, spin: 0 });
+    }
+    tone(988, .06, "triangle", .04); tone(1319, .08, "triangle", .04, .04);
+  }
+
+  function updateWeapons(dt) {
+    beams = beams.filter(beam => (beam.life -= dt) > 0);
+    starShots = starShots.filter(shot => {
+      shot.life -= dt;
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+      shot.spin += dt * 16;
+      if (shot.life <= 0) return false;
+      const box = { x: shot.x - 11, y: shot.y - 11, w: 22, h: 22 };
+      for (const enemy of enemies) {
+        if (enemy.alive && rectsOverlap(box, enemy)) { defeatEnemy(enemy, "#ffe27a"); return false; }
+      }
+      if (boss?.active && boss.alive && rectsOverlap(box, boss)) {
+        if (boss.hurt <= 0) damageBoss();
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // Draw coins toward Pupa (the magnet item; pets use their own range).
+  function pullCoins(range, dt) {
+    const cx = player.x + player.w / 2, cy = player.y + player.h / 2;
+    for (const cherry of cherries) {
+      if (cherry.taken) continue;
+      const dx = cx - cherry.x, dy = cy - cherry.y;
+      const d = Math.hypot(dx, dy);
+      if (d > range || d < 1) continue;
+      const pull = Math.min(d, (320 + (range - d) * 5) * dt);
+      cherry.x += dx / d * pull; cherry.y += dy / d * pull;
+    }
+  }
+
   function throwBomb() {
     if (player.bomb <= 0 || player.bombCooldown > 0) return;
     player.bombCooldown = .35;
@@ -1930,7 +2023,11 @@
     block.bump = .18;
     const cx = block.x + block.w / 2;
     const roll = Math.random();
-    let type = roll < .28 ? "cherry" : roll < .40 ? "heart" : roll < .52 ? "leaf" : roll < .64 ? "star" : roll < .76 ? "grow" : roll < .88 ? "bomb" : "shield";
+    let type = "cherry";
+    for (let left = roll * 100, i = 0; i < BLOCK_DROPS.length; i++) {
+      left -= BLOCK_DROPS[i][1];
+      if (left < 0) { type = BLOCK_DROPS[i][0]; break; }
+    }
     if (type === "heart" && player.lives >= 3) type = "cherry";
     if (type === "grow" && player.big) type = "cherry";
     if (type === "shield" && player.shield) type = "cherry";
@@ -1975,6 +2072,18 @@
       player.shield = true;
       announce("ได้เกราะป้องกัน กันการโจมตีได้ 1 ครั้ง");
       tone(392, .1, "triangle", .06); tone(587, .1, "triangle", .06, .08); tone(880, .2, "triangle", .06, .16);
+    } else if (item.type === "laser") {
+      player.laser = LASER_TIME;
+      announce("ได้ปืนเลเซอร์ กดปุ่มโจมตีเพื่อยิงทะลุศัตรูทั้งแถว 10 วินาที");
+      tone(660, .08, "sawtooth", .04); tone(990, .08, "sawtooth", .04, .07); tone(1320, .14, "sawtooth", .04, .14);
+    } else if (item.type === "spread") {
+      player.spread = SPREAD_TIME;
+      announce("ได้ดาวกระจาย กดปุ่มโจมตีเพื่อยิงดาว 5 ทิศ 10 วินาที");
+      [784, 988, 1175, 1568].forEach((note, i) => tone(note, .08, "triangle", .045, i * .05));
+    } else if (item.type === "magnet") {
+      player.magnet = MAGNET_TIME;
+      announce("ได้แม่เหล็ก ดูดเหรียญรอบตัว 15 วินาที");
+      tone(330, .12, "sine", .06); tone(440, .12, "sine", .06, .1); tone(660, .18, "sine", .06, .2);
     } else if (item.type === "bomb") {
       player.bomb = BOMB_TIME;
       announce("ได้เชอร์รี่ระเบิด กดปุ่มโจมตีเพื่อขว้างได้ 10 วินาที");
@@ -2023,6 +2132,10 @@
     player.star = Math.max(0, player.star - dt);
     player.boost = Math.max(0, player.boost - dt);
     player.bomb = Math.max(0, player.bomb - dt);
+    player.laser = Math.max(0, player.laser - dt);
+    player.spread = Math.max(0, player.spread - dt);
+    player.magnet = Math.max(0, player.magnet - dt);
+    if (player.magnet > 0) pullCoins(MAGNET_RANGE, dt);
     for (const p of platforms) {
       p.bounce = Math.max(0, p.bounce - dt);
       if (p.kind === "crumble" && p.state !== "idle") {
@@ -2067,7 +2180,7 @@
       tone((player.boost > 0 ? 480 : 360) * (second ? 1.35 : 1), .11, "triangle", .06);
     }
     keys.jump = false;
-    if (keys.attack) throwBomb();
+    if (keys.attack) attack();
     keys.attack = false;
 
     const previousBottom = player.y + player.h;
@@ -2196,6 +2309,7 @@
       return false;
     });
     updateBombs(dt);
+    updateWeapons(dt);
     updateBoss(dt, previousBottom);
     shake = Math.max(0, shake - dt);
     if (state !== "playing") return;
@@ -2415,6 +2529,46 @@
       ctx.beginPath(); ctx.ellipse(-8, -11, 4, 2, -.5, 0, Math.PI * 2); ctx.fill();
     },
     // A pair of cherries with a lit fuse: the bomb pickup.
+    laser() {
+      ctx.save();
+      ctx.rotate(-.25);
+      const body = ctx.createLinearGradient(0, -12, 0, 12);
+      body.addColorStop(0, "#f2e9ff"); body.addColorStop(1, "#8c6be0");
+      ctx.fillStyle = body; ctx.strokeStyle = "#3d2a7a"; ctx.lineWidth = 2;
+      roundedRect(-18, -9, 30, 15, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#3d2a7a"; roundedRect(-12, 4, 9, 13, 3); ctx.fill();
+      ctx.fillStyle = "#ff4fd8"; ctx.beginPath(); ctx.arc(14, -1.5, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(13, -3, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#ff9df0"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(22, -1.5); ctx.lineTo(30, -1.5); ctx.stroke();
+      ctx.restore();
+    },
+    spread() {
+      const star = (x, y, r) => {
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const radius = i % 2 ? r * .45 : r;
+          const angle = -Math.PI / 2 + i * Math.PI / 5;
+          ctx.lineTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+        }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      };
+      ctx.fillStyle = "#fff2a0"; ctx.strokeStyle = "#c9741a"; ctx.lineWidth = 1.5; ctx.lineJoin = "round";
+      star(-11, 7, 9); star(11, 7, 9);
+      ctx.fillStyle = "#ffd24a"; star(0, -6, 13);
+    },
+    magnet() {
+      ctx.save();
+      ctx.rotate(.5);
+      ctx.lineCap = "butt";
+      ctx.strokeStyle = "#e23b3b"; ctx.lineWidth = 11;
+      ctx.beginPath(); ctx.arc(0, -2, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.moveTo(-12, -2); ctx.lineTo(-12, 10); ctx.stroke();
+      ctx.strokeStyle = "#dfe6f2";
+      ctx.beginPath(); ctx.moveTo(-12, 10); ctx.lineTo(-12, 17); ctx.moveTo(12, 10); ctx.lineTo(12, 17); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(0, -2, 15, Math.PI * 1.15, Math.PI * 1.55); ctx.stroke();
+      ctx.restore();
+    },
     bomb() {
       ctx.strokeStyle = "#3f8f3a"; ctx.lineWidth = 3; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(-9, 4); ctx.quadraticCurveTo(-6, -12, 5, -18);
@@ -2559,6 +2713,9 @@
     if (player.star > 0) bars.push([Math.min(1, player.star / STAR_TIME), "#ffe27a"]);
     if (player.boost > 0) bars.push([player.boost / BOOST_TIME, "#89f0c0"]);
     if (player.bomb > 0) bars.push([player.bomb / BOMB_TIME, "#ff5f6e"]);
+    if (player.laser > 0) bars.push([player.laser / LASER_TIME, "#ff4fd8"]);
+    if (player.spread > 0) bars.push([player.spread / SPREAD_TIME, "#fff2a0"]);
+    if (player.magnet > 0) bars.push([player.magnet / MAGNET_TIME, "#ff6464"]);
     const x = player.x - cameraX + player.w / 2 - 32;
     bars.forEach(([amount, color], i) => {
       const y = player.y - 44 - i * 11;
@@ -3030,6 +3187,53 @@
     }
   }
 
+  function drawWeapons(time) {
+    for (const beam of beams) {
+      const fade = beam.life / .2;
+      const x0 = beam.x - cameraX;
+      const x1 = x0 + beam.dir * LASER_LENGTH;
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.lineCap = "round";
+      ctx.shadowColor = "#ff4fd8"; ctx.shadowBlur = 24;
+      ctx.strokeStyle = "rgba(255,79,216,.75)"; ctx.lineWidth = 18 * fade + 4;
+      ctx.beginPath(); ctx.moveTo(x0, beam.y); ctx.lineTo(x1, beam.y); ctx.stroke();
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 5 * fade + 1;
+      ctx.beginPath(); ctx.moveTo(x0, beam.y); ctx.lineTo(x1, beam.y); ctx.stroke();
+      ctx.restore();
+    }
+    for (const shot of starShots) {
+      ctx.save();
+      ctx.translate(shot.x - cameraX, shot.y);
+      ctx.globalAlpha = Math.min(1, shot.life / .2);
+      drawGlow("#ffe27a", 20);
+      ctx.rotate(shot.spin);
+      ctx.fillStyle = "#fff2a0"; ctx.strokeStyle = "#c9741a"; ctx.lineWidth = 1.5; ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 ? 4.5 : 11;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    if (player.magnet > 0) {
+      // Rings drifting inward show the pull.
+      ctx.save();
+      ctx.translate(player.x - cameraX + player.w / 2, player.y + player.h / 2);
+      for (let i = 0; i < 3; i++) {
+        const k = 1 - ((time * .0006 + i / 3) % 1);
+        ctx.globalAlpha = (1 - k) * .45 * Math.min(1, player.magnet);
+        ctx.strokeStyle = "#ff8a8a"; ctx.lineWidth = 2;
+        ctx.setLineDash([6, 10]);
+        ctx.beginPath(); ctx.arc(0, 0, 40 + k * (MAGNET_RANGE - 40), 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
   function drawShield(time) {
     if (!player.shield) return;
     const pulse = Math.sin(time * .006);
@@ -3125,6 +3329,7 @@
     drawPet(time);
     drawPlayer(time);
     drawShield(time);
+    drawWeapons(time);
     drawPopups();
     drawPowerBars();
     drawBossBar();
@@ -3160,11 +3365,42 @@
       items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
       bring[id] = raw.bring?.[id] !== false;
     }
-    save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring };
+    save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring, petLevels: {} };
+    for (const { id } of SHOP.pets) {
+      const level = Math.floor(Number(raw.petLevels?.[id]) || 1);
+      if (level > 1 && owned.has(id)) save.shop.petLevels[id] = Math.min(PET_MAX_LEVEL, level);
+    }
   }
 
   const owns = (id) => save.shop.owned.includes(id);
   const equippedPet = () => SHOP_INDEX[save.shop.pet]?.magnet ? SHOP_INDEX[save.shop.pet] : null;
+
+  // Pets level up with coins in the market, up to PET_MAX_LEVEL. Each level
+  // widens the coin pull by a fifth of the base range and makes the bat
+  // bite 1.5 s sooner.
+  const petLevel = (id) => save.shop.petLevels?.[id] || 1;
+  const petUpgradeCost = (entry) => Math.round(entry.price * .6 * petLevel(entry.id) / 10) * 10;
+  function petStats(entry, level = petLevel(entry.id)) {
+    return {
+      level,
+      magnet: Math.round(entry.magnet * (1 + .2 * (level - 1))),
+      bite: entry.bite ? Math.max(4, entry.bite - 1.5 * (level - 1)) : 0,
+      shield: Boolean(entry.shield)
+    };
+  }
+  function upgradePet(id) {
+    const entry = SHOP_INDEX[id];
+    if (!entry || !owns(id) || petLevel(id) >= PET_MAX_LEVEL) return false;
+    const cost = petUpgradeCost(entry);
+    if (save.coins < cost) { tone(150, .12, "square", .05); return false; }
+    save.coins -= cost;
+    save.shop.petLevels[id] = petLevel(id) + 1;
+    writeSave();
+    updateHud();
+    [523, 659, 784, 1047].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+    announce(`${entry.name} อัปเป็นเลเวล ${petLevel(id)} แล้ว`);
+    return true;
+  }
 
   function buy(id) {
     const entry = SHOP_INDEX[id];
@@ -3205,6 +3441,9 @@
     if (!player.big && take("grow")) setBig(true);
     if (take("leaf")) player.boost = BOOST_TIME;
     if (take("bomb")) player.bomb = BOMB_TIME;
+    if (take("laser")) player.laser = LASER_TIME;
+    if (take("spread")) player.spread = SPREAD_TIME;
+    if (take("magnet")) player.magnet = MAGNET_TIME;
     if (take("star")) player.star = MARKET_STAR_TIME;
     if (equippedPet()?.shield && !player.shield) player.shield = true;
     if (!used.length) return;
@@ -3236,8 +3475,9 @@
   }
 
   function updatePet(dt) {
-    const def = equippedPet();
-    if (!def || !pet) return;
+    const entry = equippedPet();
+    if (!entry || !pet) return;
+    const def = petStats(entry);
     pet.t += dt;
     const cx = player.x + player.w / 2, cy = player.y + player.h / 2;
     // Pull nearby coins in.
@@ -3358,6 +3598,15 @@
     if (x < -80 || x > viewWidth + 80) return;
     ctx.save();
     ctx.translate(x, pet.y);
+    const level = petLevel(save.shop.pet);
+    if (level > 1) {
+      ctx.save();
+      ctx.font = "900 15px 'Trebuchet MS', system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText(`Lv.${level}`, 0, -34);
+      ctx.fillStyle = "#ffe58f"; ctx.fillText(`Lv.${level}`, 0, -34);
+      ctx.restore();
+    }
     ctx.scale(pet.facing, 1);
     art(time);
     ctx.restore();
@@ -3525,6 +3774,18 @@
     const desc = document.createElement("p");
     desc.textContent = entry.desc;
     info.append(title, desc);
+    const petEntry = group === "pets" && entry.magnet ? entry : null;
+    if (petEntry && owns(entry.id)) {
+      const stats = petStats(entry);
+      const badge = document.createElement("span");
+      badge.className = "pet-level";
+      badge.textContent = `Lv.${stats.level}`;
+      title.append(" ", badge);
+      const detail = document.createElement("p");
+      detail.className = "pet-stats";
+      detail.textContent = `ดูดเหรียญ ${stats.magnet}` + (stats.bite ? ` · กัดทุก ${stats.bite} วิ` : "");
+      info.append(detail);
+    }
     const actions = document.createElement("div");
     actions.className = "shop-actions";
     const button = document.createElement("button");
@@ -3567,6 +3828,23 @@
       button.textContent = group === "pets" ? "พาไปด้วย" : group === "heroes" ? "เลือกตัวนี้" : "สวมใส่";
       button.addEventListener("click", () => { equip(entry.id); shopTry = {}; renderShop(); });
       actions.append(button);
+    }
+    if (petEntry && owns(entry.id)) {
+      const up = document.createElement("button");
+      up.type = "button";
+      up.className = "shop-buy shop-upgrade";
+      if (petLevel(entry.id) >= PET_MAX_LEVEL) {
+        up.textContent = "เลเวลสูงสุด";
+        up.disabled = true;
+      } else {
+        const cost = petUpgradeCost(entry);
+        const next = petStats(entry, petLevel(entry.id) + 1);
+        up.textContent = `อัปเลเวล ● ${formatPoints(cost)}`;
+        up.setAttribute("aria-label", `อัปเลเวล${entry.name}เป็นเลเวล ${next.level} ใช้ ${cost} เหรียญ ดูดเหรียญ ${next.magnet}`);
+        up.disabled = save.coins < cost;
+        up.addEventListener("click", () => { if (upgradePet(entry.id)) renderShop(); });
+      }
+      actions.append(up);
     }
     card.append(info, actions);
     if (slot) {
