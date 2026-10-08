@@ -38,6 +38,12 @@ const CHARACTERS = {
   pangji: {
     model: "assets/pangji.glb", texture: "assets/pangji-texture.webp", tintable: false, yaw: .4,
     legTop: -.56, armX: .5, armLow: -.5, armHigh: -.2, arms: 0
+  },
+  // Pupa V2 is painted mid-run at an angle, so it turns less; her pink hair
+  // and body take the outfit colours like the original.
+  pupav2: {
+    model: "assets/pupav2.glb", texture: "assets/pupav2-texture.webp", tintable: true, yaw: .35,
+    legTop: -.42, armX: .5, armLow: -.4, armHigh: -.1, arms: 0
   }
 };
 

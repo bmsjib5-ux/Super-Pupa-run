@@ -41,6 +41,7 @@
     baitoey: image("assets/baitoey-hero.webp"),
     ikuya: image("assets/ikuya-hero.webp"),
     pangji: image("assets/pangji-hero.webp"),
+    pupav2: image("assets/pupav2-hero.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1504,7 +1505,8 @@
       { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 },
       { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, headTop: .2, spriteHead: .03 },
       { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, headTop: .2, spriteHead: .02 },
-      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04 }
+      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04 },
+      { id: "pupav2", name: "Pupa V2", desc: "Pupa ร่างใหม่ ผมยาวสีกุหลาบ ชุดนักผจญภัยสีเขียว ใช้สีชุดจากตลาดได้", price: 600, headTop: .2, spriteHead: .03 }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -4183,13 +4185,13 @@
     }
     const scroll = shopUi.list.scrollTop;
     shopUi.list.replaceChildren();
-    if (shopTab === "outfit") shopUi.list.append(shopSection("ตัวละคร", SHOP.heroes), shopSection("สีชุด · ใช้กับ Pupa", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
+    if (shopTab === "outfit") shopUi.list.append(shopSection("ตัวละคร", SHOP.heroes), shopSection("สีชุด · ใช้กับ Pupa และ Pupa V2", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
     else if (shopTab === "pet") shopUi.list.append(shopSection("สัตว์เลี้ยงช่วยผจญภัย", SHOP.pets));
     else shopUi.list.append(shopSection("ไอเทมติดตัว · ใช้ครั้งละ 1 ชิ้น", SHOP.items));
     shopUi.list.scrollTop = scroll;
     const look = previewLook();
     const names = [SHOP_INDEX[look.hero].name];
-    if (look.hero === "pupa") names.push(SHOP_INDEX[look.skin].name);
+    if (look.hero === "pupa" || look.hero === "pupav2") names.push(SHOP_INDEX[look.skin].name);
     if (look.hat !== "nohat") names.push(SHOP_INDEX[look.hat].name);
     if (look.pet !== "nopet") names.push(SHOP_INDEX[look.pet].name);
     shopUi.previewName.textContent = names.join(" · ");
@@ -4254,10 +4256,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-08c";
+  const NEWS_VERSION = "2026-10-08d";
   const NEWS_DATE = "8 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "Pupa V2", text: "Pupa ร่างใหม่แบบ 3 มิติ ผมยาวสีกุหลาบ ชุดนักผจญภัย ซื้อได้ในตลาด", image: "pupav2", open: () => openShopAt("outfit") },
     { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละคร 3 มิติใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
     { tag: "ด่านใหม่", title: "โลก 5 · ดินแดนดาวรุ่ง", text: "ด่าน 41–50 พร้อมบอสใหม่ มังกรโคมดาวรุ่ง และจอมเวทสุริยคราสทองคำ", image: "world5", open: () => { closeNews(); openLevels(); } },
     { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 50 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
@@ -4296,9 +4299,10 @@
       }
       return row;
     }
-    if (kind === "jibjib" || kind === "dragon") {
+    const pictures = { jibjib: "assets/jibjib-hero.webp", dragon: "assets/dragon-pet.webp", pupav2: "assets/pupav2-hero.webp" };
+    if (pictures[kind]) {
       const img = document.createElement("img");
-      img.src = kind === "jibjib" ? "assets/jibjib-hero.webp" : "assets/dragon-pet.webp";
+      img.src = pictures[kind];
       img.alt = "";
       return img;
     }
