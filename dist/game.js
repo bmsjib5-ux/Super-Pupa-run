@@ -1791,7 +1791,7 @@
     const body = { x: boss.x + 16, y: boss.y + 8, w: boss.w - 32, h: boss.h - 8 };
     if (boss.hurt > 0 || !rectsOverlap(player, body)) return;
     if (player.star > 0) { damageBoss(); return; }
-    if (player.vy > 120 && previousBottom <= boss.y + 44) {
+    if (player.vy >= 0 && previousBottom <= boss.y + 44) {
       player.vy = -820;
       damageBoss();
     } else hurtPlayer();
@@ -2154,7 +2154,9 @@
         tone(660, .1, "triangle", .05, .05);
         continue;
       }
-      if (!spiky(enemy) && player.vy > 180 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
+      // Any downward landing on the head counts, including just walking
+      // off a ledge onto it.
+      if (!spiky(enemy) && player.vy >= 0 && previousBottom <= enemy.y + (enemy.type === "walker" ? 22 : 34)) {
         enemy.alive = false;
         addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
         player.vy = -560;
