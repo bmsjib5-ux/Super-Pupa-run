@@ -267,13 +267,43 @@ function loadPet() {
     gltf.scene.traverse((node) => {
       if (!node.isMesh) return;
       projectTexture(node.geometry);
-      petTurn.add(new Mesh(node.geometry, new MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 })));
+      const material = new MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 });
+      material.onBeforeCompile = (shader) => {
+        Object.assign(shader.uniforms, wing);
+        shader.vertexShader = shader.vertexShader
+          .replace("#include <common>", `#include <common>
+${WING_SHADER}`)
+          .replace("#include <begin_vertex>", "vec3 transformed = flapWings(position);");
+      };
+      petTurn.add(new Mesh(node.geometry, material));
     });
     petApi.ready = petTurn.children.length > 0;
   }, undefined, (error) => console.warn("Pupa3D: pet model failed to load", error));
 }
 
-// Bob, sway and a little lean while it flies after Pupa.
+// The dragon has no skeleton either: its wings (the parts of the mesh that
+// sit behind the body, out to either side) are hinged in the vertex shader
+// and swing up and down. The tail on the left is kept out by its height.
+const wing = { uWing: { value: 0 } };
+const WING_SHADER = `
+  uniform float uWing;
+  vec3 flapWings(vec3 p) {
+    float side = p.x < 0.0 ? -1.0 : 1.0;
+    float back = smoothstep(0.05, -0.25, p.z);
+    float spread = smoothstep(0.15, 0.45, abs(p.x));
+    float band = smoothstep(-0.45, -0.2, p.y) * (1.0 - smoothstep(0.55, 0.75, p.y));
+    float tail = (1.0 - smoothstep(-0.6, -0.45, p.x)) * smoothstep(-0.1, 0.1, p.y);
+    float w = back * spread * band * (1.0 - tail);
+    float a = uWing * w * side;
+    float px = side * 0.2, py = 0.1;
+    vec2 d = p.xy - vec2(px, py);
+    p.xy = mix(p.xy, vec2(px + d.x * cos(a) - d.y * sin(a), py + d.x * sin(a) + d.y * cos(a)), step(0.001, w));
+    return p;
+  }
+`;
+
+// Bob, sway, a little lean while it flies after Pupa, and flapping wings
+// (faster on a swoop).
 function renderPet(time, swooping) {
   if (!petApi.ready) return false;
   const t = time * .001;
@@ -282,6 +312,7 @@ function renderPet(time, swooping) {
   petTurn.position.y = Math.sin(t * 3) * .05;
   const flap = 1 + Math.sin(t * 9) * .03;
   petTurn.scale.set(flap, 2 - flap, 1);
+  wing.uWing.value = Math.sin(t * (swooping ? 14 : 7)) * (swooping ? .5 : .38);
   petRenderer.render(petScene, petCamera);
   return true;
 }
