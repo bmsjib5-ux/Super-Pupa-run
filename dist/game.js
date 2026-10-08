@@ -38,6 +38,9 @@
     hero: image("assets/pupa-hero-3d.webp"),
     jibjib: image("assets/jibjib-hero.webp"),
     dragon: image("assets/dragon-pet.webp"),
+    baitoey: image("assets/baitoey-hero.webp"),
+    ikuya: image("assets/ikuya-hero.webp"),
+    pangji: image("assets/pangji-hero.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1498,7 +1501,10 @@
     // Playable characters. Outfit colours only recolour Pupa's pink suit.
     heroes: [
       { id: "pupa", name: "Pupa", desc: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่", price: 0, headTop: .2 },
-      { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 }
+      { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 },
+      { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, flat: true, spriteHead: .03 },
+      { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, flat: true, spriteHead: .02 },
+      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, flat: true, spriteHead: .04 }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -3127,9 +3133,9 @@
     const model = window.Pupa3D;
     const hero = SHOP_INDEX[save.shop.hero];
     const skin = SHOP_INDEX[save.shop.skin];
-    model?.setCharacter?.(hero.id);
+    if (!hero.flat) model?.setCharacter?.(hero.id);
     model?.setSkin?.(skin);
-    if (model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
+    if (!hero.flat && model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
       // The model's feet sit 1 unit below the camera centre; line them up with
       // the bottom of the hitbox.
       const size = 164 * player.h / SMALL.h;
@@ -3162,6 +3168,9 @@
     if (isPupa && (skin.hue || skin.sat !== 1)) ctx.filter = `hue-rotate(${Math.round(skin.hue * 360)}deg) saturate(${skin.sat})`;
     if (sprite.complete && sprite.naturalWidth) {
       if (!isPupa) {
+        // A picture-only hero: lean into the run and bounce with each step.
+        if (isRunning) { ctx.rotate(.08 + Math.sin(time * .02) * .05); ctx.translate(0, -Math.abs(Math.sin(time * .02)) * 7); }
+        else if (!player.grounded) ctx.rotate(player.vy < 0 ? -.1 : .06);
         const h = 124, w = h * sprite.naturalWidth / sprite.naturalHeight;
         ctx.drawImage(sprite, -w / 2, -62, w, h);
       } else if (isRunning && oppositeStride) {
@@ -3186,7 +3195,7 @@
     }
     ctx.filter = "none";
     ctx.shadowColor = "transparent";
-    drawHat(save.shop.hat, 0, -60, 1, 1, time);
+    drawHat(save.shop.hat, 0, isPupa ? -60 : -62 + 124 * hero.spriteHead, 1, 1, time);
     ctx.restore();
   }
 
@@ -4176,8 +4185,9 @@
     const feetY = size * .86;
     let head;
     const model = window.Pupa3D;
-    model?.setCharacter?.(look.hero);
-    if (model?.ready) {
+    const flatHero = SHOP_INDEX[look.hero].flat;
+    if (!flatHero) model?.setCharacter?.(look.hero);
+    if (!flatHero && model?.ready) {
       model.setSkin?.(SHOP_INDEX[look.skin]);
       model.render({ time, facing: 1, speed: 0, vy: 0, grounded: true });
       const drawn = 230 * scale;
@@ -4188,7 +4198,7 @@
       const img = look.hero === "pupa" ? art.hero : art[look.hero];
       const h = 175 * scale, w = h * img.naturalWidth / img.naturalHeight;
       g.drawImage(img, size / 2 - w / 2, feetY - h, w, h);
-      head = { x: size / 2, top: feetY - h + h * .02, scale: h / 124 };
+      head = { x: size / 2, top: feetY - h + h * (SHOP_INDEX[look.hero].spriteHead ?? .02), scale: h / 124 };
     }
     paintOn(g, () => {
       if (head) drawHat(look.hat, head.x + HAT_SHIFT * head.scale, head.top, head.scale, 1, time);
@@ -4217,10 +4227,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-08b";
+  const NEWS_VERSION = "2026-10-08c";
   const NEWS_DATE = "8 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละครใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
     { tag: "ด่านใหม่", title: "โลก 5 · ดินแดนดาวรุ่ง", text: "ด่าน 41–50 พร้อมบอสใหม่ มังกรโคมดาวรุ่ง และจอมเวทสุริยคราสทองคำ", image: "world5", open: () => { closeNews(); openLevels(); } },
     { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 50 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "จิ๊บจิ๊บแมน", text: "ลูกเจี๊ยบนักผจญภัยแบบ 3 มิติ เลือกเล่นแทน Pupa ได้ฟรี", image: "jibjib", open: () => openShopAt("outfit") },
@@ -4247,6 +4258,17 @@
   // Pictures for the cards: artwork where there is some, otherwise the same
   // canvas drawings the game uses.
   function newsPicture(kind) {
+    if (kind === "trio") {
+      const row = document.createElement("div");
+      row.className = "news-trio";
+      for (const id of ["baitoey", "ikuya", "pangji"]) {
+        const img = document.createElement("img");
+        img.src = `assets/${id}-hero.webp`;
+        img.alt = "";
+        row.append(img);
+      }
+      return row;
+    }
     if (kind === "jibjib" || kind === "dragon") {
       const img = document.createElement("img");
       img.src = kind === "jibjib" ? "assets/jibjib-hero.webp" : "assets/dragon-pet.webp";

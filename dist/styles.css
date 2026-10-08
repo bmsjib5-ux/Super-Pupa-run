@@ -632,3 +632,5 @@ button { touch-action: manipulation; }
 .news-scene-5 { filter: hue-rotate(40deg) saturate(1.4) brightness(1.1); }
 .news-scene-5 b { filter: hue-rotate(-40deg); }
 .news-picture .news-boss { filter: drop-shadow(0 0 .8rem rgba(255,80,120,.7)); }
+.news-trio { display: flex; align-items: flex-end; justify-content: center; gap: 2%; width: 92%; height: 82%; }
+.news-trio img { width: 32%; height: 100%; object-fit: contain; }
