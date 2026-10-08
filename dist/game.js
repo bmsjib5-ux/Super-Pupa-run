@@ -23,6 +23,7 @@
     endIcon: document.querySelector("#endIcon"),
     announcer: document.querySelector("#announcer"),
     levelName: document.querySelector("#levelName"),
+    levelBadge: document.querySelector("#levelBadge"),
     points: document.querySelector("#points"),
     attackBtn: document.querySelector(".touch-button.attack"),
     finalPoints: document.querySelector("#finalPoints"),
@@ -1245,12 +1246,195 @@
       blocks: [[10,390],[1230,390],[2390,390],[3750,390],[5050,390],[6530,390],[7890,390],[9230,390],[10590,390],[11010,390]]
     }
   ];
+  // ---- World 5 (levels 41-50) ----
+  // Laid out from a seeded list of stretches rather than by hand: ground
+  // with something on it, short pits to jump, wide pits bridged by small
+  // platforms, and pits crossed with a bounce pad. Distances stay inside
+  // what one jump covers (about 270 px across, 180 px up), so every level
+  // can be cleared without the double jump. Levels 45 and 50 end in a boss
+  // arena of flat ground.
+  levels.push(...buildWorld5());
+
+  function buildWorld5() {
+    const LEVELS = [
+      { name: "ด่าน 41 · ถ้ำกุหลาบรุ่งอรุณ", scene: "cave", pal: "cave5", hue: 150, length: 7600 },
+      { name: "ด่าน 42 · ทะเลทรายหยกดาวรุ่ง", scene: "desert", pal: "desert5", hue: 110, length: 7900 },
+      { name: "ด่าน 43 · เมืองโคมดาวรุ่ง", scene: "lanterns", pal: "lanterns5", hue: 200, length: 8100 },
+      { name: "ด่าน 44 · ทะเลลึกทับทิม", scene: "sea", pal: "sea5", hue: 150, length: 8300 },
+      { name: "ด่าน 45 · ลานโคมมรกต", scene: "lanterns", pal: "lanterns5", hue: 200, length: 7800,
+        boss: { kind: "dragon", name: "มังกรโคมดาวรุ่ง", hp: 11 } },
+      { name: "ด่าน 46 · ธารน้ำแข็งอเมทิสต์", scene: "ice", pal: "ice5", hue: 60, length: 8500 },
+      { name: "ด่าน 47 · ถ้ำคริสตัลกุหลาบ", scene: "cave", pal: "cave5", hue: 150, length: 8700 },
+      { name: "ด่าน 48 · แนวปะการังทับทิม", scene: "sea", pal: "sea5", hue: 150, length: 8900 },
+      { name: "ด่าน 49 · ผาทรายหยกดาวตก", scene: "desert", pal: "desert5", hue: 110, length: 9100 },
+      { name: "ด่าน 50 · บัลลังก์ดาวรุ่งนิรันดร์", scene: "eclipse", pal: "eclipse5", hue: 45, length: 8800,
+        boss: { kind: "eclipse", name: "จอมเวทสุริยคราสทองคำ", hp: 13 } }
+    ];
+    // Platform colours of the scene in world 3, turned to the new hue.
+    const BASE_COLOURS = {
+      cave: { top: "#3fd9b5", shine: "#b8fff0", body: ["#1d4a52", "#123238", "#061418"] },
+      desert: { top: "#f2a65a", shine: "#ffe2b0", body: ["#7a3a3a", "#4e2230", "#1c0c16"] },
+      lanterns: { top: "#ff7a5a", shine: "#ffd3b0", body: ["#6a2240", "#44142e", "#1a0612"] },
+      sea: { top: "#5ad8ff", shine: "#d0f6ff", body: ["#1a4a6a", "#0f2e48", "#04121e"] },
+      ice: { top: "#bfefff", shine: "#ffffff", body: ["#3a5f8a", "#25405e", "#0a1626"] },
+      eclipse: { top: "#ff9d3c", shine: "#ffe2b0", body: ["#3a0a14", "#22060e", "#100308"] }
+    };
+    const ENEMY_Y = { walker: 536, hopper: 553, urchin: 549, spitter: 535, crab: 558, roller: 550 };
+    const GROUND_ENEMIES = ["walker", "hopper", "urchin", "spitter", "crab", "roller"];
+
+    return LEVELS.map((spec, index) => {
+      const number = 41 + index;
+      let state = number * 2654435761 >>> 0;
+      const rnd = () => {
+        state = (state + 0x6D2B79F5) >>> 0;
+        let t = state;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+      const between = (a, b) => Math.round(a + rnd() * (b - a));
+      const pick = (list) => list[Math.floor(rnd() * list.length)];
+      const hard = index / 9; // 0 at level 41, 1 at level 50
+
+      const platforms = [[0, 605, 640, 140], [220, 480, 170, 34], [440, 390, 140, 34]];
+      const cherries = [[275, 420], [345, 420], [510, 330]];
+      const enemies = [];
+      const blocks = [[90, 390]];
+      const grounds = [[0, 640]];
+      const coinRow = (x0, y, count, gap = 60) => { for (let i = 0; i < count; i++) cherries.push([Math.round(x0 + i * gap), y]); };
+
+      // Something to do on each stretch of ground.
+      const dress = (x0, length) => {
+        const foes = length > 720 ? 2 : 1;
+        for (let i = 0; i < foes; i++) {
+          const type = pick(GROUND_ENEMIES);
+          enemies.push([type, Math.round(x0 + length * (foes === 1 ? .55 : .35 + i * .35)), ENEMY_Y[type]]);
+        }
+        const px = Math.round(x0 + length * .22);
+        platforms.push([px, 470, 170, 34]);
+        coinRow(px + 55, 410, 2, 70);
+        if (length > 640) {
+          platforms.push([px + 230, 380, 140, 34]);
+          coinRow(px + 300, 320, 1);
+        }
+        if (length > 760 && rnd() < .7) blocks.push([Math.round(x0 + length * .78), 390]);
+        else coinRow(x0 + length * .7, 545, 3);
+      };
+
+      let x = 640;
+      const target = spec.length;
+      while (x < target) {
+        const roll = rnd();
+        let gap;
+        if (roll < .35) {
+          // a pit to jump straight over
+          gap = between(150, 220 + hard * 30);
+          coinRow(x + gap / 2 - 30, 470, 2);
+        } else if (roll < .75) {
+          // a wide pit crossed on two or three small platforms
+          gap = between(560, 700 + hard * 120);
+          const count = gap > 680 ? 3 : 2;
+          const step = gap / (count + 1);
+          for (let i = 1; i <= count; i++) {
+            const px = Math.round(x + step * i - 65);
+            const y = between(450, 500);
+            const style = pick(hard > .3 ? ["still", "x", "y", "crumble", "crumble"] : ["still", "still", "x", "crumble"]);
+            if (style === "x") platforms.push([px, y, 130, 34, "x", 80, 60]);
+            else if (style === "y") platforms.push([px, y - 40, 130, 34, "y", 120, 55]);
+            else if (style === "crumble") platforms.push([px, y, 120, 30, "crumble"]);
+            else platforms.push([px, y, 130, 34]);
+            coinRow(px + 35, y - 60, 2);
+          }
+          if (rnd() < .5 + hard * .3) {
+            const flyer = pick(["bat", "swooper", "jelly"]);
+            enemies.push([flyer, Math.round(x + gap / 2), flyer === "swooper" ? 110 : flyer === "jelly" ? 230 : between(260, 420)]);
+          }
+        } else {
+          // a pit with a bounce pad in it and a high ledge to land on
+          gap = between(520, 640);
+          const pad = Math.round(x + 130);
+          platforms.push([pad, 560, 90, 20, "spring"]);
+          platforms.push([pad + 170, 300, 170, 34]);
+          coinRow(pad + 25, 480, 1); coinRow(pad + 25, 400, 1); coinRow(pad + 210, 240, 2);
+        }
+        x += gap;
+        const length = between(520, 900);
+        platforms.push([x, 605, length, 140]);
+        grounds.push([x, x + length]);
+        dress(x, length);
+        x += length;
+      }
+
+      // The finish: a long flat run with the flagpole (and the boss, if any).
+      const level = {
+        name: spec.name,
+        theme: { scene: spec.scene, pal: spec.pal, seed: number },
+        platforms: null, cherries, enemies, blocks
+      };
+      const gap = between(170, 220);
+      x += gap;
+      const finish = spec.boss ? 2700 : 1150;
+      platforms.push([x, 605, finish, 140]);
+      level.width = x + finish;
+      level.goalX = level.width - 330;
+      if (spec.boss) {
+        const right = level.goalX - 260;
+        const left = right - 1500;
+        level.boss = { ...spec.boss, left, right, x: Math.round(left + 900) };
+        platforms.push([left + 220, 440, 190, 34], [left + 640, 330, 210, 34], [left + 1060, 440, 190, 34]);
+        blocks.push([x + 160, 390], [left + 680, 390 - 220]);
+        coinRow(x + 260, 545, 4);
+      } else {
+        platforms.push([level.goalX - 470, 470, 180, 34], [level.goalX - 300, 380, 150, 34]);
+        coinRow(level.goalX - 420, 410, 2); coinRow(level.goalX - 260, 320, 1);
+        enemies.push([pick(GROUND_ENEMIES), x + 360, 0]);
+        enemies[enemies.length - 1][2] = ENEMY_Y[enemies[enemies.length - 1][0]];
+        blocks.push([x + 120, 390]);
+      }
+      // Restart point: the first ground stretch past the middle.
+      const middle = grounds.find(([g0]) => g0 > level.width * .45) || grounds[grounds.length - 1];
+      level.checkpointX = middle[0] + 120;
+
+      const base = BASE_COLOURS[spec.scene];
+      Object.assign(level.theme, {
+        top: turnHue(base.top, spec.hue), shine: turnHue(base.shine, spec.hue),
+        body: base.body.map(c => turnHue(c, spec.hue)), sparks: ["#ffffff", "#ffd76a"]
+      });
+      level.platforms = rects(platforms);
+      return level;
+    });
+  }
+
+  // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
+  function turnHue(colour, degrees) {
+    let r, g, b, a = null;
+    const hex = /^#([0-9a-f]{6})$/i.exec(colour);
+    const rgba = /^rgba?\(([^)]+)\)$/i.exec(colour);
+    if (hex) [r, g, b] = [0, 2, 4].map(i => parseInt(hex[1].slice(i, i + 2), 16));
+    else if (rgba) { const parts = rgba[1].split(",").map(Number); [r, g, b] = parts; a = parts[3] ?? null; }
+    else return colour;
+    const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255, l = (max + min) / 2, d = max - min;
+    let h = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      const R = r / 255, G = g / 255, B = b / 255;
+      h = max === R ? ((G - B) / d) % 6 : max === G ? (B - R) / d + 2 : (R - G) / d + 4;
+      h *= 60;
+    }
+    h = ((h + degrees) % 360 + 360) % 360;
+    const c = (1 - Math.abs(2 * l - 1)) * s, x2 = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+    const [r1, g1, b1] = h < 60 ? [c, x2, 0] : h < 120 ? [x2, c, 0] : h < 180 ? [0, c, x2] : h < 240 ? [0, x2, c] : h < 300 ? [x2, 0, c] : [c, 0, x2];
+    const out = [r1, g1, b1].map(v => Math.round((v + m) * 255));
+    if (a !== null) return `rgba(${out.join(",")},${a})`;
+    return "#" + out.map(v => v.toString(16).padStart(2, "0")).join("");
+  }
+
   // Boss fights happen on every fifth level only. BOSS_PLAN maps each boss
   // level to the level whose boss (as designed) it takes. A level that was
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -1483,6 +1667,12 @@
     bannerText = level.name;
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
+    if (ui.levelBadge) {
+      // "ด่าน 12 · ชื่อด่าน" -> the number big, the name small under it
+      const [number, title] = level.name.split(" · ");
+      ui.levelBadge.firstElementChild.textContent = number;
+      ui.levelBadge.lastElementChild.textContent = title || "";
+    }
     updateHud();
   }
 
@@ -1543,12 +1733,13 @@
     renderScale = rect.height / 720;
     // With the touch buttons on screen, zoom out just enough for the ground
     // line to sit above them, so they cover soil instead of Pupa.
-    const touchButton = document.querySelector(".mobile-controls .touch-button");
     let buttonTop = 0;
-    if (touchButton && touchButton.offsetParent) {
-      buttonTop = touchButton.getBoundingClientRect().top - rect.top;
-      if (buttonTop > 0) renderScale = Math.max(renderScale * .72, Math.min(renderScale, (buttonTop - 8) / WORLD.ground));
+    for (const touchButton of document.querySelectorAll(".mobile-controls .touch-button")) {
+      if (!touchButton.offsetParent) continue;
+      const top = touchButton.getBoundingClientRect().top - rect.top;
+      if (top > 0 && (!buttonTop || top < buttonTop)) buttonTop = top;
     }
+    if (buttonTop > 0) renderScale = Math.max(renderScale * .72, Math.min(renderScale, (buttonTop - 8) / WORLD.ground));
     // On a tall, narrow screen still show at least MIN_VIEW_WIDTH units ahead.
     renderScale = Math.min(renderScale, rect.width / MIN_VIEW_WIDTH);
     viewWidth = rect.width / renderScale;
@@ -4026,10 +4217,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-08";
+  const NEWS_VERSION = "2026-10-08b";
   const NEWS_DATE = "8 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 5 · ดินแดนดาวรุ่ง", text: "ด่าน 41–50 พร้อมบอสใหม่ มังกรโคมดาวรุ่ง และจอมเวทสุริยคราสทองคำ", image: "world5", open: () => { closeNews(); openLevels(); } },
+    { tag: "บอส", title: "บอสทุก 5 ด่าน", text: "บอสอยู่ด่าน 5, 10, 15 … 50 ชนะแล้วได้ 100 เหรียญ", image: "boss", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "จิ๊บจิ๊บแมน", text: "ลูกเจี๊ยบนักผจญภัยแบบ 3 มิติ เลือกเล่นแทน Pupa ได้ฟรี", image: "jibjib", open: () => openShopAt("outfit") },
     { tag: "สัตว์เลี้ยงใหม่", title: "มังกรน้อยเปลวแสง", text: "ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรู และให้เกราะทุกด่าน", image: "dragon", open: () => openShopAt("pet") },
     { tag: "ชุดใหม่", title: "หัวฟักทองเรืองแสง", text: "หมวกฟักทองแกะสลัก 3 มิติ ไฟวาบในตา", image: "pumpkin", open: () => openShopAt("outfit") },
@@ -4060,11 +4253,18 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world") {
+    if (kind === "world" || kind === "world5") {
       const scene = document.createElement("div");
-      scene.className = "news-scene";
-      scene.innerHTML = "<b>31–40</b>";
+      scene.className = kind === "world5" ? "news-scene news-scene-5" : "news-scene";
+      scene.innerHTML = kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
+    }
+    if (kind === "boss") {
+      const img = document.createElement("img");
+      img.src = "assets/thorn-shroom.webp";
+      img.alt = "";
+      img.className = "news-boss";
+      return img;
     }
     const icon = document.createElement("canvas");
     icon.width = icon.height = 160;
@@ -4533,6 +4733,10 @@
     sea4: { sky0: "#2a1a6a", sky1: "#120a3e", sky2: "#04020e", ray: "rgba(190,170,255,.6)", far: "#1a1250", kelp: "#2a1a6a", mid: "#100a34", near: "#06041a", coral0: "#ffd6f5", coral1: "#9a8cff", glow: "rgba(200,180,255,.85)", bubble: "rgba(220,210,255,.55)", fish: "rgba(200,180,255,.25)", haze: "rgba(4,2,16,.55)" },
     eclipse2: { sky0: "#02040e", sky1: "#0e1e44", sky2: "#2a4a8a", corona: "rgba(140,200,255,.9)", ring: "#e8f8ff", far: "#14244a", mid: "#0a1430", window: "#8fd8ff", near: "#040812", ember: "rgba(150,210,255,.9)", haze: "rgba(2,6,16,.5)" }
   };
+  // world 5 (levels 41-50): world 3 scenes turned to new hues
+  for (const [name, from, degrees] of [["cave5", "cave", 150], ["desert5", "desert", 110], ["lanterns5", "lanterns", 200], ["sea5", "sea", 150], ["ice5", "ice", 60], ["eclipse5", "eclipse", 45]]) {
+    SCENE_PALS[name] = Object.fromEntries(Object.entries(SCENE_PALS[from]).map(([key, value]) => [key, turnHue(value, degrees)]));
+  }
 
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
@@ -5056,7 +5260,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
