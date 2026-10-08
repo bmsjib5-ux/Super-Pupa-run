@@ -240,6 +240,9 @@ kbd { display: inline-grid; min-width: 1.65rem; height: 1.55rem; margin-right: .
 }
 .touch-button.is-pressed { background: rgba(255,95,150,.7); transform: scale(.94); }
 .action-pad { display: flex; align-items: flex-end; gap: 1.75rem; }
+/* Keep the jump and attack buttons clear of the screen edge (and of phone
+   cases and rounded corners). */
+.mobile-controls .action-pad { margin-right: clamp(1rem, 5vw, 3rem); }
 /* The attack button stays dim until Pupa is carrying cherry bombs. */
 .touch-button.attack { display: grid; place-items: center; opacity: .38; font-size: 1.4rem; }
 .touch-button.attack.is-ready { opacity: 1; color: #fff; background: rgba(226, 46, 86, .85); border-color: #ffd76a; box-shadow: 0 0 1.2rem rgba(255, 95, 110, .7); }

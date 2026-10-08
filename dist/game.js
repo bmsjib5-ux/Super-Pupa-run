@@ -36,6 +36,7 @@
     background: image("assets/cherry-night.webp"),
     hero: image("assets/pupa-hero-3d.webp"),
     jibjib: image("assets/jibjib-hero.webp"),
+    dragon: image("assets/dragon-pet.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1303,14 +1304,16 @@
       { id: "flower", name: "ดอกซากุระ", desc: "ดอกไม้สีชมพูทัดหัว", price: 80 },
       { id: "bunny", name: "หูกระต่าย", desc: "หูยาวกระดิกได้ตอนวิ่ง", price: 120 },
       { id: "witch", name: "หมวกแม่มดจันทร์", desc: "หมวกทรงแหลมประดับจันทร์เสี้ยว", price: 180 },
-      { id: "crown", name: "มงกุฎทอง", desc: "สำหรับผู้พิชิตราชาเห็ดหนาม", price: 300 }
+      { id: "crown", name: "มงกุฎทอง", desc: "สำหรับผู้พิชิตราชาเห็ดหนาม", price: 300 },
+      { id: "pumpkin", name: "หัวฟักทองเรืองแสง", desc: "ฟักทองแกะสลัก 3 มิติ ไฟวาบในตาตลอดคืน", price: 800 }
     ],
     pets: [
       { id: "nopet", name: "ไม่พาสัตว์เลี้ยง", desc: "ผจญภัยคนเดียว", price: 0 },
       { id: "firefly", name: "หิ่งห้อยน้อย", desc: "ดูดเหรียญที่อยู่ใกล้ ๆ เข้าหา Pupa", price: 120, magnet: 110 },
       { id: "kitten", name: "ลูกแมวเชอร์รี่", desc: "ดูดเหรียญได้ไกลขึ้น", price: 250, magnet: 170 },
       { id: "minibat", name: "ค้างคาวจิ๋ว", desc: "ดูดเหรียญ และพุ่งกัดศัตรูใกล้ ๆ ทุก 10 วินาที", price: 400, magnet: 130, bite: 10 },
-      { id: "starsprite", name: "ภูตดาว", desc: "ดูดเหรียญไกลมาก และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 600, magnet: 230, shield: true }
+      { id: "starsprite", name: "ภูตดาว", desc: "ดูดเหรียญไกลมาก และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 600, magnet: 230, shield: true },
+      { id: "dragon", name: "มังกรน้อยเปลวแสง", desc: "สัตว์เลี้ยงสุดยอด ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 7 วินาที และให้เกราะฟรีทุกด่าน", price: 1500, magnet: 270, bite: 7, shield: true, fire: true }
     ],
     items: [
       { id: "shield", name: "เกราะฟองสบู่", desc: "เริ่มด่านพร้อมเกราะกันโจมตี 1 ครั้ง", price: 40 },
@@ -3508,8 +3511,13 @@
       else if (Math.hypot(tx - pet.x, ty - pet.y) < 30) {
         enemy.alive = false;
         addScore(enemy.type === "walker" ? 200 : 300, tx, enemy.y - 10);
-        burst(tx, ty, "#c68cff", 14);
-        tone(420, .08, "square", .05); tone(840, .1, "triangle", .04, .05);
+        if (entry.fire) {
+          burst(tx, ty, "#ff8a3c", 16); burst(tx, ty, "#ffe27a", 10);
+          tone(160, .18, "sawtooth", .05); tone(320, .14, "triangle", .04, .06);
+        } else {
+          burst(tx, ty, "#c68cff", 14);
+          tone(420, .08, "square", .05); tone(840, .1, "triangle", .04, .05);
+        }
         pet.target = null; pet.cool = def.bite;
       }
     }
@@ -3569,6 +3577,18 @@
       ctx.fillStyle = "#1c1235";
       ctx.beginPath(); ctx.arc(-4, -1.5, 1.8, 0, Math.PI * 2); ctx.arc(6, -1.5, 1.8, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(-3, 6); ctx.lineTo(-1, 10); ctx.lineTo(1, 6); ctx.closePath(); ctx.fill();
+    },
+    // The dragon is a 3D model when WebGL is up, otherwise its picture.
+    dragon(t) {
+      const model = window.Pupa3D?.pet;
+      model?.load();
+      drawGlow("#ffb35c", 46);
+      if (t && model?.render(t, Boolean(pet?.target))) {
+        ctx.drawImage(model.canvas, -50, -52, 100, 100);
+      } else if (art.dragon.complete && art.dragon.naturalWidth) {
+        const w = 86, h = w * art.dragon.naturalHeight / art.dragon.naturalWidth;
+        ctx.drawImage(art.dragon, -w / 2, -h / 2 - 4, w, h);
+      }
     },
     starsprite(t) {
       drawGlow("#ffe27a", 40);
@@ -3651,6 +3671,26 @@
       ctx.beginPath(); ctx.arc(0, -20, 8, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#4a2d80";
       ctx.beginPath(); ctx.arc(4, -22, 7, 0, Math.PI * 2); ctx.fill();
+    },
+    // A 3D-rendered jack-o'-lantern; a flat drawn one until it is ready.
+    pumpkin(t) {
+      const model = window.Pupa3D?.pumpkin;
+      model?.load();
+      const flicker = .8 + Math.sin(t * .011) * .1 + Math.sin(t * .027) * .06;
+      ctx.save();
+      ctx.globalAlpha *= flicker * .55;
+      drawGlow("#ffb347", 46);
+      ctx.restore();
+      if (model?.ready) { ctx.drawImage(model.canvas, -40, -58, 80, 80); return; }
+      const skin = ctx.createLinearGradient(0, -50, 0, 20);
+      skin.addColorStop(0, "#ffa04a"); skin.addColorStop(1, "#d8560e");
+      ctx.fillStyle = skin;
+      ctx.beginPath(); ctx.ellipse(0, -14, 34, 28, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#3f7a1e"; roundedRect(-4, -50, 8, 12, 3); ctx.fill();
+      ctx.fillStyle = `rgba(255,214,90,${flicker})`;
+      ctx.beginPath(); ctx.moveTo(-18, -22); ctx.lineTo(-8, -18); ctx.lineTo(-16, -12); ctx.closePath();
+      ctx.moveTo(18, -22); ctx.lineTo(8, -18); ctx.lineTo(16, -12); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-18, -4); ctx.quadraticCurveTo(0, 6, 18, -4); ctx.quadraticCurveTo(0, 0, -18, -4); ctx.fill();
     },
     crown() {
       ctx.translate(0, 16); // the crown sits low on the head

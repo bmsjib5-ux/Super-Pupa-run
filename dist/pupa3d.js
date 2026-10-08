@@ -229,3 +229,136 @@ function render(pose) {
   renderer.render(scene, camera);
   return true;
 }
+
+// ---- 3D pet (the dragon) ----
+// A second small renderer of its own, so the pet can be stamped next to the
+// hero independently. Loaded the first time the pet is shown.
+const PET_SIZE = 256;
+const PET_VIEW = 1.15;
+const petCanvas = document.createElement("canvas");
+petCanvas.width = petCanvas.height = PET_SIZE;
+const petApi = { ready: false, canvas: petCanvas, load: loadPet, render: renderPet };
+api.pet = petApi;
+
+let petRenderer, petScene, petCamera, petTurn, petLoading = false;
+function loadPet() {
+  if (petLoading) return;
+  petLoading = true;
+  try {
+    petRenderer = new WebGLRenderer({ canvas: petCanvas, alpha: true, antialias: true, premultipliedAlpha: true });
+    petRenderer.setClearColor(0x000000, 0);
+  } catch (error) {
+    console.warn("Pupa3D: WebGL unavailable for the pet", error);
+    return;
+  }
+  petScene = new Scene();
+  petCamera = new OrthographicCamera(-PET_VIEW, PET_VIEW, PET_VIEW, -PET_VIEW, .1, 20);
+  petCamera.position.set(0, 0, 6);
+  petScene.add(new HemisphereLight(0xffffff, 0xa6d9d0, 2.5));
+  const light = new DirectionalLight(0xfff1dc, 1.1);
+  light.position.set(2, 3, 5);
+  petScene.add(light);
+  petTurn = new Group();
+  petScene.add(petTurn);
+  const texture = new TextureLoader().load("assets/dragon-texture.webp");
+  texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = 4;
+  new GLTFLoader().load("assets/dragon.glb", (gltf) => {
+    gltf.scene.traverse((node) => {
+      if (!node.isMesh) return;
+      projectTexture(node.geometry);
+      petTurn.add(new Mesh(node.geometry, new MeshStandardMaterial({ map: texture, roughness: 1, metalness: 0 })));
+    });
+    petApi.ready = petTurn.children.length > 0;
+  }, undefined, (error) => console.warn("Pupa3D: pet model failed to load", error));
+}
+
+// Bob, sway and a little lean while it flies after Pupa.
+function renderPet(time, swooping) {
+  if (!petApi.ready) return false;
+  const t = time * .001;
+  petTurn.rotation.y = .35 + Math.sin(t * 1.3) * .12;
+  petTurn.rotation.z = swooping ? -.25 : Math.sin(t * 2) * .05;
+  petTurn.position.y = Math.sin(t * 3) * .05;
+  const flap = 1 + Math.sin(t * 9) * .03;
+  petTurn.scale.set(flap, 2 - flap, 1);
+  petRenderer.render(petScene, petCamera);
+  return true;
+}
+
+// ---- Pumpkin hat ----
+// Rendered once into its own canvas; game.js draws it like any other hat.
+// The model is uncoloured, so colours are painted per vertex: green stem on
+// top, glowing carved face (vertices sunk well inside the shell), orange
+// skin everywhere else.
+const pumpkinCanvas = document.createElement("canvas");
+pumpkinCanvas.width = pumpkinCanvas.height = 192;
+const pumpkinApi = { ready: false, canvas: pumpkinCanvas, load: loadPumpkin };
+api.pumpkin = pumpkinApi;
+let pumpkinLoading = false;
+
+function paintPumpkin(source) {
+  const geometry = source.index ? source.toNonIndexed() : source;
+  geometry.computeVertexNormals();
+  const position = geometry.attributes.position;
+  const count = position.count;
+  const ROWS = 40, COLS = 72;
+  const shell = new Float32Array(ROWS * COLS);
+  const cell = (x, y, z) => {
+    const row = Math.min(ROWS - 1, Math.max(0, Math.floor((y + 1) / 2 * ROWS)));
+    const col = Math.min(COLS - 1, Math.floor((Math.atan2(z, x) + Math.PI) / (Math.PI * 2) * COLS));
+    return row * COLS + col;
+  };
+  for (let i = 0; i < count; i++) {
+    const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+    const c = cell(x, y, z);
+    shell[c] = Math.max(shell[c], Math.hypot(x, z));
+  }
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+    let rgb;
+    if (y > .6) rgb = [.12, .3, .04];
+    else if (z > .2 && y > -.55 && y < .3 && Math.hypot(x, z) < shell[cell(x, y, z)] * .86) rgb = [1, .62, .06];
+    else rgb = [.95, .22 + .04 * (y + 1) / 1.6, .01];
+    colors.set(rgb, i * 3);
+  }
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  return geometry;
+}
+
+function loadPumpkin() {
+  if (pumpkinLoading) return;
+  pumpkinLoading = true;
+  let still;
+  try {
+    still = new WebGLRenderer({ alpha: true, antialias: true, premultipliedAlpha: true });
+    still.setSize(192, 192, false);
+    still.setClearColor(0x000000, 0);
+  } catch { return; }
+  const stage = new Scene();
+  stage.add(new HemisphereLight(0xfff4e0, 0x553322, 2));
+  const light = new DirectionalLight(0xffffff, 1.6);
+  light.position.set(2, 3, 5);
+  stage.add(light);
+  const view = new OrthographicCamera(-1.05, 1.05, 1.05, -1.05, .1, 20);
+  view.position.set(0, 0, 6);
+  new GLTFLoader().load("assets/pumpkin.glb", (gltf) => {
+    gltf.scene.traverse((node) => {
+      if (!node.isMesh) return;
+      const material = new MeshStandardMaterial({ vertexColors: true, roughness: .7 });
+      // The carved face glows from inside.
+      material.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace("#include <emissivemap_fragment>",
+          "#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(1.0, 0.75, 0.25) * step(0.5, vColor.g) * 1.1;");
+      };
+      const mesh = new Mesh(paintPumpkin(node.geometry), material);
+      mesh.rotation.set(.08, .35, 0);
+      stage.add(mesh);
+    });
+    still.render(stage, view);
+    pumpkinCanvas.getContext("2d").drawImage(still.domElement, 0, 0);
+    still.dispose();
+    pumpkinApi.ready = true;
+  }, undefined, (error) => console.warn("Pupa3D: pumpkin failed to load", error));
+}
