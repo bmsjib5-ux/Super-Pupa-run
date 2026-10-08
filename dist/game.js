@@ -1261,6 +1261,7 @@
   const formatPoints = (n) => n.toLocaleString("en-US");
   const QUEEN_HOVER = 200; // height the bat queen circles at
   const STAR_TIME = 8;
+  const MARKET_STAR_TIME = 10; // the star bought in the market lasts longer
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
   const BLOCK_COINS = 2; // coins from a "?" block that pops a coin
@@ -1304,7 +1305,7 @@
       { id: "grow", name: "เห็ดยักษ์", desc: "เริ่มด่านตัวใหญ่ ทนโจมตีได้ 1 ครั้ง", price: 50 },
       { id: "leaf", name: "ใบไม้วิเศษ", desc: "เริ่มด่านกระโดดสูง 10 วินาที", price: 25 },
       { id: "bomb", name: "เชอร์รี่ระเบิด", desc: "เริ่มด่านพร้อมระเบิด ขว้างได้ 10 วินาที", price: 35 },
-      { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 8 วินาที", price: 60 },
+      { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 10 วินาที", price: 60 },
       { id: "revive", name: "หัวใจสำรอง", desc: "ฟื้นด้วยหัวใจ 1 ดวงเมื่อพลังหมด", price: 100 }
     ]
   };
@@ -2555,7 +2556,7 @@
 
   function drawPowerBars() {
     const bars = [];
-    if (player.star > 0) bars.push([player.star / STAR_TIME, "#ffe27a"]);
+    if (player.star > 0) bars.push([Math.min(1, player.star / STAR_TIME), "#ffe27a"]);
     if (player.boost > 0) bars.push([player.boost / BOOST_TIME, "#89f0c0"]);
     if (player.bomb > 0) bars.push([player.bomb / BOMB_TIME, "#ff5f6e"]);
     const x = player.x - cameraX + player.w / 2 - 32;
@@ -3204,7 +3205,7 @@
     if (!player.big && take("grow")) setBig(true);
     if (take("leaf")) player.boost = BOOST_TIME;
     if (take("bomb")) player.bomb = BOMB_TIME;
-    if (take("star")) player.star = STAR_TIME;
+    if (take("star")) player.star = MARKET_STAR_TIME;
     if (equippedPet()?.shield && !player.shield) player.shield = true;
     if (!used.length) return;
     writeSave();
