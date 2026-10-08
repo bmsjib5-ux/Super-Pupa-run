@@ -5745,7 +5745,9 @@
   for (const type of ["contextmenu", "selectstart", "dragstart", "dblclick", "gesturestart", "gesturechange"]) {
     shell.addEventListener(type, (event) => event.preventDefault());
   }
-  shell.addEventListener("touchmove", (event) => { if (event.cancelable && !event.target.closest(".shop-list")) event.preventDefault(); }, { passive: false });
+  shell.addEventListener("touchmove", (event) => {
+    if (event.cancelable && !event.target.closest(".shop-list, .news-list")) event.preventDefault();
+  }, { passive: false });
   let lastTouchEnd = 0;
   shell.addEventListener("touchend", (event) => {
     const now = performance.now();
