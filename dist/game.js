@@ -1245,6 +1245,31 @@
       blocks: [[10,390],[1230,390],[2390,390],[3750,390],[5050,390],[6530,390],[7890,390],[9230,390],[10590,390],[11010,390]]
     }
   ];
+  // Boss fights happen on every fifth level only. BOSS_PLAN maps each boss
+  // level to the level whose boss (as designed) it takes. A level that was
+  // not built with an arena gets one added at the end: its last stretch of
+  // ground is lengthened and the goal moved past it, so the fight is on flat
+  // ground with no pits.
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40 };
+  const BOSS_ARENA = 1300;
+  {
+    const designed = levels.map(entry => entry.boss);
+    levels.forEach((entry, index) => {
+      const number = index + 1;
+      const source = BOSS_PLAN[number];
+      if (!source) { delete entry.boss; return; }
+      if (source === number) return;
+      const ground = entry.platforms.find(p => p.y >= 605 && p.x <= entry.goalX && p.x + p.w >= entry.goalX);
+      if (!ground) { delete entry.boss; return; }
+      const left = entry.goalX - 100;
+      entry.goalX += BOSS_ARENA;
+      entry.width += BOSS_ARENA;
+      ground.w = entry.width - ground.x;
+      const right = entry.goalX - 260;
+      entry.boss = { ...designed[source - 1], left, right, x: Math.round(left + (right - left) * .6) };
+    });
+  }
+  const BOSS_COINS = 100; // coins for beating a boss
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
   // Open the page with ?level=2 to start on a later level.
   const startLevel = Math.min(levels.length, Math.max(1, Number(new URLSearchParams(location.search).get("level")) || 1)) - 1;
@@ -1755,12 +1780,16 @@
     boss.alive = false;
     boss.fade = 1;
     hazards = [];
+    player.bonus += BOSS_COINS;
+    bankCoins();
+    popups.push({ x: boss.x + boss.w / 2, y: boss.y - 70, text: `+${BOSS_COINS} เหรียญ`, life: 2.2 });
+    [988, 1175, 1568].forEach((note, i) => tone(note, .12, "sine", .05, .6 + i * .08));
     shake = .6;
     for (let i = 0; i < 4; i++) burst(boss.x + 30 + i * 36, boss.y + 30 + (i % 2) * 60, i % 2 ? "#ff7b9c" : "#ffd166", 18);
     [392, 523, 659, 784, 1047].forEach((note, i) => tone(note, .2, "triangle", .07, i * .1));
     bannerText = "ชนะบอสแล้ว! · ประตูแสงจันทร์เปิดแล้ว";
     bannerTime = 3;
-    announce(`${boss.name}พ่ายแพ้แล้ว ประตูแสงจันทร์เปิดแล้ว`);
+    announce(`${boss.name}พ่ายแพ้แล้ว ได้ ${BOSS_COINS} เหรียญ ประตูแสงจันทร์เปิดแล้ว`);
   }
 
   function updateBoss(dt, previousBottom) {
@@ -3981,9 +4010,9 @@
   }
 
   if (shopUi.screen) {
-    shopUi.close.addEventListener("click", closeShop);
+    onTap(shopUi.close, () => closeShop());
     shopUi.tabs.forEach((tab, index) => {
-      tab.addEventListener("click", () => { shopTab = tab.dataset.tab; renderShop(); shopUi.list.scrollTop = 0; });
+      onTap(tab, () => { shopTab = tab.dataset.tab; renderShop(); shopUi.list.scrollTop = 0; });
       tab.addEventListener("keydown", (event) => {
         if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
         const next = shopUi.tabs[(index + (event.key === "ArrowRight" ? 1 : shopUi.tabs.length - 1)) % shopUi.tabs.length];
@@ -4131,8 +4160,16 @@
   // is busy cancelling touch gestures). Cancelling the touchend also stops
   // that late click from landing on the dialog that just opened.
   function onTap(button, handler) {
+    let start = null;
+    button.addEventListener("touchstart", (event) => {
+      const touch = event.changedTouches[0];
+      start = touch ? { x: touch.clientX, y: touch.clientY } : null;
+    }, { passive: true });
     button.addEventListener("touchend", (event) => {
       if (!event.cancelable) return;
+      const touch = event.changedTouches[0];
+      // A slip of the thumb still counts as a tap; a real drag does not.
+      if (start && touch && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 24) return;
       event.preventDefault();
       handler(event);
     }, { passive: false });
@@ -5115,7 +5152,7 @@
   }
 
   if (levelUi.screen) {
-    levelUi.close.addEventListener("click", () => closeLevels());
+    onTap(levelUi.close, () => closeLevels());
     document.querySelectorAll("[data-open-levels]").forEach(button => onTap(button, openLevels));
   }
 

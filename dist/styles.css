@@ -376,7 +376,9 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   text-align: left;
   background: rgba(8,4,24,.62);
 }
-.shop-head .icon-button { width: 2.9rem; flex: none; }
+.shop-head .icon-button { position: relative; width: 2.9rem; flex: none; font-size: 1.15rem; }
+/* The close buttons take taps from a wider ring than they show. */
+.shop-head .icon-button::after { content: ""; position: absolute; inset: -.6rem; }
 button { touch-action: manipulation; }
 .shop-card {
   display: flex;
@@ -470,7 +472,7 @@ button { touch-action: manipulation; }
   .shop-overlay { padding: max(.6rem, env(safe-area-inset-top)) max(.6rem, env(safe-area-inset-right)) max(.4rem, env(safe-area-inset-bottom)) max(.6rem, env(safe-area-inset-left)); }
   .shop-card { height: 100%; border-radius: 1rem; }
   .shop-head { padding: .35rem .6rem .35rem 1rem; }
-  .shop-head .icon-button { width: 2.6rem; }
+  .shop-head .icon-button { width: 2.8rem; }
   .shop-preview { width: 28%; }
   .shop-preview canvas { width: min(100%, 9rem); }
   .shop-tabs { padding: .4rem .7rem .3rem; }
