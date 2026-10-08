@@ -1562,6 +1562,17 @@
   // Level numbers cleared at least once (for the level select).
   save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
   normalizeShop();
+  // For trying things out: open the game with ?unlock=heroes to own every
+  // character on this device, or ?unlock=all for every character, outfit,
+  // hat and pet. The grant is saved, so the link is only needed once.
+  {
+    const unlock = new URLSearchParams(location.search).get("unlock");
+    if (unlock === "heroes" || unlock === "all") {
+      const groups = unlock === "all" ? ["heroes", "skins", "hats", "pets"] : ["heroes"];
+      for (const group of groups) for (const { id } of SHOP[group]) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
+    }
+  }
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     const line = document.querySelector("#saveLine");
