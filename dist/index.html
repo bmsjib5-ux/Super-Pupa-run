@@ -13,12 +13,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261009y">
-    <script src="game.js?v=20261009y" defer></script>
-    <script type="module" src="pupa3d.js?v=20261009y"></script>
+    <link rel="stylesheet" href="styles.css?v=20261009z">
+    <script src="game.js?v=20261009z" defer></script>
+    <script type="module" src="pupa3d.js?v=20261009z"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
-    <script src="config.js?v=20261009y"></script>
-    <script type="module" src="account.js?v=20261009y"></script>
+    <script src="config.js?v=20261009z"></script>
+    <script type="module" src="account.js?v=20261009z"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -141,11 +141,16 @@
               <span id="endIcon" class="moon-icon" aria-hidden="true">✦</span>
               <h2 id="endTitle">ถึงรังไหมแล้ว!</h2>
               <p id="endText">Pupa กลับถึงบ้านอย่างปลอดภัย</p>
+              <div id="endStars" class="end-stars" role="img" aria-label="ดาวที่ได้" hidden></div>
+              <ul id="endGoals" class="end-goals" hidden></ul>
+              <div id="endReward" class="end-reward" role="status" hidden></div>
               <div class="final-score tight"><span>เหรียญสะสม</span><b id="finalScore">0</b></div>
               <div class="final-score tight"><span>คะแนนสะสม</span><b id="finalPoints">0</b></div>
               <p id="bestPoints" class="best-line"></p>
               <div class="title-actions">
+                <button id="nextBtn" class="primary-button" type="button" hidden>ด่านต่อไป ▶</button>
                 <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
+                <button id="replayBtn" class="secondary-button shop-button" type="button" hidden>เล่นซ้ำเก็บดาว</button>
                 <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
                 <button class="secondary-button shop-button" type="button" data-exit-lobby>หน้าหลัก</button>
               </div>

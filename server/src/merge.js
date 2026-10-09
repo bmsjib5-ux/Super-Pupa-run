@@ -19,6 +19,12 @@ const intMap = (value, max) => {
   return out;
 };
 
+const maxMap = (a = {}, b = {}) => {
+  const out = { ...a };
+  for (const [key, value] of Object.entries(b)) out[key] = Math.max(out[key] || 0, value);
+  return out;
+};
+
 // Only the fields the game writes, with sane values, from whatever a client sent.
 export function cleanSave(raw) {
   if (!raw || typeof raw !== "object" || JSON.stringify(raw).length > MAX_SAVE_BYTES) return null;
@@ -26,6 +32,8 @@ export function cleanSave(raw) {
   const out = {
     best: int(raw.best), points: int(raw.points), coins: int(raw.coins), plays: int(raw.plays), wins: int(raw.wins),
     cleared: numberList(raw.cleared),
+    stars: intMap(raw.stars, 3),
+    worldRewards: numberList(raw.worldRewards),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
@@ -52,6 +60,8 @@ export function mergeSave(current, incoming, baseCoins) {
     best: Math.max(current.best, incoming.best), points: Math.max(current.points, incoming.points), coins,
     plays: Math.max(current.plays, incoming.plays), wins: Math.max(current.wins, incoming.wins),
     cleared: [...new Set([...current.cleared, ...incoming.cleared])].sort((a, b) => a - b),
+    stars: maxMap(current.stars, incoming.stars),
+    worldRewards: [...new Set([...(current.worldRewards || []), ...incoming.worldRewards])].sort((a, b) => a - b),
     shop
   };
 }

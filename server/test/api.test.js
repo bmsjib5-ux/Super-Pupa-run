@@ -35,6 +35,10 @@ test("merge: first sync takes the device save, later syncs apply the coin differ
   assert.deepEqual(second.shop.heroXp, { pangji: 900, pupa: 40 });
   const third = mergeSave(second, cleanSave(device(350, { shop: { owned: [], heroXp: { pangji: 100, jibjib: 7 } } })), 350);
   assert.deepEqual(third.shop.heroXp, { pangji: 900, pupa: 40, jibjib: 7 });
+  const starred = mergeSave(third, cleanSave(device(350, { stars: { 1: 3, 2: 1, 3: 9 }, worldRewards: [1] })), 350);
+  const again = mergeSave(starred, cleanSave(device(350, { stars: { 1: 2, 2: 3 }, worldRewards: [2] })), 350);
+  assert.deepEqual(again.stars, { 1: 3, 2: 3, 3: 3 });
+  assert.deepEqual(again.worldRewards, [1, 2]);
   assert.deepEqual(second.cleared, [1, 2, 3]);
 });
 

@@ -16,6 +16,11 @@
     pauseBtn: document.querySelector("#pauseBtn"),
     resumeBtn: document.querySelector("#resumeBtn"),
     restartBtn: document.querySelector("#restartBtn"),
+    nextBtn: document.querySelector("#nextBtn"),
+    replayBtn: document.querySelector("#replayBtn"),
+    endStars: document.querySelector("#endStars"),
+    endGoals: document.querySelector("#endGoals"),
+    endReward: document.querySelector("#endReward"),
     fullscreenBtn: document.querySelector("#fullscreenBtn"),
     soundBtn: document.querySelector("#soundBtn"),
     score: document.querySelector("#score"),
@@ -1855,7 +1860,18 @@
       { id: "bunny", name: "หูกระต่าย", desc: "หูยาวกระดิกได้ตอนวิ่ง", price: 120 },
       { id: "witch", name: "หมวกแม่มดจันทร์", desc: "หมวกทรงแหลมประดับจันทร์เสี้ยว", price: 180 },
       { id: "crown", name: "มงกุฎทอง", desc: "สำหรับผู้พิชิตราชาเห็ดหนาม", price: 300 },
-      { id: "pumpkin", name: "หัวฟักทองเรืองแสง", desc: "ฟักทองแกะสลัก 3 มิติ ไฟวาบในตาตลอดคืน", price: 800 }
+      { id: "pumpkin", name: "หัวฟักทองเรืองแสง", desc: "ฟักทองแกะสลัก 3 มิติ ไฟวาบในตาตลอดคืน", price: 800 },
+      // Not for sale: each is the prize for all 30 stars of one world.
+      { id: "cherrymoon", name: "ปิ่นเชอร์รี่จันทร์เสี้ยว", desc: "รางวัลดาวครบโลก 1 · คืนจันทร์เชอร์รี่", price: 0, reward: 1 },
+      { id: "rainbowband", name: "ที่คาดผมสายรุ้ง", desc: "รางวัลดาวครบโลก 2 · ดินแดนสายรุ้ง", price: 0, reward: 2 },
+      { id: "beret", name: "เบเร่ต์จิตรกรฝัน", desc: "รางวัลดาวครบโลก 3 · ภาพวาดแห่งความฝัน", price: 0, reward: 3 },
+      { id: "cloudhat", name: "หมวกก้อนเมฆ", desc: "รางวัลดาวครบโลก 4 · ฟ้าสีใหม่", price: 0, reward: 4 },
+      { id: "startiara", name: "มงกุฎดาวรุ่ง", desc: "รางวัลดาวครบโลก 5 · ดินแดนดาวรุ่ง", price: 0, reward: 5 },
+      { id: "halo", name: "วงแหวนซากุระสวรรค์", desc: "รางวัลดาวครบโลก 6 · สวนสวรรค์จักรวาล", price: 0, reward: 6 },
+      { id: "flamecrown", name: "มงกุฎเปลวสุริยะ", desc: "รางวัลดาวครบโลก 7 · อาณาจักรเปลวสุริยะ", price: 0, reward: 7 },
+      { id: "cupcake", name: "หมวกคัพเค้กเชอร์รี่", desc: "รางวัลดาวครบโลก 8 · อาณาจักรขนมหวาน", price: 0, reward: 8 },
+      { id: "tricorne", name: "หมวกกัปตันโจรสลัด", desc: "รางวัลดาวครบโลก 9 · ทะเลโจรสลัด", price: 0, reward: 9 },
+      { id: "dinoegg", name: "หมวกเปลือกไข่ไดโน", desc: "รางวัลดาวครบโลก 10 · หุบเขาไดโนเสาร์", price: 0, reward: 10 }
     ],
     pets: [
       { id: "nopet", name: "ไม่พาสัตว์เลี้ยง", desc: "ผจญภัยคนเดียว", price: 0 },
@@ -1891,6 +1907,13 @@
   const HERO_PERKS = [[3, "หัวใจสูงสุด 4 ดวง"], [5, "เริ่มทุกด่านตัวใหญ่"], [7, "กระโดดสูงขึ้น 5%"], [10, "หัวใจสูงสุด 5 ดวง"]];
   const xpForLevel = (lv) => HERO_XP_STEP * lv * (lv - 1) / 2;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
+  // Stars: one for clearing a level, one for STAR_COIN_SHARE of its coins and
+  // one for losing no heart. All 30 stars of a world give WORLD_STAR_COINS
+  // coins and that world's hat (WORLD_HATS[world - 1]).
+  const STAR_COIN_SHARE = .7;
+  const WORLD_STAR_COINS = 500;
+  const WORLD_HATS = SHOP.hats.filter(entry => entry.reward).sort((a, b) => a.reward - b.reward).map(entry => entry.id);
+  const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
   const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
   const QUICK_BY_DEFAULT = ["dash", "bowling", "lightning", "jetpack"];
   // Each hero's built-in ability (see SHOP.heroes[].ability):
@@ -1916,6 +1939,7 @@
   } catch { save.points = 0; /* storage unavailable: play on without saving */ }
   // Level numbers cleared at least once (for the level select).
   save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
+  normalizeStars();
   normalizeShop();
   // For trying things out: open the game with ?unlock=heroes to own every
   // character on this device, or ?unlock=all for every character, outfit,
@@ -1927,6 +1951,22 @@
       for (const group of groups) for (const { id } of SHOP[group]) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     }
+  }
+  // Best stars per level ({ 12: 3 }) and the worlds whose star prize was given.
+  // A level cleared before stars existed counts as one star.
+  function normalizeStars(extraStars, extraRewards) {
+    const stars = {};
+    for (const source of [save.stars, extraStars]) {
+      if (!source || typeof source !== "object") continue;
+      for (const [key, value] of Object.entries(source)) {
+        const num = Number(key), count = Math.min(3, Math.floor(Number(value) || 0));
+        if (Number.isInteger(num) && num >= 1 && num <= levels.length && count > (stars[num] || 0)) stars[num] = count;
+      }
+    }
+    for (const num of save.cleared) stars[num] = Math.max(stars[num] || 0, 1);
+    save.stars = stars;
+    const rewards = [save.worldRewards, extraRewards].flatMap(list => Array.isArray(list) ? list : []).map(Number);
+    save.worldRewards = [...new Set(rewards.filter(n => Number.isInteger(n) && n >= 1 && n <= 50))].sort((a, b) => a - b);
   }
   const saveListeners = [];
   function writeSave(quiet = false) {
@@ -1963,6 +2003,7 @@
   let bannerTime = 0;
   let bannerText = "";
   let levelStart = { score: 0, bonus: 0, points: 0 };
+  let levelHits = 0;      // hearts lost on this level, game overs included
   let boss = null;
   let hazards = [];
   let popups = [];
@@ -2055,6 +2096,7 @@
     player.flag = null;
     resetPet();
     levelStart = { score: player.score, bonus: player.bonus, points: player.points };
+    levelHits = 0;
     bannerText = level.name;
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
@@ -2085,7 +2127,9 @@
     const reachedCheckpoint = checkpoint > 90;
     const bossBefore = boss && { hp: boss.hp, alive: boss.alive };
     state = "menu";
+    const hits = levelHits;
     loadLevel(levelIndex);
+    levelHits = hits;   // a retry does not wipe the hearts already lost
     for (const cherry of cherries) cherry.taken = takenCoins.has(cherry.id);
     // On a boss level the item blocks refill, so there is always help for the
     // rematch; elsewhere opened blocks stay opened.
@@ -2099,14 +2143,11 @@
     }
   }
 
+  // Into the next level (the clear card has already counted this one).
   function nextLevel() {
-    bankCoins();
-    markCleared(levelIndex + 1);
-    gainHeroXp(100);
-    writeSave();
     // Every new level starts with full hearts.
     player.lives = maxLives();
-    [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
+    tone(659, .1, "triangle", .05);
     loadLevel(levelIndex + 1);
     announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
     applyLoadout();
@@ -2144,6 +2185,7 @@
   }
 
   function startGame() {
+    if (state === "cleared") { goNextLevel(); return; }
     if (state === "lost") retryLevel();
     else if (state === "won") resetGame();
     // Starting from the lobby: hearts follow the hero (and level) picked there.
@@ -2168,9 +2210,13 @@
     if (shouldPause) ui.resumeBtn.focus();
   }
 
-  function finish(won) {
-    if (won) { markCleared(levelIndex + 1); gainHeroXp(100); }
+  function finish(won, result) {
+    let record = null;
+    if (won) { markCleared(levelIndex + 1); gainHeroXp(100); if (result) record = recordStars(levelIndex + 1, result.stars); }
     state = won ? "won" : "lost";
+    showResult(won ? result : null, record);
+    ui.restartBtn.hidden = won;
+    ui.replayBtn.hidden = !won;
     ui.end.hidden = false;
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
     ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "เหรียญและคะแนนยังอยู่ครบ กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
@@ -2186,7 +2232,148 @@
     ui.bestPoints.textContent = `รอบนี้ได้ +${formatPoints(player.points)} คะแนน · +${player.score + player.bonus} เหรียญ · +${formatPoints(player.xp)} XP`;
     announce(won ? `ชนะแล้ว คะแนนสะสม ${formatPoints(save.points)} เหรียญสะสม ${formatPoints(save.coins)}` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
-    window.setTimeout(() => ui.restartBtn.focus(), 50);
+    window.setTimeout(() => (won ? ui.replayBtn : ui.restartBtn).focus({ preventScroll: true }), 50);
+  }
+
+  // ---- Stars ----
+  const worldOf = (num) => WORLDS.findIndex(([, from, to]) => num >= from && num <= to);
+  function worldStars(world) {
+    const [, from, to] = WORLDS[world];
+    let got = 0;
+    for (let num = from; num <= Math.min(to, levels.length); num++) got += save.stars[num] || 0;
+    return { got, max: (Math.min(to, levels.length) - from + 1) * 3 };
+  }
+
+  // How this attempt at the level went (call at the finish).
+  function rateLevel() {
+    const total = cherries.length, taken = cherries.filter(cherry => cherry.taken).length;
+    const coins = total === 0 || taken >= Math.ceil(total * STAR_COIN_SHARE);
+    const safe = levelHits === 0;
+    return { stars: 1 + coins + safe, taken, total, coins, safe };
+  }
+
+  // Keep the best stars for a level; a world's 30th star gives its prize once.
+  function recordStars(num, stars) {
+    const before = save.stars[num] || 0;
+    if (stars > before) save.stars[num] = stars;
+    let reward = null;
+    const world = worldOf(num);
+    if (world >= 0) {
+      const { got, max } = worldStars(world);
+      if (got >= max && !save.worldRewards.includes(world + 1)) {
+        save.worldRewards.push(world + 1);
+        save.worldRewards.sort((a, b) => a - b);
+        save.coins += WORLD_STAR_COINS;
+        const hat = WORLD_HATS[world];
+        if (hat && !owns(hat)) save.shop.owned.push(hat);
+        reward = { world: world + 1, coins: WORLD_STAR_COINS, hat };
+      }
+    }
+    writeSave();
+    updateHud();
+    return { before, best: Math.max(before, stars), reward, world };
+  }
+
+  // Fill the stars, goals and prize parts of the end card (or hide them).
+  function showResult(result, record) {
+    // With stars to show the card drops the coin and point rows, so it fits
+    // without scrolling on a phone.
+    ui.end.classList.toggle("is-result", Boolean(result));
+    ui.end.querySelector(".message-card").scrollTop = 0;
+    ui.endStars.hidden = ui.endGoals.hidden = !result;
+    ui.endReward.hidden = !record?.reward;
+    if (!result) return;
+    ui.endStars.replaceChildren(...[1, 2, 3].map(i => {
+      const star = document.createElement("span");
+      star.className = i <= result.stars ? "is-on" : "";
+      star.style.setProperty("--delay", `${(i - 1) * .22}s`);
+      star.textContent = "★";
+      return star;
+    }));
+    ui.endStars.setAttribute("aria-label", `ได้ ${result.stars} ดาวจาก 3`);
+    const goals = [
+      [true, "ผ่านด่าน"],
+      [result.coins, `เก็บเหรียญ ${Math.round(STAR_COIN_SHARE * 100)}% (${result.taken}/${result.total})`],
+      [result.safe, result.safe ? "ไม่เสียหัวใจเลย" : `ไม่เสียหัวใจ (เสียไป ${levelHits} ดวง)`]
+    ];
+    ui.endGoals.replaceChildren(...goals.map(([done, text]) => {
+      const item = document.createElement("li");
+      item.className = done ? "is-done" : "";
+      item.textContent = `${done ? "✓" : "✗"} ${text}`;
+      return item;
+    }));
+    if (record && record.world >= 0) {
+      const { got, max } = worldStars(record.world);
+      const note = document.createElement("li");
+      note.className = "end-world";
+      const claimed = save.worldRewards.includes(record.world + 1);
+      note.textContent = `${WORLDS[record.world][0]} · ★ ${got}/${max}${record.best > record.before && record.before ? " · สถิติใหม่!" : ""}${claimed ? "" : ` · ครบ ${max} ดาว รับ ● ${WORLD_STAR_COINS} + หมวกพิเศษ`}`;
+      ui.endGoals.append(note);
+    }
+    if (record?.reward) {
+      const hat = SHOP_INDEX[record.reward.hat];
+      ui.endReward.replaceChildren();
+      const icon = document.createElement("canvas");
+      icon.width = icon.height = 96;
+      icon.setAttribute("aria-hidden", "true");
+      paintOn(icon.getContext("2d"), () => { ctx.translate(48, 60); ctx.scale(.7, .7); hatArt[hat.id]?.(0); });
+      const text = document.createElement("p");
+      text.innerHTML = `<b>ดาวครบ 30 ดวง!</b><span>ได้รับ ● ${WORLD_STAR_COINS} เหรียญ และ “${hat.name}”</span>`;
+      ui.endReward.append(icon, text);
+      [784, 988, 1175, 1568].forEach((note, i) => tone(note, .16, "triangle", .06, .8 + i * .1));
+    }
+  }
+
+  // The flag is reached: rate the level, then show the card (the last level
+  // ends the game instead).
+  function completeLevel() {
+    const result = rateLevel();
+    if (levelIndex >= levels.length - 1) { finish(true, result); return; }
+    bankCoins();
+    markCleared(levelIndex + 1);
+    gainHeroXp(100);
+    const record = recordStars(levelIndex + 1, result.stars);
+    state = "cleared";
+    ui.end.hidden = false;
+    const [num, title] = level.name.split(" · ");
+    ui.endTitle.textContent = `ผ่าน${num} แล้ว!`;
+    ui.endText.textContent = title || "";
+    ui.endIcon.textContent = "✦";
+    ui.finalScore.textContent = formatPoints(save.coins);
+    ui.finalPoints.textContent = formatPoints(save.points);
+    ui.bestPoints.textContent = `ด่านนี้ได้ +${formatPoints(player.points - levelStart.points)} คะแนน · +${player.score + player.bonus - levelStart.score - levelStart.bonus} เหรียญ · มีเหรียญ ${formatPoints(save.coins)}`;
+    showResult(result, record);
+    ui.restartBtn.hidden = true;
+    ui.replayBtn.hidden = false;
+    ui.nextBtn.hidden = false;
+    [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
+    announce(`ผ่าน${num}แล้ว ได้ ${result.stars} ดาว${record.reward ? ` ดาวครบโลก ได้รับ ${WORLD_STAR_COINS} เหรียญและ${SHOP_INDEX[record.reward.hat].name}` : ""}`);
+    window.setTimeout(() => ui.nextBtn.focus({ preventScroll: true }), 50);
+  }
+
+  // From the level-clear card.
+  function goNextLevel() {
+    if (state !== "cleared" || loadingBusy) return;
+    const advance = () => {
+      ui.end.hidden = true;
+      ui.nextBtn.hidden = true;
+      state = "playing";
+      nextLevel();
+    };
+    const theme = levels[levelIndex + 1]?.theme;
+    if (sceneReady(theme)) { advance(); return; }
+    showLoading("กำลังเตรียมฉาก");
+    prepareScene(theme, f => setLoading(.05 + .95 * f)).then(() => { hideLoading(); advance(); });
+  }
+
+  function replayLevel() {
+    if (!["cleared", "won"].includes(state) || loadingBusy) return;
+    ui.end.hidden = true;
+    ui.nextBtn.hidden = true;
+    bankCoins();
+    state = "menu";
+    resetGame(levelIndex);
+    startWhenReady();
   }
 
   function updateHud() {
@@ -2253,8 +2440,7 @@
     player.x += player.vx * dt;
     if (player.x > level.goalX - 110) {
       player.flag = null;
-      if (levelIndex < levels.length - 1) nextLevel();
-      else finish(true);
+      completeLevel();
     }
   }
 
@@ -2333,6 +2519,7 @@
       return;
     }
     player.lives--;
+    levelHits++;
     player.hurt = HURT_TIME;
     player.vy = -700;
     player.vx = -player.facing * 280;
@@ -3051,10 +3238,7 @@
     }
     const poleX = level.goalX - POLE_OFFSET;
     if (!boss?.alive && player.x + player.w - 14 >= poleX && player.x < poleX + 30) grabFlag(poleX);
-    else if (player.x > level.goalX - 110) {
-      if (levelIndex < levels.length - 1) nextLevel();
-      else finish(true);
-    }
+    else if (player.x > level.goalX - 110) completeLevel();
 
     finishFrame(dt);
   }
@@ -4253,7 +4437,7 @@
 
   function buy(id) {
     const entry = SHOP_INDEX[id];
-    if (!entry || save.coins < entry.price) { tone(150, .12, "square", .05); return false; }
+    if (!entry || entry.reward || save.coins < entry.price) { tone(150, .12, "square", .05); return false; }
     if (entry.group === "items") {
       if (save.shop.items[id] >= 99) return false;
       save.shop.items[id]++;
@@ -4848,6 +5032,151 @@
       ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "#ff4f7d"; ctx.beginPath(); ctx.arc(0, -1, 5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#5ad0ff"; ctx.beginPath(); ctx.arc(-17, 3, 3.5, 0, Math.PI * 2); ctx.arc(17, 3, 3.5, 0, Math.PI * 2); ctx.fill();
+    },
+    // ---- World star prizes ----
+    cherrymoon(t) {
+      ctx.translate(0, 16);   // sits on the head, not above it
+      ctx.save();
+      ctx.translate(16, -10); ctx.rotate(Math.sin(t * .002) * .08);
+      drawGlow("#ffe9a8", 30);
+      ctx.fillStyle = "#ffe9a8";
+      ctx.beginPath(); ctx.arc(0, 0, 17, Math.PI * .3, Math.PI * 1.7); ctx.arc(7, -3, 13, Math.PI * 1.55, Math.PI * .45, true); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = "#3f7a1e"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-12, -30); ctx.quadraticCurveTo(-24, -20, -24, -2); ctx.moveTo(-12, -30); ctx.quadraticCurveTo(-6, -16, -6, 0); ctx.stroke();
+      ctx.fillStyle = "#6fcf4a"; ctx.beginPath(); ctx.ellipse(-6, -31, 8, 4, -.4, 0, Math.PI * 2); ctx.fill();
+      drawBall(-24, 4, 8, "#ff8aa8", "#c8143c");
+      drawBall(-6, 6, 8, "#ff8aa8", "#c8143c");
+    },
+    rainbowband() {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      const colours = ["#ff5a6e", "#ffa04a", "#ffe066", "#6fe08a", "#5ab8ff", "#a070ff"];
+      ctx.lineWidth = 4.5; ctx.lineCap = "round";
+      colours.forEach((colour, i) => { ctx.strokeStyle = colour; ctx.beginPath(); ctx.arc(0, 14, 40 - i * 4.4, Math.PI * 1.02, Math.PI * 1.98); ctx.stroke(); });
+      ctx.fillStyle = "#ffffff";
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.arc(side * 36, 12, 9, 0, Math.PI * 2); ctx.arc(side * 28, 15, 7, 0, Math.PI * 2); ctx.arc(side * 44, 15, 6, 0, Math.PI * 2); ctx.fill();
+      }
+    },
+    beret() {
+      ctx.translate(0, 14);   // sits on the head, not above it
+      ctx.save(); ctx.rotate(-.14);
+      ctx.fillStyle = "#c8325a"; ctx.strokeStyle = "#7a1234"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 0, 38, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#e0507a"; ctx.beginPath(); ctx.ellipse(-6, -4, 24, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#7a1234"; ctx.fillRect(-2, -20, 4, 8);
+      for (const [x, y, c] of [[14, 2, "#ffd84a"], [22, -4, "#5ab8ff"], [-20, 4, "#6fe08a"]]) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+      ctx.strokeStyle = "#a8743a"; ctx.lineWidth = 4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(14, 2); ctx.lineTo(38, -36); ctx.stroke();
+      ctx.fillStyle = "#c8c8d0"; ctx.save(); ctx.translate(38, -36); ctx.rotate(-1); ctx.fillRect(-3, -5, 6, 7); ctx.restore();
+      ctx.fillStyle = "#5ab8ff"; ctx.beginPath(); ctx.ellipse(42, -43, 4, 7, .55, 0, Math.PI * 2); ctx.fill();
+    },
+    cloudhat(t) {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      const bob = Math.sin(t * .003) * 2;
+      ctx.save(); ctx.translate(0, bob);
+      ctx.fillStyle = "#cfe6ff";
+      ctx.beginPath(); for (const [x, y, r] of [[-26, 2, 13], [-10, -8, 18], [10, -10, 17], [26, 0, 13], [0, 4, 16]]) ctx.arc(x, y + 2, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); for (const [x, y, r] of [[-26, 0, 12], [-10, -10, 17], [10, -12, 16], [26, -2, 12], [0, 2, 15]]) ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffe066";
+      ctx.save(); ctx.translate(20, -28); ctx.rotate(t * .002);
+      ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, r = i % 2 ? 3.5 : 8; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.fill();
+      ctx.restore(); ctx.restore();
+    },
+    startiara(t) {
+      ctx.translate(0, 14);   // sits on the head, not above it
+      const gold = ctx.createLinearGradient(0, -40, 0, 10);
+      gold.addColorStop(0, "#fff6c2"); gold.addColorStop(1, "#f2a23c");
+      ctx.strokeStyle = "#f2b33c"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(0, 26, 30, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+      const star = (x, y, r) => {
+        ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, k = i % 2 ? r * .45 : r; ctx.lineTo(x + Math.cos(a) * k, y + Math.sin(a) * k); } ctx.closePath();
+        ctx.fillStyle = gold; ctx.fill(); ctx.strokeStyle = "#b8741a"; ctx.lineWidth = 1.6; ctx.stroke();
+      };
+      ctx.save(); ctx.translate(0, -18); ctx.globalAlpha *= .7 + Math.sin(t * .004) * .2; drawGlow("#fff3a6", 30); ctx.restore();
+      star(-20, -2, 9); star(20, -2, 9); star(0, -16, 15);
+      ctx.fillStyle = "#ff6ab0"; ctx.beginPath(); ctx.arc(0, -16, 3.5, 0, Math.PI * 2); ctx.fill();
+    },
+    halo(t) {
+      const bob = Math.sin(t * .003) * 3;
+      ctx.save(); ctx.translate(0, -18 + bob);
+      drawGlow("#fff0a8", 40);
+      ctx.strokeStyle = "#ffe066"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 30, 9, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "#fff8d0"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(0, -1, 30, 9, 0, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const a = t * .0012 + i * Math.PI * 2 / 5;
+        ctx.save(); ctx.translate(Math.cos(a) * 30, Math.sin(a) * 9); ctx.rotate(a * 2);
+        ctx.fillStyle = "#ffb6d2"; ctx.beginPath(); ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    },
+    flamecrown(t) {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      ctx.save(); ctx.translate(0, -8); drawGlow("#ffb347", 44); ctx.restore();
+      const flames = [[-24, 14], [-12, 22], [0, 30], [12, 22], [24, 14]];
+      flames.forEach(([x, h], i) => {
+        const flick = 1 + Math.sin(t * .013 + i * 1.7) * .14;
+        const top = 6 - h * flick;
+        const g = ctx.createLinearGradient(0, top, 0, 8);
+        g.addColorStop(0, "#fff3a6"); g.addColorStop(.45, "#ffa13a"); g.addColorStop(1, "#e0342a");
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(x - 9, 8); ctx.quadraticCurveTo(x - 9, top + h * .4, x + Math.sin(t * .01 + i) * 3, top);
+        ctx.quadraticCurveTo(x + 9, top + h * .45, x + 9, 8); ctx.closePath(); ctx.fill();
+      });
+      ctx.fillStyle = "#f2b33c"; ctx.strokeStyle = "#a85a14"; ctx.lineWidth = 2;
+      roundedRect(-32, 4, 64, 10, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ff4f4f"; ctx.beginPath(); ctx.arc(0, 9, 3.5, 0, Math.PI * 2); ctx.fill();
+    },
+    cupcake() {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      ctx.fillStyle = "#ff8fc0"; ctx.strokeStyle = "#c8507e"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-24, -4); ctx.lineTo(24, -4); ctx.lineTo(18, 14); ctx.lineTo(-18, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 2.5;
+      for (let x = -16; x <= 16; x += 8) { ctx.beginPath(); ctx.moveTo(x * 1.25, -3); ctx.lineTo(x, 13); ctx.stroke(); }
+      ctx.fillStyle = "#fff4e8";
+      for (const [y, rx, ry] of [[-8, 28, 10], [-18, 21, 9], [-27, 13, 8]]) { ctx.beginPath(); ctx.ellipse(0, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#ffd0e4"; ctx.beginPath(); ctx.ellipse(-4, -20, 12, 4, -.1, 0, Math.PI * 2); ctx.fill();
+      for (const [x, y, c, a] of [[-16, -8, "#5ab8ff", .5], [12, -10, "#6fe08a", -.6], [-6, -26, "#ffd84a", .9], [16, -20, "#a070ff", .2], [2, -12, "#ff5a6e", -.3]]) {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.fillStyle = c; ctx.fillRect(-3.5, -1.2, 7, 2.4); ctx.restore();
+      }
+      ctx.strokeStyle = "#3f7a1e"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(1, -40); ctx.quadraticCurveTo(6, -48, 12, -50); ctx.stroke();
+      drawBall(0, -37, 7, "#ff8aa8", "#c8143c");
+    },
+    tricorne() {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      ctx.fillStyle = "#22182a"; ctx.strokeStyle = "#0c0810"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(-46, 6); ctx.quadraticCurveTo(-30, -6, -22, -26); ctx.quadraticCurveTo(0, -40, 22, -26);
+      ctx.quadraticCurveTo(30, -6, 46, 6); ctx.quadraticCurveTo(0, 22, -46, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#f2b33c"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(-42, 6); ctx.quadraticCurveTo(0, 18, 42, 6); ctx.stroke();
+      ctx.fillStyle = "#fff8ec";
+      ctx.beginPath(); ctx.arc(0, -14, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(-4, -9, 8, 5);
+      ctx.fillStyle = "#22182a"; ctx.beginPath(); ctx.arc(-2.6, -15, 2, 0, Math.PI * 2); ctx.arc(2.6, -15, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#fff8ec"; ctx.lineWidth = 2.2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(10, 4); ctx.moveTo(10, -2); ctx.lineTo(-10, 4); ctx.stroke();
+      ctx.fillStyle = "#e0342a"; ctx.beginPath(); ctx.moveTo(26, -24); ctx.quadraticCurveTo(46, -44, 38, -12); ctx.quadraticCurveTo(34, -20, 26, -24); ctx.fill();
+    },
+    dinoegg(t) {
+      ctx.translate(0, 12);   // sits on the head, not above it
+      const shell = ctx.createLinearGradient(0, -30, 0, 14);
+      shell.addColorStop(0, "#fffbec"); shell.addColorStop(1, "#e8dcb8");
+      ctx.fillStyle = shell; ctx.strokeStyle = "#a89a70"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(-34, 12); ctx.quadraticCurveTo(-36, -10, -24, -18);
+      const teeth = [[-24, -18], [-16, -30], [-8, -20], [0, -34], [8, -20], [16, -30], [24, -18]];
+      for (const [x, y] of teeth) ctx.lineTo(x, y);
+      ctx.quadraticCurveTo(36, -10, 34, 12); ctx.quadraticCurveTo(0, 20, -34, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#6fcf6a";
+      for (const [x, y, r] of [[-20, 0, 5], [-4, -10, 4], [12, 2, 6], [24, -6, 3.5], [-12, 10, 3.5]]) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+      // a tiny dino peeking out on top
+      const peek = Math.max(0, Math.sin(t * .0025)) * 6;
+      ctx.fillStyle = "#6fcf6a"; ctx.strokeStyle = "#3a8a3a";
+      ctx.beginPath(); ctx.ellipse(4, -30 - peek, 9, 7, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#1e1e24"; ctx.beginPath(); ctx.arc(8, -33 - peek, 1.6, 0, Math.PI * 2); ctx.fill();
     }
   };
 
@@ -5011,6 +5340,13 @@
       toggle.append(box, document.createTextNode(entry.id === "revive" ? " พกติดตัว" : " ใช้ตอนเริ่มด่าน"));
       if (entry.id !== "revive") toggle.title = "ไม่ติ๊ก = เก็บไว้กดใช้เองระหว่างเล่น (ปุ่มด้านขวาของจอ หรือปุ่มเลข 1-8)";
       actions.append(have, button, toggle);
+    } else if (!owns(entry.id) && entry.reward) {
+      // a world's star prize: can be tried on, not bought
+      button.className = "shop-buy shop-reward";
+      button.textContent = `★ 30 ดาวโลก ${entry.reward}`;
+      button.setAttribute("aria-label", `รางวัลเมื่อได้ดาวครบ 30 ดวงในโลก ${entry.reward}`);
+      button.disabled = true;
+      actions.append(button);
     } else if (!owns(entry.id)) {
       button.className = "shop-buy";
       button.textContent = priceLabel(entry.price);
@@ -5239,7 +5575,7 @@
     // level
     const [num, title] = level.name.split(" · ");
     lobbyUi.levelNum.textContent = num;
-    lobbyUi.levelName.textContent = title || "";
+    lobbyUi.levelName.textContent = `${title || ""}${save.stars[levelIndex + 1] ? ` · ${starText(save.stars[levelIndex + 1])}` : ""}`;
     document.querySelector("#lobbyLevelPrev").disabled = levelIndex <= 0;
     document.querySelector("#lobbyLevelNext").disabled = levelIndex + 2 > levels.length || !isOpenLevel(levelIndex + 2);
     renderLobbyItems();
@@ -5305,7 +5641,8 @@
     if (shopOpen) closeShop();
     bankCoins();
     writeSave();
-    const index = state === "won" ? Math.min(levels.length - 1, levelIndex) : levelIndex;
+    const index = state === "cleared" ? Math.min(levels.length - 1, levelIndex + 1) : levelIndex;
+    ui.nextBtn.hidden = true;
     state = "menu";
     resetGame(index);
     ui.pause.hidden = true;
@@ -5366,7 +5703,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full) {
-      const xp = save.shop.heroXp;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -5376,6 +5713,7 @@
         for (const id of remote.shop?.owned || []) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
       }
       save.cloud = { uid, coins: remote.coins };
+      normalizeStars(full ? stars : remote.stars, full ? rewards : remote.worldRewards);
       normalizeShop();
       mergeHeroXp(xp);
       mergeHeroXp(remote.shop?.heroXp);
@@ -5714,10 +6052,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09j";
+  const NEWS_VERSION = "2026-10-09k";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 70% ได้อีก 1 ดาว ไม่เสียหัวใจได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ด่านใหม่", title: "โลก 10 · หุบเขาไดโนเสาร์", text: "ด่าน 91–100 หุบเขาไดโนเสาร์ ป่าเฟิร์นยักษ์ ถ้ำฟอสซิลอำพัน ภูเขาไฟ จนถึงฝนดาวตกวันสิ้นยุค พร้อมบอสราชาทีเร็กซ์เพลิง และจักรพรรดิไดโนเสาร์อุกกาบาต", image: "world10", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "ตัวละครอัปเลเวลได้", text: "เล่นแล้วได้ XP ทุกตัวละครอัปได้ถึง Lv 10 วิ่งเร็วขึ้นทุกเลเวล Lv 3 หัวใจ 4 ดวง Lv 5 เริ่มด่านตัวใหญ่ Lv 7 กระโดดสูงขึ้น Lv 10 หัวใจ 5 ดวง", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "อีเวนต์ใหม่", title: "ประตูมิติโบนัส", text: "บางด่านจะมีประตูมิติโผล่กลางทาง เดินเข้าไปเก็บเหรียญให้ได้มากที่สุดใน 15 วินาที", image: "portal", open: () => { closeNews(); showLobby(); } },
@@ -5767,6 +6106,24 @@
         ctx.font = "900 22px 'Trebuchet MS', system-ui, sans-serif"; ctx.textAlign = "center";
         ctx.lineWidth = 5; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText("฿", 0, -34);
         ctx.fillStyle = "#ffe58f"; ctx.fillText("฿", 0, -34);
+      });
+      return icon;
+    }
+    if (kind === "stars") {
+      // three stars over a row of world prize hats
+      const icon = document.createElement("canvas");
+      icon.width = icon.height = 160;
+      paintOn(icon.getContext("2d"), () => {
+        const star = (x, y, r, fill) => {
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, k = i % 2 ? r * .45 : r; ctx.lineTo(x + Math.cos(a) * k, y + Math.sin(a) * k); }
+          ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = "#b8741a"; ctx.lineWidth = 3; ctx.stroke();
+        };
+        ctx.save(); ctx.translate(80, 54); drawGlow("#ffd76a", 70); ctx.restore();
+        star(44, 62, 20, "#ffd76a"); star(116, 62, 20, "#ffd76a"); star(80, 46, 28, "#ffe58f");
+        for (const [id, x] of [["flamecrown", 34], ["cupcake", 80], ["tricorne", 126]]) {
+          ctx.save(); ctx.translate(x, 140); ctx.scale(.62, .62); hatArt[id](0); ctx.restore();
+        }
       });
       return icon;
     }
@@ -7384,6 +7741,14 @@
       const heading = document.createElement("h3");
       heading.className = "shop-heading";
       heading.textContent = title;
+      const world = WORLDS.findIndex(([name]) => name === title);
+      const { got, max } = worldStars(world);
+      const meta = document.createElement("span");
+      meta.className = `world-stars${save.worldRewards.includes(world + 1) ? " is-claimed" : ""}`;
+      meta.textContent = save.worldRewards.includes(world + 1)
+        ? `★ ${got}/${max} · รับรางวัลแล้ว ✓`
+        : `★ ${got}/${max} · ครบรับ ● ${WORLD_STAR_COINS} + ${SHOP_INDEX[WORLD_HATS[world]]?.name || "หมวกพิเศษ"}`;
+      heading.append(meta);
       const grid = document.createElement("div");
       grid.className = "level-grid";
       for (let num = from; num <= Math.min(to, levels.length); num++) {
@@ -7404,7 +7769,8 @@
         label.textContent = name;
         const badge = document.createElement("span");
         badge.className = "level-badge";
-        badge.textContent = done ? "✓ ผ่านแล้ว" : open ? "ด่านใหม่" : "ล็อก";
+        badge.textContent = done ? starText(save.stars[num] || 1) : open ? "ด่านใหม่" : "ล็อก";
+        if (done) badge.classList.add("level-stars");
         tile.append(number, label, badge);
         if (entry.boss) {
           const boss = document.createElement("i");
@@ -7438,6 +7804,7 @@
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (loadingBusy) return;
     if (event.key === "Enter" && state === "menu") { startWhenReady(); return; }
+    if (event.key === "Enter" && state === "cleared" && !event.target.closest?.("button")) { goNextLevel(); return; }
     if (/^[1-8]$/.test(event.key) && !event.repeat) {
       const entry = quickList()[Number(event.key) - 1];
       if (entry) { event.preventDefault(); useQuickItem(entry.id); }
@@ -7657,6 +8024,8 @@
   lobbyReady = true;
   renderLobby();
   ui.restartBtn.addEventListener("click", startGame);
+  ui.nextBtn.addEventListener("click", goNextLevel);
+  ui.replayBtn.addEventListener("click", replayLevel);
   ui.resumeBtn.addEventListener("click", () => togglePause(false));
   ui.pauseBtn.addEventListener("click", () => togglePause());
   ui.soundBtn.addEventListener("click", () => {

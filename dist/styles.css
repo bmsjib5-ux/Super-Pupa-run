@@ -1023,3 +1023,69 @@ button { touch-action: manipulation; }
   box-shadow: inset 0 0 2rem rgba(255,170,80,.4);
 }
 .news-scene-10 b { color: #fff4d0; filter: none; text-shadow: 0 0 .8rem rgba(60,30,10,.9), 0 .15rem .6rem rgba(0,0,0,.7); }
+
+/* ---- Stars on the level-clear card ---- */
+.message-card { max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.end-stars { display: flex; justify-content: center; gap: .5rem; margin: -.4rem 0 .5rem; }
+.end-stars[hidden], .end-goals[hidden], .end-reward[hidden] { display: none; }
+.end-stars span {
+  color: rgba(255,255,255,.16);
+  font-size: clamp(2.4rem, 7vw, 3.2rem);
+  line-height: 1;
+  text-shadow: 0 .12em 0 rgba(0,0,0,.3);
+}
+.end-stars span:nth-child(2) { font-size: clamp(3rem, 9vw, 4rem); transform: translateY(-.3rem); }
+.end-stars span.is-on {
+  color: var(--gold);
+  text-shadow: 0 .1em 0 #b8741a, 0 0 1.2rem rgba(255,215,106,.7);
+  animation: star-pop .5s cubic-bezier(.3, 1.6, .5, 1) both;
+  animation-delay: var(--delay);
+}
+@keyframes star-pop {
+  from { opacity: 0; scale: .2; rotate: -40deg; }
+  to { opacity: 1; scale: 1; rotate: 0deg; }
+}
+.end-goals { margin: 0 auto .7rem; padding: 0; list-style: none; text-align: left; font-size: .82rem; color: var(--muted); }
+.end-goals li { padding: .12rem 0; }
+.end-goals li.is-done { color: var(--mint); }
+.end-goals li.end-world { margin-top: .3rem; padding-top: .35rem; border-top: 1px solid rgba(255,255,255,.12); color: var(--gold); font-size: .76rem; }
+.end-reward {
+  display: flex; align-items: center; gap: .6rem;
+  margin: 0 auto .8rem; padding: .4rem .7rem;
+  border: 1px solid rgba(255,215,106,.55); border-radius: .9rem;
+  background: linear-gradient(135deg, rgba(255,215,106,.18), rgba(255,120,168,.14));
+  animation: star-pop .6s .7s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+.end-reward canvas { flex: none; width: 3.6rem; height: 3.6rem; }
+.end-reward p { margin: 0 !important; text-align: left; font-size: .8rem !important; }
+.end-reward b { display: block; color: var(--gold); font-size: .95rem; }
+.end-reward span { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .end-stars span.is-on, .end-reward { animation: none; } }
+@media (orientation: landscape) and (max-height: 35rem) {
+  .end-stars { margin: 0 0 .2rem; }
+  .end-stars span { font-size: 1.8rem; }
+  .end-stars span:nth-child(2) { font-size: 2.3rem; }
+  .end-goals { margin-bottom: .35rem; font-size: .7rem; }
+  .end-goals li { padding: 0; }
+  .end-reward { margin-bottom: .4rem; padding: .2rem .5rem; }
+  .end-reward canvas { width: 2.6rem; height: 2.6rem; }
+}
+
+/* Level select: stars per level and per world */
+.world-stars { display: block; margin-top: .15rem; color: var(--gold); font-size: .72rem; font-weight: 600; letter-spacing: 0; }
+.world-stars.is-claimed { color: var(--mint); }
+.level-tile .level-badge.level-stars { color: var(--gold); letter-spacing: .05em; }
+.shop-buy.shop-reward:disabled { opacity: 1; color: #3a2410; background: linear-gradient(180deg, #ffe9a8, #f2b33c); font-size: .7rem; }
+.is-result .final-score, .is-result .moon-icon { display: none; }
+.is-result .message-card h2 { margin-top: 0; }
+.is-result .message-card #endText { margin: .2rem auto .5rem; }
+@media (orientation: landscape) and (max-height: 35rem) {
+  /* keep the card clear of the top-right buttons */
+  #endScreen { padding-top: calc(max(.5rem, env(safe-area-inset-top)) + 2.6rem); }
+  .is-result .message-card { width: min(34rem, 92%); }
+}
+@media (orientation: landscape) and (max-height: 35rem) {
+  .end-goals:not([hidden]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .9rem; text-align: center; }
+  .end-goals li.end-world { flex-basis: 100%; margin-top: .15rem; padding-top: .15rem; }
+  .is-result .message-card #endText { margin: 0 auto .2rem; }
+}
