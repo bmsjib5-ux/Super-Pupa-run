@@ -224,6 +224,12 @@ function resumePendingTopup() {
 // ---- Wiring ----
 
 async function start() {
+  if (state.available && !DEV_AUTH) {
+    try {
+      const health = await fetch(API + "/api/health").then(res => res.json());
+      if (!health.ok) state.available = false;
+    } catch { state.available = false; }
+  }
   if (!state.available) { state.ready = true; changed(); return; }
   try {
     if (DEV_AUTH) setupDevAuth();

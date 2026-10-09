@@ -7,13 +7,13 @@ window.PUPA_CONFIG = {
   apiBase: "https://super-pupa-run-api.onrender.com",
   // Firebase web app config from the Firebase console
   // (Project settings → Your apps → SDK setup and configuration).
-  // Leave null until it is set up: the sign-in button then stays hidden.
-  firebase: null
-  // Example:
-  // firebase: {
-  //   apiKey: "AIza...",
-  //   authDomain: "super-pupa-run.firebaseapp.com",
-  //   projectId: "super-pupa-run",
-  //   appId: "1:1234567890:web:abcdef"
-  // }
+  // Set to null to hide the sign-in button.
+  firebase: {
+    apiKey: "AIzaSyA7S9IUjn3u3M1jeqjpG87nxxf2TiRujXg",
+    authDomain: "super-pupa-run.firebaseapp.com",
+    projectId: "super-pupa-run",
+    storageBucket: "super-pupa-run.firebasestorage.app",
+    messagingSenderId: "880454440350",
+    appId: "1:880454440350:web:28bab6d723e59f42b9328f"
+  }
 };
