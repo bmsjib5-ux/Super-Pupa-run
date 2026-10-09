@@ -1016,3 +1016,10 @@ button { touch-action: manipulation; }
   .lobby-hero { overflow-y: auto; }
 }
 .shop-info .hero-level { color: var(--gold); }
+/* Four world-10 scenes captured from the game. */
+.news-scene-10 {
+  background: url("assets/news-world10.webp") center / cover;
+  filter: none;
+  box-shadow: inset 0 0 2rem rgba(255,170,80,.4);
+}
+.news-scene-10 b { color: #fff4d0; filter: none; text-shadow: 0 0 .8rem rgba(60,30,10,.9), 0 .15rem .6rem rgba(0,0,0,.7); }

@@ -1700,6 +1700,40 @@
     return buildSkyWorld(81, LEVELS, STYLES, .85);
   }
 
+  // ---- World 10 (levels 91-100): Dinosaur Valley ----
+  // Mostly the new "jungle" scene (a smoking volcano, long-necked dinosaurs,
+  // giant ferns and pterosaurs), with an amber fossil cave, a nesting
+  // ground and a lava underworld in between. The generator at its hardest.
+  levels.push(...buildWorld10());
+
+  function buildWorld10() {
+    const LEVELS = [
+      { name: "ด่าน 91 · หุบเขาไดโนเสาร์ยามเช้า", scene: "jungle10", pal: "dawn10", magic: "leaves", style: "fern", length: 10200 },
+      { name: "ด่าน 92 · ป่าเฟิร์นยักษ์", scene: "jungle10", pal: "fern10", magic: "leaves", style: "moss", length: 10400 },
+      { name: "ด่าน 93 · ถ้ำฟอสซิลอำพัน", scene: "cave", pal: "amber10", magic: "fireflies", style: "amber", length: 10500 },
+      { name: "ด่าน 94 · ทุ่งรังไข่ไดโนเสาร์", scene: "desert", pal: "nest10", magic: "leaves", style: "sand", length: 10700 },
+      { name: "ด่าน 95 · ภูเขาไฟราชาทีเร็กซ์", scene: "jungle10", pal: "volcano10", magic: "embers", style: "basalt", length: 10000,
+        boss: { kind: "dragon", name: "ราชาทีเร็กซ์เพลิง", hp: 19 } },
+      { name: "ด่าน 96 · บึงยักษ์คอยาวยามค่ำ", scene: "jungle10", pal: "swamp10", magic: "fireflies", style: "moss", length: 10900 },
+      { name: "ด่าน 97 · ป่าดึกดำบรรพ์ฝนกระหน่ำ", scene: "jungle10", pal: "storm10", magic: "rain", style: "stone", length: 11100 },
+      { name: "ด่าน 98 · ใต้พิภพลาวาเดือด", scene: "cave", pal: "magma10", magic: "embers", style: "basalt", length: 11300 },
+      { name: "ด่าน 99 · ฝนดาวตกวันสิ้นยุค", scene: "jungle10", pal: "meteor10", magic: "comets", style: "ash", length: 11500 },
+      { name: "ด่าน 100 · บัลลังก์จักรพรรดิไดโนเสาร์", scene: "jungle10", pal: "throne10", magic: "crown", style: "amber", length: 10600,
+        boss: { kind: "eclipse", name: "จักรพรรดิไดโนเสาร์อุกกาบาต", hp: 21 } }
+    ];
+    // Platforms look like mossy rock, amber, sand or cooled lava.
+    const STYLES = {
+      fern: { top: "#8ad86a", shine: "#e8ffd0", body: ["#6a5a3a", "#463a26", "#1e1810"], sparks: ["#e8ffd0", "#ffe27a"] },
+      moss: { top: "#5ec88a", shine: "#d8ffe8", body: ["#4a5a44", "#30402e", "#121a12"], sparks: ["#d8ffe8", "#c8ff8a"] },
+      amber: { top: "#ffb84a", shine: "#fff0c8", body: ["#7a4a1e", "#4e2e14", "#201208"], sparks: ["#ffe27a", "#ffffff"] },
+      sand: { top: "#f0cc8a", shine: "#fff8e0", body: ["#a87a4a", "#6e4e30", "#2e2014"], sparks: ["#ffffff", "#ffd45a"] },
+      basalt: { top: "#ff7a3a", shine: "#ffd8a8", body: ["#4a3a3a", "#2e2424", "#120c0c"], sparks: ["#ffb347", "#ff5a3a"] },
+      stone: { top: "#9ab8a8", shine: "#f0fff8", body: ["#4a5450", "#2e3634", "#101414"], sparks: ["#ffffff", "#c8e8d8"] },
+      ash: { top: "#c8a8e8", shine: "#fff4ff", body: ["#4a3a5a", "#30243e", "#120c1a"], sparks: ["#ffd45a", "#ffffff"] }
+    };
+    return buildSkyWorld(91, LEVELS, STYLES, .9);
+  }
+
   // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
   function turnHue(colour, degrees) {
     let r, g, b, a = null;
@@ -1729,7 +1763,7 @@
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70, 75: 75, 80: 80, 85: 85, 90: 90 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70, 75: 75, 80: 80, 85: 85, 90: 90, 95: 95, 100: 100 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -5680,10 +5714,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09i";
+  const NEWS_VERSION = "2026-10-09j";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 10 · หุบเขาไดโนเสาร์", text: "ด่าน 91–100 หุบเขาไดโนเสาร์ ป่าเฟิร์นยักษ์ ถ้ำฟอสซิลอำพัน ภูเขาไฟ จนถึงฝนดาวตกวันสิ้นยุค พร้อมบอสราชาทีเร็กซ์เพลิง และจักรพรรดิไดโนเสาร์อุกกาบาต", image: "world10", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "ตัวละครอัปเลเวลได้", text: "เล่นแล้วได้ XP ทุกตัวละครอัปได้ถึง Lv 10 วิ่งเร็วขึ้นทุกเลเวล Lv 3 หัวใจ 4 ดวง Lv 5 เริ่มด่านตัวใหญ่ Lv 7 กระโดดสูงขึ้น Lv 10 หัวใจ 5 ดวง", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "อีเวนต์ใหม่", title: "ประตูมิติโบนัส", text: "บางด่านจะมีประตูมิติโผล่กลางทาง เดินเข้าไปเก็บเหรียญให้ได้มากที่สุดใน 15 วินาที", image: "portal", open: () => { closeNews(); showLobby(); } },
     { tag: "ไอเทมใหม่", title: "โบว์ลิ่ง · สายฟ้า · ไอพ่น", text: "กลิ้งชนมอนสเตอร์ล้มทั้งแถว ฟ้าผ่าทุกตัวบนจอ และบินขึ้นด้วยไอพ่น ได้จากบล็อก ? และตลาด", image: "newitems", open: () => openShopAt("item") },
@@ -5753,10 +5788,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9") {
+    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {
       const scene = document.createElement("div");
-      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : kind === "world8" ? " news-scene-8" : kind === "world9" ? " news-scene-9" : ""}`;
-      scene.innerHTML = kind === "world9" ? "<b>81–90</b>" : kind === "world8" ? "<b>71–80</b>" : kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
+      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : kind === "world8" ? " news-scene-8" : kind === "world9" ? " news-scene-9" : kind === "world10" ? " news-scene-10" : ""}`;
+      scene.innerHTML = kind === "world10" ? "<b>91–100</b>" : kind === "world9" ? "<b>81–90</b>" : kind === "world8" ? "<b>71–80</b>" : kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
     }
     if (kind === "boss") {
@@ -5974,6 +6009,41 @@
     }
   }
 
+  // A long-necked dinosaur standing on `base`, facing left or right.
+  function sauropod(x, base, s, fill, dir) {
+    ctx.fillStyle = fill; ctx.strokeStyle = fill; ctx.lineCap = "round";
+    const bodyY = base - 92 * s;
+    for (const [lx, w] of [[-44, 17], [-22, 15], [26, 17], [46, 15]]) ctx.fillRect(x + lx * s * dir - w * s / 2, bodyY, w * s, 92 * s);
+    ctx.beginPath(); ctx.ellipse(x, bodyY, 70 * s, 40 * s, 0, 0, TAU); ctx.fill();
+    // neck up and forward, small head at the top
+    ctx.lineWidth = 22 * s;
+    ctx.beginPath(); ctx.moveTo(x + 46 * s * dir, bodyY - 10 * s);
+    ctx.quadraticCurveTo(x + 92 * s * dir, bodyY - 80 * s, x + 104 * s * dir, bodyY - 170 * s); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x + 116 * s * dir, bodyY - 176 * s, 22 * s, 11 * s, -.15 * dir, 0, TAU); ctx.fill();
+    // tail tapering behind
+    ctx.beginPath(); ctx.moveTo(x - 50 * s * dir, bodyY - 26 * s);
+    ctx.quadraticCurveTo(x - 140 * s * dir, bodyY - 10 * s, x - 190 * s * dir, bodyY + 40 * s);
+    ctx.quadraticCurveTo(x - 130 * s * dir, bodyY + 14 * s, x - 50 * s * dir, bodyY + 22 * s); ctx.fill();
+  }
+
+  // A clump of giant fern fronds arching out from one spot.
+  function fern(x, base, s, fill, r) {
+    ctx.strokeStyle = fill; ctx.fillStyle = fill; ctx.lineCap = "round";
+    const fronds = 6 + Math.floor(r() * 3);
+    for (let i = 0; i < fronds; i++) {
+      const side = i % 2 ? 1 : -1, reach = (70 + r() * 70) * s, rise = (60 + r() * 90) * s;
+      const ex = x + side * reach, ey = base - rise * .35, cx = x + side * reach * .35, cy = base - rise * 1.3;
+      ctx.lineWidth = 3 * s;
+      ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+      for (let k = 1; k < 9; k++) {   // leaflets along the frond
+        const t = k / 9, u = 1 - t;
+        const px = u * u * x + 2 * u * t * cx + t * t * ex, py = u * u * base + 2 * u * t * cy + t * t * ey;
+        const len = (16 - k * 1.2) * s;
+        ctx.beginPath(); ctx.ellipse(px, py - len * .4, len * .32, len, side * .5, 0, TAU); ctx.fill();
+      }
+    }
+  }
+
   function mushroom(x, base, s, stem, cap, glow, r) {
     const h = 120 * s, w = 110 * s;
     ctx.fillStyle = stem;
@@ -6062,6 +6132,73 @@
 
   // Scenes: pal = colours, layers = painted tiles (far -> near), live = animation.
   const SCENES = {
+    // Dinosaur valley: a volcano smoking far away (live, so the smoke can
+    // move), misty hills with tree ferns, long-necked dinosaurs, a jungle
+    // of giant ferns up close, and pterosaurs gliding overhead.
+    jungle10: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        const sx = w * .22 - cameraX * .01, sy = top + 170;
+        glowDot(sx, sy, 260, p.sunGlow, .7);
+        ctx.fillStyle = vgrad(sy - 52, sy + 52, [p.sun0, p.sun1]); ctx.beginPath(); ctx.arc(sx, sy, 52, 0, TAU); ctx.fill();
+        // the volcano, its glowing crater and a plume of smoke
+        const vx = w * .7 - cameraX * .03, base = top + 470, peak = top + 250;
+        ctx.fillStyle = p.volcano;
+        ctx.beginPath(); ctx.moveTo(vx - 330, base); ctx.quadraticCurveTo(vx - 120, base - 60, vx - 48, peak);
+        ctx.lineTo(vx + 48, peak); ctx.quadraticCurveTo(vx + 120, base - 60, vx + 330, base); ctx.closePath(); ctx.fill();
+        glowDot(vx, peak, 90, p.lava, .55 + .2 * Math.sin(t * 2.2));
+        ctx.strokeStyle = p.lava; ctx.lineWidth = 4; ctx.globalAlpha = .7;
+        ctx.beginPath(); ctx.moveTo(vx - 10, peak + 2); ctx.quadraticCurveTo(vx - 30, peak + 70, vx - 70, peak + 150); ctx.stroke();
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < 9; i++) {
+          const age = (t * .16 + i / 9) % 1;
+          const px = vx + Math.sin(i * 2.1 + t * .3) * 18 + age * 150, py = peak - 10 - age * 220;
+          ctx.globalAlpha = .55 * (1 - age);
+          ctx.fillStyle = p.smoke; ctx.beginPath(); ctx.arc(px, py, 22 + age * 70, 0, TAU); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      },
+      layers: [
+        { parallax: .08, paint(r, p) {   // misty hills and tree ferns
+          const f = periodic(r, 5, 2, 9); ridge(x => 500 - 50 * f(x), p.far);
+          for (let i = 0; i < 9; i++) palm(r() * SCENE_TILE, 520, .55 + r() * .3, p.far, r);
+        } },
+        { parallax: .2, paint(r, p) {   // a herd of long-necked dinosaurs
+          const f = periodic(r, 4, 2, 7); ridge(x => 590 - 30 * f(x), p.mid);
+          for (let i = 0; i < 4; i++) sauropod(i * SCENE_TILE / 4 + r() * 200 + 100, 596, .7 + r() * .45, p.mid, r() < .5 ? -1 : 1);
+          for (let i = 0; i < 6; i++) fern(r() * SCENE_TILE, 600, .7 + r() * .4, p.mid, r);
+        } },
+        { parallax: .4, paint(r, p) {   // the jungle up close
+          const f = periodic(r, 4, 2, 8); ridge(x => 668 - 22 * f(x), p.near);
+          for (let i = 0; i < 4; i++) palm(r() * SCENE_TILE, 672, 1.1 + r() * .5, p.near, r);
+          for (let i = 0; i < 9; i++) fern(r() * SCENE_TILE, 676, 1 + r() * .6, p.near, r);
+          ctx.fillStyle = p.near;
+          for (let i = 0; i < 5; i++) { const x = r() * SCENE_TILE; ctx.beginPath(); ctx.ellipse(x, 664, 34 + r() * 30, 20 + r() * 14, 0, Math.PI, 0); ctx.fill(); }
+        } }
+      ],
+      live(p, t, w, h, top) {
+        ctx.fillStyle = p.mist;   // a band of mist drifting through the valley
+        for (let i = 0; i < 3; i++) {
+          ctx.globalAlpha = .06 + i * .03;
+          const x = wrapX(t * (8 + i * 5) - cameraX * (.1 + i * .05) + i * 500, w + 900) - 450;
+          ctx.beginPath(); ctx.ellipse(x, top + 520 + i * 22, 420, 26, 0, 0, TAU); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        drift(5, 31, t, (a, b, c, d, i) => {   // pterosaurs
+          const span = w + 300, x = wrapX(a * span + t * (34 + c * 26) - cameraX * .1, span) - 150;
+          const y = top + 90 + b * 190 + Math.sin(t * .6 + i) * 18, s = .8 + c * .7, flap = Math.sin(t * (2.4 + d * 1.5) + i * 1.3);
+          ctx.fillStyle = p.ptero; ctx.globalAlpha = .85;
+          ctx.beginPath();   // wings
+          ctx.moveTo(x - 4 * s, y); ctx.lineTo(x - 34 * s, y - 14 * s * flap - 4 * s); ctx.lineTo(x - 14 * s, y + 4 * s);
+          ctx.moveTo(x + 4 * s, y); ctx.lineTo(x + 34 * s, y - 14 * s * flap - 4 * s); ctx.lineTo(x + 14 * s, y + 4 * s);
+          ctx.fill();
+          ctx.beginPath(); ctx.ellipse(x, y + 2 * s, 12 * s, 4 * s, 0, 0, TAU); ctx.fill();   // body
+          ctx.beginPath(); ctx.moveTo(x + 10 * s, y); ctx.lineTo(x + 24 * s, y - 3 * s); ctx.lineTo(x + 12 * s, y + 3 * s); ctx.fill();   // beak
+          ctx.beginPath(); ctx.moveTo(x + 8 * s, y - 1 * s); ctx.lineTo(x + 2 * s, y - 9 * s); ctx.lineTo(x + 5 * s, y); ctx.fill();   // crest
+        });
+        ctx.globalAlpha = 1;
+      }
+    },
     // Open sea for the pirate world: the sea itself is drawn with the sun
     // (it has to sit behind the islands and ships), waves and gulls live.
     ocean: {
@@ -6415,6 +6552,21 @@
     graveyard9: { sky0: "#050c0a", sky1: "#10261e", sky2: "#2a4a3a", corona: "rgba(140,255,190,.9)", ring: "#d8fff0", far: "#0e2018", mid: "#081410", window: "#8affc0", near: "#030806", ember: "rgba(140,255,190,.9)", haze: "rgba(4,10,8,.5)", magic0: "#8affc0", magic1: "#e0fff0", magicGlow: "rgba(120,255,180,.85)" }
   });
 
+  // World 10: the dinosaur valley. "jungle10" palettes add the sun, the
+  // volcano (with lava glow and smoke), mist and the pterosaurs.
+  Object.assign(SCENE_PALS, {
+    dawn10: { sky0: "#3a5a9a", sky1: "#f0a070", sky2: "#ffe0a0", sunGlow: "rgba(255,230,170,.9)", sun0: "#fffbe8", sun1: "#ffc860", volcano: "#6a4a5a", lava: "rgba(255,140,60,.9)", smoke: "rgba(120,96,110,.8)", far: "#7a7a8a", mid: "#4a5a4a", near: "#1e3020", mist: "#fff0e0", ptero: "#3a2a3a", haze: "rgba(30,40,30,.28)", magic0: "#8ad86a", magic1: "#ffe27a", magicGlow: "rgba(200,255,150,.8)" },
+    fern10: { sky0: "#2a7ac8", sky1: "#8ad0e8", sky2: "#e0f8e0", sunGlow: "rgba(255,255,220,.85)", sun0: "#ffffff", sun1: "#fff2a8", volcano: "#5a6a6a", lava: "rgba(255,170,90,.7)", smoke: "rgba(150,160,160,.7)", far: "#5a9a7a", mid: "#2e6a4a", near: "#123a24", mist: "#f0fff4", ptero: "#2a3a30", haze: "rgba(10,40,24,.24)", magic0: "#6ad86a", magic1: "#c8ff8a", magicGlow: "rgba(170,255,140,.8)" },
+    volcano10: { sky0: "#1a0a14", sky1: "#6a1a1a", sky2: "#e0602a", sunGlow: "rgba(255,120,60,.8)", sun0: "#ffe0a0", sun1: "#ff6a2a", volcano: "#2a1414", lava: "rgba(255,110,40,.98)", smoke: "rgba(60,30,30,.85)", far: "#4a1e1e", mid: "#2e1212", near: "#140808", mist: "#ff8a5a", ptero: "#140606", haze: "rgba(30,8,6,.4)", magic0: "#ffb347", magic1: "#ff5a3a", magicGlow: "rgba(255,130,60,.9)" },
+    swamp10: { sky0: "#0a1420", sky1: "#1a3a3a", sky2: "#3a6a5a", sunGlow: "rgba(200,255,220,.6)", sun0: "#f0fff4", sun1: "#b8f0d0", volcano: "#14262a", lava: "rgba(255,150,80,.6)", smoke: "rgba(40,60,60,.7)", far: "#1a3432", mid: "#0e2220", near: "#04100e", mist: "#b8f0d8", ptero: "#020808", haze: "rgba(4,14,12,.45)", magic0: "#c8ff8a", magic1: "#8affc0", magicGlow: "rgba(170,255,150,.85)" },
+    storm10: { sky0: "#141e1e", sky1: "#2a3a38", sky2: "#4a5a54", sunGlow: "rgba(170,190,180,.3)", sun0: "#c8d4cc", sun1: "#8a9a90", volcano: "#1e2826", lava: "rgba(255,140,70,.6)", smoke: "rgba(50,60,58,.8)", far: "#26363a", mid: "#16242a", near: "#081210", mist: "#c8d8d0", ptero: "#0a1210", haze: "rgba(6,12,12,.45)", magic0: "#c8d8e0", magic1: "#ffffff", magicGlow: "rgba(200,220,230,.6)" },
+    meteor10: { sky0: "#0c0820", sky1: "#3a1a4a", sky2: "#c8506a", sunGlow: "rgba(255,150,120,.6)", sun0: "#ffe8d0", sun1: "#ff8a6a", volcano: "#24142a", lava: "rgba(255,120,60,.9)", smoke: "rgba(60,40,60,.8)", far: "#3a2440", mid: "#22142a", near: "#0e0814", mist: "#ffb0c8", ptero: "#0a0610", haze: "rgba(14,6,18,.42)", magic0: "#ffb347", magic1: "#fff4e0", magicGlow: "rgba(255,180,120,.8)" },
+    throne10: { sky0: "#1a0e08", sky1: "#5a2e10", sky2: "#e0a040", sunGlow: "rgba(255,210,120,.9)", sun0: "#fff4d0", sun1: "#ffc040", volcano: "#3a2010", lava: "rgba(255,160,60,.95)", smoke: "rgba(80,50,30,.8)", far: "#5a3a1e", mid: "#3a2410", near: "#180e06", mist: "#ffd890", ptero: "#140a04", haze: "rgba(24,12,4,.4)", magic0: "#ffb84a", magic1: "#fff0c8", magicGlow: "rgba(255,200,100,.9)" },
+    amber10: { sky0: "#1a0e04", sky1: "#3a2208", sky2: "#120a02", far: "#3a2410", farCap: "#c87a2a", glow: "rgba(255,180,70,.92)", mid: "#24160a", midCap: "#ffa83a", near: "#100a04", nearCap: "#ffe0a0", spore: "rgba(255,200,110,.95)", haze: "rgba(18,10,4,.5)", magic0: "#ffb84a", magic1: "#fff0c8", magicGlow: "rgba(255,190,90,.9)" },
+    magma10: { sky0: "#1a0604", sky1: "#3a0e06", sky2: "#100302", far: "#3a1208", farCap: "#c83a1a", glow: "rgba(255,110,40,.95)", mid: "#240a06", midCap: "#ff6a2a", near: "#100402", nearCap: "#ffb070", spore: "rgba(255,150,80,.95)", haze: "rgba(20,4,2,.5)", magic0: "#ffb347", magic1: "#ff5a3a", magicGlow: "rgba(255,120,50,.9)" },
+    nest10: { sky0: "#2a3a6a", sky1: "#c87a5a", sky2: "#ffd090", moon: "#fff6e0", moonGlow: "rgba(255,230,190,.8)", star: "#ffffff", far: "#a8704a", mid: "#7a4a2e", near: "#3a2414", sand: "#ffe0a8", haze: "rgba(60,30,14,.35)", magic0: "#8ad86a", magic1: "#ffe27a", magicGlow: "rgba(220,255,160,.8)" }
+  });
+
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
     ctx.fillStyle = color;
@@ -6594,6 +6746,16 @@
       const flash = t % 9;
       if (flash < .18) { ctx.globalAlpha = (.18 - flash) * .9; ctx.fillStyle = p.magic1; ctx.fillRect(0, 0, w, h); }
       ctx.globalAlpha = 1;
+    } else if (theme.magic === "leaves") {
+      // jungle leaves twirling down
+      drift(22, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 120) + Math.sin(t * (.7 + d) + i) * 40 - t * (14 + c * 12) - cameraX * .18, w + 120) - 60;
+        const y = top + wrapX(b * 760 + t * (36 + c * 30), 760) - 40;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(t * (1 + d) + i); ctx.scale(1, .45 + .55 * Math.abs(Math.sin(t * 1.8 + i)));
+        ctx.globalAlpha = .55 + c * .35; ctx.fillStyle = i % 4 ? p.magic0 : p.magic1;
+        ctx.beginPath(); ctx.ellipse(0, 0, 8 + c * 6, 3.5 + c * 2, 0, 0, TAU); ctx.fill();
+        ctx.restore();
+      });
     } else if (theme.magic === "crown") {
       const x = w * .5 - cameraX * .018, y = top + 205;
       glowDot(x, y, 250, p.magicGlow, .28);
@@ -7162,7 +7324,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90], ["โลก 10 · หุบเขาไดโนเสาร์", 91, 100]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
