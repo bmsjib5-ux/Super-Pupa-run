@@ -1691,6 +1691,8 @@
   const formatPoints = (n) => n.toLocaleString("en-US");
   const QUEEN_HOVER = 200; // height the bat queen circles at
   const STAR_TIME = 8;
+  const DASH_TIME = 5;
+  const DASH_SPEED = 760;
   const MARKET_STAR_TIME = 10; // the star bought in the market lasts longer
   const BOOST_TIME = 10;
   const BOMB_TIME = 10;
@@ -1705,9 +1707,9 @@
   // Chance weights for what a "?" block holds.
   const BLOCK_DROPS = [
     ["cherry", 24], ["heart", 9], ["leaf", 8], ["star", 8], ["grow", 9],
-    ["bomb", 8], ["shield", 9], ["laser", 8], ["spread", 8], ["magnet", 9]
+    ["bomb", 8], ["shield", 9], ["laser", 8], ["spread", 8], ["magnet", 9], ["dash", 6]
   ];
-  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff", laser: "#ff4fd8", spread: "#ffe27a", magnet: "#ff6464" };
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff", laser: "#ff4fd8", spread: "#ffe27a", magnet: "#ff6464", dash: "#ff9a3c" };
   // How far hats lean toward the facing side. (Where the head sits is each
   // character's headTop in SHOP.heroes.)
   const HAT_SHIFT = 0;
@@ -1757,6 +1759,7 @@
       { id: "spread", name: "ดาวกระจาย", desc: "เริ่มด่านพร้อมดาวกระจาย ยิงดาว 5 ทิศ 10 วินาที", price: 55 },
       { id: "magnet", name: "แม่เหล็ก", desc: "เริ่มด่านพร้อมแม่เหล็ก ดูดเหรียญรอบตัว 15 วินาที", price: 45 },
       { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 10 วินาที", price: 60 },
+      { id: "dash", name: "จรวดพุ่งทะยาน", desc: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ชนมอนสเตอร์แตก", price: 65 },
       { id: "revive", name: "หัวใจสำรอง", desc: "ฟื้นด้วยหัวใจ 1 ดวงเมื่อพลังหมด", price: 100 }
     ]
   };
@@ -1918,7 +1921,7 @@
   }
 
   function resetGame(index = startLevel) {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(index);
   }
@@ -1929,7 +1932,7 @@
   function retryLevel() {
     if (player.big) setBig(false);
     // Coming back from a game over also starts with the 5 s grace period.
-    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, shield: false });
+    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, dash: 0, shield: false });
     const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
     const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
     const reachedCheckpoint = checkpoint > 90;
@@ -2155,7 +2158,7 @@
   }
 
   function hurtPlayer() {
-    if (player.hurt > 0 || player.star > 0) return;
+    if (player.hurt > 0 || player.star > 0 || player.dash > 0) return;
     if (player.shield) {
       // The shield takes the hit and breaks.
       player.shield = false;
@@ -2197,6 +2200,7 @@
     player.vx = 0;
     player.vy = 0;
     player.star = 0;
+    player.dash = 0;
     player.ride = null;
     // A fall always costs a heart, even during the post-hit grace period.
     player.hurt = 0;
@@ -2307,7 +2311,7 @@
 
     const body = { x: boss.x + 16, y: boss.y + 8, w: boss.w - 32, h: boss.h - 8 };
     if (boss.hurt > 0 || !rectsOverlap(player, body)) return;
-    if (player.star > 0) { damageBoss(); return; }
+    if (player.star > 0 || player.dash > 0) { damageBoss(); return; }
     if (player.vy >= 0 && previousBottom <= boss.y + 44) {
       player.vy = -820;
       damageBoss();
@@ -2556,6 +2560,9 @@
       player.spread = SPREAD_TIME;
       announce("ได้ดาวกระจาย กดปุ่มโจมตีเพื่อยิงดาว 5 ทิศ 10 วินาที");
       [784, 988, 1175, 1568].forEach((note, i) => tone(note, .08, "triangle", .045, i * .05));
+    } else if (item.type === "dash") {
+      startDash();
+      announce("ได้จรวดพุ่งทะยาน พุ่งทะลุทุกอย่าง 5 วินาที");
     } else if (item.type === "magnet") {
       player.magnet = MAGNET_TIME;
       announce("ได้แม่เหล็ก ดูดเหรียญรอบตัว 15 วินาที");
@@ -2600,6 +2607,54 @@
     });
   }
 
+  // ---- Dash ----
+  // Pupa rockets forward for DASH_TIME seconds at a fixed height: no
+  // gravity, straight through platforms, blocks and pits, unhurt, and every
+  // monster she touches is smashed (a boss takes a hit). She cruises at the
+  // height she started from, or ground level if she was below it, and only
+  // comes down once there is something under her.
+  function startDash() {
+    if (!player || player.flag) return false;
+    if (player.dash <= 0) {
+      player.dashDir = player.facing || 1;
+      player.dashY = Math.min(player.y, WORLD.ground - player.h);
+    }
+    player.dash = Math.max(0, player.dash) + DASH_TIME;
+    player.vy = 0;
+    [392, 523, 784, 1047].forEach((note, i) => tone(note, .09, "sawtooth", .035, i * .045));
+    return true;
+  }
+
+  function groundBelow() {
+    const cx = player.x + player.w / 2;
+    return solids.some(p => p.state !== "falling" && p.state !== "gone" && p.kind !== "spring"
+      && cx > p.x + 12 && cx < p.x + p.w - 12 && p.y >= player.y + player.h - 12);
+  }
+
+  function dashMove(dt) {
+    keys.jump = false;
+    if (keys.attack) attack();
+    keys.attack = false;
+    player.facing = player.dashDir;
+    player.vx = player.dashDir * DASH_SPEED;
+    player.vy = 0;
+    player.x += player.vx * dt;
+    player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
+    if (boss?.active && boss.alive) player.x = Math.max(boss.left, Math.min(boss.right - player.w, player.x));
+    player.y += (player.dashY - player.y) * Math.min(1, dt * 10);
+    player.grounded = false;
+    player.ride = null;
+    player.airJumps = 1;
+    if (Math.random() < dt * 40) burst(player.x + (player.dashDir > 0 ? 0 : player.w), player.y + player.h * (.3 + Math.random() * .5), Math.random() < .5 ? "#ff9a3c" : "#ffe27a", 1);
+    player.dash -= dt;
+    if (player.dash > 0) return;
+    if (!groundBelow()) { player.dash = .05; return; } // keep going until there is ground
+    player.dash = 0;
+    player.vx = player.dashDir * 330;
+    burst(player.x + player.w / 2, player.y + player.h / 2, "#ff9a3c", 14);
+    tone(523, .08, "triangle", .05); tone(392, .12, "triangle", .05, .07);
+  }
+
   function update(dt) {
     if (state !== "playing") return;
     bannerTime = Math.max(0, bannerTime - dt);
@@ -2639,6 +2694,9 @@
     // Carry Pupa along with the moving platform she is standing on.
     if (player.ride?.axis) { player.x += player.ride.dx; player.y += player.ride.dy; }
     if (player.star > 0 && Math.random() < dt * 22) burst(player.x + player.w / 2, player.y + player.h / 2, "#ffe27a", 1);
+    let previousBottom = player.y + player.h;
+    if (player.dash > 0) dashMove(dt);
+    else {
     const move = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     const target = move * 330;
     player.vx += (target - player.vx) * Math.min(1, dt * (player.grounded ? 12 : 5));
@@ -2659,7 +2717,7 @@
     if (keys.attack) attack();
     keys.attack = false;
 
-    const previousBottom = player.y + player.h;
+    previousBottom = player.y + player.h;
     player.vy += WORLD.gravity * dt;
     player.x += player.vx * dt;
     player.y += player.vy * dt;
@@ -2701,6 +2759,7 @@
         if (p.kind === "crumble" && p.state === "idle") { p.state = "shaking"; p.timer = .5; }
         else if (!p.kind && !p.axis && player.x >= p.x + 24 && player.x + player.w <= p.x + p.w - 24) lastSafe = { x: player.x, y: p.y - player.h };
       }
+    }
     }
 
     if (player.y > 780) respawn();
@@ -2755,7 +2814,7 @@
       if (enemy.type !== "hopper" || enemy.y < enemy.baseY) enemy.x += enemy.vx * dt;
       if (enemy.x < enemy.min || enemy.x > enemy.max) { enemy.vx *= -1; enemy.x = Math.max(enemy.min, Math.min(enemy.max, enemy.x)); }
       if (!rectsOverlap(player, enemy)) continue;
-      if (player.star > 0) {
+      if (player.star > 0 || player.dash > 0) {
         enemy.alive = false;
         addScore(200, enemy.x + enemy.w / 2, enemy.y - 10);
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#ffe27a", 18);
@@ -2781,7 +2840,7 @@
       shot.x += shot.vx * dt;
       if (shot.life <= 0) return false;
       if (!rectsOverlap(player, shot)) return true;
-      if (player.star > 0) burst(shot.x + 11, shot.y + 11, "#ffe27a", 8);
+      if (player.star > 0 || player.dash > 0) burst(shot.x + 11, shot.y + 11, "#ffe27a", 8);
       else hurtPlayer();
       return false;
     });
@@ -3034,6 +3093,29 @@
       star(-11, 7, 9); star(11, 7, 9);
       ctx.fillStyle = "#ffd24a"; star(0, -6, 13);
     },
+    dash() {
+      // a little rocket with a flame tail
+      ctx.save();
+      ctx.rotate(-.35);
+      const flame = ctx.createLinearGradient(-30, 0, -8, 0);
+      flame.addColorStop(0, "rgba(255,90,40,0)"); flame.addColorStop(.5, "#ff7a2a"); flame.addColorStop(1, "#ffe27a");
+      ctx.fillStyle = flame;
+      ctx.beginPath(); ctx.moveTo(-30, 0); ctx.quadraticCurveTo(-16, -9, -6, -6); ctx.lineTo(-6, 6); ctx.quadraticCurveTo(-16, 9, -30, 0); ctx.fill();
+      ctx.fillStyle = "#ff5f6e";
+      ctx.beginPath(); ctx.moveTo(-8, -7); ctx.lineTo(-15, -15); ctx.lineTo(-2, -8); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-8, 7); ctx.lineTo(-15, 15); ctx.lineTo(-2, 8); ctx.fill();
+      const body = ctx.createLinearGradient(0, -9, 0, 9);
+      body.addColorStop(0, "#ffffff"); body.addColorStop(1, "#c9d3ea");
+      ctx.fillStyle = body; ctx.strokeStyle = "#7a5aa8"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-9, -8); ctx.lineTo(10, -8); ctx.quadraticCurveTo(22, -4, 24, 0); ctx.quadraticCurveTo(22, 4, 10, 8); ctx.lineTo(-9, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ff5f6e";
+      ctx.beginPath(); ctx.moveTo(14, -6.5); ctx.quadraticCurveTo(22, -3.5, 24, 0); ctx.quadraticCurveTo(22, 3.5, 14, 6.5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#7fd4ff"; ctx.strokeStyle = "#3a6aa8";
+      ctx.beginPath(); ctx.arc(4, 0, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-20, -14); ctx.lineTo(-8, -14); ctx.moveTo(-24, 16); ctx.lineTo(-14, 16); ctx.stroke();
+    },
     magnet() {
       ctx.save();
       ctx.rotate(.5);
@@ -3193,6 +3275,7 @@
     if (player.laser > 0) bars.push([player.laser / LASER_TIME, "#ff4fd8"]);
     if (player.spread > 0) bars.push([player.spread / SPREAD_TIME, "#fff2a0"]);
     if (player.magnet > 0) bars.push([player.magnet / MAGNET_TIME, "#ff6464"]);
+    if (player.dash > 0) bars.push([Math.min(1, player.dash / DASH_TIME), "#ff9a3c"]);
     const x = player.x - cameraX + player.w / 2 - 32;
     bars.forEach(([amount, color], i) => {
       const y = player.y - 44 - i * 11;
@@ -3383,21 +3466,21 @@
     const skin = SHOP_INDEX[save.shop.skin];
     if (!hero.flat) model?.setCharacter?.(hero.id);
     model?.setSkin?.(skin);
-    if (!hero.flat && model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded })) {
+    if (!hero.flat && model?.ready && model.render({ time, facing: player.facing, speed, vy: player.vy, grounded: player.grounded || player.dash > 0 })) {
       // The model's feet sit 1 unit below the camera centre; line them up with
       // the bottom of the hitbox.
       const size = 164 * player.h / SMALL.h;
       const feet = size * (model.viewHalf + 1) / (model.viewHalf * 2);
       ctx.save();
       if (player.hurt > 0 && Math.floor(player.hurt * 12) % 2) ctx.globalAlpha = .35;
-      ctx.shadowColor = player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
-      ctx.shadowBlur = player.star > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
+      ctx.shadowColor = player.dash > 0 ? "#ff9a3c" : player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
+      ctx.shadowBlur = player.star > 0 || player.dash > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
       ctx.drawImage(model.canvas, x + player.w / 2 - size / 2, player.y + player.h - feet, size, size);
       drawHat(save.shop.hat, x + player.w / 2 + HAT_SHIFT * player.facing * size / 164, player.y + player.h - feet + size * hero.headTop, size / 164, player.facing, time);
       ctx.restore();
       return;
     }
-    const isRunning = player.grounded && speed > 45;
+    const isRunning = (player.grounded || player.dash > 0) && speed > 45;
     const frameRate = 7 + Math.min(5, speed / 70);
     const cycleFrame = Math.floor((time / 1000) * frameRate) % (art.runFrames.length * 2);
     const oppositeStride = cycleFrame >= art.runFrames.length;
@@ -3843,7 +3926,7 @@
     const items = {}, bring = {};
     for (const { id } of SHOP.items) {
       items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
-      bring[id] = raw.bring?.[id] !== false;
+      bring[id] = raw.bring && id in raw.bring ? raw.bring[id] !== false : id !== "dash";
     }
     save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring, petLevels: {} };
     for (const { id } of SHOP.pets) {
@@ -3925,6 +4008,7 @@
     if (take("spread")) player.spread = SPREAD_TIME;
     if (take("magnet")) player.magnet = MAGNET_TIME;
     if (take("star")) player.star = MARKET_STAR_TIME;
+    if (take("dash")) startDash();
     if (equippedPet()?.shield && !player.shield) player.shield = true;
     if (!used.length) return;
     writeSave();
@@ -3947,7 +4031,8 @@
     laser: () => (player.laser = Math.max(0, player.laser) + LASER_TIME, true),
     spread: () => (player.spread = Math.max(0, player.spread) + SPREAD_TIME, true),
     magnet: () => (player.magnet = Math.max(0, player.magnet) + MAGNET_TIME, true),
-    star: () => (player.star = Math.max(0, player.star) + MARKET_STAR_TIME, true)
+    star: () => (player.star = Math.max(0, player.star) + MARKET_STAR_TIME, true),
+    dash: () => startDash()
   };
   const quickUi = document.querySelector("#quickItems");
   let quickShown = "";
@@ -4919,10 +5004,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09b";
+  const NEWS_VERSION = "2026-10-09c";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ไอเทมใหม่", title: "จรวดพุ่งทะยาน", text: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ข้ามเหวได้ ชนมอนสเตอร์แตก ได้จากบล็อก ? และตลาด", image: "dash", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 7 · อาณาจักรเปลวสุริยะ", text: "ด่าน 61–70 ทุ่งตะวันรอน ถ้ำลาวา โคมฟีนิกซ์ ธารน้ำแข็งไฟ จนถึงบัลลังก์สุริยะ พร้อมบอสใหม่ 2 ตัว", image: "world7", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 20 บาท", image: "topup", open: () => openShopAt("topup") },
     { tag: "ด่านใหม่", title: "โลก 6 · สวนสวรรค์จักรวาล", text: "ด่าน 51–60 กับฉากซากุระ คริสตัล ดอกบัว ออโรรา ทางช้างเผือก และบอสใหม่ 2 ตัว", image: "world6", open: () => { closeNews(); openLevels(); } },
@@ -5006,6 +5092,7 @@
       paintOn(g, () => {
         ctx.save();
         if (kind === "pumpkin") { ctx.translate(80, 112); ctx.scale(1.55, 1.55); hatArt.pumpkin(time); }
+        else if (kind === "dash") { ctx.translate(84, 82); ctx.scale(2.4, 2.4); drawGlow(itemGlow.dash, 30); pickupArt.dash(); }
         else if (kind === "items") {
           [["laser", 40, 64], ["spread", 120, 64], ["magnet", 80, 118]].forEach(([art, x, y]) => {
             ctx.save(); ctx.translate(x, y); ctx.scale(1.5, 1.5); drawGlow(itemGlow[art], 26); pickupArt[art](); ctx.restore();
@@ -5984,7 +6071,7 @@
           if (dist >= need) { b.segs.push(b.trail[i]); need += 44; }
         }
         if (b.trail.length < 2 && oy) b.segs = [];
-        if (player.star <= 0 && b.hurt <= 0) for (const seg of b.segs) {
+        if (player.star <= 0 && player.dash <= 0 && b.hurt <= 0) for (const seg of b.segs) {
           if (rectsOverlap(player, { x: seg.x - 18, y: seg.y - 18, w: 36, h: 36 })) { hurtPlayer(); break; }
         }
       },
