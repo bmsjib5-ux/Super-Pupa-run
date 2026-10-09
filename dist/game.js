@@ -2047,6 +2047,7 @@
     ui.attackBtn?.classList.toggle("is-ready", Boolean(weapon));
     if (ui.attackBtn && ui.attackBtn.dataset.label !== (weapon || "ATK")) ui.attackBtn.dataset.label = weapon || "ATK";
     renderQuickItems();
+    if (lobbyOpen()) renderLobby();
   }
 
   function addScore(amount, x, y, label = "") {
@@ -3905,6 +3906,7 @@
     update(dt);
     render(time);
     drawShopPreview(time);
+    drawLobbyPreview(time);
     requestAnimationFrame(frame);
   }
 
@@ -4383,6 +4385,8 @@
   function closeShop() {
     if (topupOpen) closeTopup();
     shopOpen = false;
+    lobbyHero = save.shop.hero;
+    lobbyItemsShown = "";
     shopUi.screen.hidden = true;
     document.body.classList.remove("dialog-open");
     writeSave();
@@ -4579,8 +4583,11 @@
 
   function drawShopPreview(time) {
     if (!shopOpen || !previewCtx) return;
-    const g = previewCtx, size = shopUi.preview.width;
-    const look = previewLook();
+    drawLook(previewCtx, shopUi.preview.width, previewLook(), time);
+  }
+
+  // A hero dressed in `look`, standing on a soft glow, into a square canvas.
+  function drawLook(g, size, look, time) {
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, size, size);
     const glow = g.createRadialGradient(size / 2, size * .62, 10, size / 2, size * .62, size * .5);
@@ -4628,6 +4635,152 @@
       });
     });
     document.querySelectorAll("[data-open-shop]").forEach(button => onTap(button, openShop));
+  }
+
+  // ---- Lobby ----
+  // The first screen: browse the heroes with a live preview (pick one you
+  // own, buy one you don't), get items ready (buy more, tick the ones used
+  // when the level starts) and choose an open level. "ออกไปหน้าหลัก" in the
+  // pause and end screens comes back here.
+  const lobbyUi = {
+    screen: ui.start,
+    coins: document.querySelector("#lobbyCoins"),
+    preview: document.querySelector("#lobbyPreview"),
+    heroName: document.querySelector("#lobbyHeroName"),
+    heroNote: document.querySelector("#lobbyHeroNote"),
+    heroAction: document.querySelector("#lobbyHeroAction"),
+    levelNum: document.querySelector("#lobbyLevelNum"),
+    levelName: document.querySelector("#lobbyLevelName"),
+    items: document.querySelector("#lobbyItems")
+  };
+  const lobbyCtx = lobbyUi.preview?.getContext("2d");
+  let lobbyHero = save.shop.hero;
+  let lobbyItemsShown = "";
+  const lobbyOpen = () => lobbyReady && lobbyUi.screen && !lobbyUi.screen.hidden;
+  // Set at the end of setup, once the level helpers further down exist.
+  let lobbyReady = false;
+
+  function drawLobbyPreview(time) {
+    if (!lobbyCtx || !lobbyOpen() || shopOpen) return;
+    drawLook(lobbyCtx, lobbyUi.preview.width, { hero: lobbyHero, skin: save.shop.skin, hat: save.shop.hat, pet: save.shop.pet }, time);
+  }
+
+  function renderLobby() {
+    if (!lobbyReady || !lobbyUi.screen) return;
+    lobbyUi.coins.textContent = formatPoints(save.coins);
+    // hero
+    const hero = SHOP_INDEX[lobbyHero] || SHOP_INDEX[save.shop.hero];
+    lobbyUi.heroName.textContent = hero.name;
+    const owned = owns(hero.id), chosen = save.shop.hero === hero.id;
+    lobbyUi.heroNote.textContent = chosen ? "ตัวที่เลือกอยู่" : owned ? "มีแล้ว" : hero.desc;
+    const button = lobbyUi.heroAction;
+    button.classList.toggle("shop-equip", owned);
+    button.classList.toggle("shop-buy", !owned);
+    if (chosen) { button.textContent = "ใช้อยู่ ✓"; button.disabled = true; }
+    else if (owned) { button.textContent = "เลือกตัวนี้"; button.disabled = false; }
+    else {
+      button.textContent = `ซื้อ ● ${formatPoints(hero.price)}`;
+      button.disabled = save.coins < hero.price;
+    }
+    button.setAttribute("aria-label", chosen ? `${hero.name} ใช้อยู่` : owned ? `เลือก${hero.name}` : `ซื้อ${hero.name} ${hero.price} เหรียญ`);
+    // level
+    const [num, title] = level.name.split(" · ");
+    lobbyUi.levelNum.textContent = num;
+    lobbyUi.levelName.textContent = title || "";
+    document.querySelector("#lobbyLevelPrev").disabled = levelIndex <= 0;
+    document.querySelector("#lobbyLevelNext").disabled = levelIndex + 2 > levels.length || !isOpenLevel(levelIndex + 2);
+    renderLobbyItems();
+  }
+
+  // Rebuilt only when coins, counts or ticks change.
+  function renderLobbyItems() {
+    const key = save.coins + "|" + SHOP.items.map(({ id }) => `${id}:${save.shop.items[id]}:${save.shop.bring[id] ? 1 : 0}`).join(",");
+    if (key === lobbyItemsShown) return;
+    lobbyItemsShown = key;
+    lobbyUi.items.replaceChildren(...SHOP.items.map(entry => {
+      const count = save.shop.items[entry.id];
+      const card = document.createElement("article");
+      card.className = `lobby-item${count > 0 ? " has-some" : ""}`;
+      card.title = entry.desc;
+      const art = entry.id === "revive" ? "heart" : entry.id;
+      const icon = iconCanvas(() => { drawGlow(entry.id === "revive" ? "#ffd76a" : itemGlow[art], 38); pickupArt[art](); });
+      icon.className = "lobby-item-icon";
+      const name = Object.assign(document.createElement("b"), { textContent: entry.name });
+      const have = Object.assign(document.createElement("span"), { className: "lobby-item-count", textContent: `×${count}` });
+      const buyButton = document.createElement("button");
+      buyButton.type = "button";
+      buyButton.className = "shop-buy lobby-item-buy";
+      buyButton.textContent = `+ ● ${entry.price}`;
+      buyButton.setAttribute("aria-label", `ซื้อ${entry.name}เพิ่ม ${entry.price} เหรียญ (มี ${count})`);
+      buyButton.disabled = save.coins < entry.price || count >= 99;
+      buyButton.addEventListener("click", () => { if (buy(entry.id)) renderLobby(); });
+      const toggle = document.createElement("label");
+      toggle.className = "lobby-item-bring";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = save.shop.bring[entry.id];
+      box.setAttribute("aria-label", entry.id === "revive" ? `พก${entry.name}ติดตัว` : `ใช้${entry.name}ตอนเริ่มด่าน`);
+      box.addEventListener("change", () => { save.shop.bring[entry.id] = box.checked; writeSave(); lobbyItemsShown = ""; renderLobbyItems(); });
+      toggle.append(box, document.createTextNode(entry.id === "revive" ? " พกไป" : " เริ่มด่าน"));
+      card.append(icon, name, have, buyButton, toggle);
+      return card;
+    }));
+  }
+
+  function lobbyStepHero(step) {
+    const list = SHOP.heroes;
+    const index = list.findIndex(({ id }) => id === lobbyHero);
+    lobbyHero = list[(index + step + list.length) % list.length].id;
+    // Owned heroes are picked straight away; others are only shown.
+    if (owns(lobbyHero) && save.shop.hero !== lobbyHero) equip(lobbyHero, true);
+    tone(587, .05, "triangle", .04);
+    renderLobby();
+  }
+
+  function lobbyStepLevel(step) {
+    const num = levelIndex + 1 + step;
+    if (num < 1 || num > levels.length || !isOpenLevel(num)) { tone(150, .1, "square", .04); return; }
+    bankCoins();
+    resetGame(num - 1);
+    tone(523, .05, "triangle", .04);
+    renderLobby();
+  }
+
+  // Leave the level for the lobby. Coins and points are already banked.
+  function exitToLobby() {
+    if (shopOpen) closeShop();
+    bankCoins();
+    writeSave();
+    const index = state === "won" ? Math.min(levels.length - 1, levelIndex) : levelIndex;
+    state = "menu";
+    resetGame(index);
+    ui.pause.hidden = true;
+    ui.end.hidden = true;
+    ui.pauseBtn.setAttribute("aria-pressed", "false");
+    ui.pauseBtn.textContent = "Ⅱ";
+    showLobby();
+    announce("กลับมาที่หน้าหลักแล้ว");
+  }
+
+  function showLobby() {
+    lobbyHero = save.shop.hero;
+    lobbyItemsShown = "";
+    ui.start.hidden = false;
+    renderLobby();
+    ui.startBtn.focus();
+  }
+
+  if (lobbyUi.screen) {
+    onTap(document.querySelector("#lobbyHeroPrev"), () => lobbyStepHero(-1));
+    onTap(document.querySelector("#lobbyHeroNext"), () => lobbyStepHero(1));
+    onTap(document.querySelector("#lobbyLevelPrev"), () => lobbyStepLevel(-1));
+    onTap(document.querySelector("#lobbyLevelNext"), () => lobbyStepLevel(1));
+    onTap(lobbyUi.heroAction, () => {
+      if (owns(lobbyHero)) equip(lobbyHero);
+      else if (!buy(lobbyHero)) return;
+      renderLobby();
+    });
+    document.querySelectorAll("[data-exit-lobby]").forEach(button => onTap(button, exitToLobby));
   }
 
 
@@ -6449,6 +6602,8 @@
   }
 
   ui.startBtn.addEventListener("click", startGame);
+  lobbyReady = true;
+  renderLobby();
   ui.restartBtn.addEventListener("click", startGame);
   ui.resumeBtn.addEventListener("click", () => togglePause(false));
   ui.pauseBtn.addEventListener("click", () => togglePause());
