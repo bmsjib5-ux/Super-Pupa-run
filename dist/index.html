@@ -13,12 +13,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261009g">
-    <script src="game.js?v=20261009g" defer></script>
-    <script type="module" src="pupa3d.js?v=20261009g"></script>
+    <link rel="stylesheet" href="styles.css?v=20261009h">
+    <script src="game.js?v=20261009h" defer></script>
+    <script type="module" src="pupa3d.js?v=20261009h"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
-    <script src="config.js?v=20261009g"></script>
-    <script type="module" src="account.js?v=20261009g"></script>
+    <script src="config.js?v=20261009h"></script>
+    <script type="module" src="account.js?v=20261009h"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -52,6 +52,8 @@
             <div class="hud-card points"><span>คะแนน</span><b id="points">0</b></div>
             <div class="hud-card distance"><span>ระยะทาง</span><b id="distance">0%</b></div>
           </div>
+          <!-- Items kept for later: tap to use mid-level (keys 1-8). -->
+          <div id="quickItems" class="quick-items" aria-label="ไอเทมกดใช้" hidden></div>
 
           <div id="startScreen" class="overlay">
             <div class="title-card">

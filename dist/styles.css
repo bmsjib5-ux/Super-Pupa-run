@@ -732,3 +732,78 @@ button { touch-action: manipulation; }
 @media (orientation: landscape) and (max-height: 35rem) {
   .refund-box { max-height: 5.5rem; }
 }
+
+/* Quick-use items down the right side of the stage */
+.quick-items {
+  position: absolute;
+  z-index: 5;
+  top: clamp(4.4rem, 9vw, 5.6rem);
+  right: clamp(.65rem, 2vw, 1.2rem);
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(4, auto);
+  direction: rtl; /* extra columns grow to the left */
+  gap: .5rem;
+}
+.quick-items[hidden] { display: none; }
+.quick-item {
+  position: relative;
+  direction: ltr;
+  display: grid;
+  place-items: center;
+  width: 3.3rem;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid rgba(255,255,255,.22);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(60,40,110,.92), rgba(13,8,36,.9));
+  box-shadow: 0 .35rem .9rem rgba(0,0,0,.35);
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.quick-item:hover { border-color: rgba(255,215,106,.7); transform: scale(1.06); }
+.quick-item:active { transform: scale(.92); }
+.quick-icon { width: 82%; height: 82%; pointer-events: none; }
+.quick-count {
+  position: absolute;
+  right: -.25rem;
+  bottom: -.2rem;
+  min-width: 1.3rem;
+  padding: .05rem .3rem;
+  border-radius: 999px;
+  color: #30102d;
+  font-size: .72rem;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #fff3a6, #ffbd63);
+  pointer-events: none;
+}
+.quick-key {
+  position: absolute;
+  top: -.3rem;
+  left: -.3rem;
+  min-width: 1.1rem;
+  padding: 0 .25rem;
+  border-radius: .35rem;
+  color: var(--ink);
+  font: 700 .62rem/1.3 inherit;
+  background: rgba(13,8,36,.85);
+  border: 1px solid rgba(255,255,255,.25);
+  pointer-events: none;
+}
+@media (pointer: coarse) {
+  .quick-key { display: none; }
+}
+@media (pointer: coarse), (max-width: 48rem) {
+  .quick-items { top: 4rem; gap: .4rem; }
+  .quick-item { width: 2.9rem; }
+}
+/* Phones held sideways: under the top-right buttons, clear of jump/attack */
+@media (orientation: landscape) and (max-height: 35rem) {
+  .quick-items { top: calc(max(.6rem, env(safe-area-inset-top)) + 2.7rem); right: max(.5rem, env(safe-area-inset-right)); grid-template-rows: repeat(3, auto); gap: .35rem; }
+  .quick-item { width: 2.5rem; }
+  .quick-count { font-size: .62rem; min-width: 1.1rem; }
+}
