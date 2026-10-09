@@ -40,10 +40,14 @@ const CHARACTERS = {
     legTop: -.56, armX: .5, armLow: -.5, armHigh: -.2, arms: 0
   },
   // Pupa V2 is painted mid-run at an angle, so it turns less; her pink hair
-  // and body take the outfit colours like the original.
+  // and body take the outfit colours like the original. Her model is already
+  // mid-stride: one leg in front (+z), one behind (-z), both right of centre.
+  // So her legs are told apart front/back (legAxis "z"), and instead of
+  // swinging around standing straight they go from that stride (about
+  // legRest radians each way) to the opposite one and back.
   pupav2: {
     model: "assets/pupav2.glb", texture: "assets/pupav2-texture.webp", tintable: true, yaw: .35,
-    legTop: -.42, armX: .5, armLow: -.4, armHigh: -.1, arms: 0
+    legTop: -.42, armX: .5, armLow: -.4, armHigh: -.1, arms: 0, legAxis: "z", legRest: .5
   }
 };
 
@@ -78,10 +82,14 @@ const limbs = { uPhase: { value: 0 }, uSwing: { value: 0 }, uFlap: { value: 0 } 
 const LIMB_SHADER = `
   uniform float uPhase; uniform float uSwing; uniform float uFlap;
   uniform float LEG_TOP; uniform float ARM_X; uniform float ARM_LOW; uniform float ARM_HIGH; uniform float ARMS;
+  uniform float LEG_Z; uniform float LEG_REST;
   vec3 swingLimbs(vec3 p) {
     float side = p.x < 0.0 ? -1.0 : 1.0;
+    // Which leg: left/right of centre, or front/back for a model posed mid-stride.
+    float legSide = mix(p.x, p.z, LEG_Z) < 0.0 ? -1.0 : 1.0;
     float leg = 1.0 - smoothstep(LEG_TOP - 0.14, LEG_TOP + 0.02, p.y);
-    float la = side * sin(uPhase) * uSwing * 0.85 * leg;
+    float stride = LEG_REST > 0.0 ? LEG_REST * (1.0 - sin(uPhase)) : sin(uPhase) * 0.85;
+    float la = legSide * stride * uSwing * leg;
     float ly = p.y - LEG_TOP;
     p.yz = mix(p.yz, vec2(LEG_TOP + ly * cos(la) - p.z * sin(la), ly * sin(la) + p.z * cos(la)), step(0.001, leg));
     float arm = ARMS * smoothstep(ARM_X, ARM_X + 0.14, abs(p.x))
@@ -162,6 +170,7 @@ function load(id) {
   texture.anisotropy = 4;
   const shape = {
     LEG_TOP: { value: spec.legTop }, ARM_X: { value: spec.armX },
+    LEG_Z: { value: spec.legAxis === "z" ? 1 : 0 }, LEG_REST: { value: spec.legRest || 0 },
     ARM_LOW: { value: spec.armLow }, ARM_HIGH: { value: spec.armHigh }, ARMS: { value: spec.arms }
   };
   new GLTFLoader().load(spec.model, (gltf) => {
