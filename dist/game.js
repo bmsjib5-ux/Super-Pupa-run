@@ -1763,6 +1763,11 @@
   const QUEEN_HOVER = 200; // height the bat queen circles at
   const STAR_TIME = 8;
   const DASH_TIME = 5;
+  const JET_TIME = 6;          // jetpack: hold jump to fly up
+  const JET_THRUST = 4200;
+  const BOWL_SPEED = 600;      // bowling ball
+  const BONUS_TIME = 15;       // seconds in the bonus room
+  const BONUS_CHANCE = .4;     // chance a level has a bonus portal
   const DASH_SPEED = 760;
   const MARKET_STAR_TIME = 10; // the star bought in the market lasts longer
   const BOOST_TIME = 10;
@@ -1778,9 +1783,10 @@
   // Chance weights for what a "?" block holds.
   const BLOCK_DROPS = [
     ["cherry", 24], ["heart", 9], ["leaf", 8], ["star", 8], ["grow", 9],
-    ["bomb", 8], ["shield", 9], ["laser", 8], ["spread", 8], ["magnet", 9], ["dash", 6]
+    ["bomb", 8], ["shield", 9], ["laser", 8], ["spread", 8], ["magnet", 9], ["dash", 6],
+    ["bowling", 6], ["lightning", 4], ["jetpack", 6]
   ];
-  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff", laser: "#ff4fd8", spread: "#ffe27a", magnet: "#ff6464", dash: "#ff9a3c" };
+  const itemGlow = { heart: "#ff6e99", star: "#ffe27a", leaf: "#89f0c0", grow: "#ff9d6b", bomb: "#ff5f6e", shield: "#7fd4ff", laser: "#ff4fd8", spread: "#ffe27a", magnet: "#ff6464", dash: "#ff9a3c", bowling: "#7fd4ff", lightning: "#fff27a", jetpack: "#ffb347" };
   // How far hats lean toward the facing side. (Where the head sits is each
   // character's headTop in SHOP.heroes.)
   const HAT_SHIFT = 0;
@@ -1831,6 +1837,9 @@
       { id: "magnet", name: "แม่เหล็ก", desc: "เริ่มด่านพร้อมแม่เหล็ก ดูดเหรียญรอบตัว 15 วินาที", price: 45 },
       { id: "star", name: "ดาวอมตะ", desc: "เริ่มด่านอมตะ 10 วินาที", price: 60 },
       { id: "dash", name: "จรวดพุ่งทะยาน", desc: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ชนมอนสเตอร์แตก", price: 65 },
+      { id: "bowling", name: "ลูกโบว์ลิ่งยักษ์", desc: "กลิ้งไปข้างหน้า ชนมอนสเตอร์ล้มทั้งแถว", price: 45 },
+      { id: "lightning", name: "สายฟ้าฟาด", desc: "ฟ้าผ่ามอนสเตอร์ทุกตัวบนจอทีเดียว", price: 80 },
+      { id: "jetpack", name: "ไอพ่น", desc: "กดกระโดดค้างเพื่อบินขึ้น 6 วินาที", price: 60 },
       { id: "revive", name: "หัวใจสำรอง", desc: "ฟื้นด้วยหัวใจ 1 ดวงเมื่อพลังหมด", price: 100 }
     ]
   };
@@ -1839,6 +1848,7 @@
   const PET_MAX_LEVEL = 5;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
   const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
+  const QUICK_BY_DEFAULT = ["dash", "bowling", "lightning", "jetpack"];
   // Each hero's built-in ability (see SHOP.heroes[].ability):
   //   pupa: pulls nearby coins in; jibjib: two mid-air jumps; baitoey: falls
   //   slowly; ikuya: a wind blast on attack even without an item; pangji:
@@ -1911,6 +1921,11 @@
   let hazards = [];
   let popups = [];
   let bombs = [];
+  let balls = [];     // bowling balls
+  let bolts = [];     // lightning strikes (visual)
+  let flash = 0;      // the sky lighting up after a strike
+  let portals = [];   // bonus portals (and the exit, inside the bonus room)
+  let bonus = null;   // { time, startScore, saved } while in the bonus room
   // Where Pupa last stood firmly: on ground or a still platform, well in
   // from its edges. A fall into a pit puts her back here, not at the flag.
   let lastSafe = null;
@@ -1980,6 +1995,10 @@
     hazards = [];
     popups = [];
     bombs = [];
+    balls = [];
+    bolts = [];
+    bonus = null;
+    placePortal();
     beams = [];
     starShots = [];
     blasts = [];
@@ -2001,7 +2020,7 @@
   }
 
   function resetGame(index = startLevel) {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, banked: 0, airJumps: airJumpsFor(), shield: false, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, jet: 0, banked: 0, airJumps: airJumpsFor(), shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(index);
   }
@@ -2012,7 +2031,7 @@
   function retryLevel() {
     if (player.big) setBig(false);
     // Coming back from a game over also starts with the 5 s grace period.
-    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, dash: 0, shield: false });
+    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, dash: 0, jet: 0, shield: false });
     const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
     const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
     const reachedCheckpoint = checkpoint > 90;
@@ -2282,6 +2301,7 @@
     player.vy = 0;
     player.star = 0;
     player.dash = 0;
+    player.jet = 0;
     player.ride = null;
     // A fall always costs a heart, even during the post-hit grace period.
     player.hurt = 0;
@@ -2651,6 +2671,16 @@
       player.spread = SPREAD_TIME;
       announce("ได้ดาวกระจาย กดปุ่มโจมตีเพื่อยิงดาว 5 ทิศ 10 วินาที");
       [784, 988, 1175, 1568].forEach((note, i) => tone(note, .08, "triangle", .045, i * .05));
+    } else if (item.type === "bowling") {
+      rollBowling();
+      announce("ได้ลูกโบว์ลิ่งยักษ์ กลิ้งชนมอนสเตอร์");
+    } else if (item.type === "lightning") {
+      castLightning();
+      announce("สายฟ้าฟาดมอนสเตอร์ทุกตัวบนจอ");
+    } else if (item.type === "jetpack") {
+      player.jet = JET_TIME;
+      announce("ได้ไอพ่น กดกระโดดค้างไว้เพื่อบินขึ้น 6 วินาที");
+      tone(392, .1, "sawtooth", .04); tone(587, .14, "sawtooth", .04, .08);
     } else if (item.type === "dash") {
       startDash();
       announce("ได้จรวดพุ่งทะยาน พุ่งทะลุทุกอย่าง 5 วินาที");
@@ -2749,6 +2779,9 @@
   function update(dt) {
     if (state !== "playing") return;
     bannerTime = Math.max(0, bannerTime - dt);
+    flash = Math.max(0, flash - dt);
+    bolts = bolts.filter(bolt => (bolt.life -= dt) > 0);
+    if (bonus && (bonus.time -= dt) <= 0) { leaveBonus(); return; }
     if (player.flag) { updateFlag(dt); updatePet(dt); if (state === "playing") finishFrame(dt); return; }
     player.hurt = Math.max(0, player.hurt - dt);
     player.star = Math.max(0, player.star - dt);
@@ -2757,6 +2790,7 @@
     player.laser = Math.max(0, player.laser - dt);
     player.spread = Math.max(0, player.spread - dt);
     player.magnet = Math.max(0, player.magnet - dt);
+    player.jet = Math.max(0, player.jet - dt);
     if (player.magnet > 0) pullCoins(MAGNET_RANGE, dt);
     else if (heroIs("pupa")) pullCoins(COIN_CHARM_RANGE, dt);
     for (const p of platforms) {
@@ -2811,6 +2845,12 @@
 
     previousBottom = player.y + player.h;
     player.vy += WORLD.gravity * dt;
+    if (player.jet > 0) {
+      if (keys.jumpHeld) {
+        player.vy = Math.max(player.vy - JET_THRUST * dt, -480);
+        if (Math.random() < dt * 60) burst(player.x + player.w / 2 + (Math.random() - .5) * 20, player.y + player.h, Math.random() < .5 ? "#ffb347" : "#ff6a3d", 1);
+      } else if (player.vy > 320) player.vy = 320;
+    }
     if (heroIs("baitoey") && player.vy > LEAF_FALL_SPEED) {
       player.vy = LEAF_FALL_SPEED;
       if (Math.random() < dt * 8) burst(player.x + player.w / 2, player.y + player.h * .3, "#89f0c0", 1);
@@ -2941,6 +2981,8 @@
       return false;
     });
     updateBombs(dt);
+    updateBalls(dt);
+    updatePortals();
     updateWeapons(dt);
     updateBoss(dt, previousBottom);
     shake = Math.max(0, shake - dt);
@@ -3189,6 +3231,35 @@
       star(-11, 7, 9); star(11, 7, 9);
       ctx.fillStyle = "#ffd24a"; star(0, -6, 13);
     },
+    bowling() {
+      const body = ctx.createRadialGradient(-6, -7, 2, 0, 0, 18);
+      body.addColorStop(0, "#7fa8ff"); body.addColorStop(1, "#1e2a6a");
+      ctx.fillStyle = body; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#0e1440"; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = "#0a0e2a";
+      for (const [hx, hy] of [[4, -6], [9, -1], [2, 1]]) { ctx.beginPath(); ctx.arc(hx, hy, 2.4, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.ellipse(-7, -8, 5, 3, -.6, 0, Math.PI * 2); ctx.fill();
+    },
+    lightning() {
+      ctx.fillStyle = "#fff27a"; ctx.strokeStyle = "#c98a1c"; ctx.lineWidth = 1.8; ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(4, -20); ctx.lineTo(-10, 2); ctx.lineTo(-1, 2); ctx.lineTo(-6, 20); ctx.lineTo(11, -4); ctx.lineTo(2, -4); ctx.lineTo(8, -20);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.moveTo(4, -17); ctx.lineTo(-5, -1); ctx.lineTo(-2, -1); ctx.lineTo(6, -17); ctx.fill();
+    },
+    jetpack() {
+      for (const side of [-1, 1]) {
+        const flame = ctx.createLinearGradient(0, 10, 0, 24);
+        flame.addColorStop(0, "#ffe27a"); flame.addColorStop(1, "rgba(255,90,40,0)");
+        ctx.fillStyle = flame; ctx.beginPath(); ctx.moveTo(side * 7 - 4, 12); ctx.lineTo(side * 7, 25); ctx.lineTo(side * 7 + 4, 12); ctx.fill();
+        const tank = ctx.createLinearGradient(side * 7 - 6, 0, side * 7 + 6, 0);
+        tank.addColorStop(0, "#ff8a6a"); tank.addColorStop(1, "#c8323a");
+        ctx.fillStyle = tank; ctx.strokeStyle = "#7a1a24"; ctx.lineWidth = 1.4;
+        roundedRect(side * 7 - 6, -16, 12, 28, 6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,.45)"; roundedRect(side * 7 - 3, -12, 3, 16, 1.5); ctx.fill();
+      }
+      ctx.fillStyle = "#5a5a72"; ctx.fillRect(-2, -10, 4, 16);
+    },
     dash() {
       // a little rocket with a flame tail
       ctx.save();
@@ -3372,6 +3443,7 @@
     if (player.spread > 0) bars.push([player.spread / SPREAD_TIME, "#fff2a0"]);
     if (player.magnet > 0) bars.push([player.magnet / MAGNET_TIME, "#ff6464"]);
     if (player.dash > 0) bars.push([Math.min(1, player.dash / DASH_TIME), "#ff9a3c"]);
+    if (player.jet > 0) bars.push([player.jet / JET_TIME, "#ffb347"]);
     const x = player.x - cameraX + player.w / 2 - 32;
     bars.forEach(([amount, color], i) => {
       const y = player.y - 44 - i * 11;
@@ -3983,6 +4055,7 @@
     drawFlagpole(time);
     drawGoal(time);
     blocks.forEach(b => drawBlock(b, time));
+    drawPortals(time);
     cherries.forEach(c => drawCherry(c, time));
     items.forEach(item => drawItem(item, time));
     enemies.forEach(e => drawEnemy(e, time));
@@ -3999,10 +4072,13 @@
     drawPlayer(time);
     drawShield(time);
     drawWeapons(time);
+    drawBalls();
+    drawBolts();
     drawPopups();
     drawPowerBars();
     drawBossBar();
     drawBanner();
+    drawBonusHud();
   }
 
   function frame(time) {
@@ -4033,7 +4109,7 @@
     const items = {}, bring = {};
     for (const { id } of SHOP.items) {
       items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
-      bring[id] = raw.bring && id in raw.bring ? raw.bring[id] !== false : id !== "dash";
+      bring[id] = raw.bring && id in raw.bring ? raw.bring[id] !== false : !QUICK_BY_DEFAULT.includes(id);
     }
     save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring, petLevels: {} };
     for (const { id } of SHOP.pets) {
@@ -4116,6 +4192,9 @@
     if (take("magnet")) player.magnet = MAGNET_TIME;
     if (take("star")) player.star = MARKET_STAR_TIME;
     if (take("dash")) startDash();
+    if (take("jetpack")) player.jet = JET_TIME;
+    if (take("bowling")) rollBowling();
+    if (take("lightning")) castLightning();
     if (equippedPet()?.shield && !player.shield) player.shield = true;
     if (heroIs("pangji") && !player.shield) player.shield = true;
     if (!used.length) return;
@@ -4140,7 +4219,10 @@
     spread: () => (player.spread = Math.max(0, player.spread) + SPREAD_TIME, true),
     magnet: () => (player.magnet = Math.max(0, player.magnet) + MAGNET_TIME, true),
     star: () => (player.star = Math.max(0, player.star) + MARKET_STAR_TIME, true),
-    dash: () => startDash()
+    dash: () => startDash(),
+    bowling: () => rollBowling(),
+    lightning: () => castLightning(),
+    jetpack: () => (player.jet = Math.max(0, player.jet) + JET_TIME, true)
   };
   const quickUi = document.querySelector("#quickItems");
   let quickShown = "";
@@ -4196,6 +4278,224 @@
       return button;
     }));
     quickUi.hidden = !list.length;
+  }
+
+  // ---- Bowling, lightning ----
+  function rollBowling() {
+    if (!player) return false;
+    balls.push({ x: player.x + player.w / 2 + player.facing * 34, y: player.y + player.h - 26, vx: player.facing * BOWL_SPEED, r: 26, spin: 0, life: 4, hits: 0 });
+    tone(140, .18, "triangle", .06); tone(110, .3, "sine", .05, .05);
+    return true;
+  }
+
+  function updateBalls(dt) {
+    balls = balls.filter(ball => {
+      ball.x += ball.vx * dt;
+      ball.spin += ball.vx * dt / ball.r;
+      ball.life -= dt;
+      if (ball.life <= 0 || ball.x < -60 || ball.x > WORLD.width + 60) return false;
+      const box = { x: ball.x - ball.r, y: ball.y - ball.r, w: ball.r * 2, h: ball.r * 2 };
+      for (const enemy of enemies) {
+        if (!enemy.alive || !rectsOverlap(box, enemy)) continue;
+        defeatEnemy(enemy, "#7fd4ff");
+        tone(220 + ball.hits * 60, .08, "square", .05);
+        if (++ball.hits === 3) popups.push({ x: ball.x, y: ball.y - 60, text: "STRIKE!", life: 1.4 });
+      }
+      if (boss?.active && boss.alive && boss.hurt <= 0 && rectsOverlap(box, boss)) damageBoss();
+      return true;
+    });
+  }
+
+  function drawBalls() {
+    for (const ball of balls) {
+      ctx.save();
+      ctx.translate(ball.x - cameraX, ball.y);
+      ctx.globalAlpha = Math.min(1, ball.life / .3);
+      ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(0, ball.r - 2, ball.r * .9, 6, 0, 0, TAU); ctx.fill();
+      ctx.rotate(ball.spin);
+      ctx.scale(ball.r / 18, ball.r / 18);
+      pickupArt.bowling();
+      ctx.restore();
+    }
+  }
+
+  // Every monster on screen is struck at once (a boss in view takes a hit).
+  function castLightning() {
+    if (!player) return false;
+    const left = cameraX - 40, right = cameraX + viewWidth + 40;
+    let struck = 0;
+    for (const enemy of enemies) {
+      if (!enemy.alive || enemy.x + enemy.w < left || enemy.x > right) continue;
+      bolts.push({ x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h / 2, life: .45, seed: Math.random() * 1000 });
+      defeatEnemy(enemy, "#fff27a");
+      struck++;
+    }
+    if (boss?.active && boss.alive && boss.x + boss.w > left && boss.x < right) {
+      bolts.push({ x: boss.x + boss.w / 2, y: boss.y + 30, life: .45, seed: Math.random() * 1000 });
+      if (boss.hurt <= 0) damageBoss();
+    }
+    flash = .22;
+    shake = Math.max(shake, .2);
+    tone(60, .35, "sawtooth", .07); tone(1200, .06, "square", .04); tone(90, .3, "square", .05, .05);
+    popups.push({ x: player.x + player.w / 2, y: player.y - 40, text: struck ? `สายฟ้า ×${struck}` : "สายฟ้า!", life: 1.4 });
+    return true;
+  }
+
+  function drawBolts() {
+    for (const bolt of bolts) {
+      const r = seeded(bolt.seed);
+      const x = bolt.x - cameraX;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, bolt.life / .2);
+      ctx.strokeStyle = "#fff9c8"; ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.shadowColor = "#fff27a"; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.moveTo(x + (r() - .5) * 80, -40);
+      for (let y = 40; y < bolt.y; y += 60) ctx.lineTo(x + (r() - .5) * 46, y);
+      ctx.lineTo(x, bolt.y); ctx.stroke();
+      ctx.restore();
+    }
+    if (flash > 0) { ctx.fillStyle = `rgba(255,252,220,${Math.min(.22, flash)})`; ctx.fillRect(0, -worldOffsetY, viewWidth, viewHeight); }
+  }
+
+  // ---- Bonus portal ----
+  // Some levels get a portal on a long stretch of ground somewhere in the
+  // middle. Stepping in moves Pupa to a bonus room full of coins for
+  // BONUS_TIME seconds (or until the exit portal); then she comes back
+  // just past the portal, which is used up.
+  function placePortal() {
+    portals = [];
+    if (Math.random() >= BONUS_CHANCE) return;
+    const lo = level.width * .25, hi = Math.min(level.width * .75, level.boss ? level.boss.left - 500 : Infinity);
+    const spots = platforms.filter(p => p.oy >= WORLD.ground && !p.axis && !p.kind && p.w >= 380 && p.ox + p.w / 2 > lo && p.ox + p.w / 2 < hi);
+    if (!spots.length) return;
+    const p = spots[Math.floor(Math.random() * spots.length)];
+    portals.push({ x: Math.round(p.ox + p.w / 2 - 45), y: p.oy - 140, w: 90, h: 140, used: false, seen: false });
+  }
+
+  function buildBonusRoom() {
+    const W = 2600;
+    const plats = [[0, 605, W, 140], [260, 470, 200, 32], [620, 380, 200, 32], [980, 470, 200, 32], [1340, 360, 220, 32], [1720, 470, 200, 32], [2060, 380, 200, 32]];
+    const coins = [];
+    const row = (x0, y, n, gap = 56) => { for (let i = 0; i < n; i++) coins.push([x0 + i * gap, y]); };
+    const arc = (x0, w, y, n) => { for (let i = 0; i < n; i++) { const k = i / (n - 1); coins.push([Math.round(x0 + w * k), Math.round(y - Math.sin(k * Math.PI) * 90)]); } };
+    row(200, 545, 7); row(640, 545, 7); row(1120, 545, 7); row(1620, 545, 7);
+    for (const [x, y, w] of plats.slice(1)) row(x + 44, y - 56, 3);
+    arc(460, 160, 440, 5); arc(820, 160, 350, 5); arc(1180, 160, 440, 5); arc(1560, 160, 330, 5); arc(1920, 140, 440, 5);
+    for (let i = 0; i < 5; i++) row(2140, 545 - i * 56, 3, 50);
+    return {
+      name: "โบนัส · มิติเหรียญทอง",
+      theme: { scene: "desert", pal: "prism6", magic: "rainbow", seed: 777, top: "#ffd76a", shine: "#fffbe0", body: ["#7a4ab0", "#4a2e80", "#1e1440"], sparks: ["#ffffff", "#ffd76a"] },
+      platforms: rects(plats), cherries: coins, enemies: [], blocks: [],
+      width: W, goalX: W + 99999, checkpointX: W + 99999
+    };
+  }
+
+  function enterBonus(portal) {
+    portal.used = true;
+    bankCoins();
+    bonus = {
+      time: BONUS_TIME, startScore: player.score,
+      saved: { level, platforms, cherries, enemies, blocks, solids, items, portals, boss, hazards, checkpoint, lastSafe, width: WORLD.width, x: portal.x + portal.w + 40, groundY: portal.y + portal.h }
+    };
+    level = buildBonusRoom();
+    platforms = level.platforms;
+    for (const p of platforms) { p.x = p.ox; p.y = p.oy; p.t = 0; p.dx = 0; p.dy = 0; p.state = "idle"; p.timer = 0; p.bounce = 0; p.vy = 0; }
+    WORLD.width = level.width;
+    cherries = level.cherries.map(([x, y], id) => ({ id, x, y, taken: false, phase: id * .71 }));
+    enemies = []; blocks = []; solids = platforms; items = []; boss = null; hazards = [];
+    shots = []; bombs = []; balls = []; starShots = []; beams = [];
+    portals = [{ x: level.width - 260, y: WORLD.ground - 140, w: 90, h: 140, used: false, exit: true, seen: true }];
+    checkpoint = 120; lastSafe = null;
+    Object.assign(player, { x: 120, y: 420, vx: 0, vy: 0, grounded: false, ride: null, dash: 0 });
+    cameraX = 0;
+    bannerText = "โบนัส! · เก็บเหรียญให้ได้มากที่สุดใน 15 วินาที";
+    bannerTime = 3;
+    [523, 784, 1047, 1568].forEach((note, i) => tone(note, .1, "triangle", .05, i * .06));
+    announce("เข้าประตูมิติแล้ว เก็บเหรียญให้ได้มากที่สุดใน 15 วินาที");
+  }
+
+  function leaveBonus() {
+    const s = bonus.saved, got = player.score - bonus.startScore;
+    bonus = null;
+    ({ level, platforms, cherries, enemies, blocks, solids, items, portals, boss, hazards, checkpoint, lastSafe } = s);
+    WORLD.width = s.width;
+    shots = []; bombs = []; balls = []; starShots = []; beams = [];
+    Object.assign(player, { x: s.x, y: s.groundY - player.h - 2, vx: 0, vy: 0, grounded: false, ride: null, dash: 0 });
+    player.hurt = Math.max(player.hurt, 1.5);
+    cameraX = Math.max(0, player.x - viewWidth * .34);
+    bannerTime = 0;
+    bankCoins();
+    updateHud();
+    popups.push({ x: player.x + player.w / 2, y: player.y - 40, text: `โบนัส +${got} เหรียญ`, life: 2.4 });
+    [1047, 784, 659, 523].forEach((note, i) => tone(note, .1, "triangle", .05, i * .06));
+    announce(`กลับจากประตูมิติ ได้ ${got} เหรียญ`);
+  }
+
+  function updatePortals() {
+    for (const portal of portals) {
+      if (portal.used) continue;
+      if (!portal.seen && portal.x < cameraX + viewWidth - 40) {
+        portal.seen = true;
+        popups.push({ x: portal.x + portal.w / 2, y: portal.y - 30, text: "ประตูมิติโบนัส!", life: 2 });
+        tone(880, .1, "sine", .04); tone(1320, .14, "sine", .04, .1);
+      }
+      if (rectsOverlap(player, portal)) {
+        if (portal.exit) leaveBonus(); else enterBonus(portal);
+        return;
+      }
+    }
+  }
+
+  // A swirling oval doorway; `exit` turns it green.
+  function drawPortalShape(cx, cy, time, scale = 1, exit = false) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    glowDot(0, 0, 110, exit ? "rgba(137,240,192,.75)" : "rgba(200,140,255,.8)", .7);
+    const colors = exit ? ["#89f0c0", "#e8fff4", "#3fd9b5"] : ["#ff78c8", "#9ff0ff", "#ffd76a", "#c8a0ff"];
+    for (let i = 0; i < 4; i++) {
+      ctx.strokeStyle = colors[i % colors.length]; ctx.lineWidth = 6 - i; ctx.globalAlpha = .85 - i * .12;
+      ctx.beginPath(); ctx.ellipse(0, 0, 40 - i * 7, 64 - i * 11, 0, time * .004 * (i % 2 ? -1 : 1) + i, time * .004 * (i % 2 ? -1 : 1) + i + TAU * .8); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    const core = ctx.createRadialGradient(0, 0, 4, 0, 0, 34);
+    core.addColorStop(0, "rgba(255,255,255,.95)"); core.addColorStop(1, exit ? "rgba(63,217,181,.15)" : "rgba(160,90,255,.15)");
+    ctx.fillStyle = core; ctx.beginPath(); ctx.ellipse(0, 0, 30, 50, 0, 0, TAU); ctx.fill();
+    for (let i = 0; i < 6; i++) {
+      const a = time * .003 + i * TAU / 6;
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 52, Math.sin(a) * 76, 3, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPortals(time) {
+    for (const portal of portals) {
+      if (portal.used) continue;
+      const x = portal.x - cameraX;
+      if (x < -150 || x > viewWidth + 150) continue;
+      drawPortalShape(x + portal.w / 2, portal.y + portal.h / 2, time, 1, portal.exit);
+      ctx.save();
+      ctx.font = "900 20px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.lineWidth = 5; ctx.strokeStyle = "rgba(20,8,40,.85)";
+      const label = portal.exit ? "ทางออก" : "BONUS";
+      const ly = portal.y - 18 + Math.sin(time * .005) * 4;
+      ctx.strokeText(label, x + portal.w / 2, ly); ctx.fillStyle = portal.exit ? "#89f0c0" : "#ffe27a"; ctx.fillText(label, x + portal.w / 2, ly);
+      ctx.restore();
+    }
+  }
+
+  function drawBonusHud() {
+    if (!bonus || state !== "playing") return;
+    const got = player.score - bonus.startScore, left = Math.max(0, bonus.time);
+    const x = viewWidth / 2, y = 150;   // just under the HUD cards
+    ctx.save();
+    ctx.fillStyle = "rgba(13,8,36,.72)"; roundedRect(x - 130, y - 30, 260, 60, 18); ctx.fill();
+    ctx.strokeStyle = left < 4 ? "#ff7aa8" : "#ffd76a"; ctx.lineWidth = 2; roundedRect(x - 130, y - 30, 260, 60, 18); ctx.stroke();
+    ctx.fillStyle = left < 4 ? "#ff7aa8" : "#ffd76a"; roundedRect(x - 118, y + 16, 236 * left / BONUS_TIME, 6, 3); ctx.fill();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "900 26px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+    ctx.fillStyle = "#fff6d8"; ctx.fillText(`⏱ ${left.toFixed(1)}   ● +${got}`, x, y - 4);
+    ctx.restore();
   }
 
   // A spare heart brings Pupa back instead of ending the run.
@@ -5274,10 +5574,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09g";
+  const NEWS_VERSION = "2026-10-09h";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "อีเวนต์ใหม่", title: "ประตูมิติโบนัส", text: "บางด่านจะมีประตูมิติโผล่กลางทาง เดินเข้าไปเก็บเหรียญให้ได้มากที่สุดใน 15 วินาที", image: "portal", open: () => { closeNews(); showLobby(); } },
+    { tag: "ไอเทมใหม่", title: "โบว์ลิ่ง · สายฟ้า · ไอพ่น", text: "กลิ้งชนมอนสเตอร์ล้มทั้งแถว ฟ้าผ่าทุกตัวบนจอ และบินขึ้นด้วยไอพ่น ได้จากบล็อก ? และตลาด", image: "newitems", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 9 · ทะเลโจรสลัด", text: "ด่าน 81–90 อ่าวโจรสลัด เกาะสมบัติ เมืองท่า ทะเลพายุ จนถึงเรือผี พร้อมบอสกัปตันปูหนวดแดง และกัปตันเรือผีโครงกระดูก", image: "world9", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "ความสามารถติดตัว", text: "ตัวละครทุกตัวมีพลังของตัวเอง: จิ๊บจิ๊บแมนกระโดด 3 สเต็ป ใบเตยร่อน อิคุยะปล่อยคลื่นลม ปังจิมีเกราะ Pupa V2 วิ่งเร็ว Pupa ดูดเหรียญ", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "ด่านใหม่", title: "โลก 8 · อาณาจักรขนมหวาน", text: "ด่าน 71–80 ทุ่งสายไหม ถ้ำช็อกโกแลตมินต์ ทะเลโซดา ภูเขาไอศกรีม จนถึงพระราชวังขนมหวาน พร้อมบอสใหม่ 2 ตัว", image: "world8", open: () => { closeNews(); openLevels(); } },
@@ -5365,6 +5667,12 @@
       paintOn(g, () => {
         ctx.save();
         if (kind === "pumpkin") { ctx.translate(80, 112); ctx.scale(1.55, 1.55); hatArt.pumpkin(time); }
+        else if (kind === "portal") drawPortalShape(80, 82, time, 1.1);
+        else if (kind === "newitems") {
+          [["bowling", 42, 66], ["lightning", 118, 66], ["jetpack", 80, 120]].forEach(([art, x, y]) => {
+            ctx.save(); ctx.translate(x, y); ctx.scale(1.5, 1.5); drawGlow(itemGlow[art], 26); pickupArt[art](); ctx.restore();
+          });
+        }
         else if (kind === "dash") { ctx.translate(84, 82); ctx.scale(2.4, 2.4); drawGlow(itemGlow.dash, 30); pickupArt.dash(); }
         else if (kind === "items") {
           [["laser", 40, 64], ["spread", 120, 64], ["magnet", 80, 118]].forEach(([art, x, y]) => {
@@ -6807,6 +7115,7 @@
   }
 
   function setKey(action, value) {
+    if (action === "jump") keys.jumpHeld = value;   // the jetpack flies while jump is held
     if (action === "jump" || action === "attack") { if (value) keys[action] = true; return; }
     keys[action] = value;
   }
@@ -6827,7 +7136,7 @@
   });
   window.addEventListener("keyup", (event) => {
     const action = keyMap[event.key];
-    if (action && action !== "jump" && action !== "attack") setKey(action, false);
+    if (action && action !== "attack") setKey(action, false);
   });
   window.addEventListener("blur", () => { keys.left = keys.right = false; if (state === "playing") togglePause(true); });
   window.addEventListener("resize", resize, { passive: true });
@@ -6835,7 +7144,7 @@
   document.querySelectorAll(".touch-button").forEach(button => {
     const action = button.dataset.key;
     const press = (event) => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); button.classList.add("is-pressed"); setKey(action, true); };
-    const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "jump" && action !== "attack") setKey(action, false); };
+    const release = (event) => { event.preventDefault(); button.classList.remove("is-pressed"); if (action !== "attack") setKey(action, false); };
     // Cancelling touchstart is what stops the long-press copy/select menu on
     // phones; the pointer events below still fire.
     button.addEventListener("touchstart", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
