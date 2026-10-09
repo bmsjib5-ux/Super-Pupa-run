@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  // Declared first: drawing helpers that use it can run while the page is
+  // still starting up (the what's-new pictures are painted at load).
+  const TAU = Math.PI * 2;
+
   const canvas = document.querySelector("#gameCanvas");
   // `let` so the market can borrow the drawing helpers for its icons.
   let ctx = canvas.getContext("2d", { alpha: false });
@@ -5782,7 +5786,6 @@
   // seamless tiles, and a few animated details (spores, lanterns, bubbles...).
   const SCENE_TILE = 1600;
   const SCENE_RES = 1.25;
-  const TAU = Math.PI * 2;
   let sceneCache = null;
 
   function seeded(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
