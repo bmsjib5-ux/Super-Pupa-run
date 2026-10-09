@@ -5,6 +5,9 @@
 window.PUPA_CONFIG = {
   // The API server (server/ in this repo, deployed on Render).
   apiBase: "https://super-pupa-run-api.onrender.com",
+  // Where players ask about payments and refunds; shown in the refund
+  // policy (in the game and on refund-policy.html).
+  supportEmail: null,
   // Firebase web app config from the Firebase console
   // (Project settings → Your apps → SDK setup and configuration).
   // Set to null to hide the sign-in button.

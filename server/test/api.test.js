@@ -59,8 +59,9 @@ test("api: login, sync, pay with TrueMoney, coins land on the account", async ()
     // The same sync again (lost reply) changes nothing.
     assert.equal((await call("PUT", "/api/save", { body: { save: device(500), baseCoins: 0, syncId: "s1" } })).json.save.coins, 500);
 
-    assert.equal((await call("POST", "/api/topup", { body: { pack: "p39", method: "truemoney", phone: "123" } })).json.error, "bad_phone");
-    const order = (await call("POST", "/api/topup", { body: { pack: "p39", method: "truemoney", phone: "081-234-5678" } })).json;
+    assert.equal((await call("POST", "/api/topup", { body: { pack: "p39", method: "truemoney", phone: "123", terms: "2026-10-09" } })).json.error, "bad_phone");
+    assert.equal((await call("POST", "/api/topup", { body: { pack: "p39", method: "promptpay" } })).json.error, "terms_not_accepted");
+    const order = (await call("POST", "/api/topup", { body: { pack: "p39", method: "truemoney", phone: "081-234-5678", terms: "2026-10-09" } })).json;
     assert.equal(order.status, "pending");
     assert.equal(order.coins, 450);
     assert.match(order.authorizeUri, /\/dev\/pay\/chrg_test_/);
@@ -86,7 +87,7 @@ test("api: webhook settles a PromptPay charge, even for a player who never synce
   const { call, omise, close } = boot();
   try {
     await call("POST", "/api/login", { token: "dev:cat" });
-    const order = (await call("POST", "/api/topup", { body: { pack: "p79", method: "promptpay" }, token: "dev:cat" })).json;
+    const order = (await call("POST", "/api/topup", { body: { pack: "p79", method: "promptpay", terms: "2026-10-09" }, token: "dev:cat" })).json;
     assert.match(order.qrImage, /\/dev\/qr\//);
     const chargeId = [...omise.charges.keys()][0];
     // A webhook for a still-pending charge credits nothing.
@@ -102,7 +103,7 @@ test("api: webhook settles a PromptPay charge, even for a player who never synce
     const sync = await call("PUT", "/api/save", { body: { save: device(30), baseCoins: 0, syncId: "x" }, token: "dev:cat" });
     assert.equal(sync.json.save.coins, 1030);
     // A failed charge credits nothing.
-    const bad = (await call("POST", "/api/topup", { body: { pack: "p20", method: "promptpay" }, token: "dev:cat" })).json;
+    const bad = (await call("POST", "/api/topup", { body: { pack: "p20", method: "promptpay", terms: "2026-10-09" }, token: "dev:cat" })).json;
     omise.finish([...omise.charges.keys()][1], "fail");
     assert.equal((await call("GET", `/api/orders/${bad.orderId}`, { token: "dev:cat" })).json.status, "failed");
     assert.equal((await call("GET", `/api/orders/${bad.orderId}`, { token: "dev:cat" })).json.balance, 1030);

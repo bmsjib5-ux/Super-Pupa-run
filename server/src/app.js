@@ -70,7 +70,9 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
       const pack = PACKS[req.body?.pack];
       const method = req.body?.method;
       const phone = String(req.body?.phone || "").replace(/[\s-]/g, "");
+      const terms = typeof req.body?.terms === "string" ? req.body.terms.slice(0, 20) : "";
       if (!pack || !METHODS.includes(method)) return res.status(400).json({ error: "bad_request" });
+      if (!terms) return res.status(400).json({ error: "terms_not_accepted" });
       if (method === "truemoney" && !PHONE.test(phone)) return res.status(400).json({ error: "bad_phone" });
       if ((await store.pendingOrders(req.user.uid)).length >= MAX_PENDING_ORDERS) return res.status(429).json({ error: "too_many_pending" });
 
@@ -83,7 +85,8 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
       });
       const order = {
         id, uid: req.user.uid, pack: pack.id, coins: pack.coins, amount: pack.amount, method,
-        chargeId: charge.id, status: chargeOutcome(charge), createdAt: Date.now(), paidAt: null
+        chargeId: charge.id, status: chargeOutcome(charge), createdAt: Date.now(), paidAt: null,
+        termsVersion: terms, termsAcceptedAt: Date.now()
       };
       await store.putOrder(order);
       if (order.status === "paid") await store.settleOrder(id, "paid");

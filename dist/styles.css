@@ -715,3 +715,20 @@ button { touch-action: manipulation; }
   .topup-qr { width: min(9rem, 30vh); }
   .topup-summary b { font-size: 1.15rem; }
 }
+
+/* Refund policy, agreed to before paying */
+.refund-box { width: 100%; max-height: 9.5rem; overflow-y: auto; padding: .55rem .75rem; border: 1px solid rgba(255,255,255,.16); border-radius: .8rem; text-align: left; background: rgba(0,0,0,.22); overscroll-behavior: contain; }
+.refund-title { display: block; margin-bottom: .2rem; color: var(--gold); font-size: .8rem; }
+.refund-list { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: .7rem; line-height: 1.45; }
+.refund-list li + li { margin-top: .15rem; }
+.refund-foot { margin: .35rem 0 0; color: var(--muted); font-size: .68rem; }
+.refund-foot a, .topup-note a { color: var(--gold); }
+.refund-agree { display: flex; align-items: center; gap: .45rem; width: 100%; padding: .45rem .6rem; border: 1px solid rgba(255,215,106,.35); border-radius: .7rem; color: var(--ink); font-size: .82rem; text-align: left; background: rgba(255,215,106,.08); cursor: pointer; }
+.refund-agree input { flex: none; width: 1.15rem; height: 1.15rem; accent-color: #ffbd63; }
+.refund-agree.is-missing { border-color: #ff9db6; animation: refund-shake .35s ease; }
+@keyframes refund-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.topup-methods.is-locked .topup-method { opacity: .45; }
+@media (prefers-reduced-motion: reduce) { .refund-agree.is-missing { animation: none; } }
+@media (orientation: landscape) and (max-height: 35rem) {
+  .refund-box { max-height: 5.5rem; }
+}
