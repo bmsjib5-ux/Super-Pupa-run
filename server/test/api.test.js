@@ -26,12 +26,15 @@ test("merge: first sync takes the device save, later syncs apply the coin differ
   assert.equal(first.coins, 500);
   // A top-up credited 1000 meanwhile; the device spent 200 and earned 50.
   const credited = { ...first, coins: first.coins + 1000 };
-  const second = mergeSave(credited, cleanSave(device(350, { shop: { owned: ["pangji"], hero: "pangji", items: { bomb: 1 }, petLevels: { dragon: 2 }, bring: {} }, cleared: [3] })), 500);
+  const second = mergeSave(credited, cleanSave(device(350, { shop: { owned: ["pangji"], hero: "pangji", items: { bomb: 1 }, petLevels: { dragon: 2 }, heroXp: { pangji: 900, pupa: 40 }, bring: {} }, cleared: [3] })), 500);
   assert.equal(second.coins, 1350);
   assert.deepEqual(second.shop.owned.sort(), ["jibjib", "pangji"]);
   assert.equal(second.shop.hero, "pangji");
   assert.equal(second.shop.items.bomb, 2);
   assert.equal(second.shop.petLevels.dragon, 2);
+  assert.deepEqual(second.shop.heroXp, { pangji: 900, pupa: 40 });
+  const third = mergeSave(second, cleanSave(device(350, { shop: { owned: [], heroXp: { pangji: 100, jibjib: 7 } } })), 350);
+  assert.deepEqual(third.shop.heroXp, { pangji: 900, pupa: 40, jibjib: 7 });
   assert.deepEqual(second.cleared, [1, 2, 3]);
 });
 

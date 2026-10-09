@@ -988,3 +988,31 @@ button { touch-action: manipulation; }
   to { transform: translateY(-1.1rem) scale(.97, 1.03); }
 }
 @media (prefers-reduced-motion: reduce) { .loading-hero { animation: none; } }
+
+/* ---- Hero level ---- */
+.lobby-xp { width: 100%; display: flex; align-items: center; gap: .5rem; }
+.lobby-xp b {
+  flex: none;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  color: #2a1440;
+  font-size: .78rem;
+  background: linear-gradient(135deg, var(--gold), #ff9fc4);
+  box-shadow: 0 0 .7rem rgba(255,215,106,.35);
+}
+.lobby-xp .xp-bar { flex: 1; height: .5rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+.lobby-xp .xp-bar i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--mint), var(--gold)); transition: width .3s ease; }
+.lobby-xp small { flex: none; color: var(--muted); font-size: .66rem; font-variant-numeric: tabular-nums; }
+.lobby-xp.is-max small { color: var(--gold); }
+.lobby-ability em { display: block; margin-top: .1rem; color: var(--gold); font-size: .62rem; font-style: normal; line-height: 1.3; }
+.lobby-ability em:empty { display: none; }
+@media (orientation: landscape) and (max-height: 35rem) {
+  .lobby-xp b { font-size: .64rem; padding: .05rem .4rem; }
+  .lobby-xp .xp-bar { height: .38rem; }
+  .lobby-xp small { font-size: .56rem; }
+  /* no room for the perk line sideways: the XP row carries it as a tooltip */
+  .lobby-ability em { display: none; }
+  #lobbyPreview { width: min(6.2rem, 21vh); }
+  .lobby-hero { overflow-y: auto; }
+}
+.shop-info .hero-level { color: var(--gold); }

@@ -1850,6 +1850,12 @@
   const SHOP_INDEX = {};
   for (const [group, list] of Object.entries(SHOP)) for (const entry of list) SHOP_INDEX[entry.id] = { ...entry, group };
   const PET_MAX_LEVEL = 5;
+  // Heroes level up by playing (see gainHeroXp). Going from level n to n + 1
+  // takes n * HERO_XP_STEP XP; every level runs 1.5% faster, and some add a perk.
+  const HERO_MAX_LEVEL = 10;
+  const HERO_XP_STEP = 500;
+  const HERO_PERKS = [[3, "หัวใจสูงสุด 4 ดวง"], [5, "เริ่มทุกด่านตัวใหญ่"], [7, "กระโดดสูงขึ้น 5%"], [10, "หัวใจสูงสุด 5 ดวง"]];
+  const xpForLevel = (lv) => HERO_XP_STEP * lv * (lv - 1) / 2;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
   const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
   const QUICK_BY_DEFAULT = ["dash", "bowling", "lightning", "jetpack"];
@@ -1902,8 +1908,10 @@
     try {
       const incoming = JSON.parse(event.newValue);
       if (!incoming?.shop) return;
+      const xp = save.shop.heroXp;
       save.shop = incoming.shop;
       normalizeShop();
+      mergeHeroXp(xp);
     } catch { /* ignore */ }
   });
   // Move coins picked up since the last call into the lifetime total.
@@ -2026,7 +2034,7 @@
   }
 
   function resetGame(index = startLevel) {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, jet: 0, banked: 0, airJumps: airJumpsFor(), shield: false, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: maxLives(), xp: 0, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, jet: 0, banked: 0, airJumps: airJumpsFor(), shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(index);
   }
@@ -2037,7 +2045,7 @@
   function retryLevel() {
     if (player.big) setBig(false);
     // Coming back from a game over also starts with the 5 s grace period.
-    Object.assign(player, { lives: 3, hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, dash: 0, jet: 0, shield: false });
+    Object.assign(player, { lives: maxLives(), hurt: HURT_TIME, star: 0, boost: 0, bomb: 0, laser: 0, spread: 0, magnet: 0, dash: 0, jet: 0, shield: false });
     const takenCoins = new Set(cherries.filter(cherry => cherry.taken).map(cherry => cherry.id));
     const usedBlocks = new Set(blocks.filter(block => block.used).map(block => block.id));
     const reachedCheckpoint = checkpoint > 90;
@@ -2060,8 +2068,10 @@
   function nextLevel() {
     bankCoins();
     markCleared(levelIndex + 1);
+    gainHeroXp(100);
+    writeSave();
     // Every new level starts with full hearts.
-    player.lives = 3;
+    player.lives = maxLives();
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .18, "triangle", .06, i * .11));
     loadLevel(levelIndex + 1);
     announce(`ผ่านด่านแล้ว เข้าสู่${level.name}`);
@@ -2102,6 +2112,8 @@
   function startGame() {
     if (state === "lost") retryLevel();
     else if (state === "won") resetGame();
+    // Starting from the lobby: hearts follow the hero (and level) picked there.
+    if (state === "menu") player.lives = maxLives();
     state = "playing";
     ui.start.hidden = true;
     ui.pause.hidden = true;
@@ -2123,7 +2135,7 @@
   }
 
   function finish(won) {
-    if (won) markCleared(levelIndex + 1);
+    if (won) { markCleared(levelIndex + 1); gainHeroXp(100); }
     state = won ? "won" : "lost";
     ui.end.hidden = false;
     ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
@@ -2137,7 +2149,7 @@
     bankCoins();
     writeSave();
     ui.finalPoints.textContent = formatPoints(save.points);
-    ui.bestPoints.textContent = `รอบนี้ได้ +${formatPoints(player.points)} คะแนน · +${player.score + player.bonus} เหรียญ`;
+    ui.bestPoints.textContent = `รอบนี้ได้ +${formatPoints(player.points)} คะแนน · +${player.score + player.bonus} เหรียญ · +${formatPoints(player.xp)} XP`;
     announce(won ? `ชนะแล้ว คะแนนสะสม ${formatPoints(save.points)} เหรียญสะสม ${formatPoints(save.coins)}` : "พลังหมดแล้ว ลองใหม่อีกครั้ง");
     playFanfare(won);
     window.setTimeout(() => ui.restartBtn.focus(), 50);
@@ -2145,7 +2157,7 @@
 
   function updateHud() {
     ui.score.textContent = formatPoints(save.coins);
-    ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
+    ui.hearts.textContent = Array.from({ length: maxLives() }, (_, i) => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
     ui.points.textContent = formatPoints(save.points);
     const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : heroIs("ikuya") ? "WIND" : "";
@@ -2158,6 +2170,7 @@
   function addScore(amount, x, y, label = "") {
     player.points += amount;
     save.points += amount;
+    gainHeroXp(amount / 10);
     bankCoins();
     writeSave();
     popups.push({ x, y, text: `${label}+${formatPoints(amount)}`, life: 1.1 });
@@ -2625,7 +2638,7 @@
       left -= BLOCK_DROPS[i][1];
       if (left < 0) { type = BLOCK_DROPS[i][0]; break; }
     }
-    if (type === "heart" && player.lives >= 3) type = "cherry";
+    if (type === "heart" && player.lives >= maxLives()) type = "cherry";
     if (type === "grow" && player.big) type = "cherry";
     if (type === "shield" && player.shield) type = "cherry";
     burst(cx, block.y, "#ffd76a", 8);
@@ -2654,7 +2667,7 @@
     burst(item.x, item.y, itemGlow[item.type], 16);
     addScore(500, item.x, item.y - 30);
     if (item.type === "heart") {
-      player.lives = Math.min(3, player.lives + 1);
+      player.lives = Math.min(maxLives(), player.lives + 1);
       announce("ได้หัวใจเพิ่ม 1 ดวง");
       tone(659, .1, "sine", .06); tone(988, .16, "sine", .06, .09);
     } else if (item.type === "star") {
@@ -2832,7 +2845,7 @@
     if (player.dash > 0) dashMove(dt);
     else {
     const move = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const target = move * (heroIs("pupav2") ? 396 : 330);
+    const target = move * (heroIs("pupav2") ? 396 : 330) * heroSpeed();
     player.vx += (target - player.vx) * Math.min(1, dt * (player.grounded ? 12 : 5));
     if (move) player.facing = move;
 
@@ -2843,7 +2856,7 @@
         player.airJumps--;
         burst(player.x + player.w / 2, player.y + player.h, "#ffffff", 7);
       }
-      player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1) * (heroIs("pupav2") ? 1.06 : 1);
+      player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1) * (heroIs("pupav2") ? 1.06 : 1) * heroJump();
       player.grounded = false;
       tone((player.boost > 0 ? 480 : 360) * (second ? 1.35 : 1), .11, "triangle", .06);
     }
@@ -4040,7 +4053,7 @@
 
   function drawBanner() {
     if (bannerTime <= 0 || state !== "playing") return;
-    const [title, subtitle] = bannerText.split(" · ");
+    const [title, subtitle, extra] = bannerText.split(" · ");
     ctx.save();
     ctx.globalAlpha = Math.min(1, bannerTime / .6, (3 - bannerTime) / .35);
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -4049,6 +4062,7 @@
     ctx.fillStyle = "#fff6d8"; ctx.fillText(title, viewWidth / 2, 250);
     ctx.font = "700 30px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
     ctx.fillStyle = level.theme.shine; ctx.fillText(subtitle, viewWidth / 2, 308);
+    if (extra) { ctx.font = "700 24px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif"; ctx.fillStyle = "#ffe27a"; ctx.fillText(extra, viewWidth / 2, 352); }
     ctx.restore();
   }
 
@@ -4119,7 +4133,11 @@
       items[id] = Math.max(0, Math.min(99, Math.floor(Number(raw.items?.[id]) || 0)));
       bring[id] = raw.bring && id in raw.bring ? raw.bring[id] !== false : !QUICK_BY_DEFAULT.includes(id);
     }
-    save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring, petLevels: {} };
+    save.shop = { owned: [...owned], hero: pick(raw.hero, "heroes", "pupa"), skin: pick(raw.skin, "skins", "cherry"), hat: pick(raw.hat, "hats", "nohat"), pet: pick(raw.pet, "pets", "nopet"), items, bring, petLevels: {}, heroXp: {} };
+    for (const { id } of SHOP.heroes) {
+      const xp = Math.min(xpForLevel(HERO_MAX_LEVEL), Math.floor(Number(raw.heroXp?.[id]) || 0));
+      if (xp > 0) save.shop.heroXp[id] = xp;
+    }
     for (const { id } of SHOP.pets) {
       const level = Math.floor(Number(raw.petLevels?.[id]) || 1);
       if (level > 1 && owned.has(id)) save.shop.petLevels[id] = Math.min(PET_MAX_LEVEL, level);
@@ -4142,6 +4160,49 @@
       shield: Boolean(entry.shield)
     };
   }
+  const heroXp = (id = save.shop.hero) => save.shop.heroXp?.[id] || 0;
+  function heroLevel(id = save.shop.hero) {
+    let lv = 1;
+    while (lv < HERO_MAX_LEVEL && heroXp(id) >= xpForLevel(lv + 1)) lv++;
+    return lv;
+  }
+  const heroSpeed = () => 1 + .015 * (heroLevel() - 1);
+  const heroJump = () => heroLevel() >= 7 ? 1.05 : 1;
+  const maxLives = () => heroLevel() >= 10 ? 5 : heroLevel() >= 3 ? 4 : 3;
+  const heroPerks = (lv) => HERO_PERKS.filter(([at]) => at <= lv).map(([, text]) => text);
+  const nextHeroPerk = (lv) => HERO_PERKS.find(([at]) => at > lv);
+  // Both copies of a save keep the larger XP for each hero.
+  function mergeHeroXp(other) {
+    for (const [id, xp] of Object.entries(other || {})) if (SHOP_INDEX[id]?.group === "heroes") save.shop.heroXp[id] = Math.max(heroXp(id), Math.floor(Number(xp) || 0));
+  }
+
+  // The hero in play earns a tenth of every point as XP.
+  function gainHeroXp(amount) {
+    amount = Math.round(amount);
+    if (!player || amount <= 0) return;
+    const id = save.shop.hero, before = heroLevel(id);
+    if (before >= HERO_MAX_LEVEL) return;
+    save.shop.heroXp[id] = Math.min(xpForLevel(HERO_MAX_LEVEL), heroXp(id) + amount);
+    player.xp += amount;
+    const after = heroLevel(id);
+    if (after > before) heroLevelUp(id, before, after);
+  }
+
+  function heroLevelUp(id, before, after) {
+    const name = SHOP_INDEX[id].name;
+    const perks = HERO_PERKS.filter(([at]) => at > before && at <= after).map(([, text]) => text);
+    bannerText = `เลเวลอัป! · ${name} Lv ${after}${perks.length ? ` · ${perks.join(", ")}` : ""}`;
+    bannerTime = 3;
+    // Celebrate with a heart (up to the new limit) and, from level 5, the big form.
+    player.lives = Math.min(maxLives(), player.lives + 1);
+    if (after >= 5 && before < 5 && !player.big && !player.flag && state === "playing") setBig(true);
+    burst(player.x + player.w / 2, player.y + player.h / 2, "#ffe27a", 24);
+    popups.push({ x: player.x + player.w / 2, y: player.y - 30, text: `Lv ${after}!`, life: 2 });
+    [659, 784, 988, 1319].forEach((note, i) => tone(note, .14, "triangle", .06, i * .09));
+    announce(`${name} เลเวลอัปเป็นเลเวล ${after}${perks.length ? ` ได้ ${perks.join(" และ ")}` : ""}`);
+    updateHud();
+  }
+
   function upgradePet(id) {
     const entry = SHOP_INDEX[id];
     if (!entry || !owns(id) || petLevel(id) >= PET_MAX_LEVEL) return false;
@@ -4192,6 +4253,7 @@
       save.shop.items[id]--; used.push(SHOP_INDEX[id].name); return true;
     };
     if (!player.shield && take("shield")) player.shield = true;
+    if (!player.big && heroLevel() >= 5) setBig(true);
     if (!player.big && take("grow")) setBig(true);
     if (take("leaf")) player.boost = BOOST_TIME;
     if (take("bomb")) player.bomb = BOMB_TIME;
@@ -4871,6 +4933,12 @@
       ability.className = "hero-ability";
       ability.textContent = `⚡ ${entry.ability[0]}: ${entry.ability[1]}`;
       info.append(ability);
+      if (owns(entry.id)) {
+        const lv = document.createElement("span");
+        lv.className = "hero-ability hero-level";
+        lv.textContent = `★ Lv ${heroLevel(entry.id)}${heroLevel(entry.id) >= HERO_MAX_LEVEL ? " (สูงสุด)" : ` · ${formatPoints(heroXp(entry.id))} XP`}`;
+        info.append(lv);
+      }
     }
     const petEntry = group === "pets" && entry.magnet ? entry : null;
     if (petEntry && owns(entry.id)) {
@@ -5069,6 +5137,7 @@
     heroName: document.querySelector("#lobbyHeroName"),
     heroNote: document.querySelector("#lobbyHeroNote"),
     ability: document.querySelector("#lobbyHeroAbility"),
+    xp: document.querySelector("#lobbyHeroXp"),
     heroAction: document.querySelector("#lobbyHeroAction"),
     levelNum: document.querySelector("#lobbyLevelNum"),
     levelName: document.querySelector("#lobbyLevelName"),
@@ -5086,6 +5155,30 @@
     drawLook(lobbyCtx, lobbyUi.preview.width, { hero: lobbyHero, skin: save.shop.skin, hat: save.shop.hat, pet: save.shop.pet }, time);
   }
 
+  // Level, XP bar and level perks of the hero shown in the lobby.
+  function renderHeroLevel(id) {
+    const lv = heroLevel(id), xp = heroXp(id);
+    const maxed = lv >= HERO_MAX_LEVEL;
+    const from = xpForLevel(lv), to = xpForLevel(lv + 1);
+    const percent = maxed ? 100 : Math.floor(100 * (xp - from) / (to - from));
+    if (lobbyUi.xp) {
+      lobbyUi.xp.querySelector("b").textContent = `Lv ${lv}`;
+      lobbyUi.xp.querySelector("i").style.width = `${percent}%`;
+      lobbyUi.xp.querySelector(".xp-bar").setAttribute("aria-valuenow", String(percent));
+      lobbyUi.xp.querySelector("small").textContent = maxed ? "เลเวลสูงสุด" : `${formatPoints(xp - from)} / ${formatPoints(to - from)} XP`;
+      lobbyUi.xp.classList.toggle("is-max", maxed);
+    }
+    const perks = heroPerks(lv);
+    if (lv > 1) perks.unshift(`วิ่งเร็ว +${(1.5 * (lv - 1)).toFixed(1).replace(".0", "")}%`);
+    const next = nextHeroPerk(lv);
+    const parts = [];
+    if (perks.length) parts.push(`โบนัสเลเวล: ${perks.join(" · ")}`);
+    if (next) parts.push(`ถัดไป Lv ${next[0]}: ${next[1]}`);
+    const em = lobbyUi.ability?.querySelector("em");
+    if (em) em.textContent = parts.join(" — ");
+    if (lobbyUi.xp) lobbyUi.xp.title = parts.join("\n");
+  }
+
   function renderLobby() {
     if (!lobbyReady || !lobbyUi.screen) return;
     lobbyUi.coins.textContent = formatPoints(save.coins);
@@ -5098,6 +5191,7 @@
       lobbyUi.ability.querySelector("b").textContent = hero.ability[0];
       lobbyUi.ability.querySelector("span").textContent = hero.ability[1];
     }
+    renderHeroLevel(hero.id);
     const button = lobbyUi.heroAction;
     button.classList.toggle("shop-equip", owned);
     button.classList.toggle("shop-buy", !owned);
@@ -5238,6 +5332,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full) {
+      const xp = save.shop.heroXp;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -5248,6 +5343,8 @@
       }
       save.cloud = { uid, coins: remote.coins };
       normalizeShop();
+      mergeHeroXp(xp);
+      mergeHeroXp(remote.shop?.heroXp);
       writeSave(true);
       refreshCoins();
     },
@@ -5583,10 +5680,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09h";
+  const NEWS_VERSION = "2026-10-09i";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "ตัวละครอัปเลเวลได้", text: "เล่นแล้วได้ XP ทุกตัวละครอัปได้ถึง Lv 10 วิ่งเร็วขึ้นทุกเลเวล Lv 3 หัวใจ 4 ดวง Lv 5 เริ่มด่านตัวใหญ่ Lv 7 กระโดดสูงขึ้น Lv 10 หัวใจ 5 ดวง", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "อีเวนต์ใหม่", title: "ประตูมิติโบนัส", text: "บางด่านจะมีประตูมิติโผล่กลางทาง เดินเข้าไปเก็บเหรียญให้ได้มากที่สุดใน 15 วินาที", image: "portal", open: () => { closeNews(); showLobby(); } },
     { tag: "ไอเทมใหม่", title: "โบว์ลิ่ง · สายฟ้า · ไอพ่น", text: "กลิ้งชนมอนสเตอร์ล้มทั้งแถว ฟ้าผ่าทุกตัวบนจอ และบินขึ้นด้วยไอพ่น ได้จากบล็อก ? และตลาด", image: "newitems", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 9 · ทะเลโจรสลัด", text: "ด่าน 81–90 อ่าวโจรสลัด เกาะสมบัติ เมืองท่า ทะเลพายุ จนถึงเรือผี พร้อมบอสกัปตันปูหนวดแดง และกัปตันเรือผีโครงกระดูก", image: "world9", open: () => { closeNews(); openLevels(); } },

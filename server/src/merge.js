@@ -26,7 +26,7 @@ export function cleanSave(raw) {
   const out = {
     best: int(raw.best), points: int(raw.points), coins: int(raw.coins), plays: int(raw.plays), wins: int(raw.wins),
     cleared: numberList(raw.cleared),
-    shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), bring: {} }
+    shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
   if (shop.bring && typeof shop.bring === "object") for (const [key, on] of Object.entries(shop.bring)) if (/^[a-z0-9]{1,30}$/.test(key)) out.shop.bring[key] = on !== false;
@@ -42,10 +42,12 @@ export function mergeSave(current, incoming, baseCoins) {
     ...incoming.shop,
     owned: [...new Set([...current.shop.owned, ...incoming.shop.owned])],
     items: { ...current.shop.items },
-    petLevels: { ...current.shop.petLevels }
+    petLevels: { ...current.shop.petLevels },
+    heroXp: { ...current.shop.heroXp }
   };
   for (const [id, count] of Object.entries(incoming.shop.items)) shop.items[id] = Math.max(shop.items[id] || 0, count);
   for (const [id, level] of Object.entries(incoming.shop.petLevels)) shop.petLevels[id] = Math.max(shop.petLevels[id] || 0, level);
+  for (const [id, xp] of Object.entries(incoming.shop.heroXp || {})) shop.heroXp[id] = Math.max(shop.heroXp[id] || 0, xp);
   return {
     best: Math.max(current.best, incoming.best), points: Math.max(current.points, incoming.points), coins,
     plays: Math.max(current.plays, incoming.plays), wins: Math.max(current.wins, incoming.wins),
