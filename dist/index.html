@@ -13,17 +13,32 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261009v">
-    <script src="game.js?v=20261009v" defer></script>
-    <script type="module" src="pupa3d.js?v=20261009v"></script>
+    <link rel="stylesheet" href="styles.css?v=20261009w">
+    <script src="game.js?v=20261009w" defer></script>
+    <script type="module" src="pupa3d.js?v=20261009w"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
-    <script src="config.js?v=20261009v"></script>
-    <script type="module" src="account.js?v=20261009v"></script>
+    <script src="config.js?v=20261009w"></script>
+    <script type="module" src="account.js?v=20261009w"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
     <main id="game" tabindex="-1">
       <section class="game-shell" aria-labelledby="game-title">
+        <div class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
+          <div class="loading-card">
+            <img class="loading-hero" src="assets/pupa-hero-3d.webp" alt="" width="160" height="160">
+            <p class="loading-title">Super Pupa Run</p>
+            <div class="loading-bar" id="loadingBar" role="progressbar" aria-label="ความคืบหน้าการโหลด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span class="loading-fill" id="loadingFill"></span>
+            </div>
+            <p class="loading-status"><span id="loadingText">กำลังโหลดเกม</span> <b id="loadingPercent">0%</b></p>
+            <p class="loading-tip" id="loadingTip"></p>
+          </div>
+        </div>
+        <script>
+          // If the game script never gets going, don't leave the loader up for ever.
+          setTimeout(() => document.getElementById("loadingScreen")?.classList.add("is-done"), 30000);
+        </script>
         <header class="topbar">
           <div class="brand">
             <span class="brand-mark" aria-hidden="true">✦</span>

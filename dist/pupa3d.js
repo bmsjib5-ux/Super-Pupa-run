@@ -64,13 +64,14 @@ const CHARACTERS = {
   }
 };
 
-const api = { ready: false, canvas, viewHalf: VIEW, render, setSkin, setCharacter, character: "pupa" };
+const api = { ready: false, webgl: false, failed: {}, canvas, viewHalf: VIEW, render, setSkin, setCharacter, character: "pupa" };
 window.Pupa3D = api;
 
 let renderer;
 try {
   renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
   renderer.setClearColor(0x000000, 0);
+  api.webgl = true;
 } catch (error) {
   console.warn("Pupa3D: WebGL unavailable, falling back to sprites", error);
 }
@@ -221,7 +222,7 @@ function load(id) {
     });
     meshes[id] = group;
     if (api.character === id) show(id);
-  }, undefined, (error) => console.warn(`Pupa3D: ${id} model failed to load`, error));
+  }, undefined, (error) => { api.failed[id] = true; console.warn(`Pupa3D: ${id} model failed to load`, error); });
 }
 
 function show(id) {
@@ -293,7 +294,7 @@ const PET_SIZE = 256;
 const PET_VIEW = 1.15;
 const petCanvas = document.createElement("canvas");
 petCanvas.width = petCanvas.height = PET_SIZE;
-const petApi = { ready: false, canvas: petCanvas, load: loadPet, render: renderPet };
+const petApi = { ready: false, failed: false, canvas: petCanvas, load: loadPet, render: renderPet };
 api.pet = petApi;
 
 let petRenderer, petScene, petCamera, petTurn, petLoading = false;
@@ -305,6 +306,7 @@ function loadPet() {
     petRenderer.setClearColor(0x000000, 0);
   } catch (error) {
     console.warn("Pupa3D: WebGL unavailable for the pet", error);
+    petApi.failed = true;
     return;
   }
   petScene = new Scene();
@@ -334,7 +336,7 @@ ${WING_SHADER}`)
       petTurn.add(new Mesh(node.geometry, material));
     });
     petApi.ready = petTurn.children.length > 0;
-  }, undefined, (error) => console.warn("Pupa3D: pet model failed to load", error));
+  }, undefined, (error) => { petApi.failed = true; console.warn("Pupa3D: pet model failed to load", error); });
 }
 
 // The dragon has no skeleton either: its wings (the parts of the mesh that
@@ -380,7 +382,7 @@ function renderPet(time, swooping) {
 // skin everywhere else.
 const pumpkinCanvas = document.createElement("canvas");
 pumpkinCanvas.width = pumpkinCanvas.height = 192;
-const pumpkinApi = { ready: false, canvas: pumpkinCanvas, load: loadPumpkin };
+const pumpkinApi = { ready: false, failed: false, canvas: pumpkinCanvas, load: loadPumpkin };
 api.pumpkin = pumpkinApi;
 let pumpkinLoading = false;
 
@@ -422,7 +424,7 @@ function loadPumpkin() {
     still = new WebGLRenderer({ alpha: true, antialias: true, premultipliedAlpha: true });
     still.setSize(192, 192, false);
     still.setClearColor(0x000000, 0);
-  } catch { return; }
+  } catch { pumpkinApi.failed = true; return; }
   const stage = new Scene();
   stage.add(new HemisphereLight(0xfff4e0, 0x553322, 2));
   const light = new DirectionalLight(0xffffff, 1.6);
@@ -447,5 +449,5 @@ function loadPumpkin() {
     pumpkinCanvas.getContext("2d").drawImage(still.domElement, 0, 0);
     still.dispose();
     pumpkinApi.ready = true;
-  }, undefined, (error) => console.warn("Pupa3D: pumpkin failed to load", error));
+  }, undefined, (error) => { pumpkinApi.failed = true; console.warn("Pupa3D: pumpkin failed to load", error); });
 }

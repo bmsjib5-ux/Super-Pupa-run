@@ -1947,6 +1947,7 @@
   let particles = [];
   let cameraX = 0;
   let state = "menu";
+  let nextScenePrimed = false;
   let last = 0;
   let soundOn = true;
   let audio;
@@ -1971,6 +1972,7 @@
 
   function loadLevel(index) {
     levelIndex = index;
+    nextScenePrimed = false;
     level = levels[index];
     platforms = level.platforms;
     for (const p of platforms) { p.x = p.ox; p.y = p.oy; p.t = 0; p.dx = 0; p.dy = 0; p.state = "idle"; p.timer = 0; p.bounce = 0; p.vy = 0; }
@@ -2782,6 +2784,8 @@
 
   function update(dt) {
     if (state !== "playing") return;
+    // Paint the next level's scene in the background, well before the flag.
+    if (!nextScenePrimed && player.x > level.goalX * .45) { nextScenePrimed = true; prepareScene(levels[levelIndex + 1]?.theme); }
     bannerTime = Math.max(0, bannerTime - dt);
     flash = Math.max(0, flash - dt);
     bolts = bolts.filter(bolt => (bolt.life -= dt) > 0);
@@ -5163,6 +5167,7 @@
     if (num < 1 || num > levels.length || !isOpenLevel(num)) { tone(150, .1, "square", .04); return; }
     bankCoins();
     resetGame(num - 1);
+    prepareScene(level.theme);
     tone(523, .05, "triangle", .04);
     renderLobby();
   }
@@ -5786,7 +5791,12 @@
   // seamless tiles, and a few animated details (spores, lanterns, bubbles...).
   const SCENE_TILE = 1600;
   const SCENE_RES = 1.25;
-  let sceneCache = null;
+  // Painted scenes, newest last. Two are kept: the level being played and the
+  // next one, which is painted ahead of time so arriving there doesn't stall.
+  const sceneStore = new Map();
+  const sceneBuilds = new Map();
+  const sceneKey = (theme) => `${theme.scene}:${theme.pal}:${theme.magic || "none"}:${theme.seed}`;
+  const sceneReady = (theme) => !theme?.scene || sceneStore.has(sceneKey(theme));
 
   function seeded(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
   // A smooth periodic curve in -1..1 that joins up across the tile edge.
@@ -6503,35 +6513,73 @@
     ctx.restore();
   }
 
-  function buildScene(theme) {
-    const def = SCENES[theme.scene];
-    const layers = def.layers.map((layer, i) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(SCENE_TILE * SCENE_RES); canvas.height = Math.round(720 * SCENE_RES);
-      const g = canvas.getContext("2d");
-      g.scale(SCENE_RES, SCENE_RES);
-      paintOn(g, () => {
-        // paint three times, a tile apart, so shapes crossing an edge wrap round
-        for (const shift of [-SCENE_TILE, 0, SCENE_TILE]) {
-          ctx.save(); ctx.translate(shift, 0);
-          layer.paint(seeded((theme.seed || 1) * 97 + i * 13), SCENE_PALS[theme.pal]);
-          ctx.restore();
-        }
-      });
-      return { canvas, parallax: layer.parallax };
+  function keepScene(key, scene) {
+    sceneStore.delete(key);
+    sceneStore.set(key, scene);
+    while (sceneStore.size > 2) sceneStore.delete(sceneStore.keys().next().value);
+  }
+
+  function buildSceneLayer(theme, i) {
+    const layer = SCENES[theme.scene].layers[i];
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(SCENE_TILE * SCENE_RES); canvas.height = Math.round(720 * SCENE_RES);
+    const g = canvas.getContext("2d");
+    g.scale(SCENE_RES, SCENE_RES);
+    paintOn(g, () => {
+      // paint three times, a tile apart, so shapes crossing an edge wrap round
+      for (const shift of [-SCENE_TILE, 0, SCENE_TILE]) {
+        ctx.save(); ctx.translate(shift, 0);
+        layer.paint(seeded((theme.seed || 1) * 97 + i * 13), SCENE_PALS[theme.pal]);
+        ctx.restore();
+      }
     });
-    return { key: `${theme.scene}:${theme.pal}:${theme.magic || "none"}:${theme.seed}`, layers };
+    return { canvas, parallax: layer.parallax };
+  }
+
+
+  function buildScene(theme) {
+    return { key: sceneKey(theme), layers: SCENES[theme.scene].layers.map((_, i) => buildSceneLayer(theme, i)) };
+  }
+
+  // Paint a scene one layer per frame so the page stays responsive (and a
+  // loading bar can move). Resolves once the scene is in the store.
+  function prepareScene(theme, onStep) {
+    if (!theme?.scene || !SCENES[theme.scene]) return Promise.resolve();
+    const key = sceneKey(theme);
+    if (sceneStore.has(key)) { keepScene(key, sceneStore.get(key)); onStep?.(1); return Promise.resolve(); }
+    if (sceneBuilds.has(key)) return sceneBuilds.get(key).then(() => onStep?.(1));
+    const count = SCENES[theme.scene].layers.length;
+    const layers = [];
+    const build = new Promise((resolve) => {
+      const step = () => {
+        if (layers.length < count) {
+          try { layers.push(buildSceneLayer(theme, layers.length)); }
+          catch (error) { console.warn("scene layer failed", error); sceneBuilds.delete(key); resolve(); return; }
+          onStep?.(layers.length / count);
+          requestAnimationFrame(step);
+          return;
+        }
+        keepScene(key, { key, layers });
+        sceneBuilds.delete(key);
+        resolve();
+      };
+      requestAnimationFrame(step);
+    });
+    sceneBuilds.set(key, build);
+    return build;
   }
 
   function drawScene(theme, time) {
     const def = SCENES[theme.scene];
     if (!Number.isFinite(viewWidth) || !Number.isFinite(viewHeight) || viewWidth <= 0) return;
-    const key = `${theme.scene}:${theme.pal}:${theme.magic || "none"}:${theme.seed}`;
-    if (!sceneCache || sceneCache.key !== key) sceneCache = buildScene(theme);
+    const key = sceneKey(theme);
+    let scene = sceneStore.get(key);
+    // Being painted in the background: show the sky and live details meanwhile.
+    if (!scene && !sceneBuilds.has(key)) keepScene(key, scene = buildScene(theme));
     const t = time / 1000, w = viewWidth, h = viewHeight, top = worldOffsetY, p = SCENE_PALS[theme.pal];
     ctx.fillStyle = vgrad(0, top + 720, def.sky(p)); ctx.fillRect(0, 0, w, h);
     def.celestial?.(p, t, w, top);
-    for (const layer of sceneCache.layers) {
+    for (const layer of scene?.layers || []) {
       const offset = wrapX(cameraX * layer.parallax, SCENE_TILE);
       for (let x = -offset; x < w; x += SCENE_TILE) ctx.drawImage(layer.canvas, Math.floor(x), top, SCENE_TILE + 1, 720);
     }
@@ -7062,7 +7110,7 @@
     resetGame(num - 1);
     state = "menu";
     ui.pauseBtn.textContent = "Ⅱ";
-    startGame();
+    startWhenReady();
   }
 
   function renderLevels() {
@@ -7128,7 +7176,8 @@
     // The market takes the keyboard while it is open: Escape closes it.
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
-    if (event.key === "Enter" && state === "menu") { startGame(); return; }
+    if (loadingBusy) return;
+    if (event.key === "Enter" && state === "menu") { startWhenReady(); return; }
     if (/^[1-8]$/.test(event.key) && !event.repeat) {
       const entry = quickList()[Number(event.key) - 1];
       if (entry) { event.preventDefault(); useQuickItem(entry.id); }
@@ -7219,7 +7268,132 @@
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 
-  ui.startBtn.addEventListener("click", startGame);
+  // ---- Loading screen ----
+  // Shown before the game opens (pictures, 3D characters and the painted
+  // scenes of the first levels) and again when a level's scene still needs
+  // painting, so play never starts on a half-drawn world.
+  const loadUi = {
+    screen: document.querySelector("#loadingScreen"),
+    fill: document.querySelector("#loadingFill"),
+    bar: document.querySelector("#loadingBar"),
+    text: document.querySelector("#loadingText"),
+    percent: document.querySelector("#loadingPercent"),
+    tip: document.querySelector("#loadingTip")
+  };
+  const LOADING_TIPS = [
+    "เคล็ดลับ: กระโดดเหยียบหัวมอนสเตอร์เพื่อกำจัดมัน",
+    "เคล็ดลับ: เก็บเหรียญไปซื้อชุด สัตว์เลี้ยง และไอเทมในตลาด",
+    "เคล็ดลับ: ด่านที่ผ่านแล้วกลับไปเล่นซ้ำได้จากปุ่มเลือกด่าน",
+    "เคล็ดลับ: ธงกลางด่านคือจุดเซฟ ตายแล้วเริ่มต่อจากตรงนั้น",
+    "เคล็ดลับ: บอสจะอ่อนแรงลงทุกครั้งที่โดนเหยียบ"
+  ];
+  let loadingBusy = Boolean(loadUi.screen && !loadUi.screen.hidden);
+  let loadingShown = 0;
+  let loadingTipTimer = 0;
+  let loadingTipIndex = Math.floor(Math.random() * LOADING_TIPS.length);
+
+  function nextLoadingTip() {
+    if (!loadUi.tip) return;
+    loadUi.tip.textContent = LOADING_TIPS[loadingTipIndex++ % LOADING_TIPS.length];
+  }
+
+  function setLoading(fraction, text) {
+    if (!loadUi.screen) return;
+    // never move backwards: several jobs report progress at once
+    loadingShown = Math.max(loadingShown, Math.min(1, fraction));
+    const percent = Math.round(loadingShown * 100);
+    loadUi.fill.style.width = `${percent}%`;
+    loadUi.percent.textContent = `${percent}%`;
+    loadUi.bar?.setAttribute("aria-valuenow", String(percent));
+    if (text) loadUi.text.textContent = text;
+  }
+
+  function showLoading(text) {
+    loadingBusy = true;
+    if (!loadUi.screen) return;
+    loadingShown = 0;
+    loadUi.screen.hidden = false;
+    loadUi.screen.classList.remove("is-done");
+    setLoading(0, text);
+    nextLoadingTip();
+    clearInterval(loadingTipTimer);
+    loadingTipTimer = setInterval(nextLoadingTip, 3200);
+  }
+
+  function hideLoading() {
+    loadingBusy = false;
+    clearInterval(loadingTipTimer);
+    if (!loadUi.screen) return;
+    setLoading(1, "พร้อมแล้ว!");
+    // let the bar reach the end before fading out
+    setTimeout(() => { if (!loadingBusy) loadUi.screen.classList.add("is-done"); }, 300);
+    setTimeout(() => { if (!loadingBusy) loadUi.screen.hidden = true; }, 750);
+  }
+
+  const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const waitImage = (img) => img.complete ? Promise.resolve() : new Promise(resolve => {
+    img.addEventListener("load", resolve, { once: true });
+    img.addEventListener("error", resolve, { once: true });
+  });
+  // Resolves when test() turns true, or after ms at the latest.
+  const waitFor = (test, ms) => new Promise(resolve => {
+    const end = performance.now() + ms;
+    const tick = () => { if (test() || performance.now() > end) resolve(); else setTimeout(tick, 80); };
+    tick();
+  });
+
+  async function loadModels(onStep) {
+    await waitFor(() => window.Pupa3D, 6000);
+    const model = window.Pupa3D;
+    if (!model?.webgl) { onStep(1); return; }
+    const hero = SHOP_INDEX[save.shop.hero];
+    const jobs = [];
+    if (hero && !hero.flat) { model.setCharacter(hero.id); jobs.push(() => (model.ready && model.character === hero.id) || model.failed?.[hero.id]); }
+    if (save.shop.pet === "dragon" && model.pet) { model.pet.load(); jobs.push(() => model.pet.ready || model.pet.failed); }
+    if (save.shop.hat === "pumpkin" && model.pumpkin) { model.pumpkin.load(); jobs.push(() => model.pumpkin.ready || model.pumpkin.failed); }
+    if (!jobs.length) { onStep(1); return; }
+    let finished = 0;
+    await Promise.all(jobs.map(test => waitFor(test, 12000).then(() => onStep(++finished / jobs.length))));
+  }
+
+  async function bootLoading() {
+    nextLoadingTip();
+    loadingTipTimer = setInterval(nextLoadingTip, 3200);
+    // A slow network never keeps the player out for long.
+    await Promise.race([bootSteps(), pause(20000)]);
+    hideLoading();
+  }
+
+  async function bootSteps() {
+    try {
+      const images = Object.values(art).flat();
+      let done = 0;
+      setLoading(.02, "กำลังโหลดรูปภาพ");
+      await Promise.all(images.map(img => waitImage(img).then(() => setLoading(.3 * ++done / images.length))));
+      setLoading(.3, "กำลังโหลดตัวอักษร");
+      await Promise.race([document.fonts?.ready, pause(2500)]);
+      setLoading(.35, "กำลังโหลดตัวละคร 3D");
+      await loadModels(f => setLoading(.35 + .35 * f));
+      setLoading(.7, "กำลังเตรียมฉาก");
+      const themes = [level.theme, levels[levelIndex + 1]?.theme].filter(theme => theme?.scene);
+      for (let i = 0; i < themes.length; i++) await prepareScene(themes[i], f => setLoading(.7 + .3 * (i + f) / themes.length));
+    } catch (error) {
+      console.warn("loading screen", error);
+    }
+  }
+
+  // Start (or enter a level) once its scene is painted.
+  function startWhenReady() {
+    if (loadingBusy) return;
+    if (state !== "menu" || sceneReady(level.theme)) { startGame(); return; }
+    showLoading("กำลังเตรียมฉาก");
+    prepareScene(level.theme, f => setLoading(.05 + .95 * f)).then(() => {
+      hideLoading();
+      startGame();
+    });
+  }
+
+  ui.startBtn.addEventListener("click", startWhenReady);
   lobbyReady = true;
   renderLobby();
   ui.restartBtn.addEventListener("click", startGame);
@@ -7278,4 +7452,5 @@
   resize();
   registerWebMcp();
   requestAnimationFrame(frame);
+  bootLoading();
 })();
