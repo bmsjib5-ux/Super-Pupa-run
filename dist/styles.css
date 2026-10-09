@@ -918,3 +918,15 @@ button { touch-action: manipulation; }
   .lobby-actions .primary-button { min-width: 8rem; padding: .45rem 1rem; }
   .lobby-actions .secondary-button { padding: .4rem .8rem; font-size: .75rem; }
 }
+
+/* Hero abilities */
+.lobby-ability { width: 100%; margin: 0; padding: .3rem .55rem; border: 1px solid rgba(127,212,255,.35); border-radius: .7rem; text-align: center; background: rgba(127,212,255,.08); }
+.lobby-ability b { display: block; color: #9ff0ff; font-size: .78rem; }
+.lobby-ability b::before { content: "⚡ "; }
+.lobby-ability span { display: block; color: var(--muted); font-size: .68rem; line-height: 1.3; }
+.shop-info .hero-ability { display: block; margin-top: .2rem; color: #9ff0ff; font-size: .64rem; -webkit-line-clamp: unset; }
+@media (orientation: landscape) and (max-height: 35rem) {
+  .lobby-ability { padding: .15rem .4rem; }
+  .lobby-ability b { font-size: .66rem; }
+  .lobby-ability span { font-size: .58rem; }
+}

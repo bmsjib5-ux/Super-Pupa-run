@@ -1790,12 +1790,12 @@
   const SHOP = {
     // Playable characters. Outfit colours only recolour Pupa's pink suit.
     heroes: [
-      { id: "pupa", name: "Pupa", desc: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่", price: 0, headTop: .2 },
-      { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21 },
-      { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, headTop: .2, spriteHead: .03 },
-      { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, headTop: .2, spriteHead: .02 },
-      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04 },
-      { id: "pupav2", name: "Pupa V2", desc: "Pupa ร่างใหม่ ผมยาวสีกุหลาบ ชุดนักผจญภัยสีเขียว ใช้สีชุดจากตลาดได้", price: 600, headTop: .2, spriteHead: .03 }
+      { id: "pupa", name: "Pupa", desc: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่", price: 0, headTop: .2, ability: ["เสน่ห์เหรียญทอง", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
+      { id: "jibjib", name: "จิ๊บจิ๊บแมน", desc: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว", price: 0, headTop: .21, ability: ["ปีกกระพือ", "กระโดดกลางอากาศได้ 2 ครั้ง (รวม 3 สเต็ป)"] },
+      { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, headTop: .2, spriteHead: .03, ability: ["ใบไม้ร่อน", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
+      { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, headTop: .2, spriteHead: .02, ability: ["หมัดคลื่นลม", "กดโจมตีปล่อยคลื่นลมได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04, ability: ["ซาลาเปานุ่มนิ่ม", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
+      { id: "pupav2", name: "Pupa V2", desc: "Pupa ร่างใหม่ ผมยาวสีกุหลาบ ชุดนักผจญภัยสีเขียว ใช้สีชุดจากตลาดได้", price: 600, headTop: .2, spriteHead: .03, ability: ["สายฟ้าสีกุหลาบ", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -1839,6 +1839,15 @@
   const PET_MAX_LEVEL = 5;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
   const SLOTS = { heroes: "hero", skins: "skin", hats: "hat", pets: "pet" };
+  // Each hero's built-in ability (see SHOP.heroes[].ability):
+  //   pupa: pulls nearby coins in; jibjib: two mid-air jumps; baitoey: falls
+  //   slowly; ikuya: a wind blast on attack even without an item; pangji:
+  //   starts each level with a bubble shield; pupav2: runs and jumps further.
+  const heroIs = (id) => save.shop.hero === id;
+  const airJumpsFor = () => heroIs("jibjib") ? 2 : 1;
+  const COIN_CHARM_RANGE = 130;
+  const LEAF_FALL_SPEED = 380;
+  const WIND_COOLDOWN = 1;
 
   // Progress kept on this device. Points are a running total that only ever
   // grows: across levels, game overs, replays and visits. Coins add up the
@@ -1992,7 +2001,7 @@
   }
 
   function resetGame(index = startLevel) {
-    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, banked: 0, airJumps: 1, shield: false, big: false, ride: null, flag: null };
+    player = { x: 90, y: 420, w: 70, h: 88, vx: 0, vy: 0, lives: 3, score: 0, grounded: false, hurt: 0, facing: 1, bonus: 0, points: 0, star: 0, boost: 0, bomb: 0, bombCooldown: 0, laser: 0, spread: 0, magnet: 0, dash: 0, dashDir: 1, dashY: 0, banked: 0, airJumps: airJumpsFor(), shield: false, big: false, ride: null, flag: null };
     if (state !== "playing") state = "menu";
     loadLevel(index);
   }
@@ -2114,7 +2123,7 @@
     ui.hearts.textContent = [0,1,2].map(i => i < player.lives ? "♥" : "♡").join(" ");
     ui.distance.textContent = `${progress()}%`;
     ui.points.textContent = formatPoints(save.points);
-    const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : "";
+    const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : heroIs("ikuya") ? "WIND" : "";
     ui.attackBtn?.classList.toggle("is-ready", Boolean(weapon));
     if (ui.attackBtn && ui.attackBtn.dataset.label !== (weapon || "ATK")) ui.attackBtn.dataset.label = weapon || "ATK";
     renderQuickItems();
@@ -2393,6 +2402,7 @@
   function attack() {
     if (player.laser > 0) fireLaser();
     else if (player.spread > 0) throwStars();
+    else if (player.bomb <= 0 && heroIs("ikuya")) windBlast();
     else throwBomb();
   }
 
@@ -2426,6 +2436,15 @@
       starShots.push({ x: cx, y: cy, vx: Math.cos(spread) * 640 * player.facing, vy: Math.sin(spread) * 640, life: .85, spin: 0 });
     }
     tone(988, .06, "triangle", .04); tone(1319, .08, "triangle", .04, .04);
+  }
+
+  // Ikuya's ability: a crescent of wind that flies forward and knocks out
+  // the first monster it meets (a boss takes a hit).
+  function windBlast() {
+    if (player.bombCooldown > 0) return;
+    player.bombCooldown = WIND_COOLDOWN;
+    starShots.push({ x: player.x + player.w / 2 + player.facing * 26, y: player.y + player.h * .42, vx: player.facing * 720, vy: 0, life: .6, spin: 0, wind: true, dir: player.facing });
+    tone(520, .06, "sawtooth", .03); tone(880, .1, "triangle", .04, .03);
   }
 
   function updateWeapons(dt) {
@@ -2716,7 +2735,7 @@
     player.y += (player.dashY - player.y) * Math.min(1, dt * 10);
     player.grounded = false;
     player.ride = null;
-    player.airJumps = 1;
+    player.airJumps = airJumpsFor();
     if (Math.random() < dt * 40) burst(player.x + (player.dashDir > 0 ? 0 : player.w), player.y + player.h * (.3 + Math.random() * .5), Math.random() < .5 ? "#ff9a3c" : "#ffe27a", 1);
     player.dash -= dt;
     if (player.dash > 0) return;
@@ -2739,6 +2758,7 @@
     player.spread = Math.max(0, player.spread - dt);
     player.magnet = Math.max(0, player.magnet - dt);
     if (player.magnet > 0) pullCoins(MAGNET_RANGE, dt);
+    else if (heroIs("pupa")) pullCoins(COIN_CHARM_RANGE, dt);
     for (const p of platforms) {
       p.bounce = Math.max(0, p.bounce - dt);
       if (p.kind === "crumble" && p.state !== "idle") {
@@ -2770,7 +2790,7 @@
     if (player.dash > 0) dashMove(dt);
     else {
     const move = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const target = move * 330;
+    const target = move * (heroIs("pupav2") ? 396 : 330);
     player.vx += (target - player.vx) * Math.min(1, dt * (player.grounded ? 12 : 5));
     if (move) player.facing = move;
 
@@ -2781,7 +2801,7 @@
         player.airJumps--;
         burst(player.x + player.w / 2, player.y + player.h, "#ffffff", 7);
       }
-      player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1);
+      player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1) * (heroIs("pupav2") ? 1.06 : 1);
       player.grounded = false;
       tone((player.boost > 0 ? 480 : 360) * (second ? 1.35 : 1), .11, "triangle", .06);
     }
@@ -2791,6 +2811,10 @@
 
     previousBottom = player.y + player.h;
     player.vy += WORLD.gravity * dt;
+    if (heroIs("baitoey") && player.vy > LEAF_FALL_SPEED) {
+      player.vy = LEAF_FALL_SPEED;
+      if (Math.random() < dt * 8) burst(player.x + player.w / 2, player.y + player.h * .3, "#89f0c0", 1);
+    }
     player.x += player.vx * dt;
     player.y += player.vy * dt;
     player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
@@ -2819,14 +2843,14 @@
         if (p.kind === "spring") {
           // Bounce pads fling Pupa far higher than a normal jump.
           player.vy = -1280;
-          player.airJumps = 1;
+          player.airJumps = airJumpsFor();
           p.bounce = .3;
           tone(330, .08, "triangle", .06); tone(660, .16, "triangle", .06, .06);
           continue;
         }
         player.vy = 0;
         player.grounded = true;
-        player.airJumps = 1;
+        player.airJumps = airJumpsFor();
         player.ride = p;
         if (p.kind === "crumble" && p.state === "idle") { p.state = "shaking"; p.timer = .5; }
         else if (!p.kind && !p.axis && player.x >= p.x + 24 && player.x + player.w <= p.x + p.w - 24) lastSafe = { x: player.x, y: p.y - player.h };
@@ -3842,6 +3866,16 @@
       ctx.save();
       ctx.translate(shot.x - cameraX, shot.y);
       ctx.globalAlpha = Math.min(1, shot.life / .2);
+      if (shot.wind) {
+        drawGlow("#9ff0ff", 26);
+        ctx.scale(shot.dir, 1);
+        ctx.strokeStyle = "rgba(220,250,255,.95)"; ctx.lineWidth = 5; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.arc(-8, 0, 20, -1.1, 1.1); ctx.stroke();
+        ctx.strokeStyle = "rgba(127,212,255,.7)"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(-20, 0, 16, -1, 1); ctx.stroke();
+        ctx.restore();
+        continue;
+      }
       drawGlow("#ffe27a", 20);
       ctx.rotate(shot.spin);
       ctx.fillStyle = "#fff2a0"; ctx.strokeStyle = "#c9741a"; ctx.lineWidth = 1.5; ctx.lineJoin = "round";
@@ -4083,6 +4117,7 @@
     if (take("star")) player.star = MARKET_STAR_TIME;
     if (take("dash")) startDash();
     if (equippedPet()?.shield && !player.shield) player.shield = true;
+    if (heroIs("pangji") && !player.shield) player.shield = true;
     if (!used.length) return;
     writeSave();
     used.forEach((name, i) => popups.push({ x: player.x + player.w / 2, y: player.y - 30 - i * 30, text: name, life: 1.8 }));
@@ -4523,6 +4558,12 @@
     const desc = document.createElement("p");
     desc.textContent = entry.desc;
     info.append(title, desc);
+    if (entry.ability) {
+      const ability = document.createElement("p");
+      ability.className = "hero-ability";
+      ability.textContent = `⚡ ${entry.ability[0]}: ${entry.ability[1]}`;
+      info.append(ability);
+    }
     const petEntry = group === "pets" && entry.magnet ? entry : null;
     if (petEntry && owns(entry.id)) {
       const stats = petStats(entry);
@@ -4719,6 +4760,7 @@
     preview: document.querySelector("#lobbyPreview"),
     heroName: document.querySelector("#lobbyHeroName"),
     heroNote: document.querySelector("#lobbyHeroNote"),
+    ability: document.querySelector("#lobbyHeroAbility"),
     heroAction: document.querySelector("#lobbyHeroAction"),
     levelNum: document.querySelector("#lobbyLevelNum"),
     levelName: document.querySelector("#lobbyLevelName"),
@@ -4744,6 +4786,10 @@
     lobbyUi.heroName.textContent = hero.name;
     const owned = owns(hero.id), chosen = save.shop.hero === hero.id;
     lobbyUi.heroNote.textContent = chosen ? "ตัวที่เลือกอยู่" : owned ? "มีแล้ว" : hero.desc;
+    if (lobbyUi.ability) {
+      lobbyUi.ability.querySelector("b").textContent = hero.ability[0];
+      lobbyUi.ability.querySelector("span").textContent = hero.ability[1];
+    }
     const button = lobbyUi.heroAction;
     button.classList.toggle("shop-equip", owned);
     button.classList.toggle("shop-buy", !owned);
@@ -5228,11 +5274,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09e";
+  const NEWS_VERSION = "2026-10-09g";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
     { tag: "ด่านใหม่", title: "โลก 9 · ทะเลโจรสลัด", text: "ด่าน 81–90 อ่าวโจรสลัด เกาะสมบัติ เมืองท่า ทะเลพายุ จนถึงเรือผี พร้อมบอสกัปตันปูหนวดแดง และกัปตันเรือผีโครงกระดูก", image: "world9", open: () => { closeNews(); openLevels(); } },
+    { tag: "ระบบใหม่", title: "ความสามารถติดตัว", text: "ตัวละครทุกตัวมีพลังของตัวเอง: จิ๊บจิ๊บแมนกระโดด 3 สเต็ป ใบเตยร่อน อิคุยะปล่อยคลื่นลม ปังจิมีเกราะ Pupa V2 วิ่งเร็ว Pupa ดูดเหรียญ", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "ด่านใหม่", title: "โลก 8 · อาณาจักรขนมหวาน", text: "ด่าน 71–80 ทุ่งสายไหม ถ้ำช็อกโกแลตมินต์ ทะเลโซดา ภูเขาไอศกรีม จนถึงพระราชวังขนมหวาน พร้อมบอสใหม่ 2 ตัว", image: "world8", open: () => { closeNews(); openLevels(); } },
     { tag: "ไอเทมใหม่", title: "จรวดพุ่งทะยาน", text: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ข้ามเหวได้ ชนมอนสเตอร์แตก ได้จากบล็อก ? และตลาด", image: "dash", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 7 · อาณาจักรเปลวสุริยะ", text: "ด่าน 61–70 ทุ่งตะวันรอน ถ้ำลาวา โคมฟีนิกซ์ ธารน้ำแข็งไฟ จนถึงบัลลังก์สุริยะ พร้อมบอสใหม่ 2 ตัว", image: "world7", open: () => { closeNews(); openLevels(); } },
