@@ -1442,11 +1442,17 @@
       galaxy: { top: "#8d83ff", shine: "#f1eeff", body: ["#33276d", "#20194d", "#0b0924"], sparks: ["#ffffff", "#8eeeff"] },
       cosmos: { top: "#ff77bd", shine: "#fff2c7", body: ["#5b245e", "#351541", "#14091f"], sparks: ["#ffffff", "#ffd768"] }
     };
+    return buildSkyWorld(51, LEVELS, STYLES, 0);
+  }
+
+  // The generator behind worlds 6 and 7. `first` is the first level number;
+  // `base` is how hard the first level is (0..1); it rises to 1 by the tenth.
+  function buildSkyWorld(first, LEVELS, STYLES, base) {
     const ENEMY_Y = { walker: 536, hopper: 553, urchin: 549, spitter: 535, crab: 558, roller: 550 };
     const GROUND_ENEMIES = ["walker", "hopper", "urchin", "spitter", "crab", "roller"];
 
     return LEVELS.map((spec, index) => {
-      const number = 51 + index;
+      const number = first + index;
       let state = (number * 2246822519 + 3266489917) >>> 0;
       const rnd = () => {
         state = (state + 0x6D2B79F5) >>> 0;
@@ -1457,7 +1463,7 @@
       };
       const between = (a, b) => Math.round(a + rnd() * (b - a));
       const pick = (list) => list[Math.floor(rnd() * list.length)];
-      const hard = index / 9;
+      const hard = base + (1 - base) * index / 9;
       const platforms = [[0, 605, 680, 140], [230, 480, 170, 34], [455, 385, 145, 34]];
       const cherries = [[280, 420], [350, 420], [515, 325]];
       const enemies = [];
@@ -1582,6 +1588,43 @@
     });
   }
 
+  // ---- World 7 (levels 61-70): Solar Flame Kingdom ----
+  // Built by the same generator as world 6, a step harder: it starts where
+  // world 6 got to (more moving and crumbling platforms, more flyers) and
+  // ends at its hardest. Sunset meadows lead through lava caves and a
+  // phoenix lantern festival to the throne of the sun.
+  levels.push(...buildWorld7());
+
+  function buildWorld7() {
+    const LEVELS = [
+      { name: "ด่าน 61 · ทุ่งตะวันรอน", scene: "desert", pal: "dusk7", magic: "embers", style: "dusk", length: 9000 },
+      { name: "ด่าน 62 · ถ้ำลาวาอัญมณี", scene: "cave", pal: "lava7", magic: "embers", style: "lava", length: 9300 },
+      { name: "ด่าน 63 · เทศกาลโคมฟีนิกซ์", scene: "lanterns", pal: "phoenix7", magic: "feathers", style: "phoenix", length: 9500 },
+      { name: "ด่าน 64 · ทะเลแก้วออบซิเดียน", scene: "sea", pal: "obsidian7", magic: "bubbles", style: "obsidian", length: 9700 },
+      { name: "ด่าน 65 · ป้อมปราการหินหลอมเหลว", scene: "cave", pal: "forge7", magic: "embers", style: "forge", length: 9000,
+        boss: { kind: "crab", name: "ปูยักษ์ลาวาหลอมเหลว", hp: 16 } },
+      { name: "ด่าน 66 · ธารน้ำแข็งไฟ", scene: "ice", pal: "frostfire7", magic: "snow", style: "frostfire", length: 9900 },
+      { name: "ด่าน 67 · ทะเลทรายนาฬิกาทอง", scene: "desert", pal: "gold7", magic: "fireflies", style: "gold", length: 10100 },
+      { name: "ด่าน 68 · หมู่เกาะเมฆสุริยะ", scene: "lanterns", pal: "sunsky7", magic: "feathers", style: "sunsky", length: 10300 },
+      { name: "ด่าน 69 · บันไดสู่ดวงอาทิตย์", scene: "eclipse", pal: "corona7", magic: "comets", style: "corona", length: 10500 },
+      { name: "ด่าน 70 · บัลลังก์สุริยะนิรันดร์", scene: "eclipse", pal: "solar7", magic: "crown", style: "solar", length: 9800,
+        boss: { kind: "eclipse", name: "จักรพรรดิสุริยะเพลิง", hp: 18 } }
+    ];
+    const STYLES = {
+      dusk: { top: "#ffb36b", shine: "#fff1d6", body: ["#7a3b52", "#4a2445", "#1d1029"], sparks: ["#fff3c8", "#ff9a6b"] },
+      lava: { top: "#ff7a45", shine: "#ffe0b8", body: ["#5a2232", "#3a1525", "#170812"], sparks: ["#ffd36b", "#ff6a3d"] },
+      phoenix: { top: "#ff9c4a", shine: "#fff4cf", body: ["#7c2d3c", "#4d1a34", "#1f0b1d"], sparks: ["#ffe27a", "#ff7ba8"] },
+      obsidian: { top: "#ffb05c", shine: "#fff0d0", body: ["#2c2f52", "#1c1d3a", "#0a0a1d"], sparks: ["#ffd98a", "#7fe7ff"] },
+      forge: { top: "#ff6a3d", shine: "#ffd2a8", body: ["#4a1d24", "#2e1119", "#12060b"], sparks: ["#ffb347", "#ff5a36"] },
+      frostfire: { top: "#8fe8ff", shine: "#ffffff", body: ["#3a4f86", "#283361", "#111632"], sparks: ["#ffb36b", "#d8f6ff"] },
+      gold: { top: "#ffd25a", shine: "#fffbe0", body: ["#8a5a2c", "#5a3a26", "#241712"], sparks: ["#ffffff", "#ffd25a"] },
+      sunsky: { top: "#ffd98a", shine: "#ffffff", body: ["#a0566a", "#6a3a5c", "#2e1d3c"], sparks: ["#ffffff", "#ffb36b"] },
+      corona: { top: "#ffb84d", shine: "#fff3c4", body: ["#5a2a3a", "#36182c", "#140a16"], sparks: ["#ffffff", "#ffcf5a"] },
+      solar: { top: "#ffd45a", shine: "#fffbe2", body: ["#6a2a2a", "#40161e", "#18070c"], sparks: ["#ffffff", "#ff8a3d"] }
+    };
+    return buildSkyWorld(61, LEVELS, STYLES, .45);
+  }
+
   // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
   function turnHue(colour, degrees) {
     let r, g, b, a = null;
@@ -1611,7 +1654,7 @@
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -4876,10 +4919,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09a";
+  const NEWS_VERSION = "2026-10-09b";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 7 · อาณาจักรเปลวสุริยะ", text: "ด่าน 61–70 ทุ่งตะวันรอน ถ้ำลาวา โคมฟีนิกซ์ ธารน้ำแข็งไฟ จนถึงบัลลังก์สุริยะ พร้อมบอสใหม่ 2 ตัว", image: "world7", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 20 บาท", image: "topup", open: () => openShopAt("topup") },
     { tag: "ด่านใหม่", title: "โลก 6 · สวนสวรรค์จักรวาล", text: "ด่าน 51–60 กับฉากซากุระ คริสตัล ดอกบัว ออโรรา ทางช้างเผือก และบอสใหม่ 2 ตัว", image: "world6", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "Pupa V2", text: "Pupa ร่างใหม่แบบ 3 มิติ ผมยาวสีกุหลาบ ชุดนักผจญภัย ซื้อได้ในตลาด", image: "pupav2", open: () => openShopAt("outfit") },
@@ -4941,10 +4985,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world" || kind === "world5" || kind === "world6") {
+    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7") {
       const scene = document.createElement("div");
-      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : ""}`;
-      scene.innerHTML = kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
+      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : ""}`;
+      scene.innerHTML = kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
     }
     if (kind === "boss") {
@@ -5440,6 +5484,20 @@
     cosmos6: { sky0: "#16061f", sky1: "#561247", sky2: "#ba3c70", corona: "rgba(255,113,185,.95)", ring: "#ffe9a7", far: "#4d174d", mid: "#2e103b", window: "#ffd36a", near: "#12071e", ember: "rgba(255,160,207,.95)", haze: "rgba(18,5,27,.5)", magic0: "#ff82c0", magic1: "#ffe379", magicGlow: "rgba(255,127,191,.92)" }
   });
 
+  // World 7: sunset, lava and gold. Same keys as the scene each one paints.
+  Object.assign(SCENE_PALS, {
+    dusk7: { sky0: "#2a1240", sky1: "#a4405c", sky2: "#ffb071", moon: "#fff3d0", moonGlow: "rgba(255,196,128,.9)", star: "#fff6e0", far: "#8a4060", mid: "#5a2a4c", near: "#2a1430", sand: "#ffd59a", haze: "rgba(48,18,40,.38)", magic0: "#ffb35c", magic1: "#fff1c4", magicGlow: "rgba(255,150,80,.9)" },
+    lava7: { sky0: "#1a0710", sky1: "#40121e", sky2: "#1c0810", far: "#3a1420", farCap: "#a8402c", glow: "rgba(255,120,60,.92)", mid: "#2a0e18", midCap: "#ff6a3a", near: "#12050a", nearCap: "#ffb070", spore: "rgba(255,190,110,.95)", haze: "rgba(30,6,12,.5)", magic0: "#ff8a3d", magic1: "#ffd36b", magicGlow: "rgba(255,110,50,.92)" },
+    phoenix7: { sky0: "#24103a", sky1: "#8a2f58", sky2: "#ff9a5c", sunGlow: "rgba(255,190,120,.9)", sun0: "#fff4cc", sun1: "#ff8a4a", band: "rgba(255,120,90,.4)", cloud: "rgba(255,220,190,.4)", far: "#7a2f50", window: "#ffd56a", mid: "#4a1c3c", rope: "rgba(50,16,36,.72)", lantern0: "#ff6a3a", lantern1: "#ffd56a", near: "#22102a", haze: "rgba(40,14,34,.38)", magic0: "#ff8a4a", magic1: "#ffe79a", magicGlow: "rgba(255,140,70,.9)" },
+    obsidian7: { sky0: "#1e2448", sky1: "#141a38", sky2: "#080a1c", ray: "rgba(255,206,140,.7)", far: "#262c52", kelp: "#5a3a3a", mid: "#161a36", near: "#080a18", coral0: "#ff8a4a", coral1: "#ffd56a", glow: "rgba(255,150,80,.85)", bubble: "rgba(255,214,160,.6)", fish: "rgba(255,190,130,.3)", haze: "rgba(6,8,22,.5)", magic0: "#ffc070", magic1: "#ff8a4a", magicGlow: "rgba(255,160,90,.85)" },
+    forge7: { sky0: "#200a0c", sky1: "#4c1612", sky2: "#220a0c", far: "#44161a", farCap: "#c8502a", glow: "rgba(255,140,50,.95)", mid: "#300e12", midCap: "#ff7a2a", near: "#160608", nearCap: "#ffc070", spore: "rgba(255,200,120,.95)", haze: "rgba(34,8,10,.5)", magic0: "#ff6a2a", magic1: "#ffcf5a", magicGlow: "rgba(255,100,40,.95)" },
+    frostfire7: { sky0: "#0e1236", sky1: "#2a2a6a", sky2: "#c86a6a", aurora0: "rgba(255,150,90,1)", aurora1: "rgba(140,220,255,1)", far: "#3a4a86", far2: "#5a6aa6", mid: "#8aa6d6", edge: "rgba(235,248,255,.9)", near: "#1c2450", snow: "#f2f8ff", haze: "rgba(12,16,44,.42)", magic0: "#ffffff", magic1: "#ffc890", magicGlow: "rgba(200,236,255,.85)" },
+    gold7: { sky0: "#3a2410", sky1: "#b8722c", sky2: "#ffe0a0", moon: "#fffbe8", moonGlow: "rgba(255,230,160,.95)", star: "#ffffff", far: "#a8703a", mid: "#7a4a26", near: "#3a2414", sand: "#ffe7a8", haze: "rgba(60,34,14,.32)", magic0: "#ffe07a", magic1: "#fffbe0", magicGlow: "rgba(255,214,110,.9)" },
+    sunsky7: { sky0: "#3a6aa8", sky1: "#ff9a8a", sky2: "#ffe6a8", sunGlow: "rgba(255,240,190,.95)", sun0: "#fffef4", sun1: "#ffd27a", band: "rgba(255,170,150,.38)", cloud: "rgba(255,255,255,.6)", far: "#a06a8a", window: "#fff2a8", mid: "#6a4a72", rope: "rgba(60,40,70,.6)", lantern0: "#ffb36b", lantern1: "#fff2a8", near: "#3a2a4c", haze: "rgba(60,40,80,.28)", magic0: "#fff6d8", magic1: "#ffc48a", magicGlow: "rgba(255,230,170,.9)" },
+    corona7: { sky0: "#140612", sky1: "#4a1428", sky2: "#a8402c", corona: "rgba(255,170,70,.95)", ring: "#fff0b0", far: "#401424", mid: "#2a0c1c", window: "#ffcf5a", near: "#12050c", ember: "rgba(255,170,90,.95)", haze: "rgba(20,5,12,.48)", magic0: "#ffb84d", magic1: "#fff3c4", magicGlow: "rgba(255,160,70,.92)" },
+    solar7: { sky0: "#1a0608", sky1: "#6a1a14", sky2: "#e0602a", corona: "rgba(255,210,90,.98)", ring: "#fff6c8", far: "#5a1a1a", mid: "#360e12", window: "#ffe07a", near: "#160508", ember: "rgba(255,200,100,.98)", haze: "rgba(24,6,8,.46)", magic0: "#ffd45a", magic1: "#fffbe2", magicGlow: "rgba(255,190,80,.95)" }
+  });
+
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
     ctx.fillStyle = color;
@@ -5535,6 +5593,42 @@
         ctx.strokeStyle = g; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cycle - 120, y - 45); ctx.lineTo(cycle, y); ctx.stroke();
         sparkle(cycle, y, 2, p.magic1, .9);
       }
+    } else if (theme.magic === "embers") {
+      // sparks rising off the lava, flickering as they climb
+      ctx.globalCompositeOperation = "lighter";
+      drift(40, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 80) + Math.sin(t * (1.2 + d) + i) * 16 - cameraX * .2, w + 80) - 40;
+        const y = top + 720 - wrapX(b * 760 + t * (34 + c * 60), 780);
+        const flicker = .45 + .55 * Math.sin(t * (6 + d * 5) + i * 1.7) ** 2;
+        glowDot(x, y, 5 + c * 8, p.magicGlow, flicker * .55);
+        ctx.globalAlpha = flicker; ctx.fillStyle = i % 3 ? p.magic0 : p.magic1;
+        ctx.fillRect(x - 1, y - 1, 2 + c * 1.5, 2 + c * 1.5);
+      });
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+    } else if (theme.magic === "snow") {
+      drift(46, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 100) + Math.sin(t * (.6 + d) + i) * 24 - t * 10 - cameraX * .18, w + 100) - 50;
+        const y = top + wrapX(b * 760 + t * (24 + c * 36), 780) - 20;
+        ctx.globalAlpha = .45 + c * .45; ctx.fillStyle = i % 7 === 0 ? p.magic1 : p.magic0;
+        ctx.beginPath(); ctx.arc(x, y, 1.4 + d * 2.4, 0, TAU); ctx.fill();
+        if (i % 9 === 0) sparkle(x, y, 1.2, p.magic1, .6);
+      });
+      ctx.globalAlpha = 1;
+    } else if (theme.magic === "feathers") {
+      // glowing phoenix feathers gliding down in slow arcs
+      drift(16, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 160) + t * (18 + c * 16) + Math.sin(t * .8 + i) * 30 - cameraX * .14, w + 160) - 80;
+        const y = top + wrapX(b * 760 + t * (16 + d * 18), 780) - 20;
+        const angle = Math.sin(t * (1 + d) + i) * .7 + .4, size = 8 + c * 9;
+        glowDot(x, y, size * 1.8, p.magicGlow, .22);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = .75;
+        const g = ctx.createLinearGradient(0, -size, 0, size);
+        g.addColorStop(0, p.magic1); g.addColorStop(1, p.magic0);
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(0, -size); ctx.quadraticCurveTo(size * .55, 0, 0, size); ctx.quadraticCurveTo(-size * .55, 0, 0, -size); ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -size * .8); ctx.lineTo(0, size); ctx.stroke();
+        ctx.restore();
+      });
     } else if (theme.magic === "crown") {
       const x = w * .5 - cameraX * .018, y = top + 205;
       glowDot(x, y, 250, p.magicGlow, .28);
@@ -6065,7 +6159,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
