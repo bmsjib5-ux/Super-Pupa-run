@@ -22,9 +22,13 @@ const CHARACTERS = {
   },
   jibjib: {
     // The artwork is painted at a slight angle, so this one turns less: the
-    // projected colours smear on the far side of the head.
+    // projected colours smear on the far side of the head. His wing-arms
+    // sit low (y -.55 to -.28) either side of a body centred left of x=0
+    // (armCenter), forward of the middle (armZ), and stop below the scarf;
+    // armZMin leaves out a scarf strand hanging behind him. His legs part at
+    // x -.13 (legCenter), not at 0.
     model: "assets/jibjib.glb", texture: "assets/jibjib-texture.webp", tintable: false, yaw: .38,
-    legTop: -.62, armX: .40, armLow: -.58, armHigh: -.12, arms: 0
+    legTop: -.62, armX: .32, armCenter: -.12, armZ: .33, armZMin: -.05, armLow: -.55, armHigh: -.29, arms: 1, legCenter: -.13
   },
   // Leg regions estimated from where the legs start in each picture.
   baitoey: {
@@ -82,25 +86,30 @@ const limbs = { uPhase: { value: 0 }, uSwing: { value: 0 }, uFlap: { value: 0 } 
 const LIMB_SHADER = `
   uniform float uPhase; uniform float uSwing; uniform float uFlap;
   uniform float LEG_TOP; uniform float ARM_X; uniform float ARM_LOW; uniform float ARM_HIGH; uniform float ARMS;
-  uniform float LEG_Z; uniform float LEG_REST;
+  uniform float LEG_Z; uniform float LEG_REST; uniform float ARM_C; uniform float ARM_Z; uniform float ARM_ZMIN; uniform float LEG_C;
   vec3 swingLimbs(vec3 p) {
-    float side = p.x < 0.0 ? -1.0 : 1.0;
     // Which leg: left/right of centre, or front/back for a model posed mid-stride.
-    float legSide = mix(p.x, p.z, LEG_Z) < 0.0 ? -1.0 : 1.0;
+    float legSide = mix(p.x - LEG_C, p.z, LEG_Z) < 0.0 ? -1.0 : 1.0;
     float leg = 1.0 - smoothstep(LEG_TOP - 0.14, LEG_TOP + 0.02, p.y);
     float stride = LEG_REST > 0.0 ? LEG_REST * (1.0 - sin(uPhase)) : sin(uPhase) * 0.85;
     float la = legSide * stride * uSwing * leg;
     float ly = p.y - LEG_TOP;
     p.yz = mix(p.yz, vec2(LEG_TOP + ly * cos(la) - p.z * sin(la), ly * sin(la) + p.z * cos(la)), step(0.001, leg));
-    float arm = ARMS * smoothstep(ARM_X, ARM_X + 0.14, abs(p.x))
-      * smoothstep(ARM_LOW - 0.06, ARM_LOW + 0.04, p.y) * (1.0 - smoothstep(ARM_HIGH - 0.06, ARM_HIGH + 0.05, p.y));
+    // Arms are measured from ARM_C, the middle of the body (0 for most).
+    float aq = p.x - ARM_C;
+    float aside = aq < 0.0 ? -1.0 : 1.0;
+    float shoulder = ARM_C + aside * ARM_X;
+    float arm = ARMS * smoothstep(ARM_X, ARM_X + 0.14, abs(aq))
+      * smoothstep(ARM_LOW - 0.06, ARM_LOW + 0.04, p.y) * (1.0 - smoothstep(ARM_HIGH - 0.06, ARM_HIGH + 0.05, p.y))
+      * step(ARM_ZMIN, p.z);
+    // Swing forward and back about the shoulder, which sits at depth ARM_Z.
     float aa = -sin(uPhase) * uSwing * 0.75 * arm;
-    float ax = p.x - side * ARM_X;
-    p.xz = mix(p.xz, vec2(side * ARM_X + ax * cos(aa) + p.z * sin(aa), -ax * sin(aa) + p.z * cos(aa)), step(0.001, arm));
-    float fa = side * uFlap * arm;
-    ax = p.x - side * ARM_X;
+    float ax = p.x - shoulder, az = p.z - ARM_Z;
+    p.xz = mix(p.xz, vec2(shoulder + ax * cos(aa) + az * sin(aa), ARM_Z - ax * sin(aa) + az * cos(aa)), step(0.001, arm));
+    float fa = aside * uFlap * arm;
+    ax = p.x - shoulder;
     float ay = p.y - (ARM_LOW + ARM_HIGH) * 0.5;
-    p.xy = mix(p.xy, vec2(side * ARM_X + ax * cos(fa) - ay * sin(fa), (ARM_LOW + ARM_HIGH) * 0.5 + ax * sin(fa) + ay * cos(fa)), step(0.001, arm));
+    p.xy = mix(p.xy, vec2(shoulder + ax * cos(fa) - ay * sin(fa), (ARM_LOW + ARM_HIGH) * 0.5 + ax * sin(fa) + ay * cos(fa)), step(0.001, arm));
     return p;
   }
 `;
@@ -170,7 +179,8 @@ function load(id) {
   texture.anisotropy = 4;
   const shape = {
     LEG_TOP: { value: spec.legTop }, ARM_X: { value: spec.armX },
-    LEG_Z: { value: spec.legAxis === "z" ? 1 : 0 }, LEG_REST: { value: spec.legRest || 0 },
+    LEG_Z: { value: spec.legAxis === "z" ? 1 : 0 }, LEG_REST: { value: spec.legRest || 0 }, ARM_C: { value: spec.armCenter || 0 },
+    ARM_Z: { value: spec.armZ || 0 }, ARM_ZMIN: { value: spec.armZMin ?? -10 }, LEG_C: { value: spec.legCenter || 0 },
     ARM_LOW: { value: spec.armLow }, ARM_HIGH: { value: spec.armHigh }, ARMS: { value: spec.arms }
   };
   new GLTFLoader().load(spec.model, (gltf) => {
