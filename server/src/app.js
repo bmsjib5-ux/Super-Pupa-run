@@ -12,7 +12,7 @@
 import { randomUUID } from "node:crypto";
 import express from "express";
 import cors from "cors";
-import { PACKS, METHODS, APP_RETURN_URL, missingSettings } from "./config.js";
+import { PACKS, METHODS, APP_RETURN_URL, missingSettings, firebaseKeyStatus } from "./config.js";
 import { cleanSave, mergeSave } from "./merge.js";
 import { chargeOutcome, OmiseError } from "./omise.js";
 import { requireUser } from "./auth.js";
@@ -31,7 +31,7 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
   // Until the keys are in place, only health answers.
   const ready = (req, res, next) => missing.length ? res.status(503).json({ error: "not_configured", missing }) : next();
 
-  app.get("/api/health", (req, res) => res.json({ ok: missing.length === 0, devMode, missing, time: Date.now() }));
+  app.get("/api/health", (req, res) => res.json({ ok: missing.length === 0, devMode, missing, firebaseKey: devMode ? "dev" : firebaseKeyStatus(), time: Date.now() }));
   app.get("/api/packs", (req, res) => res.json({ packs: Object.values(PACKS).map(({ amount, ...pack }) => pack), methods: METHODS }));
 
   // The account's view of a user: profile plus the save the game loads.

@@ -4553,7 +4553,7 @@
       card.className = "shop-item topup-pack";
       if (pack.tag) card.append(Object.assign(document.createElement("span"), { className: "topup-tag", textContent: pack.tag }));
       card.append(iconCanvas(() => {
-        const stack = pack.id === "p19" ? 1 : pack.id === "p39" ? 2 : 3;
+        const stack = pack.id === "p20" ? 1 : pack.id === "p39" ? 2 : 3;
         drawGlow("#ffd76a", 44);
         for (let i = 0; i < stack; i++) { ctx.save(); ctx.translate((i - (stack - 1) / 2) * 16, 8 - i * 9); ctx.scale(1.15, 1.15); pickupArt.coin(i * .9); ctx.restore(); }
       }));
@@ -4751,7 +4751,7 @@
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
-    { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 19 บาท", image: "topup", open: () => openShopAt("topup") },
+    { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 20 บาท", image: "topup", open: () => openShopAt("topup") },
     { tag: "ด่านใหม่", title: "โลก 6 · สวนสวรรค์จักรวาล", text: "ด่าน 51–60 กับฉากซากุระ คริสตัล ดอกบัว ออโรรา ทางช้างเผือก และบอสใหม่ 2 ตัว", image: "world6", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "Pupa V2", text: "Pupa ร่างใหม่แบบ 3 มิติ ผมยาวสีกุหลาบ ชุดนักผจญภัย ซื้อได้ในตลาด", image: "pupav2", open: () => openShopAt("outfit") },
     { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละคร 3 มิติใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },

@@ -102,7 +102,7 @@ test("api: webhook settles a PromptPay charge, even for a player who never synce
     const sync = await call("PUT", "/api/save", { body: { save: device(30), baseCoins: 0, syncId: "x" }, token: "dev:cat" });
     assert.equal(sync.json.save.coins, 1030);
     // A failed charge credits nothing.
-    const bad = (await call("POST", "/api/topup", { body: { pack: "p19", method: "promptpay" }, token: "dev:cat" })).json;
+    const bad = (await call("POST", "/api/topup", { body: { pack: "p20", method: "promptpay" }, token: "dev:cat" })).json;
     omise.finish([...omise.charges.keys()][1], "fail");
     assert.equal((await call("GET", `/api/orders/${bad.orderId}`, { token: "dev:cat" })).json.status, "failed");
     assert.equal((await call("GET", `/api/orders/${bad.orderId}`, { token: "dev:cat" })).json.balance, 1030);

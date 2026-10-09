@@ -166,7 +166,7 @@ async function flushSync() {
 // ---- Top-ups ----
 
 export const PACKS = [
-  { id: "p19", baht: 19, coins: 200, name: "ถุงเหรียญเล็ก" },
+  { id: "p20", baht: 20, coins: 200, name: "ถุงเหรียญเล็ก" },
   { id: "p39", baht: 39, coins: 450, name: "ถุงเหรียญกลาง", tag: "คุ้มกว่า" },
   { id: "p79", baht: 79, coins: 1000, name: "หีบเหรียญใหญ่", tag: "คุ้มสุด" }
 ];

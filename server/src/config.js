@@ -17,13 +17,25 @@ export const PUBLIC_URL = (env.PUBLIC_URL || env.RENDER_EXTERNAL_URL || `http://
 export const OMISE_SECRET_KEY = env.OMISE_SECRET_KEY || "";
 export const FIREBASE_SERVICE_ACCOUNT = env.FIREBASE_SERVICE_ACCOUNT || "";
 
-// Coin packs for sale. Prices are in satang (1 baht = 100 satang).
+// Coin packs for sale. Prices are in satang (1 baht = 100 satang); Opn
+// refuses PromptPay and TrueMoney charges under 20 baht.
 export const PACKS = {
-  p19: { id: "p19", baht: 19, amount: 1900, coins: 200, name: "ถุงเหรียญเล็ก" },
+  p20: { id: "p20", baht: 20, amount: 2000, coins: 200, name: "ถุงเหรียญเล็ก" },
   p39: { id: "p39", baht: 39, amount: 3900, coins: 450, name: "ถุงเหรียญกลาง" },
   p79: { id: "p79", baht: 79, amount: 7900, coins: 1000, name: "หีบเหรียญใหญ่" }
 };
 export const METHODS = ["truemoney", "promptpay"];
+
+// Does FIREBASE_SERVICE_ACCOUNT look like a service-account key? Only the
+// shape is checked here (nothing secret is reported), so /api/health can
+// say whether the pasted JSON is usable before the server is fully set up.
+export function firebaseKeyStatus() {
+  if (!FIREBASE_SERVICE_ACCOUNT) return "missing";
+  let key;
+  try { key = JSON.parse(FIREBASE_SERVICE_ACCOUNT); } catch { return "not_json"; }
+  if (key?.type !== "service_account" || !key.client_email || !String(key.private_key || "").includes("PRIVATE KEY")) return "not_a_service_account";
+  return "ok:" + key.project_id;
+}
 
 // What is still missing for real payments. Empty means ready.
 export function missingSettings() {
