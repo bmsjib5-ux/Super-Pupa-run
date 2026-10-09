@@ -1625,6 +1625,42 @@
     return buildSkyWorld(61, LEVELS, STYLES, .45);
   }
 
+  // ---- World 8 (levels 71-80): Candy Kingdom ----
+  // The same generator again, harder from the start (base .7). Cotton-candy
+  // dunes, a mint-chocolate cave, a macaron lantern fair, a fizzy soda sea,
+  // an ice-cream mountain and finally the palace of sweets.
+  levels.push(...buildWorld8());
+
+  function buildWorld8() {
+    const LEVELS = [
+      { name: "ด่าน 71 · ทุ่งสายไหมสีชมพู", scene: "desert", pal: "cotton8", magic: "sprinkles", style: "cotton", length: 9600 },
+      { name: "ด่าน 72 · ถ้ำช็อกโกแลตมินต์", scene: "cave", pal: "mint8", magic: "fireflies", style: "mint", length: 9800 },
+      { name: "ด่าน 73 · เทศกาลโคมมาการง", scene: "lanterns", pal: "macaron8", magic: "confetti", style: "macaron", length: 10000 },
+      { name: "ด่าน 74 · ทะเลโซดาซ่า", scene: "sea", pal: "soda8", magic: "bubbles", style: "soda", length: 10200 },
+      { name: "ด่าน 75 · ปราสาทเค้กสตรอว์เบอร์รี", scene: "lanterns", pal: "berry8", magic: "confetti", style: "berry", length: 9400,
+        boss: { kind: "dragon", name: "มังกรเยลลี่สตรอว์เบอร์รี", hp: 17 } },
+      { name: "ด่าน 76 · ภูเขาไอศกรีม", scene: "ice", pal: "icecream8", magic: "snow", style: "icecream", length: 10400 },
+      { name: "ด่าน 77 · ทะเลทรายคาราเมล", scene: "desert", pal: "caramel8", magic: "sprinkles", style: "caramel", length: 10600 },
+      { name: "ด่าน 78 · แนวปะการังเยลลี่", scene: "sea", pal: "jelly8", magic: "bubbles", style: "jelly", length: 10800 },
+      { name: "ด่าน 79 · ทางช้างเผือกลูกอม", scene: "eclipse", pal: "candystar8", magic: "comets", style: "candystar", length: 11000 },
+      { name: "ด่าน 80 · พระราชวังขนมหวานนิรันดร์", scene: "eclipse", pal: "sweet8", magic: "crown", style: "sweet", length: 10200,
+        boss: { kind: "eclipse", name: "ราชินีขนมหวานจอมเวท", hp: 19 } }
+    ];
+    const STYLES = {
+      cotton: { top: "#ffb3d9", shine: "#ffffff", body: ["#9a5a8a", "#6a3a6e", "#2e1a3a"], sparks: ["#ffffff", "#9ff0ff"] },
+      mint: { top: "#8ff5d2", shine: "#f0fff9", body: ["#6a4030", "#45281e", "#1e100c"], sparks: ["#ffffff", "#8ff5d2"] },
+      macaron: { top: "#ffc2e0", shine: "#fffaf0", body: ["#8a6aa8", "#5a4680", "#2a2048"], sparks: ["#fff3a6", "#a8f0ff"] },
+      soda: { top: "#7fe8ff", shine: "#ffffff", body: ["#2f6a9a", "#22487a", "#0e1e44"], sparks: ["#ffffff", "#ffe27a"] },
+      berry: { top: "#ff7aa8", shine: "#fff0f6", body: ["#a0405a", "#6a2846", "#2e0f22"], sparks: ["#ffffff", "#ffd1e2"] },
+      icecream: { top: "#fff0c8", shine: "#ffffff", body: ["#c88aa8", "#8a5a86", "#3a2448"], sparks: ["#ffb3d9", "#9ff0ff"] },
+      caramel: { top: "#ffc87a", shine: "#fff6e0", body: ["#8a5230", "#5a3420", "#26140c"], sparks: ["#ffffff", "#ffd98a"] },
+      jelly: { top: "#c8a0ff", shine: "#fbf4ff", body: ["#3a5a9a", "#2a3a72", "#101a3c"], sparks: ["#ffb3d9", "#9ff0ff"] },
+      candystar: { top: "#ff9fe0", shine: "#fff4fb", body: ["#4a2a7a", "#2e1a56", "#120a28"], sparks: ["#ffffff", "#9ff0ff"] },
+      sweet: { top: "#ffd1f0", shine: "#fffbe8", body: ["#8a3a7a", "#56204e", "#220a22"], sparks: ["#ffffff", "#ffe27a"] }
+    };
+    return buildSkyWorld(71, LEVELS, STYLES, .7);
+  }
+
   // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
   function turnHue(colour, degrees) {
     let r, g, b, a = null;
@@ -1654,7 +1690,7 @@
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70, 75: 75, 80: 80 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -5157,10 +5193,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09c";
+  const NEWS_VERSION = "2026-10-09d";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 8 · อาณาจักรขนมหวาน", text: "ด่าน 71–80 ทุ่งสายไหม ถ้ำช็อกโกแลตมินต์ ทะเลโซดา ภูเขาไอศกรีม จนถึงพระราชวังขนมหวาน พร้อมบอสใหม่ 2 ตัว", image: "world8", open: () => { closeNews(); openLevels(); } },
     { tag: "ไอเทมใหม่", title: "จรวดพุ่งทะยาน", text: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ข้ามเหวได้ ชนมอนสเตอร์แตก ได้จากบล็อก ? และตลาด", image: "dash", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 7 · อาณาจักรเปลวสุริยะ", text: "ด่าน 61–70 ทุ่งตะวันรอน ถ้ำลาวา โคมฟีนิกซ์ ธารน้ำแข็งไฟ จนถึงบัลลังก์สุริยะ พร้อมบอสใหม่ 2 ตัว", image: "world7", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 20 บาท", image: "topup", open: () => openShopAt("topup") },
@@ -5224,10 +5261,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7") {
+    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8") {
       const scene = document.createElement("div");
-      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : ""}`;
-      scene.innerHTML = kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
+      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : kind === "world8" ? " news-scene-8" : ""}`;
+      scene.innerHTML = kind === "world8" ? "<b>71–80</b>" : kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
     }
     if (kind === "boss") {
@@ -5738,6 +5775,20 @@
     solar7: { sky0: "#1a0608", sky1: "#6a1a14", sky2: "#e0602a", corona: "rgba(255,210,90,.98)", ring: "#fff6c8", far: "#5a1a1a", mid: "#360e12", window: "#ffe07a", near: "#160508", ember: "rgba(255,200,100,.98)", haze: "rgba(24,6,8,.46)", magic0: "#ffd45a", magic1: "#fffbe2", magicGlow: "rgba(255,190,80,.95)" }
   });
 
+  // World 8: candy colours. Same keys as the scene each one paints.
+  Object.assign(SCENE_PALS, {
+    cotton8: { sky0: "#5a6ad0", sky1: "#c88ae0", sky2: "#ffd1ec", moon: "#fffaf4", moonGlow: "rgba(255,220,240,.9)", star: "#ffffff", far: "#d0a0e0", mid: "#b07ac8", near: "#7a4a90", sand: "#ffe4f4", haze: "rgba(90,60,140,.25)", magic0: "#ff8fc8", magic1: "#9ff0ff", magicGlow: "rgba(255,190,230,.85)" },
+    mint8: { sky0: "#1e100c", sky1: "#3a2218", sky2: "#1a0e0a", far: "#3a2418", farCap: "#6ad8b0", glow: "rgba(140,255,215,.9)", mid: "#2a1810", midCap: "#8ff5d2", near: "#140a06", nearCap: "#d0fff0", spore: "rgba(200,255,235,.95)", haze: "rgba(24,12,8,.5)", magic0: "#8ff5d2", magic1: "#ffffff", magicGlow: "rgba(140,255,215,.85)" },
+    macaron8: { sky0: "#3a3a8a", sky1: "#a07ad0", sky2: "#ffd0e8", sunGlow: "rgba(255,236,210,.9)", sun0: "#fffdf4", sun1: "#ffc2e0", band: "rgba(200,170,255,.35)", cloud: "rgba(255,255,255,.5)", far: "#9a7ac0", window: "#fff3a6", mid: "#6a5098", rope: "rgba(60,40,90,.6)", lantern0: "#ffb3d9", lantern1: "#a8f0ff", near: "#3a2a5a", haze: "rgba(50,36,90,.28)", magic0: "#ffb3d9", magic1: "#a8f0ff", magicGlow: "rgba(255,210,240,.85)" },
+    soda8: { sky0: "#3aa8d8", sky1: "#1e6aa8", sky2: "#0e2a5a", ray: "rgba(220,250,255,.85)", far: "#2a7ab0", kelp: "#5ac8a8", mid: "#1a4a80", near: "#0a2048", coral0: "#ffe27a", coral1: "#ff8fc8", glow: "rgba(255,240,170,.85)", bubble: "rgba(235,255,255,.8)", fish: "rgba(255,240,200,.35)", haze: "rgba(10,40,80,.4)", magic0: "#ffffff", magic1: "#ffe27a", magicGlow: "rgba(220,250,255,.85)" },
+    berry8: { sky0: "#5a2a5a", sky1: "#d06a90", sky2: "#ffd0dc", sunGlow: "rgba(255,230,230,.9)", sun0: "#fffaf6", sun1: "#ff9fb8", band: "rgba(255,150,180,.38)", cloud: "rgba(255,245,250,.5)", far: "#b05a80", window: "#fff0a8", mid: "#7a3460", rope: "rgba(70,24,50,.65)", lantern0: "#ff6a90", lantern1: "#fff0f6", near: "#3e1430", haze: "rgba(70,24,50,.3)", magic0: "#ff7aa8", magic1: "#ffffff", magicGlow: "rgba(255,170,200,.88)" },
+    icecream8: { sky0: "#4a5ab0", sky1: "#9a8ad8", sky2: "#ffd8ec", aurora0: "rgba(255,180,220,1)", aurora1: "rgba(170,240,255,1)", far: "#b8a8e0", far2: "#d8c8f0", mid: "#f4e8ff", edge: "rgba(255,255,255,.95)", near: "#8a70b8", snow: "#fffaf0", haze: "rgba(70,60,140,.25)", magic0: "#ffffff", magic1: "#ffd1e8", magicGlow: "rgba(255,230,245,.85)" },
+    caramel8: { sky0: "#5a3a6a", sky1: "#d08a5a", sky2: "#ffe0b0", moon: "#fffaf0", moonGlow: "rgba(255,226,180,.9)", star: "#fff6e0", far: "#c08a5a", mid: "#8a5a38", near: "#4a2c1a", sand: "#ffdba0", haze: "rgba(70,40,30,.28)", magic0: "#ff8fc8", magic1: "#9ff0ff", magicGlow: "rgba(255,210,150,.85)" },
+    jelly8: { sky0: "#3a5ad0", sky1: "#2a3a9a", sky2: "#121a50", ray: "rgba(230,215,255,.8)", far: "#3a4ab0", kelp: "#c86ab0", mid: "#232c78", near: "#0e1240", coral0: "#ff9fe0", coral1: "#9ff0ff", glow: "rgba(255,170,230,.88)", bubble: "rgba(230,220,255,.75)", fish: "rgba(200,220,255,.32)", haze: "rgba(14,20,64,.42)", magic0: "#c8a0ff", magic1: "#ffb3d9", magicGlow: "rgba(220,180,255,.85)" },
+    candystar8: { sky0: "#120a28", sky1: "#3a1a6a", sky2: "#8a3aa0", corona: "rgba(255,160,230,.95)", ring: "#e0f6ff", far: "#341c66", mid: "#22124a", window: "#9ff0ff", near: "#0e0820", ember: "rgba(255,180,235,.95)", haze: "rgba(14,8,32,.46)", magic0: "#ff9fe0", magic1: "#9ff0ff", magicGlow: "rgba(255,170,230,.9)" },
+    sweet8: { sky0: "#2a0a2a", sky1: "#7a2a6a", sky2: "#e070b0", corona: "rgba(255,200,240,.98)", ring: "#fff6c8", far: "#6a2460", mid: "#420e3e", window: "#ffe27a", near: "#1a061a", ember: "rgba(255,210,240,.98)", haze: "rgba(30,6,28,.44)", magic0: "#ffd1f0", magic1: "#ffe27a", magicGlow: "rgba(255,190,235,.95)" }
+  });
+
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
     ctx.fillStyle = color;
@@ -5869,6 +5920,31 @@
         ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -size * .8); ctx.lineTo(0, size); ctx.stroke();
         ctx.restore();
       });
+    } else if (theme.magic === "sprinkles") {
+      // candy sprinkles tumbling down
+      const SPRINKLE = ["#ff8fc8", "#9ff0ff", "#ffe27a", "#b8ff9a", "#c8a0ff", "#ffffff"];
+      drift(40, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 100) + Math.sin(t * (.7 + d) + i) * 18 - cameraX * .18, w + 100) - 50;
+        const y = top + wrapX(b * 760 + t * (26 + c * 40), 780) - 20;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(t * (1.5 + d * 3) + i);
+        ctx.globalAlpha = .55 + c * .4; ctx.fillStyle = SPRINKLE[i % SPRINKLE.length];
+        roundedRect(-5 - c * 2, -1.6, 10 + c * 4, 3.2, 1.6); ctx.fill();
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
+    } else if (theme.magic === "confetti") {
+      // paper confetti fluttering: it flips, so its width swings
+      const CONFETTI = [p.magic0, p.magic1, "#ffe27a", "#ffffff"];
+      drift(34, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 120) + t * (10 + c * 14) + Math.sin(t * 1.3 + i) * 26 - cameraX * .16, w + 120) - 60;
+        const y = top + wrapX(b * 760 + t * (20 + d * 26), 780) - 20;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * (1 + d) + i) * .8);
+        ctx.scale(Math.cos(t * (3 + c * 4) + i * 2), 1);
+        ctx.globalAlpha = .7; ctx.fillStyle = CONFETTI[i % CONFETTI.length];
+        ctx.fillRect(-4, -5, 8, 10);
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
     } else if (theme.magic === "crown") {
       const x = w * .5 - cameraX * .018, y = top + 205;
       glowDot(x, y, 250, p.magicGlow, .28);
@@ -6399,7 +6475,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);

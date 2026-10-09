@@ -4,11 +4,11 @@ const CACHE = "super-pupa-run-v4-topup";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=20261009m",
-  "./game.js?v=20261009m",
-  "./pupa3d.js?v=20261009m",
-  "./config.js?v=20261009m",
-  "./account.js?v=20261009m",
+  "./styles.css?v=20261009n",
+  "./game.js?v=20261009n",
+  "./pupa3d.js?v=20261009n",
+  "./config.js?v=20261009n",
+  "./account.js?v=20261009n",
   "./manifest.json",
   "./vendor/three-bundle.min.js",
   "./assets/apple-touch-icon.png",
@@ -46,7 +46,8 @@ const APP_SHELL = [
   "./assets/pupav2-hero.webp",
   "./assets/pumpkin.glb",
   "./assets/news-world6.webp",
-  "./assets/news-world7.webp"
+  "./assets/news-world7.webp",
+  "./assets/news-world8.webp"
 ];
 
 self.addEventListener("install", (event) => {
