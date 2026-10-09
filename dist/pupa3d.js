@@ -30,18 +30,24 @@ const CHARACTERS = {
     model: "assets/jibjib.glb", texture: "assets/jibjib-texture.webp", tintable: false, yaw: .38,
     legTop: -.62, armX: .32, armCenter: -.12, armZ: .33, armZMin: -.05, armLow: -.55, armHigh: -.29, arms: 1, legCenter: -.13
   },
-  // Leg regions estimated from where the legs start in each picture.
+  // Limb regions measured on each mesh: where the gap between the legs
+  // closes (legTop), where it runs (legCenter), the legs' depth (legZ), the
+  // knee height and how far the shin folds back (knee), and the band of
+  // height either side of the body that holds the arms.
   baitoey: {
     model: "assets/baitoey.glb", texture: "assets/baitoey-texture.webp", tintable: false, yaw: .55,
-    legTop: -.34, armX: .5, armLow: -.4, armHigh: -.05, arms: 0
+    legTop: -.38, legCenter: -.1, legZ: .15, knee: .9, kneeY: -.68,
+    armX: .3, armCenter: -.12, armZ: .25, armLow: -.36, armHigh: -.02, arms: 1
   },
   ikuya: {
     model: "assets/ikuya.glb", texture: "assets/ikuya-texture.webp", tintable: false, yaw: .35,
-    legTop: -.32, armX: .5, armLow: -.4, armHigh: -.05, arms: 0
+    legTop: -.42, legCenter: -.05, legZ: .15, knee: .8, kneeY: -.72,
+    armX: .3, armCenter: -.07, armZ: .1, armZMin: -.2, armLow: -.32, armHigh: .12, arms: 1
   },
   pangji: {
     model: "assets/pangji.glb", texture: "assets/pangji-texture.webp", tintable: false, yaw: .4,
-    legTop: -.56, armX: .5, armLow: -.5, armHigh: -.2, arms: 0
+    legTop: -.62, legCenter: -.05, legZ: .17, knee: .6, kneeY: -.82,
+    armX: .36, armZ: .2, armLow: -.52, armHigh: -.32, arms: 1
   },
   // Pupa V2 is painted mid-run at an angle, so it turns less; her pink hair
   // and body take the outfit colours like the original. Her model is already
@@ -51,7 +57,10 @@ const CHARACTERS = {
   // legRest radians each way) to the opposite one and back.
   pupav2: {
     model: "assets/pupav2.glb", texture: "assets/pupav2-texture.webp", tintable: true, yaw: .35,
-    legTop: -.42, armX: .5, armLow: -.4, armHigh: -.1, arms: 0, legAxis: "z", legRest: .5
+    legTop: -.42, legAxis: "z", legRest: .5,
+    // Only her right fist shows, out front at chest height; the other arm
+    // is hidden behind the leaf cape, so only that side swings (armSide).
+    armX: .3, armCenter: .1, armZ: .35, armLow: -.47, armHigh: -.12, arms: 1, armSide: 1
   }
 };
 
@@ -87,21 +96,29 @@ const LIMB_SHADER = `
   uniform float uPhase; uniform float uSwing; uniform float uFlap;
   uniform float LEG_TOP; uniform float ARM_X; uniform float ARM_LOW; uniform float ARM_HIGH; uniform float ARMS;
   uniform float LEG_Z; uniform float LEG_REST; uniform float ARM_C; uniform float ARM_Z; uniform float ARM_ZMIN; uniform float LEG_C;
+  uniform float LEG_ZC; uniform float KNEE; uniform float KNEE_Y; uniform float ARM_SIDE;
   vec3 swingLimbs(vec3 p) {
     // Which leg: left/right of centre, or front/back for a model posed mid-stride.
     float legSide = mix(p.x - LEG_C, p.z, LEG_Z) < 0.0 ? -1.0 : 1.0;
     float leg = 1.0 - smoothstep(LEG_TOP - 0.14, LEG_TOP + 0.02, p.y);
     float stride = LEG_REST > 0.0 ? LEG_REST * (1.0 - sin(uPhase)) : sin(uPhase) * 0.85;
     float la = legSide * stride * uSwing * leg;
+    // Knee: the shin folds back while its leg swings forward (the legs pivot
+    // about LEG_ZC, the depth they stand at).
+    float shin = KNEE * (1.0 - smoothstep(KNEE_Y - 0.06, KNEE_Y + 0.04, p.y));
+    float kb = shin * uSwing * max(0.0, -legSide * cos(uPhase));
+    float lz = p.z - LEG_ZC, ky = p.y - KNEE_Y;
+    p.yz = mix(p.yz, vec2(KNEE_Y + ky * cos(kb) - lz * sin(kb), LEG_ZC + ky * sin(kb) + lz * cos(kb)), step(0.001, shin));
+    lz = p.z - LEG_ZC;
     float ly = p.y - LEG_TOP;
-    p.yz = mix(p.yz, vec2(LEG_TOP + ly * cos(la) - p.z * sin(la), ly * sin(la) + p.z * cos(la)), step(0.001, leg));
+    p.yz = mix(p.yz, vec2(LEG_TOP + ly * cos(la) - lz * sin(la), LEG_ZC + ly * sin(la) + lz * cos(la)), step(0.001, leg));
     // Arms are measured from ARM_C, the middle of the body (0 for most).
     float aq = p.x - ARM_C;
     float aside = aq < 0.0 ? -1.0 : 1.0;
     float shoulder = ARM_C + aside * ARM_X;
     float arm = ARMS * smoothstep(ARM_X, ARM_X + 0.14, abs(aq))
       * smoothstep(ARM_LOW - 0.06, ARM_LOW + 0.04, p.y) * (1.0 - smoothstep(ARM_HIGH - 0.06, ARM_HIGH + 0.05, p.y))
-      * step(ARM_ZMIN, p.z);
+      * step(ARM_ZMIN, p.z) * (ARM_SIDE == 0.0 ? 1.0 : step(0.0, aq * ARM_SIDE));
     // Swing forward and back about the shoulder, which sits at depth ARM_Z.
     float aa = -sin(uPhase) * uSwing * 0.75 * arm;
     float ax = p.x - shoulder, az = p.z - ARM_Z;
@@ -181,6 +198,7 @@ function load(id) {
     LEG_TOP: { value: spec.legTop }, ARM_X: { value: spec.armX },
     LEG_Z: { value: spec.legAxis === "z" ? 1 : 0 }, LEG_REST: { value: spec.legRest || 0 }, ARM_C: { value: spec.armCenter || 0 },
     ARM_Z: { value: spec.armZ || 0 }, ARM_ZMIN: { value: spec.armZMin ?? -10 }, LEG_C: { value: spec.legCenter || 0 },
+    LEG_ZC: { value: spec.legZ || 0 }, KNEE: { value: spec.knee || 0 }, KNEE_Y: { value: spec.kneeY || 0 }, ARM_SIDE: { value: spec.armSide || 0 },
     ARM_LOW: { value: spec.armLow }, ARM_HIGH: { value: spec.armHigh }, ARMS: { value: spec.arms }
   };
   new GLTFLoader().load(spec.model, (gltf) => {
