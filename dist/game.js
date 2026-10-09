@@ -2000,6 +2000,7 @@
     const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : "";
     ui.attackBtn?.classList.toggle("is-ready", Boolean(weapon));
     if (ui.attackBtn && ui.attackBtn.dataset.label !== (weapon || "ATK")) ui.attackBtn.dataset.label = weapon || "ATK";
+    renderQuickItems();
   }
 
   function addScore(amount, x, y, label = "") {
@@ -3890,6 +3891,77 @@
     updateHud();
   }
 
+  // ---- Quick-use items ----
+  // Items the player owns but has not ticked "ใช้ตอนเริ่มด่าน" for wait as
+  // buttons down the right side of the stage, to be used at any moment
+  // (also keys 1-8). The spare heart is left out: it works by itself when
+  // the last heart goes. Each use returns false when it would be wasted.
+  const QUICK_USE = {
+    shield: () => !player.shield && (player.shield = true),
+    grow: () => !player.big && (setBig(true), true),
+    leaf: () => (player.boost = Math.max(0, player.boost) + BOOST_TIME, true),
+    bomb: () => (player.bomb = Math.max(0, player.bomb) + BOMB_TIME, true),
+    laser: () => (player.laser = Math.max(0, player.laser) + LASER_TIME, true),
+    spread: () => (player.spread = Math.max(0, player.spread) + SPREAD_TIME, true),
+    magnet: () => (player.magnet = Math.max(0, player.magnet) + MAGNET_TIME, true),
+    star: () => (player.star = Math.max(0, player.star) + MARKET_STAR_TIME, true)
+  };
+  const quickUi = document.querySelector("#quickItems");
+  let quickShown = "";
+
+  const quickList = () => SHOP.items.filter(({ id }) => QUICK_USE[id] && !save.shop.bring[id] && save.shop.items[id] > 0);
+
+  function useQuickItem(id) {
+    if (state !== "playing" || !player || save.shop.items[id] <= 0 || save.shop.bring[id]) return;
+    const entry = SHOP_INDEX[id];
+    if (!QUICK_USE[id]()) {
+      tone(150, .12, "square", .05);
+      popups.push({ x: player.x + player.w / 2, y: player.y - 30, text: `${entry.name} ใช้อยู่แล้ว`, life: 1.2 });
+      return;
+    }
+    save.shop.items[id]--;
+    writeSave();
+    burst(player.x + player.w / 2, player.y + player.h / 2, itemGlow[id] || "#ffd76a", 18);
+    popups.push({ x: player.x + player.w / 2, y: player.y - 30, text: entry.name, life: 1.6 });
+    tone(523, .08, "triangle", .05); tone(784, .12, "triangle", .05, .08);
+    announce(`ใช้${entry.name} เหลือ ${save.shop.items[id]} ชิ้น`);
+    updateHud();
+  }
+
+  // Rebuilt only when the list or a count changes.
+  function renderQuickItems() {
+    if (!quickUi) return;
+    const list = quickList();
+    const key = list.map(({ id }) => `${id}:${save.shop.items[id]}`).join(",");
+    if (key === quickShown) return;
+    quickShown = key;
+    quickUi.replaceChildren(...list.map((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "quick-item";
+      button.dataset.item = entry.id;
+      const count = save.shop.items[entry.id];
+      button.setAttribute("aria-label", `ใช้${entry.name} (มี ${count}) ปุ่ม ${index + 1}`);
+      button.title = `${entry.name} · กด ${index + 1}`;
+      const icon = iconCanvas(() => { ctx.scale(1.1, 1.1); drawGlow(itemGlow[entry.id], 34); pickupArt[entry.id](); });
+      icon.className = "quick-icon";
+      button.append(icon, Object.assign(document.createElement("b"), { className: "quick-count", textContent: count }));
+      if (index < 8) button.append(Object.assign(document.createElement("kbd"), { className: "quick-key", textContent: index + 1 }));
+      // No focus on mouse down, so Space keeps jumping instead of pressing it.
+      button.addEventListener("mousedown", (event) => event.preventDefault());
+      button.addEventListener("touchstart", (event) => { if (event.cancelable) event.preventDefault(); }, { passive: false });
+      button.addEventListener("pointerdown", (event) => event.stopPropagation());
+      button.addEventListener("touchend", (event) => {
+        if (!event.cancelable) return;
+        event.preventDefault();
+        useQuickItem(entry.id);
+      }, { passive: false });
+      button.addEventListener("click", () => useQuickItem(entry.id));
+      return button;
+    }));
+    quickUi.hidden = !list.length;
+  }
+
   // A spare heart brings Pupa back instead of ending the run.
   function tryRevive() {
     if (!save.shop.bring.revive || save.shop.items.revive <= 0) return false;
@@ -4283,6 +4355,7 @@
       box.checked = save.shop.bring[entry.id];
       box.addEventListener("change", () => { save.shop.bring[entry.id] = box.checked; writeSave(); });
       toggle.append(box, document.createTextNode(entry.id === "revive" ? " พกติดตัว" : " ใช้ตอนเริ่มด่าน"));
+      if (entry.id !== "revive") toggle.title = "ไม่ติ๊ก = เก็บไว้กดใช้เองระหว่างเล่น (ปุ่มด้านขวาของจอ หรือปุ่มเลข 1-8)";
       actions.append(have, button, toggle);
     } else if (!owns(entry.id)) {
       button.className = "shop-buy";
@@ -4364,7 +4437,7 @@
     if (shopTab === "outfit") shopUi.list.append(shopSection("ตัวละคร", SHOP.heroes), shopSection("สีชุด · ใช้กับ Pupa และ Pupa V2", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
     else if (shopTab === "pet") shopUi.list.append(shopSection("สัตว์เลี้ยงช่วยผจญภัย", SHOP.pets));
     else if (shopTab === "topup") shopUi.list.append(topupSection());
-    else shopUi.list.append(shopSection("ไอเทมติดตัว · ใช้ครั้งละ 1 ชิ้น", SHOP.items));
+    else shopUi.list.append(shopSection("ไอเทมติดตัว · ติ๊ก = ใช้ตอนเริ่มด่าน · ไม่ติ๊ก = กดใช้เองระหว่างเล่น", SHOP.items));
     shopUi.list.scrollTop = scroll;
     const look = previewLook();
     const names = [SHOP_INDEX[look.hero].name];
@@ -6104,6 +6177,11 @@
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (event.key === "Enter" && state === "menu") { startGame(); return; }
+    if (/^[1-8]$/.test(event.key) && !event.repeat) {
+      const entry = quickList()[Number(event.key) - 1];
+      if (entry) { event.preventDefault(); useQuickItem(entry.id); }
+      return;
+    }
     const action = keyMap[event.key];
     if (action) { event.preventDefault(); setKey(action, true); }
   });
