@@ -1661,6 +1661,41 @@
     return buildSkyWorld(71, LEVELS, STYLES, .7);
   }
 
+  // ---- World 9 (levels 81-90): Pirate Seas ----
+  // Mostly the new "ocean" scene (open sea, ships, islands, gulls), with a
+  // treasure cave, a pirate port, a sunken wreck and a ghost-ship graveyard
+  // in between. Same generator, starting at its hardest (base .85).
+  levels.push(...buildWorld9());
+
+  function buildWorld9() {
+    const LEVELS = [
+      { name: "ด่าน 81 · อ่าวโจรสลัดยามเช้า", scene: "ocean", pal: "bay9", magic: "gold", style: "deck", length: 10000 },
+      { name: "ด่าน 82 · เกาะมะพร้าวสมบัติ", scene: "ocean", pal: "palm9", magic: "gold", style: "sand", length: 10200 },
+      { name: "ด่าน 83 · ถ้ำสมบัติทองคำ", scene: "cave", pal: "treasure9", magic: "gold", style: "treasure", length: 10300 },
+      { name: "ด่าน 84 · เมืองท่าโจรสลัด", scene: "lanterns", pal: "port9", magic: "fireflies", style: "port", length: 10500 },
+      { name: "ด่าน 85 · เรือธงกัปตันหนวดแดง", scene: "ocean", pal: "flagship9", magic: "gold", style: "deck", length: 9800,
+        boss: { kind: "crab", name: "กัปตันปูหนวดแดง", hp: 18 } },
+      { name: "ด่าน 86 · ซากเรืออับปางใต้ทะเล", scene: "sea", pal: "wreck9", magic: "bubbles", style: "wreck", length: 10700 },
+      { name: "ด่าน 87 · ทะเลพายุคลั่ง", scene: "ocean", pal: "storm9", magic: "rain", style: "storm", length: 10900 },
+      { name: "ด่าน 88 · สุสานเรือผี", scene: "eclipse", pal: "graveyard9", magic: "fireflies", style: "ghost", length: 11100 },
+      { name: "ด่าน 89 · หมอกทะเลจันทร์เงิน", scene: "ocean", pal: "moon9", magic: "fireflies", style: "moon", length: 11300 },
+      { name: "ด่าน 90 · เรือผีกัปตันโครงกระดูก", scene: "ocean", pal: "ghostship9", magic: "crown", style: "ghost", length: 10400,
+        boss: { kind: "eclipse", name: "กัปตันเรือผีโครงกระดูก", hp: 20 } }
+    ];
+    // Platforms look like ship timber, sand or barnacled stone.
+    const STYLES = {
+      deck: { top: "#e2b673", shine: "#fff1d0", body: ["#8a5a34", "#5e3a22", "#2a180e"], sparks: ["#ffe27a", "#ffffff"] },
+      sand: { top: "#ffe0a0", shine: "#fffbe8", body: ["#c8945a", "#8a5e38", "#3a2414"], sparks: ["#ffffff", "#7fe8ff"] },
+      treasure: { top: "#ffd45a", shine: "#fffbe2", body: ["#6a4a20", "#43301a", "#1c140a"], sparks: ["#ffffff", "#ffd45a"] },
+      port: { top: "#d8a060", shine: "#ffe8c8", body: ["#6a3a2a", "#44241c", "#1c0e0c"], sparks: ["#ffd56a", "#ff9a5a"] },
+      wreck: { top: "#9ad8c8", shine: "#e8fff8", body: ["#3a4a40", "#26322c", "#0e1412"], sparks: ["#d8fff8", "#ffd45a"] },
+      storm: { top: "#a8b8cc", shine: "#ffffff", body: ["#3a4458", "#262e3e", "#0e121c"], sparks: ["#ffffff", "#c8d8e8"] },
+      ghost: { top: "#8affc0", shine: "#e8fff4", body: ["#2a4a3c", "#1a3028", "#08120e"], sparks: ["#e0fff0", "#8affc0"] },
+      moon: { top: "#c8d4f0", shine: "#ffffff", body: ["#3a4a72", "#283456", "#10162c"], sparks: ["#ffffff", "#a8ffd8"] }
+    };
+    return buildSkyWorld(81, LEVELS, STYLES, .85);
+  }
+
   // Rotate the hue of a "#rrggbb" or "rgba(r,g,b,a)" colour by some degrees.
   function turnHue(colour, degrees) {
     let r, g, b, a = null;
@@ -1690,7 +1725,7 @@
   // not built with an arena gets one added at the end: its last stretch of
   // ground is lengthened and the goal moved past it, so the fight is on flat
   // ground with no pits.
-  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70, 75: 75, 80: 80 };
+  const BOSS_PLAN = { 5: 4, 10: 10, 15: 16, 20: 20, 25: 24, 30: 30, 35: 37, 40: 40, 45: 45, 50: 50, 55: 55, 60: 60, 65: 65, 70: 70, 75: 75, 80: 80, 85: 85, 90: 90 };
   const BOSS_ARENA = 1300;
   {
     const designed = levels.map(entry => entry.boss);
@@ -5193,10 +5228,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09d";
+  const NEWS_VERSION = "2026-10-09e";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "โลก 9 · ทะเลโจรสลัด", text: "ด่าน 81–90 อ่าวโจรสลัด เกาะสมบัติ เมืองท่า ทะเลพายุ จนถึงเรือผี พร้อมบอสกัปตันปูหนวดแดง และกัปตันเรือผีโครงกระดูก", image: "world9", open: () => { closeNews(); openLevels(); } },
     { tag: "ด่านใหม่", title: "โลก 8 · อาณาจักรขนมหวาน", text: "ด่าน 71–80 ทุ่งสายไหม ถ้ำช็อกโกแลตมินต์ ทะเลโซดา ภูเขาไอศกรีม จนถึงพระราชวังขนมหวาน พร้อมบอสใหม่ 2 ตัว", image: "world8", open: () => { closeNews(); openLevels(); } },
     { tag: "ไอเทมใหม่", title: "จรวดพุ่งทะยาน", text: "พุ่งไปข้างหน้า 5 วินาที ทะลุทุกอย่าง ข้ามเหวได้ ชนมอนสเตอร์แตก ได้จากบล็อก ? และตลาด", image: "dash", open: () => openShopAt("item") },
     { tag: "ด่านใหม่", title: "โลก 7 · อาณาจักรเปลวสุริยะ", text: "ด่าน 61–70 ทุ่งตะวันรอน ถ้ำลาวา โคมฟีนิกซ์ ธารน้ำแข็งไฟ จนถึงบัลลังก์สุริยะ พร้อมบอสใหม่ 2 ตัว", image: "world7", open: () => { closeNews(); openLevels(); } },
@@ -5261,10 +5297,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8") {
+    if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9") {
       const scene = document.createElement("div");
-      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : kind === "world8" ? " news-scene-8" : ""}`;
-      scene.innerHTML = kind === "world8" ? "<b>71–80</b>" : kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
+      scene.className = `news-scene${kind === "world5" ? " news-scene-5" : kind === "world6" ? " news-scene-6" : kind === "world7" ? " news-scene-7" : kind === "world8" ? " news-scene-8" : kind === "world9" ? " news-scene-9" : ""}`;
+      scene.innerHTML = kind === "world9" ? "<b>81–90</b>" : kind === "world8" ? "<b>71–80</b>" : kind === "world7" ? "<b>61–70</b>" : kind === "world6" ? "<b>51–60</b>" : kind === "world5" ? "<b>41–50</b>" : "<b>31–40</b>";
       return scene;
     }
     if (kind === "boss") {
@@ -5424,6 +5460,54 @@
   const wrapX = (x, w) => ((x % w) + w) % w;
 
   // Shapes used by several scenes ------------------------------------------------
+  // A pirate ship seen side-on, standing on the line `base`.
+  function pirateShip(x, base, s, p, r) {
+    const W = 230 * s, H = 44 * s;
+    ctx.fillStyle = p.mid;
+    ctx.beginPath();
+    ctx.moveTo(x - W * .5, base - H * 1.25);
+    ctx.lineTo(x - W * .28, base - H * 1.25); ctx.lineTo(x - W * .26, base - H);
+    ctx.lineTo(x + W * .44, base - H); ctx.quadraticCurveTo(x + W * .56, base - H * 1.05, x + W * .62, base - H * 1.45);
+    ctx.lineTo(x + W * .38, base); ctx.lineTo(x - W * .42, base); ctx.closePath(); ctx.fill();
+    ctx.fillRect(x + W * .52, base - H * 1.5, W * .2, 3 * s);   // bowsprit
+    const masts = [x - W * .18, x + W * .08, x + W * .3];
+    masts.forEach((mx, i) => {
+      const tall = (i === 1 ? 175 : 140) * s;
+      ctx.fillStyle = p.mid; ctx.fillRect(mx - 2.5 * s, base - H - tall, 5 * s, tall);
+      ctx.fillStyle = p.sail;
+      for (let k = 0; k < 2; k++) {
+        const top = base - H - tall + 14 * s + k * tall * .42, h = tall * .34, half = (i === 1 ? 36 : 28) * s;
+        ctx.beginPath(); ctx.moveTo(mx - half, top); ctx.lineTo(mx + half, top);
+        ctx.quadraticCurveTo(mx + half + 9 * s, top + h / 2, mx + half, top + h); ctx.lineTo(mx - half, top + h);
+        ctx.quadraticCurveTo(mx - half + 9 * s, top + h / 2, mx - half, top); ctx.fill();
+      }
+      if (i === 1) {   // the skull-and-crossbones flag
+        const fy = base - H - tall - 2 * s;
+        ctx.fillStyle = p.flag; ctx.fillRect(mx + 2 * s, fy, 30 * s, 18 * s);
+        ctx.fillStyle = p.sail; ctx.beginPath(); ctx.arc(mx + 17 * s, fy + 8 * s, 4 * s, 0, TAU); ctx.fill();
+        ctx.strokeStyle = p.sail; ctx.lineWidth = 1.6 * s;
+        ctx.beginPath(); ctx.moveTo(mx + 10 * s, fy + 11 * s); ctx.lineTo(mx + 24 * s, fy + 16 * s); ctx.moveTo(mx + 24 * s, fy + 11 * s); ctx.lineTo(mx + 10 * s, fy + 16 * s); ctx.stroke();
+      }
+    });
+    ctx.fillStyle = p.sail; ctx.globalAlpha = .45;
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(x - W * .3 + i * W * .12, base - H * .55, 3.2 * s, 0, TAU); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+
+  // A leaning palm tree with fronds.
+  function palm(x, base, s, fill, r) {
+    const lean = (r() - .3) * 50 * s, tx = x + lean, ty = base - 150 * s;
+    ctx.strokeStyle = fill; ctx.lineWidth = 10 * s; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(x + lean * .2, base - 80 * s, tx, ty); ctx.stroke();
+    ctx.fillStyle = fill;
+    for (let i = 0; i < 7; i++) {
+      const a = -Math.PI / 2 + (i - 3) * .48 + (r() - .5) * .2, len = (60 + r() * 25) * s;
+      ctx.save(); ctx.translate(tx, ty); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(len * .5, -14 * s, len, 10 * s); ctx.quadraticCurveTo(len * .5, 2 * s, 0, 0); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function mushroom(x, base, s, stem, cap, glow, r) {
     const h = 120 * s, w = 110 * s;
     ctx.fillStyle = stem;
@@ -5512,6 +5596,66 @@
 
   // Scenes: pal = colours, layers = painted tiles (far -> near), live = animation.
   const SCENES = {
+    // Open sea for the pirate world: the sea itself is drawn with the sun
+    // (it has to sit behind the islands and ships), waves and gulls live.
+    ocean: {
+      sky(p) { return [p.sky0, p.sky1, p.sky2]; },
+      celestial(p, t, w, top) {
+        const x = w * .7 - cameraX * .012, y = top + 320;
+        glowDot(x, y, 320, p.sunGlow, .6);
+        ctx.fillStyle = vgrad(y - 64, y + 64, [p.sun0, p.sun1]); ctx.beginPath(); ctx.arc(x, y, 64, 0, TAU); ctx.fill();
+        const horizon = top + 440;
+        ctx.fillStyle = vgrad(horizon, top + 720, [p.sea0, p.sea1]); ctx.fillRect(0, horizon, w, 2000);
+        ctx.fillStyle = p.glint;   // the sun's glitter path
+        for (let i = 0; i < 24; i++) {
+          const yy = horizon + 5 + i * i * .55, width = (14 + i * 3.2) * (.45 + .55 * Math.abs(Math.sin(t * 2.1 + i * 1.7)));
+          ctx.globalAlpha = Math.max(0, .6 - i * .02);
+          ctx.fillRect(x - width / 2 + Math.sin(t * 1.3 + i) * (6 + i * 2), yy, width, 2 + i * .08);
+        }
+        ctx.globalAlpha = 1;
+      },
+      layers: [
+        { parallax: .06, paint(r, p) {   // far islands
+          ctx.fillStyle = p.far;
+          for (let i = 0; i < 4; i++) {
+            const x = r() * SCENE_TILE, w = 180 + r() * 260, h = 34 + r() * 60;
+            ctx.beginPath(); ctx.ellipse(x, 446, w / 2, h, 0, Math.PI, 0); ctx.fill();
+            for (let k = 0; k < 2; k++) palm(x - w * .2 + k * w * .3, 446 - h * .7, .35 + r() * .15, p.far, r);
+          }
+        } },
+        { parallax: .16, paint(r, p) {   // ships at sea
+          for (let i = 0; i < 3; i++) pirateShip(i * SCENE_TILE / 3 + r() * 220 + 80, 492 + r() * 26, .55 + r() * .4, p, r);
+        } },
+        { parallax: .38, paint(r, p) {   // the dock and the shore
+          const f = periodic(r, 4, 2, 8); ridge(x => 652 - 26 * f(x), p.near);
+          ctx.fillStyle = p.near;
+          for (let i = 0; i < 12; i++) { const x = r() * SCENE_TILE; ctx.fillRect(x, 596 + r() * 20, 11, 140); }
+          for (let i = 0; i < 4; i++) palm(r() * SCENE_TILE, 660, 1 + r() * .45, p.near, r);
+          for (let i = 0; i < 5; i++) { const x = r() * SCENE_TILE; ctx.beginPath(); ctx.ellipse(x, 640, 15, 21, 0, 0, TAU); ctx.fill(); }
+        } }
+      ],
+      live(p, t, w, h, top) {
+        ctx.strokeStyle = p.foam; ctx.lineWidth = 2;
+        for (let band = 0; band < 4; band++) {   // rolling surf lines
+          const y0 = top + 454 + band * 34, amp = 3 + band * 1.6, par = .05 + band * .07;
+          ctx.globalAlpha = .16 + band * .06;
+          ctx.beginPath();
+          for (let x = -20; x <= w + 20; x += 14) {
+            const y = y0 + Math.sin((x + cameraX * par) * .018 + t * (1.2 + band * .5) + band) * amp;
+            if (x === -20) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        drift(6, 19, t, (a, b, c, d, i) => {   // gulls
+          const x = wrapX(a * (w + 200) + t * (26 + c * 30) - cameraX * .08, w + 200) - 100;
+          const y = top + 110 + b * 210 + Math.sin(t * .8 + i) * 14, flap = Math.sin(t * (6 + d * 3) + i) * 5, s = .8 + c * .6;
+          ctx.strokeStyle = p.gull; ctx.lineWidth = 2; ctx.globalAlpha = .8;
+          ctx.beginPath(); ctx.moveTo(x - 11 * s, y - flap * s); ctx.quadraticCurveTo(x - 5 * s, y - 6 * s, x, y);
+          ctx.quadraticCurveTo(x + 5 * s, y - 6 * s, x + 11 * s, y - flap * s); ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+      }
+    },
     cave: {
       sky(p) { return [p.sky0, p.sky1, p.sky2]; },
       layers: [
@@ -5789,6 +5933,22 @@
     sweet8: { sky0: "#2a0a2a", sky1: "#7a2a6a", sky2: "#e070b0", corona: "rgba(255,200,240,.98)", ring: "#fff6c8", far: "#6a2460", mid: "#420e3e", window: "#ffe27a", near: "#1a061a", ember: "rgba(255,210,240,.98)", haze: "rgba(30,6,28,.44)", magic0: "#ffd1f0", magic1: "#ffe27a", magicGlow: "rgba(255,190,235,.95)" }
   });
 
+  // World 9: the pirate seas. "ocean" palettes add a sea (sea0 to sea1, with
+  // the sun's glitter in glint), islands (far), ships (mid, sail, flag), the
+  // dock (near), surf (foam) and the gulls.
+  Object.assign(SCENE_PALS, {
+    bay9: { sky0: "#4a8ad8", sky1: "#9ad0f0", sky2: "#ffe8c0", sunGlow: "rgba(255,240,200,.9)", sun0: "#fffbea", sun1: "#ffd98a", sea0: "#3aa0c8", sea1: "#14507a", glint: "#fff6d0", far: "#3a7a8a", mid: "#2a4a6a", sail: "#f4ead0", flag: "#1a1a2a", near: "#1e3048", foam: "#e8faff", gull: "#ffffff", haze: "rgba(10,40,70,.25)", magic0: "#ffe27a", magic1: "#ffffff", magicGlow: "rgba(255,226,122,.85)" },
+    palm9: { sky0: "#2a7ad8", sky1: "#7ac8f0", sky2: "#d8f4ff", sunGlow: "rgba(255,255,220,.9)", sun0: "#ffffff", sun1: "#fff2a8", sea0: "#2ac8c0", sea1: "#0e6a8a", glint: "#ffffff", far: "#2a8a6a", mid: "#24506a", sail: "#fff8e8", flag: "#141420", near: "#1a4a3a", foam: "#ffffff", gull: "#ffffff", haze: "rgba(10,60,70,.2)", magic0: "#ffe27a", magic1: "#ffffff", magicGlow: "rgba(255,226,122,.85)" },
+    flagship9: { sky0: "#3a2a6a", sky1: "#e06a5a", sky2: "#ffc87a", sunGlow: "rgba(255,170,100,.9)", sun0: "#fff0c0", sun1: "#ff8a4a", sea0: "#c86a5a", sea1: "#3a2a5a", glint: "#ffd9a0", far: "#6a3a5a", mid: "#2a1a34", sail: "#e8c8a8", flag: "#100810", near: "#1e1228", foam: "#ffd0b8", gull: "#2a1a30", haze: "rgba(40,16,40,.3)", magic0: "#ffd45a", magic1: "#fff3c4", magicGlow: "rgba(255,200,90,.9)" },
+    storm9: { sky0: "#141a2a", sky1: "#2a3448", sky2: "#4a5468", sunGlow: "rgba(160,170,200,.35)", sun0: "#c8d0e0", sun1: "#8a94a8", sea0: "#2a3a50", sea1: "#0a1220", glint: "#9aa8c0", far: "#1e2838", mid: "#121a28", sail: "#8a8a90", flag: "#05060a", near: "#0a0e18", foam: "#c8d8e8", gull: "#d0d8e0", haze: "rgba(6,10,20,.45)", magic0: "#b8c8e0", magic1: "#ffffff", magicGlow: "rgba(200,220,255,.6)" },
+    moon9: { sky0: "#0a1030", sky1: "#1a2a5a", sky2: "#3a4a7a", sunGlow: "rgba(200,215,255,.7)", sun0: "#f4f6ff", sun1: "#c8d4f0", sea0: "#1a3460", sea1: "#060e24", glint: "#e0e8ff", far: "#14204a", mid: "#0c1434", sail: "#9aa4c0", flag: "#04050c", near: "#060a1c", foam: "#c0d0f0", gull: "#c8d0e8", haze: "rgba(6,10,30,.42)", magic0: "#a8ffd8", magic1: "#e0e8ff", magicGlow: "rgba(160,255,210,.75)" },
+    ghostship9: { sky0: "#08140e", sky1: "#143a2a", sky2: "#3a6a4a", sunGlow: "rgba(140,255,190,.7)", sun0: "#e0fff0", sun1: "#8af0b8", sea0: "#12382a", sea1: "#040e0a", glint: "#b8ffd8", far: "#0e2a1e", mid: "#081a12", sail: "#6a8a7a", flag: "#020604", near: "#040c08", foam: "#a8f0c8", gull: "#80c8a0", haze: "rgba(4,14,10,.45)", magic0: "#8affc0", magic1: "#e0fff0", magicGlow: "rgba(120,255,180,.85)" },
+    treasure9: { sky0: "#120c06", sky1: "#2a1c0c", sky2: "#100a04", far: "#2a1e10", farCap: "#c89a3a", glow: "rgba(255,210,90,.92)", mid: "#1c140a", midCap: "#ffcf5a", near: "#0c0804", nearCap: "#fff0a8", spore: "rgba(255,230,140,.95)", haze: "rgba(16,10,4,.5)", magic0: "#ffd45a", magic1: "#fffbe2", magicGlow: "rgba(255,210,90,.9)" },
+    port9: { sky0: "#1a1430", sky1: "#6a3a4a", sky2: "#e09060", sunGlow: "rgba(255,190,130,.85)", sun0: "#fff0d0", sun1: "#ff9a5a", band: "rgba(255,150,100,.35)", cloud: "rgba(255,220,200,.35)", far: "#4a2a3a", window: "#ffd56a", mid: "#2e1a2a", rope: "rgba(30,14,20,.72)", lantern0: "#ffb347", lantern1: "#ff6a4a", near: "#160c14", haze: "rgba(24,12,18,.38)", magic0: "#ffd56a", magic1: "#ff9a5a", magicGlow: "rgba(255,200,100,.85)" },
+    wreck9: { sky0: "#0e4a5a", sky1: "#0a2e44", sky2: "#04121e", ray: "rgba(190,240,230,.7)", far: "#0e3a48", kelp: "#1e5a4a", mid: "#082a38", near: "#03141e", coral0: "#c8a060", coral1: "#ff8a6a", glow: "rgba(255,210,120,.75)", bubble: "rgba(200,240,240,.6)", fish: "rgba(160,220,220,.3)", haze: "rgba(3,18,26,.5)", magic0: "#d8fff8", magic1: "#ffd45a", magicGlow: "rgba(255,210,120,.8)" },
+    graveyard9: { sky0: "#050c0a", sky1: "#10261e", sky2: "#2a4a3a", corona: "rgba(140,255,190,.9)", ring: "#d8fff0", far: "#0e2018", mid: "#081410", window: "#8affc0", near: "#030806", ember: "rgba(140,255,190,.9)", haze: "rgba(4,10,8,.5)", magic0: "#8affc0", magic1: "#e0fff0", magicGlow: "rgba(120,255,180,.85)" }
+  });
+
   function drawStars(w, maxY, count, t, seed, color) {
     const r = seeded(seed);
     ctx.fillStyle = color;
@@ -5944,6 +6104,29 @@
         ctx.fillRect(-4, -5, 8, 10);
         ctx.restore();
       });
+      ctx.globalAlpha = 1;
+    } else if (theme.magic === "gold") {
+      // glints of pirate gold in the air: twinkles only, nothing that looks
+      // like a coin to collect
+      drift(26, seed, t, (a, b, c, d, i) => {
+        const x = wrapX(a * (w + 100) + Math.sin(t * .4 + i) * 24 - cameraX * .12, w + 100) - 50;
+        const y = top + 70 + b * 470 + Math.sin(t * (.6 + d) + i) * 12;
+        const twinkle = Math.max(0, Math.sin(t * (1.6 + d * 1.4) + i * 2.3));
+        if (twinkle < .05) return;
+        glowDot(x, y, 8 + c * 10, p.magicGlow, twinkle * .35);
+        sparkle(x, y, .9 + c * 1.6, i % 3 ? p.magic0 : p.magic1, twinkle * .85);
+      });
+    } else if (theme.magic === "rain") {
+      // a storm: slanting rain, and now and then a far flash of lightning
+      ctx.strokeStyle = p.magic0; ctx.lineWidth = 1.4;
+      drift(80, seed, t, (a, b, c, d) => {
+        const x = wrapX(a * (w + 240) - t * (120 + c * 60) - cameraX * .3, w + 240) - 120;
+        const y = top + wrapX(b * 800 + t * (820 + d * 300), 820) - 60;
+        ctx.globalAlpha = .18 + c * .28;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6, y + 18 + d * 10); ctx.stroke();
+      });
+      const flash = t % 9;
+      if (flash < .18) { ctx.globalAlpha = (.18 - flash) * .9; ctx.fillStyle = p.magic1; ctx.fillRect(0, 0, w, h); }
       ctx.globalAlpha = 1;
     } else if (theme.magic === "crown") {
       const x = w * .5 - cameraX * .018, y = top + 205;
@@ -6475,7 +6658,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90]];
 
   const isCleared = (num) => save.cleared.includes(num);
   const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
