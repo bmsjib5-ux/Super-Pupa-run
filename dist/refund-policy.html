@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>นโยบายการคืนเงิน · Super Pupa Run</title>
+    <meta name="description" content="นโยบายการคืนเงินสำหรับการเติมเหรียญในเกม Super Pupa Run">
+    <link rel="icon" href="assets/icon-192.png">
+    <style>
+      :root { color-scheme: dark; --ink: #fdf6ff; --muted: #d6cdea; --gold: #ffd76a; }
+      body { margin: 0; min-height: 100vh; font-family: "Trebuchet MS", "Noto Sans Thai", system-ui, sans-serif; color: var(--ink); background: linear-gradient(160deg, #251047, #0d0824 70%); }
+      main { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem 3rem; }
+      a { color: var(--gold); }
+      h1 { margin: 0 0 .3rem; font-size: 1.6rem; }
+      .updated { margin: 0 0 1.5rem; color: var(--muted); font-size: .85rem; }
+      section { margin-bottom: 1.4rem; padding: 1rem 1.2rem; border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; background: rgba(255,255,255,.05); }
+      h2 { margin: 0 0 .5rem; color: var(--gold); font-size: 1.05rem; }
+      p, li { color: var(--muted); line-height: 1.65; }
+      ol, ul { margin: 0; padding-left: 1.3rem; }
+      table { width: 100%; border-collapse: collapse; }
+      td, th { padding: .35rem .2rem; border-bottom: 1px solid rgba(255,255,255,.1); text-align: left; }
+      .back { display: inline-block; margin-top: 1rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>นโยบายการคืนเงิน</h1>
+      <p class="updated">Super Pupa Run · ปรับปรุงล่าสุด 9 ตุลาคม 2569 (ฉบับ 2026-10-09)</p>
+
+      <section>
+        <h2>สินค้าที่ขาย</h2>
+        <p>เหรียญทองในเกม Super Pupa Run ชำระผ่าน TrueMoney Wallet หรือ PromptPay (ให้บริการรับชำระโดย Opn Payments / Omise)</p>
+        <table>
+          <tr><th>แพ็ก</th><th>ราคา</th><th>เหรียญ</th></tr>
+          <tr><td>ถุงเหรียญเล็ก</td><td>20 บาท</td><td>200</td></tr>
+          <tr><td>ถุงเหรียญกลาง</td><td>39 บาท</td><td>450</td></tr>
+          <tr><td>หีบเหรียญใหญ่</td><td>79 บาท</td><td>1,000</td></tr>
+        </table>
+        <p>เหรียญจะเข้าบัญชี Google ที่ใช้เข้าสู่ระบบทันทีเมื่อชำระสำเร็จ</p>
+      </section>
+
+      <section>
+        <h2>เงื่อนไขการคืนเงิน</h2>
+        <ol>
+          <li>เหรียญทองเป็นไอเทมดิจิทัลในเกม ใช้ซื้อของในตลาดของเกมเท่านั้น ไม่มีมูลค่าเป็นเงิน แลกคืนเป็นเงินหรือโอนให้ผู้อื่นไม่ได้</li>
+          <li>เมื่อเหรียญเข้าบัญชีแล้ว จะไม่มีการคืนเงิน ทั้งกรณีใช้เหรียญไปแล้ว เปลี่ยนใจ หรือเลิกเล่น</li>
+          <li>คืนเงินเต็มจำนวนเมื่อ (1) ถูกตัดเงินแต่เหรียญไม่เข้าบัญชีภายใน 24 ชั่วโมงและเราเติมให้ไม่ได้ หรือ (2) ถูกตัดเงินซ้ำในรายการเดียวกัน</li>
+          <li>แจ้งขอคืนเงินภายใน 30 วันหลังชำระ พร้อมอีเมลบัญชี Google วันเวลา ยอดเงิน และหลักฐานการชำระ</li>
+          <li>เราจะตอบกลับภายใน 3 วันทำการ และคืนเงินผ่านช่องทางเดิมภายใน 7–14 วันทำการ ตามรอบของผู้ให้บริการชำระเงิน</li>
+          <li>ผู้เล่นอายุต่ำกว่า 20 ปี ควรได้รับอนุญาตจากผู้ปกครองก่อนชำระเงิน</li>
+        </ol>
+        <p>ผู้ซื้อต้องติ๊กยอมรับนโยบายนี้ในหน้าชำระเงินของเกมก่อนชำระทุกครั้ง</p>
+      </section>
+
+      <section>
+        <h2>ติดต่อ</h2>
+        <p id="contact">ติดต่อเรื่องการชำระเงินและการคืนเงิน: <a id="contactEmail" href="#">-</a></p>
+      </section>
+
+      <a class="back" href="./">← กลับไปเล่น Super Pupa Run</a>
+    </main>
+    <script src="config.js"></script>
+    <script>
+      const email = window.PUPA_CONFIG && window.PUPA_CONFIG.supportEmail;
+      const link = document.getElementById("contactEmail");
+      if (email) { link.textContent = email; link.href = "mailto:" + email; }
+    </script>
+  </body>
+</html>

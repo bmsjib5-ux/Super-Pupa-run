@@ -173,8 +173,9 @@ export const PACKS = [
 
 // Start a payment. Returns the order: for TrueMoney an `authorizeUri` to
 // send the player to, for PromptPay a `qrImage` to show.
-export async function createTopup(pack, method, phone) {
-  const order = await api("/api/topup", { method: "POST", body: { pack, method, phone } });
+// `terms` is the version of the refund policy the player ticked.
+export async function createTopup(pack, method, phone, terms) {
+  const order = await api("/api/topup", { method: "POST", body: { pack, method, phone, terms } });
   if (order.status === "pending") storage.set(PENDING_KEY, order.orderId);
   return order;
 }

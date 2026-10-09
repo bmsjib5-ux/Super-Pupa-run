@@ -4577,7 +4577,13 @@
     wrap.append(grid);
     const note = document.createElement("p");
     note.className = "topup-note";
-    note.textContent = "ชำระผ่าน TrueMoney Wallet หรือสแกน QR PromptPay · เหรียญเป็นไอเทมในเกม ใช้ซื้อของในตลาดเท่านั้น ไม่สามารถแลกคืนเป็นเงินได้";
+    note.textContent = "ชำระผ่าน TrueMoney Wallet หรือสแกน QR PromptPay · เหรียญเป็นไอเทมในเกม ใช้ซื้อของในตลาดเท่านั้น ไม่สามารถแลกคืนเป็นเงินได้ · ";
+    const policy = document.createElement("a");
+    policy.href = "refund-policy.html";
+    policy.target = "_blank";
+    policy.rel = "noopener";
+    policy.textContent = "นโยบายการคืนเงิน";
+    note.append(policy);
     wrap.append(note);
     return wrap;
   }
@@ -4611,6 +4617,36 @@
 
   const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 
+  // The refund policy shown (and agreed to) before every payment, and on
+  // refund-policy.html. Bump REFUND_POLICY_VERSION when the wording changes;
+  // each order records which version the player accepted.
+  const REFUND_POLICY_VERSION = "2026-10-09";
+  const REFUND_POLICY = [
+    "เหรียญทองเป็นไอเทมดิจิทัลในเกม ใช้ซื้อของในตลาดของเกมเท่านั้น ไม่มีมูลค่าเป็นเงิน แลกคืนเป็นเงินหรือโอนให้ผู้อื่นไม่ได้",
+    "เมื่อเหรียญเข้าบัญชีแล้ว จะไม่มีการคืนเงิน ทั้งกรณีใช้เหรียญไปแล้ว เปลี่ยนใจ หรือเลิกเล่น",
+    "คืนเงินเต็มจำนวนเมื่อ (1) ถูกตัดเงินแต่เหรียญไม่เข้าบัญชีภายใน 24 ชั่วโมงและเราเติมให้ไม่ได้ หรือ (2) ถูกตัดเงินซ้ำในรายการเดียวกัน",
+    "แจ้งขอคืนเงินภายใน 30 วันหลังชำระ พร้อมอีเมลบัญชี Google วันเวลา ยอดเงิน และหลักฐานการชำระ",
+    "เราจะตอบกลับภายใน 3 วันทำการ และคืนเงินผ่านช่องทางเดิมภายใน 7–14 วันทำการ ตามรอบของผู้ให้บริการชำระเงิน",
+    "ผู้เล่นอายุต่ำกว่า 20 ปี ควรได้รับอนุญาตจากผู้ปกครองก่อนชำระเงิน"
+  ];
+  const supportEmail = () => window.PUPA_CONFIG?.supportEmail || "";
+
+  function refundPolicyBox() {
+    const box = el("div", "refund-box");
+    box.append(el("b", "refund-title", "นโยบายการคืนเงิน"));
+    const list = el("ol", "refund-list");
+    for (const line of REFUND_POLICY) list.append(el("li", null, line));
+    box.append(list);
+    const foot = el("p", "refund-foot", supportEmail() ? `ติดต่อ: ${supportEmail()} · ` : "");
+    const full = el("a", null, "อ่านฉบับเต็ม");
+    full.href = "refund-policy.html";
+    full.target = "_blank";
+    full.rel = "noopener";
+    foot.append(full);
+    box.append(foot);
+    return box;
+  }
+
   function showTopupStep(step, pack, order = null, message = "") {
     const body = accountUi.body;
     body.replaceChildren();
@@ -4620,6 +4656,13 @@
     if (summary.childElementCount) body.append(summary);
 
     if (step === "method") {
+      body.append(refundPolicyBox());
+      const agree = el("label", "refund-agree");
+      const tick = document.createElement("input");
+      tick.type = "checkbox";
+      tick.id = "refundAgree";
+      agree.append(tick, document.createTextNode(" ฉันอ่านและยอมรับนโยบายการคืนเงินแล้ว"));
+      body.append(agree);
       body.append(el("p", "topup-lead", "เลือกวิธีชำระเงิน"));
       const choices = el("div", "topup-methods");
       const truemoney = el("button", "topup-method", "");
@@ -4630,6 +4673,18 @@
       promptpay.append(el("b", null, "PromptPay QR"), el("span", null, "สแกนจ่ายด้วยแอปธนาคารไหนก็ได้"));
       choices.append(truemoney, promptpay);
       body.append(choices);
+      const agreed = () => {
+        if (tick.checked) return true;
+        agree.classList.remove("is-missing");
+        void agree.offsetWidth; // restart the shake
+        agree.classList.add("is-missing");
+        tick.focus();
+        tone(150, .12, "square", .05);
+        return false;
+      };
+      const syncAgree = () => { choices.classList.toggle("is-locked", !tick.checked); if (tick.checked) agree.classList.remove("is-missing"); };
+      tick.addEventListener("change", syncAgree);
+      syncAgree();
       const phoneBox = el("form", "topup-phone");
       phoneBox.hidden = true;
       const label = el("label", null, "เบอร์มือถือ TrueMoney Wallet");
@@ -4641,17 +4696,18 @@
       go.type = "submit";
       phoneBox.append(label, go);
       body.append(phoneBox);
-      onTap(truemoney, () => { phoneBox.hidden = false; truemoney.classList.add("is-picked"); promptpay.classList.remove("is-picked"); input.focus(); });
-      onTap(promptpay, () => { phoneBox.hidden = true; promptpay.classList.add("is-picked"); truemoney.classList.remove("is-picked"); startTopup(pack, "promptpay"); });
+      onTap(truemoney, () => { if (!agreed()) return; phoneBox.hidden = false; truemoney.classList.add("is-picked"); promptpay.classList.remove("is-picked"); input.focus(); });
+      onTap(promptpay, () => { if (!agreed()) return; phoneBox.hidden = true; promptpay.classList.add("is-picked"); truemoney.classList.remove("is-picked"); startTopup(pack, "promptpay"); });
       phoneBox.addEventListener("submit", (event) => {
         event.preventDefault();
+        if (!agreed()) return;
         const phone = input.value.replace(/[\s-]/g, "");
         if (!/^0[689]\d{8}$/.test(phone)) { input.setCustomValidity("ใส่เบอร์มือถือ 10 หลัก"); input.reportValidity(); return; }
         input.setCustomValidity("");
         startTopup(pack, "truemoney", phone);
       });
       input.addEventListener("input", () => input.setCustomValidity(""));
-      body.append(el("p", "topup-note", "เหรียญจะเข้ากระเป๋าทันทีที่ชำระสำเร็จ · เหรียญในเกมไม่สามารถแลกคืนเป็นเงินได้"));
+      body.append(el("p", "topup-note", "เหรียญจะเข้ากระเป๋าทันทีที่ชำระสำเร็จ"));
     } else if (step === "pending") {
       if (order?.qrImage) {
         const qr = document.createElement("img");
@@ -4703,7 +4759,7 @@
   async function startTopup(pack, method, phone) {
     showTopupStep("pending", pack, null, "กำลังสร้างรายการ…");
     try {
-      const order = await account().createTopup(pack.id, method, phone);
+      const order = await account().createTopup(pack.id, method, phone, REFUND_POLICY_VERSION);
       if (!topupOpen) return;
       if (order.status === "paid") return finishTopup(order);
       if (order.status !== "pending") return showTopupStep("failed", pack, order);
@@ -4714,7 +4770,7 @@
       }
       followTopup(order.orderId, pack);
     } catch (error) {
-      const why = error.code === "bad_phone" ? "เบอร์มือถือไม่ถูกต้อง" : error.code === "too_many_pending" ? "มีรายการรอชำระค้างอยู่หลายรายการ ลองใหม่ภายหลัง" : error.code === "payment_provider" ? "ระบบชำระเงินขัดข้อง ลองใหม่อีกครั้ง" : "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
+      const why = error.code === "bad_phone" ? "เบอร์มือถือไม่ถูกต้อง" : error.code === "terms_not_accepted" ? "ต้องยอมรับนโยบายการคืนเงินก่อน" : error.code === "too_many_pending" ? "มีรายการรอชำระค้างอยู่หลายรายการ ลองใหม่ภายหลัง" : error.code === "payment_provider" ? "ระบบชำระเงินขัดข้อง ลองใหม่อีกครั้ง" : "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
       showTopupStep("failed", pack, null, why);
     }
   }
