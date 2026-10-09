@@ -13,9 +13,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261008w6">
-    <script src="game.js?v=20261008w6" defer></script>
-    <script type="module" src="pupa3d.js?v=20261008w6"></script>
+    <link rel="stylesheet" href="styles.css?v=20261009d">
+    <script src="game.js?v=20261009d" defer></script>
+    <script type="module" src="pupa3d.js?v=20261009d"></script>
+    <!-- Online parts: sign-in, cloud save and coin top-ups. -->
+    <script src="config.js?v=20261009d"></script>
+    <script type="module" src="account.js?v=20261009d"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -32,6 +35,7 @@
           <div class="top-actions">
             <button id="levelsBtn" class="icon-button accent" type="button" aria-label="เลือกด่าน" title="เลือกด่าน" data-open-levels><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M15 21v-7.5l5 2.2-5 2.3"/></svg></button>
             <button id="shopBtn" class="icon-button accent" type="button" aria-label="ร้านค้า" title="ร้านค้า" data-open-shop><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1.2 12h-10.6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/><path d="M9.5 12.5a2.5 2.5 0 0 0 5 0"/></svg></button>
+            <button id="accountBtn" class="icon-button account-button" type="button" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ" hidden><span class="account-avatar" aria-hidden="true">👤</span></button>
             <button id="soundBtn" class="icon-button" type="button" aria-label="ปิดเสียง" aria-pressed="false">♫</button>
             <button id="pauseBtn" class="icon-button" type="button" aria-label="หยุดเกมชั่วคราว" aria-pressed="false">Ⅱ</button>
             <button id="fullscreenBtn" class="icon-button" type="button" aria-label="เปิดเต็มหน้าจอ">⛶</button>
@@ -149,6 +153,18 @@
           </div>
         </div>
 
+        <!-- Paying for a coin pack: pick TrueMoney Wallet or PromptPay, then
+             follow the payment until the coins arrive. -->
+        <div id="topupScreen" class="overlay shop-overlay topup-overlay" role="dialog" aria-modal="true" aria-labelledby="topupTitle" hidden>
+          <div class="shop-card topup-card">
+            <header class="shop-head">
+              <h2 id="topupTitle">เติมเหรียญ</h2>
+              <button id="topupClose" class="icon-button" type="button" aria-label="ปิดหน้าเติมเหรียญ">✕</button>
+            </header>
+            <div id="topupBody" class="topup-body"></div>
+          </div>
+        </div>
+
         <div id="shopScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
           <div class="shop-card">
             <header class="shop-head">
@@ -167,6 +183,7 @@
                   <button type="button" role="tab" data-tab="outfit" aria-selected="true">ชุดแต่งตัว</button>
                   <button type="button" role="tab" data-tab="pet" aria-selected="false" tabindex="-1">สัตว์เลี้ยง</button>
                   <button type="button" role="tab" data-tab="item" aria-selected="false" tabindex="-1">ไอเทม</button>
+                  <button type="button" role="tab" data-tab="topup" aria-selected="false" tabindex="-1" class="tab-topup">เติมเหรียญ</button>
                 </div>
                 <div id="shopList" class="shop-list" role="tabpanel" aria-labelledby="shopTitle"></div>
               </div>

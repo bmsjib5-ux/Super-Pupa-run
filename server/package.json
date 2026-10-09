@@ -1,0 +1,19 @@
+{
+  "name": "super-pupa-run-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Player accounts, cloud saves and coin top-ups (Opn Payments) for Super Pupa Run",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "DEV_MODE=1 node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.0.2"
+  }
+}

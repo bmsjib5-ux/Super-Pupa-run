@@ -1748,10 +1748,12 @@
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     }
   }
-  function writeSave() {
+  const saveListeners = [];
+  function writeSave(quiet = false) {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
     const line = document.querySelector("#saveLine");
     if (line) line.textContent = `คะแนนสะสม ${formatPoints(save.points)} · เหรียญสะสม ${formatPoints(save.coins)}`;
+    if (!quiet) for (const listener of saveListeners) listener();
   }
   // If the game is open in another tab, follow that tab's character and
   // outfit choice so neither tab writes an older choice back over it.
@@ -4179,6 +4181,7 @@
   }
 
   function closeShop() {
+    if (topupOpen) closeTopup();
     shopOpen = false;
     shopUi.screen.hidden = true;
     document.body.classList.remove("dialog-open");
@@ -4360,6 +4363,7 @@
     shopUi.list.replaceChildren();
     if (shopTab === "outfit") shopUi.list.append(shopSection("ตัวละคร", SHOP.heroes), shopSection("สีชุด · ใช้กับ Pupa และ Pupa V2", SHOP.skins), shopSection("หมวกและเครื่องประดับ", SHOP.hats));
     else if (shopTab === "pet") shopUi.list.append(shopSection("สัตว์เลี้ยงช่วยผจญภัย", SHOP.pets));
+    else if (shopTab === "topup") shopUi.list.append(topupSection());
     else shopUi.list.append(shopSection("ไอเทมติดตัว · ใช้ครั้งละ 1 ชิ้น", SHOP.items));
     shopUi.list.scrollTop = scroll;
     const look = previewLook();
@@ -4425,14 +4429,329 @@
     document.querySelectorAll("[data-open-shop]").forEach(button => onTap(button, openShop));
   }
 
+
+  // ---- Account, cloud save and coin top-ups ----
+  // account.js (a module, loaded after this script) signs the player in
+  // with Google, keeps the save on the server and starts payments. It
+  // reaches the save through window.PupaGame and reports back with
+  // "pupa-account" events. save.cloud remembers which account this device
+  // last synced with and the coin balance at that moment, so the next sync
+  // can send only how the coins moved since (see server/src/merge.js).
+  const account = () => window.PupaAccount;
+  const accountState = () => account()?.state || { available: false, ready: false, user: null };
+  const accountUi = {
+    button: document.querySelector("#accountBtn"),
+    screen: document.querySelector("#topupScreen"),
+    body: document.querySelector("#topupBody"),
+    close: document.querySelector("#topupClose")
+  };
+  let topupOpen = false;
+  let topupWatch = null;
+  let topupTimer = 0;
+
+  window.PupaGame = {
+    get save() { return save; },
+    exportSave() { const { cloud, ...rest } = save; return JSON.parse(JSON.stringify(rest)); },
+    cloudBase(uid) { return !save.cloud ? 0 : save.cloud.uid === uid ? save.cloud.coins : save.coins; },
+    markSynced(uid, coins) { save.cloud = { uid, coins }; writeSave(true); },
+    // `full` right after signing in: the account's save replaces this
+    // device's. Otherwise only the balance is corrected, keeping whatever
+    // the coins did here while the request was out.
+    applyCloudSave(remote, uid, sentCoins, full) {
+      if (full) {
+        Object.assign(save, remote);
+      } else {
+        save.coins = Math.max(0, remote.coins + (save.coins - sentCoins));
+        save.points = Math.max(save.points, remote.points);
+        save.cleared = [...new Set([...save.cleared, ...remote.cleared])].sort((a, b) => a - b);
+        for (const id of remote.shop?.owned || []) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
+      }
+      save.cloud = { uid, coins: remote.coins };
+      normalizeShop();
+      writeSave(true);
+      refreshCoins();
+    },
+    onSaveWritten(listener) { saveListeners.push(listener); },
+    resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
+  };
+
+  function refreshCoins() {
+    if (player) updateHud();
+    if (shopOpen) renderShop();
+  }
+
+  function renderAccountButton() {
+    const button = accountUi.button;
+    if (!button) return;
+    const { available, user } = accountState();
+    button.hidden = !available;
+    const avatar = button.firstElementChild;
+    if (user?.picture) {
+      avatar.replaceChildren(Object.assign(document.createElement("img"), { src: user.picture, alt: "", referrerPolicy: "no-referrer" }));
+    } else avatar.textContent = user ? (user.name || "?").slice(0, 1).toUpperCase() : "👤";
+    button.classList.toggle("is-signed-in", Boolean(user));
+    const label = user ? `บัญชี: ${user.name}` : "เข้าสู่ระบบด้วย Google";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+  }
+
+  window.addEventListener("pupa-account", () => {
+    renderAccountButton();
+    if (shopOpen && shopTab === "topup") renderShop();
+  });
+  if (accountUi.button) onTap(accountUi.button, () => {
+    if (accountState().user) { shopTab = "topup"; if (!shopOpen) openShop(); else renderShop(); }
+    else account()?.signIn();
+  });
+
+  // The "เติมเหรียญ" tab of the market.
+  function topupSection() {
+    const wrap = document.createElement("div");
+    wrap.className = "topup-tab";
+    const { available, ready, user, busy, error } = accountState();
+    const row = document.createElement("div");
+    row.className = "account-row";
+    if (!available) {
+      row.innerHTML = `<p class="account-note">ระบบเติมเหรียญยังไม่เปิดให้บริการบนเครื่องนี้</p>`;
+    } else if (!user) {
+      const text = document.createElement("p");
+      text.className = "account-note";
+      text.textContent = busy ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบด้วย Google เพื่อเติมเหรียญ และเก็บเหรียญกับของในตลาดไว้กับบัญชี เล่นต่อได้ทุกเครื่อง";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "shop-buy account-signin";
+      button.textContent = account()?.devAuth ? "เข้าสู่ระบบ (ทดสอบ)" : "เข้าสู่ระบบด้วย Google";
+      button.disabled = !ready || busy;
+      onTap(button, () => account()?.signIn());
+      row.append(text, button);
+      if (error) row.append(Object.assign(document.createElement("p"), { className: "account-error", textContent: error }));
+    } else {
+      const who = document.createElement("div");
+      who.className = "account-who";
+      const avatar = document.createElement("span");
+      avatar.className = "account-avatar big";
+      if (user.picture) avatar.append(Object.assign(document.createElement("img"), { src: user.picture, alt: "", referrerPolicy: "no-referrer" }));
+      else avatar.textContent = (user.name || "?").slice(0, 1).toUpperCase();
+      const name = document.createElement("b");
+      name.textContent = user.name;
+      const sub = document.createElement("span");
+      sub.textContent = `บันทึกบนคลาวด์แล้ว · เติมไปแล้ว ${formatPoints(accountState().topupCoins || 0)} เหรียญ`;
+      const out = document.createElement("button");
+      out.type = "button";
+      out.className = "shop-equip account-signout";
+      out.textContent = "ออกจากระบบ";
+      onTap(out, () => account()?.signOut());
+      who.append(avatar, name, sub);
+      row.append(who, out);
+    }
+    wrap.append(row);
+
+    const grid = document.createElement("div");
+    grid.className = "shop-grid topup-grid";
+    for (const pack of account()?.PACKS || []) {
+      const card = document.createElement("article");
+      card.className = "shop-item topup-pack";
+      if (pack.tag) card.append(Object.assign(document.createElement("span"), { className: "topup-tag", textContent: pack.tag }));
+      card.append(iconCanvas(() => {
+        const stack = pack.id === "p20" ? 1 : pack.id === "p39" ? 2 : 3;
+        drawGlow("#ffd76a", 44);
+        for (let i = 0; i < stack; i++) { ctx.save(); ctx.translate((i - (stack - 1) / 2) * 16, 8 - i * 9); ctx.scale(1.15, 1.15); pickupArt.coin(i * .9); ctx.restore(); }
+      }));
+      const info = document.createElement("div");
+      info.className = "shop-info";
+      info.append(Object.assign(document.createElement("h3"), { textContent: `${formatPoints(pack.coins)} เหรียญ` }),
+        Object.assign(document.createElement("p"), { textContent: pack.name }));
+      const actions = document.createElement("div");
+      actions.className = "shop-actions";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "shop-buy";
+      button.textContent = `${pack.baht} บาท`;
+      button.setAttribute("aria-label", `ซื้อ${pack.name} ${pack.coins} เหรียญ ราคา ${pack.baht} บาท`);
+      button.disabled = !available;
+      onTap(button, () => { if (user) openTopup(pack); else account()?.signIn(); });
+      actions.append(button);
+      card.append(info, actions);
+      grid.append(card);
+    }
+    wrap.append(grid);
+    const note = document.createElement("p");
+    note.className = "topup-note";
+    note.textContent = "ชำระผ่าน TrueMoney Wallet หรือสแกน QR PromptPay · เหรียญเป็นไอเทมในเกม ใช้ซื้อของในตลาดเท่านั้น ไม่สามารถแลกคืนเป็นเงินได้";
+    wrap.append(note);
+    return wrap;
+  }
+
+  // The payment dialog. Opened with a pack to start a payment, or with an
+  // order id to pick up one that is still running (back from TrueMoney).
+  function openTopup(pack, resume = null) {
+    if (!accountUi.screen) return;
+    if (state === "playing") togglePause(true);
+    topupOpen = true;
+    accountUi.screen.hidden = false;
+    document.body.classList.add("dialog-open");
+    if (resume) {
+      showTopupStep("pending", { coins: 0, method: "" }, { status: "pending" }, resume.fromReturn ? "กำลังตรวจสอบการชำระเงิน…" : "ยังมีรายการเติมเหรียญที่รอชำระอยู่");
+      followTopup(resume.orderId);
+    } else showTopupStep("method", pack);
+    accountUi.close.focus();
+  }
+
+  function closeTopup() {
+    if (!topupOpen) return;
+    topupOpen = false;
+    topupWatch?.stop();
+    topupWatch = null;
+    window.clearInterval(topupTimer);
+    accountUi.screen.hidden = true;
+    if (!shopOpen && !newsOpen) document.body.classList.remove("dialog-open");
+    refreshCoins();
+    if (shopOpen) shopUi.close.focus();
+  }
+
+  const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
+
+  function showTopupStep(step, pack, order = null, message = "") {
+    const body = accountUi.body;
+    body.replaceChildren();
+    const summary = el("div", "topup-summary");
+    if (pack?.coins) summary.append(el("b", null, `${formatPoints(pack.coins)} เหรียญ`), el("span", null, pack.name ? `${pack.name} · ${pack.baht} บาท` : ""));
+    else if (order?.coins) summary.append(el("b", null, `${formatPoints(order.coins)} เหรียญ`), el("span", null, `${(order.amount / 100).toFixed(0)} บาท`));
+    if (summary.childElementCount) body.append(summary);
+
+    if (step === "method") {
+      body.append(el("p", "topup-lead", "เลือกวิธีชำระเงิน"));
+      const choices = el("div", "topup-methods");
+      const truemoney = el("button", "topup-method", "");
+      truemoney.type = "button";
+      truemoney.append(el("b", null, "TrueMoney Wallet"), el("span", null, "ใส่เบอร์มือถือที่ผูกวอลเล็ต แล้วยืนยันในแอป TrueMoney"));
+      const promptpay = el("button", "topup-method", "");
+      promptpay.type = "button";
+      promptpay.append(el("b", null, "PromptPay QR"), el("span", null, "สแกนจ่ายด้วยแอปธนาคารไหนก็ได้"));
+      choices.append(truemoney, promptpay);
+      body.append(choices);
+      const phoneBox = el("form", "topup-phone");
+      phoneBox.hidden = true;
+      const label = el("label", null, "เบอร์มือถือ TrueMoney Wallet");
+      const input = document.createElement("input");
+      input.type = "tel"; input.inputMode = "numeric"; input.autocomplete = "tel-national"; input.maxLength = 12; input.placeholder = "08x xxx xxxx"; input.required = true;
+      input.pattern = "0[689][0-9]{8}";
+      label.append(input);
+      const go = el("button", "shop-buy", "ไปชำระเงิน");
+      go.type = "submit";
+      phoneBox.append(label, go);
+      body.append(phoneBox);
+      onTap(truemoney, () => { phoneBox.hidden = false; truemoney.classList.add("is-picked"); promptpay.classList.remove("is-picked"); input.focus(); });
+      onTap(promptpay, () => { phoneBox.hidden = true; promptpay.classList.add("is-picked"); truemoney.classList.remove("is-picked"); startTopup(pack, "promptpay"); });
+      phoneBox.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const phone = input.value.replace(/[\s-]/g, "");
+        if (!/^0[689]\d{8}$/.test(phone)) { input.setCustomValidity("ใส่เบอร์มือถือ 10 หลัก"); input.reportValidity(); return; }
+        input.setCustomValidity("");
+        startTopup(pack, "truemoney", phone);
+      });
+      input.addEventListener("input", () => input.setCustomValidity(""));
+      body.append(el("p", "topup-note", "เหรียญจะเข้ากระเป๋าทันทีที่ชำระสำเร็จ · เหรียญในเกมไม่สามารถแลกคืนเป็นเงินได้"));
+    } else if (step === "pending") {
+      if (order?.qrImage) {
+        const qr = document.createElement("img");
+        qr.className = "topup-qr";
+        qr.src = order.qrImage;
+        qr.alt = "QR PromptPay";
+        body.append(qr, el("p", "topup-lead", "สแกน QR นี้ด้วยแอปธนาคาร แล้วรอสักครู่"));
+        const timer = el("p", "topup-timer", "");
+        body.append(timer);
+        window.clearInterval(topupTimer);
+        if (order.expiresAt) {
+          const tick = () => {
+            const left = Math.max(0, Math.round((new Date(order.expiresAt) - Date.now()) / 1000));
+            timer.textContent = left ? `QR ใช้ได้อีก ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")} นาที` : "QR หมดอายุแล้ว";
+          };
+          tick();
+          topupTimer = window.setInterval(tick, 1000);
+        }
+      } else if (order?.authorizeUri) {
+        body.append(el("p", "topup-lead", "กำลังพาไปหน้าชำระเงิน TrueMoney…"));
+      }
+      const status = el("p", "topup-status", message || "รอการชำระเงิน…");
+      status.setAttribute("role", "status");
+      body.append(status);
+      if (order?.authorizeUri) {
+        const link = el("a", "shop-buy topup-link", "เปิดหน้า TrueMoney");
+        link.href = order.authorizeUri;
+        body.append(link);
+      }
+      const cancel = el("button", "shop-equip", "ปิดหน้าต่างนี้");
+      cancel.type = "button";
+      onTap(cancel, closeTopup);
+      body.append(cancel);
+    } else if (step === "paid") {
+      body.append(el("p", "topup-done", `+${formatPoints(order.coins)} เหรียญ เข้ากระเป๋าแล้ว!`), el("p", "topup-lead", `ตอนนี้มี ${formatPoints(save.coins)} เหรียญ ขอบคุณที่สนับสนุนเกมนะ`));
+      const ok = el("button", "shop-buy", "ไปช้อปต่อ");
+      ok.type = "button";
+      onTap(ok, closeTopup);
+      body.append(ok);
+    } else {
+      body.append(el("p", "topup-failed", message || "การชำระเงินไม่สำเร็จ"), el("p", "topup-lead", "ยังไม่มีการหักเงิน ลองใหม่อีกครั้งได้เลย"));
+      const retry = el("button", "shop-buy", "ลองใหม่");
+      retry.type = "button";
+      onTap(retry, () => { if (pack?.id) showTopupStep("method", pack); else closeTopup(); });
+      body.append(retry);
+    }
+  }
+
+  async function startTopup(pack, method, phone) {
+    showTopupStep("pending", pack, null, "กำลังสร้างรายการ…");
+    try {
+      const order = await account().createTopup(pack.id, method, phone);
+      if (!topupOpen) return;
+      if (order.status === "paid") return finishTopup(order);
+      if (order.status !== "pending") return showTopupStep("failed", pack, order);
+      showTopupStep("pending", pack, order);
+      if (order.authorizeUri) {
+        // Off to TrueMoney; it brings the player back with ?topup=<order>.
+        window.setTimeout(() => { location.href = order.authorizeUri; }, 600);
+      }
+      followTopup(order.orderId, pack);
+    } catch (error) {
+      const why = error.code === "bad_phone" ? "เบอร์มือถือไม่ถูกต้อง" : error.code === "too_many_pending" ? "มีรายการรอชำระค้างอยู่หลายรายการ ลองใหม่ภายหลัง" : error.code === "payment_provider" ? "ระบบชำระเงินขัดข้อง ลองใหม่อีกครั้ง" : "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
+      showTopupStep("failed", pack, null, why);
+    }
+  }
+
+  function followTopup(orderId, pack = null) {
+    topupWatch?.stop();
+    let shown = false;
+    topupWatch = account().watchOrder(orderId, (order) => {
+      if (!topupOpen) return;
+      if (order.status === "paid") finishTopup(order);
+      else if (order.status === "failed") showTopupStep("failed", pack, order);
+      else if (!shown) { shown = true; showTopupStep("pending", pack, order); }
+    });
+    topupWatch.done.then(final => { if (topupOpen && !final && !shown) showTopupStep("failed", pack, null, "ไม่พบรายการนี้แล้ว"); });
+  }
+
+  function finishTopup(order) {
+    topupWatch?.stop();
+    window.clearInterval(topupTimer);
+    [523, 659, 784, 1047, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
+    // watchOrder syncs the save, which brings the new balance here.
+    window.setTimeout(() => { if (topupOpen) showTopupStep("paid", null, order); refreshCoins(); }, 400);
+    announce(`ได้รับ ${order.coins} เหรียญแล้ว`);
+  }
+
+  if (accountUi.screen) onTap(accountUi.close, closeTopup);
+  renderAccountButton();
+
   // ---- What's new ----
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-08e";
-  const NEWS_DATE = "8 ต.ค. 2569";
+  const NEWS_VERSION = "2026-10-09a";
+  const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "เติมเหรียญ · บันทึกบนคลาวด์", text: "เข้าสู่ระบบด้วย Google เก็บเหรียญและของไว้กับบัญชี เติมเหรียญผ่าน TrueMoney หรือ PromptPay เริ่ม 20 บาท", image: "topup", open: () => openShopAt("topup") },
     { tag: "ด่านใหม่", title: "โลก 6 · สวนสวรรค์จักรวาล", text: "ด่าน 51–60 กับฉากซากุระ คริสตัล ดอกบัว ออโรรา ทางช้างเผือก และบอสใหม่ 2 ตัว", image: "world6", open: () => { closeNews(); openLevels(); } },
     { tag: "ตัวละครใหม่", title: "Pupa V2", text: "Pupa ร่างใหม่แบบ 3 มิติ ผมยาวสีกุหลาบ ชุดนักผจญภัย ซื้อได้ในตลาด", image: "pupav2", open: () => openShopAt("outfit") },
     { tag: "ตัวละครใหม่", title: "ใบเตย · อิคุยะ · ปังจิ", text: "สามตัวละคร 3 มิติใหม่ในตลาด ซื้อด้วยเหรียญแล้วเลือกเล่นได้เลย", image: "trio", open: () => openShopAt("outfit") },
@@ -4462,6 +4781,19 @@
   // Pictures for the cards: artwork where there is some, otherwise the same
   // canvas drawings the game uses.
   function newsPicture(kind) {
+    if (kind === "topup") {
+      const icon = document.createElement("canvas");
+      icon.width = icon.height = 160;
+      paintOn(icon.getContext("2d"), () => {
+        ctx.translate(80, 92); ctx.scale(1.5, 1.5);
+        drawGlow("#ffd76a", 50);
+        for (let i = 0; i < 3; i++) { ctx.save(); ctx.translate((i - 1) * 18, 8 - i * 10); ctx.scale(1.2, 1.2); pickupArt.coin(i * .9); ctx.restore(); }
+        ctx.font = "900 22px 'Trebuchet MS', system-ui, sans-serif"; ctx.textAlign = "center";
+        ctx.lineWidth = 5; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText("฿", 0, -34);
+        ctx.fillStyle = "#ffe58f"; ctx.fillText("฿", 0, -34);
+      });
+      return icon;
+    }
     if (kind === "trio") {
       const row = document.createElement("div");
       row.className = "news-trio";

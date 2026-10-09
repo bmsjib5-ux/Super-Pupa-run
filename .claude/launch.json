@@ -4,8 +4,22 @@
     {
       "name": "super-pupa-run",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5173", "--directory", "dist"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5173",
+        "--directory",
+        "dist"
+      ],
       "port": 5173
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "server/src/index.js"
+      ],
+      "port": 8787
     }
   ]
 }
