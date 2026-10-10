@@ -8244,7 +8244,7 @@
 
     // the ground, in bands that rush toward Pupa
     const [g0, g1, g2] = theme.body;
-    ctx.fillStyle = vgrad(horizon, h, [g1, g2]);
+    ctx.fillStyle = vgrad(horizon, h, [g0, g1, g2]);
     ctx.fillRect(0, horizon, w, h - horizon);
     const band = 3.2;
     for (let k = Math.floor(-3 / band); k < 40; k++) {
@@ -8255,6 +8255,11 @@
       ctx.fillStyle = "rgba(255,255,255,.045)";
       ctx.fillRect(0, b.y, w, a.y - b.y);
     }
+    // a haze where the land meets the sky
+    ctx.save(); ctx.globalAlpha = .45;
+    ctx.fillStyle = vgrad(horizon - 30, horizon + 90, ["rgba(255,255,255,0)", theme.shine, "rgba(255,255,255,0)"]);
+    ctx.fillRect(0, horizon - 30, w, 120);
+    ctx.restore();
     // the road
     const edge = (side, z) => proj(side * 1.62, z);
     const far = RUN.view, nearZ = -RUN.focal * .69;
