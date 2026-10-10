@@ -40,7 +40,7 @@
   };
 
   const WORLD = { width: 6100, ground: 605, gravity: 2200 };
-  const keys = { left: false, right: false, jump: false, attack: false };
+  const keys = { left: false, right: false, jump: false, attack: false, down: false };
   const image = (src) => { const img = new Image(); img.src = src; return img; };
   const art = {
     background: image("assets/cherry-night.webp"),
@@ -1787,6 +1787,25 @@
       entry.boss = { ...designed[source - 1], left, right, x: Math.round(left + (right - left) * .6) };
     });
   }
+
+  // ---- Dodge-run stages (levels 101-105) ----
+  // Played by the dodge-run mode further down (see makeRunner); they borrow
+  // painted scenes from the worlds and are open from the start.
+  const MAIN_LEVELS = levels.length;
+  const RUNNER_FIRST = MAIN_LEVELS + 1;
+  levels.push(...[
+    { title: "วิ่งฝ่าสวนซากุระ", from: 51, length: 700, speed: [13, 16], density: .35 },
+    { title: "ซิ่งทุ่งสายไหม", from: 71, length: 900, speed: [14, 18], density: .5 },
+    { title: "ตะลุยอ่าวโจรสลัด", from: 81, length: 1100, speed: [15, 20], density: .62 },
+    { title: "สไลด์ธารน้ำแข็งไฟ", from: 66, length: 1300, speed: [16, 22], density: .74 },
+    { title: "หนีลาวาราชาทีเร็กซ์", from: 95, length: 1500, speed: [17, 24], density: .86 }
+  ].map((stage, i) => ({
+    name: `ด่าน ${RUNNER_FIRST + i} · ${stage.title}`,
+    theme: { ...levels[stage.from - 1].theme },
+    runner: { length: stage.length, speed: stage.speed, density: stage.density },
+    platforms: [], cherries: [], enemies: [], blocks: [],
+    width: 2000, goalX: Infinity, checkpointX: Infinity
+  })));
   const BOSS_COINS = 100; // coins for beating a boss
   const totalCherries = levels.reduce((sum, entry) => sum + entry.cherries.length, 0);
   // Open the page with ?level=2 to start on a later level.
@@ -1871,7 +1890,8 @@
       { id: "flamecrown", name: "มงกุฎเปลวสุริยะ", desc: "รางวัลดาวครบโลก 7 · อาณาจักรเปลวสุริยะ", price: 0, reward: 7 },
       { id: "cupcake", name: "หมวกคัพเค้กเชอร์รี่", desc: "รางวัลดาวครบโลก 8 · อาณาจักรขนมหวาน", price: 0, reward: 8 },
       { id: "tricorne", name: "หมวกกัปตันโจรสลัด", desc: "รางวัลดาวครบโลก 9 · ทะเลโจรสลัด", price: 0, reward: 9 },
-      { id: "dinoegg", name: "หมวกเปลือกไข่ไดโน", desc: "รางวัลดาวครบโลก 10 · หุบเขาไดโนเสาร์", price: 0, reward: 10 }
+      { id: "dinoegg", name: "หมวกเปลือกไข่ไดโน", desc: "รางวัลดาวครบโลก 10 · หุบเขาไดโนเสาร์", price: 0, reward: 10 },
+      { id: "runcap", name: "หมวกแก๊ปปีกสายฟ้า", desc: "รางวัลดาวครบโลกพิเศษ · วิ่งหลบ", price: 0, reward: 11 }
     ],
     pets: [
       { id: "nopet", name: "ไม่พาสัตว์เลี้ยง", desc: "ผจญภัยคนเดียว", price: 0 },
@@ -2087,7 +2107,7 @@
     balls = [];
     bolts = [];
     bonus = null;
-    placePortal();
+    if (level.runner) portals = []; else placePortal();
     beams = [];
     starShots = [];
     blasts = [];
@@ -2097,6 +2117,7 @@
     resetPet();
     levelStart = { score: player.score, bonus: player.bonus, points: player.points };
     levelHits = 0;
+    runner = level.runner ? makeRunner(level) : null;
     bannerText = level.name;
     bannerTime = 3;
     if (ui.levelName) ui.levelName.textContent = level.name;
@@ -2154,6 +2175,7 @@
   }
 
   function progress() {
+    if (runner) return runnerProgress();
     return Math.min(100, Math.round((player.x / (level.goalX - 80)) * 100));
   }
 
@@ -2218,8 +2240,8 @@
     ui.restartBtn.hidden = won;
     ui.replayBtn.hidden = !won;
     ui.end.hidden = false;
-    ui.endTitle.textContent = won ? "ถึงรังไหมแล้ว!" : "ลองใหม่อีกครั้ง";
-    ui.endText.textContent = won ? "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย" : "เหรียญและคะแนนยังอยู่ครบ กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
+    ui.endTitle.textContent = won ? (runner ? "วิ่งครบทุกด่านแล้ว!" : "ถึงรังไหมแล้ว!") : "ลองใหม่อีกครั้ง";
+    ui.endText.textContent = won ? (runner ? "Pupa ฝ่าทุกสิ่งกีดขวางถึงเส้นชัยสุดท้าย" : "Pupa ฝ่าคืนมหัศจรรย์กลับถึงบ้านอย่างปลอดภัย") : "เหรียญและคะแนนยังอยู่ครบ กดเล่นอีกครั้งเพื่อเริ่มด่านนี้ใหม่";
     ui.endIcon.textContent = won ? "✦" : "☾";
     ui.finalScore.textContent = formatPoints(save.coins);
     const isNewBest = player.points > save.best;
@@ -2246,7 +2268,8 @@
 
   // How this attempt at the level went (call at the finish).
   function rateLevel() {
-    const total = cherries.length, taken = cherries.filter(cherry => cherry.taken).length;
+    const total = runner ? runner.coinTotal : cherries.length;
+    const taken = runner ? runner.coinsTaken : cherries.filter(cherry => cherry.taken).length;
     const coins = total === 0 || taken >= Math.ceil(total * STAR_COIN_SHARE);
     const safe = levelHits === 0;
     return { stars: 1 + coins + safe, taken, total, coins, safe };
@@ -2328,7 +2351,8 @@
   // ends the game instead).
   function completeLevel() {
     const result = rateLevel();
-    if (levelIndex >= levels.length - 1) { finish(true, result); return; }
+    // the last platform level and the last dodge-run stage end their track
+    if (levelIndex === MAIN_LEVELS - 1 || levelIndex >= levels.length - 1) { finish(true, result); return; }
     bankCoins();
     markCleared(levelIndex + 1);
     gainHeroXp(100);
@@ -2383,7 +2407,8 @@
     ui.points.textContent = formatPoints(save.points);
     const weapon = player.laser > 0 ? "LASER" : player.spread > 0 ? "STAR" : player.bomb > 0 ? "BOMB" : heroIs("ikuya") ? "WIND" : "";
     ui.attackBtn?.classList.toggle("is-ready", Boolean(weapon));
-    if (ui.attackBtn && ui.attackBtn.dataset.label !== (weapon || "ATK")) ui.attackBtn.dataset.label = weapon || "ATK";
+    const label = runner ? "หมอบ" : weapon || "ATK";
+    if (ui.attackBtn && ui.attackBtn.dataset.label !== label) ui.attackBtn.dataset.label = label;
     renderQuickItems();
     if (lobbyOpen()) renderLobby();
   }
@@ -3018,6 +3043,7 @@
 
   function update(dt) {
     if (state !== "playing") return;
+    if (runner) { updateRunner(dt); return; }
     // Paint the next level's scene in the background, well before the flag.
     if (!nextScenePrimed && player.x > level.goalX * .45) { nextScenePrimed = true; prepareScene(levels[levelIndex + 1]?.theme); }
     bannerTime = Math.max(0, bannerTime - dt);
@@ -4287,6 +4313,7 @@
   function render(time) {
     ctx.setTransform(dpr * renderScale, 0, 0, dpr * renderScale, 0, 0);
     ctx.clearRect(0, 0, viewWidth, viewHeight);
+    if (runner) { drawRunner(time); return; }
     if (shake > 0 && state === "playing") ctx.translate((Math.random() - .5) * 14 * Math.min(1, shake * 3), (Math.random() - .5) * 10 * Math.min(1, shake * 3));
     drawBackground(time);
     ctx.translate(0, worldOffsetY);
@@ -4471,6 +4498,11 @@
       save.shop.items[id]--; used.push(SHOP_INDEX[id].name); return true;
     };
     if (!player.shield && take("shield")) player.shield = true;
+    if (runner) {
+      // only the shield, magnet and star make sense on the dodge run
+      if (take("magnet")) player.magnet = MAGNET_TIME;
+      if (take("star")) player.star = MARKET_STAR_TIME;
+    } else {
     if (!player.big && heroLevel() >= 5) setBig(true);
     if (!player.big && take("grow")) setBig(true);
     if (take("leaf")) player.boost = BOOST_TIME;
@@ -4483,6 +4515,7 @@
     if (take("jetpack")) player.jet = JET_TIME;
     if (take("bowling")) rollBowling();
     if (take("lightning")) castLightning();
+    }
     if (equippedPet()?.shield && !player.shield) player.shield = true;
     if (heroIs("pangji") && !player.shield) player.shield = true;
     if (!used.length) return;
@@ -4519,6 +4552,7 @@
 
   function useQuickItem(id) {
     if (state !== "playing" || !player || save.shop.items[id] <= 0 || save.shop.bring[id]) return;
+    if (runner && !["shield", "magnet", "star", "revive"].includes(id)) { tone(150, .12, "square", .05); announce("ใช้ไอเทมนี้ในด่านวิ่งหลบไม่ได้"); return; }
     const entry = SHOP_INDEX[id];
     if (!QUICK_USE[id]()) {
       tone(150, .12, "square", .05);
@@ -5160,6 +5194,19 @@
       ctx.strokeStyle = "#fff8ec"; ctx.lineWidth = 2.2; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(10, 4); ctx.moveTo(10, -2); ctx.lineTo(-10, 4); ctx.stroke();
       ctx.fillStyle = "#e0342a"; ctx.beginPath(); ctx.moveTo(26, -24); ctx.quadraticCurveTo(46, -44, 38, -12); ctx.quadraticCurveTo(34, -20, 26, -24); ctx.fill();
+    },
+    runcap() {
+      ctx.translate(0, 14);   // sits on the head, not above it
+      for (let i = 0; i < 3; i++) {   // a little wing on the side
+        ctx.fillStyle = i % 2 ? "#e8f4ff" : "#ffffff";
+        ctx.beginPath(); ctx.ellipse(-28 - i * 6, -10 - i * 5, 13 - i * 2, 5, -.55, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = "#3a8aff"; ctx.strokeStyle = "#1a4aa8"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 2, 30, 26, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#1a4aa8"; ctx.beginPath(); ctx.ellipse(22, 3, 22, 6, .06, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffe066";
+      ctx.beginPath(); ctx.moveTo(-2, -20); ctx.lineTo(7, -9); ctx.lineTo(1, -9); ctx.lineTo(6, 0); ctx.lineTo(-6, -12); ctx.lineTo(0, -12); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(0, -24, 3.5, 0, Math.PI * 2); ctx.fill();
     },
     dinoegg(t) {
       ctx.translate(0, 12);   // sits on the head, not above it
@@ -6052,10 +6099,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-09k";
+  const NEWS_VERSION = "2026-10-10a";
   const NEWS_DATE = "9 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "ด่านวิ่งหลบ", text: "5 ด่านพิเศษ วิ่งบนถนน 3 เลน ฉากไหลเข้ามาจากด้านบน ปัดหรือกดซ้ายขวาเปลี่ยนเลน กระโดดข้ามรั้ว หมอบลอดคาน เก็บเหรียญและไอเทมตลอดทาง เล่นได้เลยไม่ต้องปลดล็อก", image: "runner", open: () => { closeNews(); openRunnerLevels(); } },
     { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 70% ได้อีก 1 ดาว ไม่เสียหัวใจได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ด่านใหม่", title: "โลก 10 · หุบเขาไดโนเสาร์", text: "ด่าน 91–100 หุบเขาไดโนเสาร์ ป่าเฟิร์นยักษ์ ถ้ำฟอสซิลอำพัน ภูเขาไฟ จนถึงฝนดาวตกวันสิ้นยุค พร้อมบอสราชาทีเร็กซ์เพลิง และจักรพรรดิไดโนเสาร์อุกกาบาต", image: "world10", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "ตัวละครอัปเลเวลได้", text: "เล่นแล้วได้ XP ทุกตัวละครอัปได้ถึง Lv 10 วิ่งเร็วขึ้นทุกเลเวล Lv 3 หัวใจ 4 ดวง Lv 5 เริ่มด่านตัวใหญ่ Lv 7 กระโดดสูงขึ้น Lv 10 หัวใจ 5 ดวง", image: "trio", open: () => { closeNews(); showLobby(); } },
@@ -6106,6 +6154,26 @@
         ctx.font = "900 22px 'Trebuchet MS', system-ui, sans-serif"; ctx.textAlign = "center";
         ctx.lineWidth = 5; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText("฿", 0, -34);
         ctx.fillStyle = "#ffe58f"; ctx.fillText("฿", 0, -34);
+      });
+      return icon;
+    }
+    if (kind === "runner") {
+      // a little three-lane road running into the distance
+      const icon = document.createElement("canvas");
+      icon.width = icon.height = 160;
+      paintOn(icon.getContext("2d"), () => {
+        ctx.fillStyle = vgrad(0, 160, ["#3a5ab8", "#ff9ac0"]); ctx.fillRect(0, 0, 160, 70);
+        ctx.fillStyle = "#3a6a4a"; ctx.fillRect(0, 70, 160, 90);
+        ctx.fillStyle = "#2a1a40"; ctx.beginPath(); ctx.moveTo(66, 70); ctx.lineTo(94, 70); ctx.lineTo(160, 160); ctx.lineTo(0, 160); ctx.fill();
+        ctx.strokeStyle = "#ffd76a"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(66, 70); ctx.lineTo(0, 160); ctx.moveTo(94, 70); ctx.lineTo(160, 160); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.setLineDash([8, 8]);
+        ctx.beginPath(); ctx.moveTo(75, 70); ctx.lineTo(53, 160); ctx.moveTo(85, 70); ctx.lineTo(107, 160); ctx.stroke();
+        ctx.setLineDash([]);
+        for (const [x, y, k] of [[80, 84, .4], [80, 100, .55], [80, 120, .75]]) { ctx.save(); ctx.translate(x, y); ctx.scale(k, k); pickupArt.coin(y); ctx.restore(); }
+        ctx.fillStyle = "#ff7aa8"; ctx.fillRect(98, 108, 34, 12);
+        ctx.fillStyle = "rgba(255,255,255,.8)"; for (let i = 0; i < 3; i++) ctx.fillRect(102 + i * 10, 108, 4, 12);
+        ctx.save(); ctx.translate(48, 150); ctx.scale(.5, .5); const img = art.hero; if (img.complete && img.naturalWidth) ctx.drawImage(img, -50, -120, 100, 120); ctx.restore();
       });
       return icon;
     }
@@ -7681,10 +7749,11 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90], ["โลก 10 · หุบเขาไดโนเสาร์", 91, 100]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90], ["โลก 10 · หุบเขาไดโนเสาร์", 91, 100], ["โลกพิเศษ · วิ่งหลบ", 101, 105]];
 
   const isCleared = (num) => save.cleared.includes(num);
-  const isOpenLevel = (num) => num === 1 || isCleared(num) || isCleared(num - 1);
+  // The first dodge-run stage is open from the start, like level 1.
+  const isOpenLevel = (num) => num === 1 || num === RUNNER_FIRST || isCleared(num) || (num !== RUNNER_FIRST && isCleared(num - 1));
 
   function markCleared(num) {
     if (isCleared(num)) return;
@@ -7786,18 +7855,25 @@
     }
   }
 
+  function openRunnerLevels(event) {
+    openLevels(event);
+    const heading = [...levelUi.list.querySelectorAll(".shop-heading")].find(h => h.firstChild.textContent.includes("วิ่งหลบ"));
+    if (heading) levelUi.list.scrollTop = heading.parentElement.offsetTop - levelUi.list.offsetTop - 8;
+  }
+
   if (levelUi.screen) {
     onTap(levelUi.close, () => closeLevels());
+    document.querySelectorAll("[data-open-runner]").forEach(button => onTap(button, openRunnerLevels));
     document.querySelectorAll("[data-open-levels]").forEach(button => onTap(button, openLevels));
   }
 
   function setKey(action, value) {
     if (action === "jump") keys.jumpHeld = value;   // the jetpack flies while jump is held
-    if (action === "jump" || action === "attack") { if (value) keys[action] = true; return; }
+    if (action === "jump" || action === "attack" || action === "down") { if (value) keys[action] = true; return; }
     keys[action] = value;
   }
 
-  const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack" };
+  const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack", ArrowDown: "down", s: "down", S: "down" };
   window.addEventListener("keydown", (event) => {
     // The market takes the keyboard while it is open: Escape closes it.
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
@@ -7815,7 +7891,7 @@
   });
   window.addEventListener("keyup", (event) => {
     const action = keyMap[event.key];
-    if (action && action !== "attack") setKey(action, false);
+    if (action && action !== "attack" && action !== "down") setKey(action, false);
   });
   window.addEventListener("blur", () => { keys.left = keys.right = false; if (state === "playing") togglePause(true); });
   window.addEventListener("resize", resize, { passive: true });
@@ -7894,6 +7970,555 @@
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
+
+  // ---- Dodge run (levels 101-105) ----
+  // A different kind of level: Pupa runs down a three-lane road while the
+  // world streams toward her from the top of the screen. Change lanes, jump
+  // hurdles and monsters, and duck under bars; walls can only be dodged.
+  // Coins and items line the way, and the finish arch ends the stage. Lengths
+  // are in metres along the road; `z` is how far ahead of Pupa a thing is.
+  const RUN = {
+    lane: 2.2,        // lane width
+    focal: 9,         // perspective: things this far ahead are drawn half size
+    view: 80,         // how far ahead is drawn
+    gravity: 34, jump: 12.5,
+    duck: .75, stand: 1.6, crouch: .8,
+    hurt: 1.4,        // grace after a hit
+    hurdle: .75, barLow: 1.05, barHigh: 2.7, wall: 3.4, monster: .95
+  };
+  let runner = null;
+  let runSwipe = null;
+
+  // Lay out a stage: rows of obstacles with coins through the safe lanes,
+  // a breather of coin snakes now and then, and an item every so often.
+  // Every row leaves at least one lane open without walls.
+  function buildRun(entry) {
+    const { length, density } = entry.runner;
+    const r = seeded((entry.theme.seed || 1) * 131 + entry.runner.length);
+    const things = [];
+    const pick = (list) => list[Math.floor(r() * list.length)];
+    const shuffled = () => { const lanes = [-1, 0, 1]; for (let i = 2; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [lanes[i], lanes[j]] = [lanes[j], lanes[i]]; } return lanes; };
+    const add = (type, lane, z, extra = {}) => things.push({ type, lane, z, depth: .6, alive: true, ...extra });
+    const coins = (lane, z0, count, h = .8, gap = 2.6) => { for (let i = 0; i < count; i++) add("coin", lane, z0 + i * gap, { h, depth: 0 }); };
+    const arc = (lane, z) => { for (let i = 0; i < 5; i++) add("coin", lane, z - 4 + i * 2, { h: .8 + Math.sin(i / 4 * Math.PI) * 1.4, depth: 0 }); };
+    let z = 38, nextItem = 90 + r() * 60;
+    while (z < length - 45) {
+      const roll = r();
+      const lanes = shuffled();
+      if (roll < .12) {
+        // a coin snake through the lanes, nothing to dodge
+        let lane = lanes[0];
+        for (let i = 0; i < 9; i++) { add("coin", lane, z + i * 2.6, { h: .8, depth: 0 }); if (i % 3 === 2) lane = Math.max(-1, Math.min(1, lane + (r() < .5 ? -1 : 1))); }
+        z += 30;
+        continue;
+      }
+      if (roll < .34) {
+        // hurdles: jump them, or go round
+        const count = r() < .3 + density * .4 ? 2 : 1;
+        for (let i = 0; i < count; i++) add("hurdle", lanes[i], z);
+        arc(lanes[0], z);
+        if (count === 1) coins(lanes[1], z - 6, 4);
+      } else if (roll < .52) {
+        // bars: duck under (a low coin line under one of them)
+        const count = r() < .35 + density * .4 ? 2 : 1;
+        for (let i = 0; i < count; i++) add("bar", lanes[i], z, { depth: .4 });
+        coins(lanes[0], z - 3, 3, .45);
+      } else if (roll < .7) {
+        // walls in two lanes; the third is open
+        const depth = r() < density * .6 ? 9 : 2.4;
+        add("wall", lanes[0], z, { depth });
+        add("wall", lanes[1], z + (r() < .5 ? 0 : 5), { depth });
+        coins(lanes[2], z - 5, 5);
+      } else if (roll < .86) {
+        // one lane each: a wall, a hurdle and a bar
+        add("wall", lanes[0], z, { depth: 2.4 });
+        add("hurdle", lanes[1], z);
+        add("bar", lanes[2], z, { depth: .4 });
+        arc(lanes[1], z);
+      } else {
+        // a thorn-shroom running at Pupa: jump it, stomp it or step aside
+        add("monster", lanes[0], z + 12, { depth: .8, phase: r() * 6 });
+        if (density > .5) add("hurdle", lanes[1], z);
+        coins(lanes[2], z - 4, 4);
+      }
+      if (z > nextItem) {
+        add("item", lanes[2], z - 10, { kind: pick(["magnet", "shield", "star", "magnet", "heart"]), h: .9, depth: 0 });
+        nextItem = z + 110 + r() * 90;
+      }
+      z += 30 - density * 12 + r() * 8;
+    }
+    add("goal", 0, length, { depth: 1 });
+    return things.sort((a, b) => a.z - b.z);
+  }
+
+  function makeRunner(entry) {
+    const things = buildRun(entry);
+    return {
+      spec: entry.runner, things, dist: 0, speed: entry.runner.speed[0],
+      lane: 0, laneX: 0, y: 0, vy: 0, grounded: true, airJumps: 0, duck: 0, hurt: 0, slow: 0,
+      prevLeft: false, prevRight: false, hudTimer: 0,
+      coinTotal: things.filter(t => t.type === "coin").length, coinsTaken: 0,
+      pops: [], bits: []
+    };
+  }
+
+  const runnerProgress = () => Math.min(100, Math.round(runner.dist / runner.spec.length * 100));
+
+  function runnerMove(dir) {
+    const lane = Math.max(-1, Math.min(1, runner.lane + dir));
+    if (lane === runner.lane) { tone(180, .05, "square", .03); return; }
+    runner.lane = lane;
+    tone(520 + dir * 40, .05, "triangle", .035);
+  }
+
+  function runnerJump() {
+    const R = runner;
+    if (!R.grounded && R.airJumps <= 0) return;
+    const second = !R.grounded;
+    if (second) R.airJumps--;
+    R.grounded = false;
+    R.vy = RUN.jump * (second ? .92 : 1);
+    R.duck = 0;
+    tone(second ? 480 : 360, .1, "triangle", .05);
+  }
+
+  function runnerDuck() {
+    const R = runner;
+    R.duck = RUN.duck;
+    if (!R.grounded) R.vy = Math.min(R.vy, -18);   // dive back down
+    tone(240, .07, "sine", .04);
+  }
+
+  function runnerPop(text, lane, z, h, colour = "#ffe58f") {
+    runner.pops.push({ text, lane, z, h, life: .9, colour });
+  }
+
+  function runnerBurst(lane, z, h, colour, count = 10) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * TAU, v = 2 + Math.random() * 4;
+      runner.bits.push({ lane, z, h, vx: Math.cos(a) * v * .25, vz: Math.sin(a) * v, vh: 2 + Math.random() * 5, life: .5 + Math.random() * .4, colour });
+    }
+  }
+
+  function runnerCollect(t) {
+    const R = runner;
+    t.alive = false;
+    if (t.type === "coin") {
+      R.coinsTaken++;
+      player.score++;
+      addScore(100, 0, 0);
+      tone(880 + (R.coinsTaken % 4) * 60, .06, "sine", .04);
+      runnerBurst(t.lane, Math.max(0, t.z - R.dist), t.h, "#ffd76a", 4);
+      return;
+    }
+    // items
+    const kind = t.kind;
+    if (kind === "magnet") player.magnet = MAGNET_TIME;
+    else if (kind === "shield") player.shield = true;
+    else if (kind === "star") player.star = STAR_TIME;
+    else if (kind === "heart") player.lives = Math.min(maxLives(), player.lives + 1);
+    addScore(500, 0, 0);
+    runnerPop({ magnet: "แม่เหล็ก!", shield: "เกราะ!", star: "อมตะ!", heart: "+1 หัวใจ" }[kind], t.lane, 0, 2.4, itemGlow[kind]);
+    [659, 880, 1175].forEach((note, i) => tone(note, .1, "triangle", .05, i * .06));
+    updateHud();
+  }
+
+  function runnerHit(t) {
+    const R = runner;
+    const z = Math.max(0, t.z - R.dist);
+    t.alive = false;
+    runnerBurst(t.lane, z, 1, level.theme.top, 16);
+    if (player.star > 0) { addScore(200, 0, 0); runnerPop("+200", t.lane, z, 2); tone(660, .08, "square", .05); return; }
+    if (R.hurt > 0) return;
+    shake = .35;
+    if (player.shield) {
+      player.shield = false;
+      R.hurt = .8;
+      tone(880, .08, "triangle", .06); tone(587, .1, "triangle", .06, .07);
+      announce("เกราะแตกแล้ว");
+      return;
+    }
+    player.lives--;
+    levelHits++;
+    R.hurt = RUN.hurt;
+    R.slow = .9;
+    tone(145, .28, "sawtooth", .06);
+    updateHud();
+    if (player.lives <= 0 && !tryRevive()) finish(false);
+  }
+
+  function updateRunner(dt) {
+    const R = runner;
+    bannerTime = Math.max(0, bannerTime - dt);
+    shake = Math.max(0, shake - dt);
+    // controls: lane changes on the press, a jump or a duck per tap
+    if (keys.left && !R.prevLeft) runnerMove(-1);
+    if (keys.right && !R.prevRight) runnerMove(1);
+    R.prevLeft = keys.left; R.prevRight = keys.right;
+    if (keys.jump) runnerJump();
+    if (keys.attack || keys.down) runnerDuck();
+    keys.jump = keys.attack = keys.down = false;
+
+    const share = Math.min(1, R.dist / R.spec.length);
+    const target = (R.spec.speed[0] + (R.spec.speed[1] - R.spec.speed[0]) * share) * (R.slow > 0 ? .55 : 1);
+    R.speed += (target - R.speed) * Math.min(1, dt * 2.5);
+    R.slow = Math.max(0, R.slow - dt);
+    R.dist += R.speed * dt;
+    R.laneX += (R.lane - R.laneX) * Math.min(1, dt * 14);
+    if (!R.grounded) {
+      // Baitoey's leaf glides: she falls more slowly
+      R.vy -= RUN.gravity * (heroIs("baitoey") && R.vy < 0 && R.duck <= 0 ? .55 : 1) * dt;
+      R.y += R.vy * dt;
+      if (R.y <= 0) { R.y = 0; R.vy = 0; R.grounded = true; R.airJumps = heroIs("jibjib") ? 1 : 0; }
+    }
+    R.duck = Math.max(0, R.duck - dt);
+    R.hurt = Math.max(0, R.hurt - dt);
+    player.star = Math.max(0, player.star - dt);
+    player.magnet = Math.max(0, player.magnet - dt);
+
+    const ducking = R.duck > 0 && R.y < .3;
+    const top = R.y + (ducking ? RUN.crouch : RUN.stand);
+    // a magnet pulls coins from every lane; Pupa and the coin pets from the next lane over
+    const pull = player.magnet > 0 ? 2.5 : equippedPet() || heroIs("pupa") ? 1.2 : .5;
+    for (const t of R.things) {
+      if (!t.alive) continue;
+      if (t.type === "monster" && t.z - R.dist < RUN.view) { t.z -= 3.5 * dt; t.phase += dt * 9; }
+      const z = t.z - R.dist;
+      if (z > 3) continue;
+      if (z < -3) { if (t.type !== "goal") t.alive = false; continue; }
+      const lanes = Math.abs(R.laneX - t.lane);
+      if (t.type === "coin" || t.type === "item") {
+        const near = t.type === "coin" && pull > .5 ? lanes < pull && z < 1.5 && z > -.8 : lanes < .5 && Math.abs(z) < .7 && Math.abs(t.h - (R.y + .8)) < 1.2;
+        if (near) runnerCollect(t);
+        continue;
+      }
+      if (t.type === "goal" || lanes > .55 || z > .35 || z + t.depth < -.35) continue;
+      if (t.type === "hurdle" && R.y < RUN.hurdle) runnerHit(t);
+      else if (t.type === "bar" && top > RUN.barLow && R.y < RUN.barHigh) runnerHit(t);
+      else if (t.type === "wall" && R.y < RUN.wall) runnerHit(t);
+      else if (t.type === "monster") {
+        if (R.y > .45 && R.vy < 0) {
+          // stomped
+          t.alive = false;
+          R.vy = RUN.jump * .7;
+          addScore(300, 0, 0);
+          runnerPop("+300", t.lane, z, 1.6);
+          runnerBurst(t.lane, z, .5, "#ff9d6b", 14);
+          tone(330, .08, "square", .05); tone(660, .1, "square", .05, .06);
+        } else if (R.y < RUN.monster) runnerHit(t);
+      }
+    }
+    for (const pop of R.pops) pop.life -= dt;
+    R.pops = R.pops.filter(pop => pop.life > 0);
+    for (const bit of R.bits) { bit.life -= dt; bit.z += (bit.vz - R.speed * .15) * dt; bit.lane += bit.vx * dt; bit.vh -= 14 * dt; bit.h = Math.max(0, bit.h + bit.vh * dt); }
+    R.bits = R.bits.filter(bit => bit.life > 0);
+    popups = [];   // addScore's world-space popups have no place here
+    // paint the next stage's scene in the background
+    if (!nextScenePrimed && share > .45) { nextScenePrimed = true; prepareScene(levels[levelIndex + 1]?.theme); }
+    if ((R.hudTimer -= dt) <= 0) { R.hudTimer = .2; updateHud(); }
+    if (state === "playing" && R.dist >= R.spec.length) { updateHud(); completeLevel(); }
+  }
+
+  // ---- Drawing the dodge run ----
+  function drawRunner(time) {
+    const R = runner;
+    const theme = level.theme;
+    const w = viewWidth, h = viewHeight;
+    const horizon = worldOffsetY + 290;
+    const base = Math.min(h - 24, worldOffsetY + WORLD.ground + 30);
+    const laneW = Math.min(w * .25, 230);
+    const proj = (lane, z, height = 0) => {
+      const s = RUN.focal / (RUN.focal + Math.max(-RUN.focal * .7, z));
+      const ppm = laneW / RUN.lane * s;
+      return { x: w / 2 + lane * laneW * s, y: horizon + (base - horizon) * s - height * ppm, s, ppm };
+    };
+    // the painted scene, lifted so its hills meet the road's horizon
+    const keepCamera = cameraX;
+    cameraX = R.dist * 6;
+    ctx.save();
+    ctx.translate(0, horizon - (worldOffsetY + 480));
+    drawBackground(time);
+    ctx.restore();
+    cameraX = keepCamera;
+    if (shake > 0 && state === "playing") ctx.translate((Math.random() - .5) * 12 * Math.min(1, shake * 3), (Math.random() - .5) * 8 * Math.min(1, shake * 3));
+
+    // the ground, in bands that rush toward Pupa
+    const [g0, g1, g2] = theme.body;
+    ctx.fillStyle = vgrad(horizon, h, [g1, g2]);
+    ctx.fillRect(0, horizon, w, h - horizon);
+    const band = 3.2;
+    for (let k = Math.floor(-3 / band); k < 40; k++) {
+      const z0 = k * band - (R.dist % (band * 2)), z1 = z0 + band;
+      if (Math.floor(k) % 2) continue;
+      const a = proj(0, z0), b = proj(0, z1);
+      if (a.y <= horizon) continue;
+      ctx.fillStyle = "rgba(255,255,255,.045)";
+      ctx.fillRect(0, b.y, w, a.y - b.y);
+    }
+    // the road
+    const edge = (side, z) => proj(side * 1.62, z);
+    const far = RUN.view, nearZ = -RUN.focal * .69;
+    const roadFill = vgrad(horizon, h, ["rgba(20,12,36,.9)", "rgba(36,22,58,.96)"]);
+    ctx.fillStyle = roadFill;
+    ctx.beginPath();
+    { const a = edge(-1, far), b = edge(1, far), c = edge(1, nearZ), d = edge(-1, nearZ); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); }
+    ctx.closePath(); ctx.fill();
+    for (let k = -2; k < 30; k++) {   // road stripes
+      if (k % 2) continue;
+      const z0 = k * band - (R.dist % (band * 2)), z1 = z0 + band;
+      const a = edge(-1, z0), b = edge(1, z0), c = edge(1, z1), d = edge(-1, z1);
+      ctx.fillStyle = "rgba(255,255,255,.035)";
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.fill();
+    }
+    // lane dashes
+    ctx.fillStyle = "rgba(255,255,255,.28)";
+    for (const side of [-.5, .5]) {
+      for (let k = -1; k < 26; k++) {
+        const z0 = k * 5 - (R.dist % 5), z1 = z0 + 2.2;
+        if (z0 > far) break;
+        const a = proj(side, z0), b = proj(side, z1);
+        const wa = 4 * a.s, wb = 4 * b.s;
+        ctx.beginPath(); ctx.moveTo(a.x - wa, a.y); ctx.lineTo(a.x + wa, a.y); ctx.lineTo(b.x + wb, b.y); ctx.lineTo(b.x - wb, b.y); ctx.fill();
+      }
+    }
+    // glowing kerbs
+    ctx.strokeStyle = theme.top; ctx.lineWidth = 3;
+    ctx.shadowColor = theme.shine; ctx.shadowBlur = 10;
+    for (const side of [-1, 1]) { const a = edge(side, far), b = edge(side, nearZ); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    ctx.shadowBlur = 0;
+
+    // everything on and beside the road, far to near; Pupa in her place
+    const list = [];
+    for (const t of R.things) {
+      if (!t.alive && t.type !== "goal") continue;
+      const z = t.z - R.dist;
+      if (z > far || z < -3) continue;
+      list.push([z, t]);
+    }
+    for (let k = 0; k < 18; k++) {   // lamps along both sides
+      const z = k * 9 - (R.dist % 9) + 2;
+      list.push([z, { type: "lamp", lane: -2.15 }], [z + 4.5, { type: "lamp", lane: 2.15 }]);
+    }
+    list.sort((a, b) => b[0] - a[0]);
+    let heroDrawn = false;
+    for (const [z, t] of list) {
+      if (!heroDrawn && z < .25) { drawRunnerHero(proj, time); heroDrawn = true; }
+      drawRunThing(t, z, proj, time);
+    }
+    if (!heroDrawn) drawRunnerHero(proj, time);
+
+    for (const bit of R.bits) {
+      const p = proj(bit.lane, bit.z, bit.h);
+      ctx.globalAlpha = Math.min(1, bit.life * 2);
+      ctx.fillStyle = bit.colour; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, 7 * p.s), 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const pop of R.pops) {
+      const p = proj(pop.lane, pop.z, pop.h + (1 - pop.life) * 1.2);
+      ctx.globalAlpha = Math.min(1, pop.life * 2.5);
+      ctx.font = "900 28px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif";
+      ctx.lineWidth = 5; ctx.strokeStyle = "rgba(30,10,45,.85)"; ctx.strokeText(pop.text, p.x, p.y);
+      ctx.fillStyle = pop.colour; ctx.fillText(pop.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+    drawRunnerHud(w);
+    drawBanner();
+  }
+
+  // A box standing on the road: front face, top, and the side facing the middle.
+  function runBox(lane, z, depth, height, front, top, side, proj) {
+    const half = .4;
+    const f0 = proj(lane - half, z), f1 = proj(lane + half, z);
+    const b0 = proj(lane - half, z + depth), b1 = proj(lane + half, z + depth);
+    const ft = height * f0.ppm, bt = height * b0.ppm;
+    if (lane !== 0) {
+      const sx = lane < 0 ? 1 : 0;
+      const fa = sx ? f1 : f0, ba = sx ? b1 : b0;
+      ctx.fillStyle = side;
+      ctx.beginPath(); ctx.moveTo(fa.x, fa.y); ctx.lineTo(ba.x, ba.y); ctx.lineTo(ba.x, ba.y - bt); ctx.lineTo(fa.x, fa.y - ft); ctx.fill();
+    }
+    ctx.fillStyle = top;
+    ctx.beginPath(); ctx.moveTo(f0.x, f0.y - ft); ctx.lineTo(f1.x, f1.y - ft); ctx.lineTo(b1.x, b1.y - bt); ctx.lineTo(b0.x, b0.y - bt); ctx.fill();
+    ctx.fillStyle = front;
+    ctx.fillRect(f0.x, f0.y - ft, f1.x - f0.x, ft);
+    return { x0: f0.x, x1: f1.x, y: f0.y, top: f0.y - ft, ppm: f0.ppm };
+  }
+
+  function drawRunThing(t, z, proj, time) {
+    const theme = level.theme;
+    if (t.type === "lamp") {
+      const p = proj(t.lane, z), top = proj(t.lane, z, 3.2);
+      ctx.strokeStyle = theme.body[2]; ctx.lineWidth = Math.max(1.5, 8 * p.s);
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(top.x, top.y); ctx.stroke();
+      ctx.save(); ctx.translate(top.x, top.y); ctx.scale(p.s * 1.4, p.s * 1.4);
+      drawGlow(theme.sparks[0], 40);
+      ctx.fillStyle = theme.shine; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.fill();
+      ctx.restore();
+      return;
+    }
+    const ground = proj(t.lane, z);
+    if (t.type !== "goal" && t.type !== "coin") {   // a soft shadow
+      ctx.fillStyle = "rgba(0,0,0,.28)";
+      ctx.beginPath(); ctx.ellipse(ground.x, ground.y, 70 * ground.s, 16 * ground.s, 0, 0, TAU); ctx.fill();
+    }
+    if (t.type === "coin") {
+      const p = proj(t.lane, z, t.h);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * 1.3, p.s * 1.3);
+      pickupArt.coin(time * .006 + t.z);
+      ctx.restore();
+    } else if (t.type === "item") {
+      const p = proj(t.lane, z, t.h + Math.sin(time * .005 + t.z) * .15);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * 1.5, p.s * 1.5);
+      drawGlow(itemGlow[t.kind], 40);
+      pickupArt[t.kind]();
+      ctx.restore();
+    } else if (t.type === "hurdle") {
+      const box = runBox(t.lane, z, .25, RUN.hurdle, theme.top, theme.shine, theme.body[0], proj);
+      // warning stripes on the board, legs below
+      const bw = box.x1 - box.x0, bh = (box.y - box.top) * .55;
+      ctx.save(); ctx.beginPath(); ctx.rect(box.x0, box.top, bw, bh); ctx.clip();
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      for (let i = -2; i < 8; i++) { const x = box.x0 + i * bw / 5; ctx.beginPath(); ctx.moveTo(x, box.top + bh); ctx.lineTo(x + bw / 10, box.top + bh); ctx.lineTo(x + bw / 10 + bh, box.top); ctx.lineTo(x + bh, box.top); ctx.fill(); }
+      ctx.restore();
+      ctx.fillStyle = "rgba(20,10,30,.55)";
+      ctx.fillRect(box.x0 + bw * .1, box.top + bh, bw * .1, box.y - box.top - bh);
+      ctx.fillRect(box.x1 - bw * .2, box.top + bh, bw * .1, box.y - box.top - bh);
+    } else if (t.type === "bar") {
+      const l = proj(t.lane - .42, z), r = proj(t.lane + .42, z);
+      const lowY = l.y - RUN.barLow * l.ppm - 4 * l.s, highY = l.y - RUN.barHigh * l.ppm;
+      ctx.fillStyle = theme.body[0];
+      ctx.fillRect(l.x - 5 * l.s, highY, 10 * l.s, l.y - highY);
+      ctx.fillRect(r.x - 5 * r.s, highY, 10 * r.s, r.y - highY);
+      const boardTop = highY + (lowY - highY) * .25;
+      ctx.fillStyle = theme.top;
+      roundedRect(l.x - 6 * l.s, boardTop, r.x - l.x + 12 * l.s, lowY - boardTop, 6 * l.s); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = `900 ${Math.max(10, 44 * l.s)}px 'Trebuchet MS', system-ui, sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("▼ ▼", (l.x + r.x) / 2, (boardTop + lowY) / 2);
+    } else if (t.type === "wall") {
+      const box = runBox(t.lane, z, t.depth, RUN.wall, theme.body[1], theme.top, theme.body[2], proj);
+      // a crate face: frame and cross
+      ctx.strokeStyle = theme.shine; ctx.globalAlpha = .45; ctx.lineWidth = Math.max(1, 5 * box.ppm / 100);
+      const bw = box.x1 - box.x0, bh = box.y - box.top;
+      ctx.strokeRect(box.x0 + bw * .08, box.top + bh * .06, bw * .84, bh * .88);
+      ctx.beginPath(); ctx.moveTo(box.x0 + bw * .08, box.top + bh * .06); ctx.lineTo(box.x1 - bw * .08, box.y - bh * .06);
+      ctx.moveTo(box.x1 - bw * .08, box.top + bh * .06); ctx.lineTo(box.x0 + bw * .08, box.y - bh * .06); ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else if (t.type === "monster") {
+      const img = art.enemy;
+      const hop = Math.abs(Math.sin(t.phase)) * .25;
+      const p = proj(t.lane, z, hop);
+      if (img.complete && img.naturalWidth) {
+        const height = 1.25 * p.ppm, width = height * img.naturalWidth / img.naturalHeight;
+        ctx.drawImage(img, p.x - width / 2, p.y - height, width, height);
+      }
+    } else if (t.type === "goal") {
+      const l = proj(-1.75, z), r = proj(1.75, z), topY = l.y - 4.4 * l.ppm;
+      ctx.fillStyle = theme.body[0];
+      ctx.fillRect(l.x - 14 * l.s, topY, 28 * l.s, l.y - topY);
+      ctx.fillRect(r.x - 14 * r.s, topY, 28 * r.s, r.y - topY);
+      const colours = ["#ff5a6e", "#ffa04a", "#ffe066", "#6fe08a", "#5ab8ff", "#a070ff"];
+      ctx.lineWidth = Math.max(2, 14 * l.s);
+      colours.forEach((colour, i) => {
+        ctx.strokeStyle = colour;
+        ctx.beginPath(); ctx.ellipse((l.x + r.x) / 2, topY + 10 * l.s, (r.x - l.x) / 2 - i * 12 * l.s, 1.3 * l.ppm - i * 10 * l.s, 0, Math.PI, 0); ctx.stroke();
+      });
+      ctx.fillStyle = "#fff6d8";
+      ctx.font = `900 ${Math.max(10, 60 * l.s)}px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 6 * l.s; ctx.strokeStyle = "rgba(30,10,45,.8)";
+      ctx.strokeText("เส้นชัย", (l.x + r.x) / 2, topY + 30 * l.s); ctx.fillText("เส้นชัย", (l.x + r.x) / 2, topY + 30 * l.s);
+    }
+  }
+
+  // Pupa from the front (the models are painted from the front only), turning
+  // toward the lane she is moving to, with her hat on.
+  function drawRunnerHero(proj, time) {
+    const R = runner;
+    const feet = proj(R.laneX, 0, R.y), floor = proj(R.laneX, 0);
+    const model = window.Pupa3D;
+    const hero = SHOP_INDEX[save.shop.hero];
+    const ducking = R.duck > 0 && R.y < .3;
+    // shadow shrinks as she rises
+    ctx.fillStyle = "rgba(0,0,0,.3)";
+    const shadow = 1 / (1 + R.y * .5);
+    ctx.beginPath(); ctx.ellipse(floor.x, floor.y, 60 * floor.s * shadow, 15 * floor.s * shadow, 0, 0, TAU); ctx.fill();
+    ctx.save();
+    if (R.hurt > 0 && Math.floor(R.hurt * 12) % 2) ctx.globalAlpha = .35;
+    if (player.star > 0) { ctx.shadowColor = "#ffe27a"; ctx.shadowBlur = 34 + Math.sin(time * .02) * 10; }
+    const size = 1.65 * feet.ppm;
+    ctx.translate(feet.x, feet.y);
+    if (ducking) ctx.scale(1.15, .58);
+    if (!hero.flat) model?.setCharacter?.(hero.id);
+    model?.setSkin?.(SHOP_INDEX[save.shop.skin]);
+    const turn = (R.lane - R.laneX) * .9;
+    if (!hero.flat && model?.ready && model.render({ time, facing: 0, yaw: turn, speed: 320, vy: -R.vy * 70, grounded: R.grounded })) {
+      const below = size * (model.viewHalf + 1) / (model.viewHalf * 2);
+      ctx.drawImage(model.canvas, -size / 2, -below, size, size);
+      drawHat(save.shop.hat, 0, -below + size * hero.headTop, size / 164, 1, time);
+    } else {
+      const sprite = hero.id === "pupa" ? art.hero : art[hero.id];
+      if (sprite?.complete && sprite.naturalWidth) {
+        const height = 1.25 * feet.ppm, width = height * sprite.naturalWidth / sprite.naturalHeight;
+        ctx.rotate(Math.sin(time * .02) * .06);
+        ctx.drawImage(sprite, -width / 2, -height - Math.abs(Math.sin(time * .02)) * 6, width, height);
+      }
+    }
+    ctx.restore();
+    if (player.shield) {
+      ctx.save();
+      ctx.globalAlpha = .55 + Math.sin(time * .008) * .15;
+      ctx.strokeStyle = "#7fd4ff"; ctx.lineWidth = 4; ctx.fillStyle = "rgba(127,212,255,.12)";
+      ctx.beginPath(); ctx.ellipse(feet.x, feet.y - .85 * feet.ppm, .75 * feet.ppm, 1 * feet.ppm, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    if (player.magnet > 0) {
+      for (let i = 0; i < 3; i++) {
+        const a = time * .004 + i * TAU / 3;
+        ctx.save(); ctx.translate(feet.x + Math.cos(a) * .8 * feet.ppm, feet.y - .9 * feet.ppm + Math.sin(a) * .25 * feet.ppm); ctx.scale(.45, .45);
+        pickupArt.magnet(); ctx.restore();
+      }
+    }
+  }
+
+  // Distance bar along the top, and how long the power-ups have left.
+  function drawRunnerHud(w) {
+    const R = runner;
+    const share = Math.min(1, R.dist / R.spec.length);
+    const barW = Math.min(420, w * .5), x = (w - barW) / 2, y = 196 + worldOffsetY * .5;
+    ctx.fillStyle = "rgba(10,6,24,.55)"; roundedRect(x - 4, y - 4, barW + 8, 16, 8); ctx.fill();
+    ctx.fillStyle = vgrad(y, y + 8, ["#ffe58f", "#ff8fb8"]); roundedRect(x, y, Math.max(8, barW * share), 8, 4); ctx.fill();
+    ctx.font = "800 15px 'Trebuchet MS', 'Noto Sans Thai', system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillStyle = "#fff6d8";
+    ctx.fillText(`${Math.floor(R.dist)} / ${R.spec.length} ม. · เหรียญ ${R.coinsTaken}/${R.coinTotal}`, w / 2, y + 16);
+    const timers = [];
+    if (player.star > 0) timers.push(["star", player.star / STAR_TIME]);
+    if (player.magnet > 0) timers.push(["magnet", player.magnet / MAGNET_TIME]);
+    timers.forEach(([kind, left], i) => {
+      const cx = w / 2 + (i - (timers.length - 1) / 2) * 60, cy = y + 56;
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(.55, .55); drawGlow(itemGlow[kind], 40); pickupArt[kind](); ctx.restore();
+      ctx.strokeStyle = itemGlow[kind]; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, 22, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, left)); ctx.stroke();
+    });
+  }
+
+  // Swipes on the game: left/right change lanes, up jumps, down ducks; a tap jumps.
+  canvas.addEventListener("pointerdown", (event) => {
+    if (!runner || state !== "playing") return;
+    runSwipe = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (!runSwipe || runSwipe.id !== event.pointerId || !runner || state !== "playing") { runSwipe = null; return; }
+    const dx = event.clientX - runSwipe.x, dy = event.clientY - runSwipe.y;
+    runSwipe = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) { keys.jump = true; return; }
+    if (Math.abs(dx) > Math.abs(dy)) runnerMove(dx < 0 ? -1 : 1);
+    else if (dy < 0) keys.jump = true;
+    else keys.down = true;
+  });
+  canvas.addEventListener("pointercancel", () => { runSwipe = null; });
 
   // ---- Loading screen ----
   // Shown before the game opens (pictures, 3D characters and the painted

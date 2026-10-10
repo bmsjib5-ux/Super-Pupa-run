@@ -259,7 +259,9 @@ function render(pose) {
   const running = pose.grounded && pose.speed > 45;
   const airborne = !pose.grounded;
 
-  yaw += (pose.facing * CHARACTERS[api.character].yaw - yaw) * ease(11);
+  // pose.yaw, when given, turns the model to that angle (the dodge run shows
+  // Pupa from behind); otherwise she faces her running direction.
+  yaw += ((pose.yaw ?? pose.facing * CHARACTERS[api.character].yaw) - yaw) * ease(11);
   const rising = airborne && pose.vy < 0;
   // Jump pose: arms thrown up and legs in a wide stride on the way up, then
   // arms fluttering out and the body tipping back on the way down.

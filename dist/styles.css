@@ -1089,3 +1089,4 @@ button { touch-action: manipulation; }
   .end-goals li.end-world { flex-basis: 100%; margin-top: .15rem; padding-top: .15rem; }
   .is-result .message-card #endText { margin: 0 auto .2rem; }
 }
+.runner-button { border-color: rgba(127,212,255,.6); background: linear-gradient(135deg, rgba(90,184,255,.25), rgba(255,120,168,.18)); }
