@@ -36,7 +36,16 @@
     ikuya: "assets/ikuya-hero.webp", pangji: "assets/pangji-hero.webp", pupav2: "assets/pupav2-hero.webp",
     dragon: "assets/dragon-pet.webp"
   };
+  // A worn costume recolours the card and adds a golden glow.
+  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140 };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก" };
+  const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   function portrait(kind) {
+    const art = plainPortrait(kind);
+    if (E.CARDS[kind] && wearing(kind)) { art.classList.add("is-costume"); art.style.setProperty("--hue", `${COSTUME_HUE[kind] || 180}deg`); }
+    return art;
+  }
+  function plainPortrait(kind) {
     if (PICTURES[kind]) {
       const img = el("img", "card-art");
       img.src = PICTURES[kind];
@@ -101,13 +110,32 @@
       const n = Math.min(3, Math.floor(Number(raw.stars?.[stage.num]) || 0));
       if (n > 0) best[stage.num] = n;
     }
-    s.cards = { units, team, stars: best, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    const xp = {}, outfit = {};
+    for (const id of Object.keys(units)) {
+      const n = Math.max(0, Math.floor(Number(raw.xp?.[id]) || 0));
+      if (n > 0) xp[id] = Math.min(n, E.xpNeed(units[id]) - 1);
+      const o = Math.floor(Number(raw.outfit?.[id]) || 0);
+      if (o === 1 || o === 2) outfit[id] = o;
+    }
+    const now = Date.now();
+    const idleAt = Math.min(now, Math.max(0, Math.floor(Number(raw.idleAt) || 0))) || now;
+    const daily = raw.daily && typeof raw.daily.day === "string" ? { day: raw.daily.day.slice(0, 10), streak: Math.max(1, Math.min(7, Math.floor(Number(raw.daily.streak) || 1))) } : null;
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   const cards = () => save().cards;
   const isCleared = (num) => (cards().stars[num] || 0) > 0;
   const isOpen = (num) => num === 1 || isCleared(num - 1);
   const store = () => game().writeSave();
+  // The furthest stage cleared: how rich the auto hunt is.
+  const bestStage = () => E.STAGES.reduce((best, stage) => (isCleared(stage.num) ? stage.num : best), 0);
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  // XP for these cards; says who went up a level.
+  function shareXp(ids, amount) {
+    const ups = [];
+    for (const id of new Set(ids)) if (cards().units[id] && E.giveXp(cards(), id, amount)) ups.push(`${E.CARDS[id].name} Lv ${cards().units[id]}`);
+    return ups;
+  }
   const teamPower = () => cards().team.filter(Boolean).reduce((sum, id) => sum + E.power(id, cards().units[id]), 0);
   // The stage a card is the first-clear prize of.
   const prizeStage = (id) => E.STAGES.find(stage => stage.card === id);
@@ -144,6 +172,7 @@
     showHub();
     tone(587, .07, "triangle", .04);
     closeButton.focus();
+    if (cards().daily?.day !== today()) dailySheet();
   }
 
   function close() {
@@ -160,11 +189,11 @@
     stopShow();
     battle = null;
     sheet = null;
-    frame.classList.remove("is-battle");
+    frame.classList.remove("is-battle", "is-arena");
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["team", "ทีมและการ์ด"]]) {
+    for (const [key, label] of [["stages", "ด่าน"], ["arena", "ลานประลอง 10v10"], ["team", "ทีมและการ์ด"]]) {
       const t = button("", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
@@ -172,8 +201,83 @@
     }
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
-    if (tab === "stages") renderStages(panel); else renderTeam(panel);
-    body.replaceChildren(tabs, panel);
+    if (tab === "stages") renderStages(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
+    body.replaceChildren(idleBanner(), tabs, panel);
+  }
+
+  // ---- Auto hunting ----
+  // The team out hunting: a little scene, what has piled up, a claim button.
+  function idleBanner() {
+    const c = cards();
+    const got = E.idleReward(bestStage(), Date.now() - c.idleAt);
+    const box = el("section", "idle-banner");
+    const scene = el("div", "idle-scene");
+    scene.setAttribute("aria-hidden", "true");
+    c.team.filter(Boolean).forEach((id, n) => { const f = el("span", "idle-hero"); f.style.animationDelay = `${-n * .17}s`; f.append(portrait(id)); scene.append(f); });
+    const foe = el("span", "idle-foe"); foe.append(portrait(["walker", "bat", "hopper", "crab", "jelly"][Math.floor(Date.now() / 60000) % 5])); scene.append(foe);
+    const text = el("div", "idle-text");
+    const h = Math.floor(got.hours), m = Math.floor((got.hours - h) * 60);
+    text.append(el("b", null, "⚔ ล่าอัตโนมัติ"), el("span", null, `สะสม ${h} ชม. ${m} นาที${got.hours >= E.IDLE_HOURS ? " (เต็มแล้ว)" : ` / ${E.IDLE_HOURS} ชม.`}`), el("span", "idle-loot", `● ${fmt(got.coins)} · EXP ${fmt(got.xp)}`));
+    const claim = button("shop-buy idle-claim", "รับรางวัล", () => claimIdle());
+    claim.disabled = got.coins < 1 && got.xp < 1;
+    box.append(scene, text, claim);
+    return box;
+  }
+  function claimIdle() {
+    const c = cards(), got = E.idleReward(bestStage(), Date.now() - c.idleAt);
+    if (got.coins < 1 && got.xp < 1) return;
+    c.idleAt = Date.now();
+    save().coins += got.coins;
+    const ups = shareXp(c.team.filter(Boolean), got.xp);
+    store();
+    [523, 659, 784, 1047].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+    announce(`รับ ${got.coins} เหรียญ และ EXP ${got.xp}${ups.length ? ` เลเวลอัป: ${ups.join(", ")}` : ""}`);
+    showHub();
+    openSheet([el("h3", "sheet-title", "รางวัลล่าอัตโนมัติ"), el("p", "sheet-reward", `● ${fmt(got.coins)} · EXP ${fmt(got.xp)} ให้การ์ดทุกใบในทีม`), ...(ups.length ? [el("p", "sheet-passive", `เลเวลอัป! ${ups.join(" · ")}`)] : []), el("p", "sheet-goals", "ทีมจะล่าต่อเองแม้ปิดเกม ผ่านด่านไกลขึ้น ได้รางวัลมากขึ้น")]);
+  }
+
+  // ---- Login rewards ----
+  function dailySheet() {
+    const c = cards();
+    const yesterday = new Date(Date.now() - 864e5);
+    const ymd = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+    const day = c.daily && c.daily.day === ymd ? (c.daily.streak % 7) + 1 : 1;
+    const grid = el("div", "daily-grid");
+    E.DAILY.forEach((r, n) => {
+      const cell = el("div", `daily-day${n + 1 < day ? " is-done" : n + 1 === day ? " is-today" : ""}`);
+      cell.append(el("small", null, `วันที่ ${n + 1}`), el("b", null, [r.coins ? `● ${r.coins}` : "", r.xp ? `EXP ${r.xp}` : ""].filter(Boolean).join(" + ")));
+      grid.append(cell);
+    });
+    const take = button("primary-button", "รับรางวัลวันนี้", () => {
+      const r = E.DAILY[day - 1];
+      c.daily = { day: today(), streak: day };
+      save().coins += r.coins || 0;
+      const ups = r.xp ? shareXp(c.team.filter(Boolean), r.xp) : [];
+      store();
+      [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
+      announce(`รับรางวัลวันที่ ${day} แล้ว${ups.length ? ` เลเวลอัป: ${ups.join(", ")}` : ""}`);
+      closeSheet();
+    });
+    openSheet([el("h3", "sheet-title", "รางวัลเข้าเกมรายวัน"), el("p", "sheet-sub", "เข้ามาทุกวันติดกัน รางวัลยิ่งใหญ่ขึ้น ครบ 7 วันเริ่มรอบใหม่ · EXP แจกให้การ์ดทุกใบในทีม"), grid, el("div", "title-actions sheet-actions", null)]);
+    sheet.querySelector(".sheet-actions").append(take);
+    take.focus();
+  }
+
+  // ---- Arena: ten against ten ----
+  function renderArena(panel) {
+    const c = cards(), tier = E.arenaTier(c.arena);
+    const team = E.arenaTeam(c);
+    panel.append(el("p", "cards-intro", `การ์ดที่แรงที่สุด ${team.length} ใบลงสนามเอง ตัวป้องกันยืนหน้า · สู้อัตโนมัติทั้งหมด · ชนะแล้วขึ้นชั้นต่อไป`));
+    const box = el("section", "arena-box");
+    box.append(el("h3", "sheet-title", `ชั้น ${tier.num}${tier.boss ? " · มีบอส" : ""}`), el("p", "sheet-sub", `มอนสเตอร์ 10 ตัว Lv ${tier.lv} · รางวัล ● ${tier.coins} · EXP ${tier.xp} ต่อการ์ด`));
+    const foes = el("div", "sheet-foes");
+    for (const f of tier.waves[0]) { const fig = el("figure", `sheet-foe${E.FOES[f.id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[f.id].art), el("figcaption", null, E.FOES[f.id].name)); foes.append(fig); }
+    const mine = el("div", "arena-team");
+    for (const t of team) mine.append(cardTile(t.id, () => cardSheet(t.id)));
+    const go = button("primary-button", "เริ่มประลอง ⚔", () => startBattle(tier));
+    box.append(foes, el("p", "sheet-sub", `ทีมของคุณ ${team.length}/10 · พลังรวม ${fmt(team.reduce((sum, t) => sum + E.power(t.id, t.lv), 0))}`), mine, el("div", "title-actions sheet-actions"));
+    box.querySelector(".sheet-actions").append(go);
+    panel.append(box);
   }
 
   function renderStages(panel) {
@@ -282,7 +386,31 @@
     info.append(table);
     top.append(art, info);
     const parts = [top];
+    if (lv && lv < E.MAX_LEVEL) {
+      const need = E.xpNeed(lv), have = c.xp[id] || 0;
+      const bar = el("div", "sheet-xp");
+      bar.append(el("span", null, `EXP ${fmt(have)} / ${fmt(need)}`), el("i"));
+      bar.querySelector("i").style.setProperty("--fill", `${Math.floor(100 * have / need)}%`);
+      parts.push(bar);
+    }
     if (def.passive) parts.push(el("p", "sheet-passive", `ติดตัว · ${def.passive.text}`));
+    if (lv) {
+      const own = c.outfit[id];
+      const row = el("div", "sheet-costume");
+      row.append(el("b", null, `คอสตูม · ${COSTUME_NAME[id]}`), el("span", null, `เปลี่ยนสีชุดและเพิ่มพลังชีวิต โจมตี ป้องกัน +${Math.round(E.COSTUME_BONUS * 100)}% เมื่อสวม`));
+      if (!own) {
+        const buyIt = button("shop-buy", `ซื้อ ● ${E.COSTUME_PRICE}`, () => {
+          if (save().coins < E.COSTUME_PRICE) return;
+          save().coins -= E.COSTUME_PRICE; c.outfit[id] = 2; store(); showCoins();
+          [784, 988, 1319].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+          announce(`ซื้อ${COSTUME_NAME[id]}แล้ว`);
+          cardSheet(id);
+        });
+        buyIt.disabled = save().coins < E.COSTUME_PRICE;
+        row.append(buyIt);
+      } else row.append(button("shop-equip", own === 2 ? "ถอดชุด" : "สวมชุด", () => { c.outfit[id] = own === 2 ? 1 : 2; store(); tone(660, .08, "triangle", .05); cardSheet(id); }));
+      parts.push(row);
+    }
     def.skills.forEach((skill, n) => {
       const row = el("div", "sheet-skill");
       row.append(el("span", "sheet-skill-icon", skill.icon), el("b", null, `สกิล ${n + 1} · ${skill.name}`), el("p", null, E.describe(skill)));
@@ -385,13 +513,14 @@
     const c = cards();
     if (!c.team.some(Boolean)) return;
     closeSheet(true);
-    const team = c.team.map(id => (id ? { id, lv: c.units[id] } : null));
+    const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: c.outfit[id] === 2 ? E.COSTUME_BONUS : 0 } : null));
     const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
     battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0 };
     frame.classList.add("is-battle");
+    frame.classList.toggle("is-arena", Boolean(stage.arena));
     buildBattle();
     tone(392, .1, "triangle", .05); tone(523, .12, "triangle", .05, .1);
-    announce(`เริ่มด่าน ${stage.num} ${stage.name}`);
+    announce(stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`);
     runBattle(battle);
   }
 
@@ -432,7 +561,7 @@
 
   function drawTop() {
     const v = battle, b = v.state;
-    v.title.textContent = `ด่าน ${v.stage.num} · ${v.stage.name}`;
+    v.title.textContent = v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
     v.wave.textContent = `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
     v.auto.setAttribute("aria-pressed", String(cards().auto));
     v.fast.setAttribute("aria-pressed", String(cards().fast));
@@ -461,8 +590,11 @@
         const i = list.indexOf(u);
         const tile = side === "foe" ? button("unit is-foe", null, () => setFocus(i)) : el("div", "unit");
         if (u.boss) tile.classList.add("is-boss");
-        const y = standAt(inRow.length, n);
-        tile.style.left = `${STAND_X[side][row] + (inRow.length > 2 ? (n % 2 ? 3 : -3) * (side === "hero" ? 1 : -1) : 0)}%`;
+        const crowd = inRow.length > 3;
+        const y = crowd ? standAt(Math.ceil(inRow.length / 2), Math.floor(n / 2)) + (n % 2) * 4 : standAt(inRow.length, n);
+        const shift = crowd ? (n % 2 ? 6 : -6) : inRow.length > 2 ? (n % 2 ? 3 : -3) : 0;
+        tile.style.left = `${STAND_X[side][row] + (shift || 0) * (side === "hero" ? 1 : -1)}%`;
+        if (crowd) tile.classList.add("is-crowd");
         tile.style.top = `${y}%`;
         tile.style.zIndex = String(Math.round(y));
         tile.style.setProperty("--depth", String(.82 + y / 500));
@@ -635,7 +767,7 @@
     }
     v.token.stopped = true;
     battle = null;
-    tab = "stages";
+    tab = v.stage.arena ? "arena" : "stages";
     showHub();
   }
 
@@ -655,7 +787,12 @@
       v.queue = [];
       drawTop(); drawBar();
       let queue;
-      if (cards().auto) {
+      if (v.stage.arena) {
+        hint("ลานประลอง · สู้อัตโนมัติ");
+        await wait(300 * speed());
+        if (v.token.stopped) return;
+        queue = E.autoQueue(b);
+      } else if (cards().auto) {
         hint("สู้อัตโนมัติ · กดปุ่มอัตโนมัติเพื่อเลือกสกิลเอง");
         await wait(350 * speed());
         if (v.token.stopped) return;
@@ -757,9 +894,13 @@
   function finish(v) {
     const b = v.state, stage = v.stage, c = cards();
     const won = b.result === "won";
+    if (stage.arena) { finishArena(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
     let coins = 0, newCard = null;
+    const xp = E.stageXp(stage, won);
+    const ups = shareXp(c.team.filter(Boolean), xp);
+    store();
     if (won) {
       coins = first ? stage.coins : stage.repeat;
       if (c.team.includes("pupa")) coins = Math.round(coins * (1 + E.CARDS.pupa.passive.coins));
@@ -783,14 +924,15 @@
         goals.append(el("li", okay ? "is-done" : "", `${okay ? "★" : "☆"} ${text}`));
       }
       box.append(goals);
-      box.append(el("p", "end-reward battle-reward", `ได้รับ ● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""}`));
+      box.append(el("p", "end-reward battle-reward", `ได้รับ ● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
+      if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
       if (newCard) {
         const prize = el("div", "battle-prize");
         prize.append(cardTile(newCard, null), el("p", null, `การ์ดใหม่! ${E.CARDS[newCard].name}`));
         box.append(prize);
         [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
       }
-    } else box.append(el("p", null, "ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง"));
+    } else box.append(el("p", null, `ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
     const actions = el("div", "title-actions");
     const next = E.STAGES[stage.num];
     if (won && next && isOpen(next.num)) actions.append(button("primary-button", "ด่านต่อไป ▶", () => { battle = null; startBattle(next); }));
@@ -804,6 +946,30 @@
     game().tone(won ? 784 : 220, .2, "triangle", .06);
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(won ? `ชนะด่าน ${stage.num} ได้ ${got} ดาว และ ${coins} เหรียญ${newCard ? ` ได้การ์ด${E.CARDS[newCard].name}` : ""}` : "พ่ายแพ้ ลองอีกครั้ง");
+    actions.querySelector("button")?.focus();
+  }
+
+  function finishArena(v) {
+    const b = v.state, tier = v.stage, c = cards(), won = b.result === "won";
+    const xp = Math.round(tier.xp * (won ? 1 : .3));
+    const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
+    if (won) { save().coins += tier.coins; c.arena = Math.max(c.arena, tier.num + 1); }
+    store(); showCoins();
+    v.busy = true;
+    const box = el("div", "message-card battle-card");
+    box.append(el("span", "moon-icon", won ? "✦" : "☾"), el("h2", null, won ? `ผ่านชั้น ${tier.num}!` : "พ่ายแพ้…"));
+    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
+    if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
+    const actions = el("div", "title-actions");
+    if (won) actions.append(button("primary-button", `ชั้น ${tier.num + 1} ▶`, () => { battle = null; startBattle(E.arenaTier(tier.num + 1)); }));
+    actions.append(button(won ? "secondary-button" : "primary-button", "สู้อีกครั้ง", () => { battle = null; startBattle(E.arenaTier(c.arena)); }));
+    actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "arena"; showHub(); }));
+    box.append(actions);
+    v.result.replaceChildren(box);
+    v.result.hidden = false;
+    hint("");
+    if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
+    announce(won ? `ผ่านลานประลองชั้น ${tier.num}` : "พ่ายแพ้ในลานประลอง");
     actions.querySelector("button")?.focus();
   }
 

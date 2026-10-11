@@ -244,10 +244,12 @@
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  function makeUnit(side, slot, id, lv, row) {
+  // bonus: a costume's extra share of hp, attack and defence.
+  function makeUnit(side, slot, id, lv, row, bonus = 0) {
     const foe = side === "foe";
     const def = foe ? FOES[id] : CARDS[id];
     const stats = statsOf(def, lv, foe);
+    for (const key of ["hp", "atk", "def"]) stats[key] = Math.round(stats[key] * (1 + bonus));
     return {
       side, slot, id, lv, name: def.name, role: def.role, boss: Boolean(def.boss),
       row: row || (slot < FRONT_SLOTS ? "front" : "back"),
@@ -269,16 +271,18 @@
   const other = (b, u) => (u.side === "hero" ? b.foes : b.heroes);
 
   // ---- Starting a battle ----
-  // team: five { id, lv } or null, by slot. stage: a STAGES entry.
+  // team: { id, lv, row?, bonus? } or null, by slot (five for a stage, up
+  // to ten in the arena; without a row, slots 0-1 are the front).
+  // stage: a STAGES entry, or an arena tier (see arenaTier).
   function createBattle({ team, stage, seed = 1 }) {
     const b = {
       stage: stage.num, waves: stage.waves, waveLv: stage.lv, wave: 0,
       seed: seed >>> 0, turn: 0, phase: "hero", result: null, focus: -1,
       heroes: [], foes: []
     };
-    for (let slot = 0; slot < TEAM_SIZE; slot++) {
+    for (let slot = 0; slot < team.length; slot++) {
       const entry = team[slot];
-      b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv) : null;
+      b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv, entry.row, entry.bonus || 0) : null;
     }
     for (const hero of living(b.heroes)) {
       if (hero.passive?.shield) addStatus(hero, { k: "shield", v: Math.round(hero.maxHp * hero.passive.shield), turns: 2 });
@@ -631,7 +635,72 @@
     return `${parts.join(" · ")} (${wait})`;
   }
 
+  // ---- Growing without fighting ----
+  // Card XP: a card at level lv needs xpNeed(lv) XP for the next level.
+  const xpNeed = (lv) => 40 * lv;
+  // Adds XP to { units, xp } for one card; returns how many levels it rose.
+  function giveXp(cards, id, amount) {
+    let lv = cards.units[id], xp = (cards.xp[id] || 0) + Math.round(amount), ups = 0;
+    while (lv < MAX_LEVEL && xp >= xpNeed(lv)) { xp -= xpNeed(lv); lv++; ups++; }
+    cards.units[id] = lv;
+    cards.xp[id] = lv >= MAX_LEVEL ? 0 : xp;
+    return ups;
+  }
+  // XP each card of the team gets from a stage.
+  const stageXp = (stage, won) => Math.round((10 + stage.num * 6) * (won ? 1 : .3));
+
+  // Auto hunting: the team keeps hunting while the game is closed, up to
+  // IDLE_HOURS; the better the furthest stage cleared, the richer the hunt.
+  const IDLE_HOURS = 8;
+  function idleReward(best, ms) {
+    const hours = Math.max(0, Math.min(IDLE_HOURS, ms / 3600000));
+    return { hours, coins: Math.floor(hours * (30 + 12 * best)), xp: Math.floor(hours * (40 + 15 * best)) };
+  }
+
+  // Login rewards, one a day in a cycle of seven.
+  const DAILY = [
+    { coins: 50 }, { xp: 120 }, { coins: 100 }, { xp: 200 }, { coins: 150 }, { xp: 300 }, { coins: 400, xp: 400 }
+  ];
+
+  // Costumes: one per card, bought with coins; worn, it changes the look
+  // and adds COSTUME_BONUS to hp, attack and defence.
+  const COSTUME_PRICE = 400;
+  const COSTUME_BONUS = .08;
+
+  // ---- The arena: ten against ten ----
+  // Tier n: ten monsters a little above the stages, a boss every fifth.
+  const ARENA_SIZE = 10;
+  const ARENA_FRONT = 4;
+  const ARENA_FOES = ["walker", "bat", "hopper", "urchin", "spitter", "jelly", "crab", "roller", "swooper"];
+  function arenaTier(n) {
+    let seed = n * 7919 + 13;
+    const roll = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+    const pool = ARENA_FOES.slice(0, Math.min(ARENA_FOES.length, 4 + n));
+    const wave = [];
+    const boss = n % 5 === 0 ? (n % 10 === 0 ? "queen" : "king") : null;
+    if (boss) wave.push({ id: boss, row: "front" });
+    while (wave.length < ARENA_SIZE) {
+      const front = wave.filter(f => f.row === "front").length < ARENA_FRONT;
+      const tough = pool.filter(id => ["defense", "balance", "attack"].includes(FOES[id].role));
+      const id = front ? tough[Math.floor(roll() * tough.length)] : pool[Math.floor(roll() * pool.length)];
+      wave.push({ id, row: front ? "front" : "back" });
+    }
+    return {
+      num: n, arena: true, name: `ลานประลอง ชั้น ${n}`, lv: 1 + n,
+      waves: [wave], boss: Boolean(boss), par: 99,
+      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n
+    };
+  }
+  // The strongest cards first, tanks in front: who goes to the arena.
+  function arenaTeam(cards) {
+    const ids = Object.keys(cards.units).filter(id => CARDS[id]).sort((a, b) => power(b, cards.units[b]) - power(a, cards.units[a])).slice(0, ARENA_SIZE);
+    const sturdy = (id) => ({ defense: 0, balance: 1, attack: 2, magic: 3, support: 4 })[CARDS[id].role];
+    const front = [...ids].sort((a, b) => sturdy(a) - sturdy(b)).slice(0, Math.min(ARENA_FRONT, Math.ceil(ids.length / 2)));
+    return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0 }));
+  }
+
   return {
+    xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };

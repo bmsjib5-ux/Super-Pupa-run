@@ -42,3 +42,20 @@ test("cards: skills wait out their cooldown and stunned heroes skip", () => {
   assert.ok(events.some(ev => ev.t === "skip" && ev.i === 0));
   assert.ok(E.describe(E.CARDS.ikuya.skills[1]).includes("ลดเกราะ"));
 });
+
+test("cards: XP raises levels, the hunt is capped, the arena fields ten", () => {
+  const cards = { units: { pupa: 1 }, xp: {} };
+  assert.equal(E.giveXp(cards, "pupa", E.xpNeed(1) + E.xpNeed(2) + 5), 2);
+  assert.equal(cards.units.pupa, 3);
+  assert.equal(cards.xp.pupa, 5);
+  assert.deepEqual(E.idleReward(5, 20 * 3600000), E.idleReward(5, E.IDLE_HOURS * 3600000));
+  const many = { units: Object.fromEntries(E.CARD_IDS.map(id => [id, 20])), outfit: {} };
+  const team = E.arenaTeam(many);
+  assert.equal(team.length, 10);
+  const b = E.createBattle({ team, stage: E.arenaTier(3), seed: 9 });
+  assert.equal(b.foes.length, 10);
+  for (let n = 0; b.phase !== "done" && n < 300; n++) {
+    if (b.phase === "hero") E.heroTurn(b, E.autoQueue(b)); else E.enemyTurn(b);
+  }
+  assert.equal(b.result, "won");
+});

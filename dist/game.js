@@ -5805,7 +5805,12 @@
       return out;
     };
     const team = (keepTeam && Array.isArray(a.team) && a.team.some(Boolean)) ? a.team : Array.isArray(b.team) ? b.team : a.team;
-    return { ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [] };
+    const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
+    return {
+      ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
+      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2),
+      arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily)
+    };
   }
 
   // A card portrait: a pet or a monster from the levels drawn into any canvas.

@@ -131,3 +131,13 @@ test("merge: card battles keep the higher card levels and stars, the device's te
   assert.deepEqual(third.cards.units, second.cards.units);
   assert.deepEqual(third.cards.team, second.cards.team);
 });
+
+test("merge: card hunting, login rewards, costumes and the arena keep the furthest along", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { pupa: 3 }, xp: { pupa: 50 }, outfit: { pupa: 2 }, arena: 4, idleAt: 1000, daily: { day: "2026-10-11", streak: 3 } } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { units: { pupa: 3 }, xp: { pupa: 20 }, arena: 2, idleAt: 500, daily: { day: "2026-10-09", streak: 1 } } })), 0);
+  assert.equal(b.cards.xp.pupa, 50);
+  assert.equal(b.cards.outfit.pupa, 2);
+  assert.equal(b.cards.arena, 4);
+  assert.equal(b.cards.idleAt, 1000);
+  assert.deepEqual(b.cards.daily, { day: "2026-10-11", streak: 3 });
+});

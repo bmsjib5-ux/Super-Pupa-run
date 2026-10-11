@@ -24,7 +24,11 @@ const intMap = (value, max) => {
 const cleanCards = (raw) => {
   const cards = raw && typeof raw === "object" ? raw : {};
   const team = Array.isArray(cards.team) ? cards.team.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) : [];
-  return { units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true };
+  const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
+  return {
+    units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true,
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily
+  };
 };
 
 const maxMap = (a = {}, b = {}) => {
@@ -53,7 +57,13 @@ export function cleanSave(raw) {
 // Higher card levels and stars win; the team and switches come from the device.
 function mergeCards(current, incoming) {
   const now = cleanCards(current), next = cleanCards(incoming);
-  return { ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team };
+  return {
+    ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team,
+    xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), arena: Math.max(now.arena, next.arena),
+    // the later claim wins, so a hunt or a day's reward is not taken twice
+    idleAt: Math.max(now.idleAt, next.idleAt),
+    daily: (next.daily?.day || "") >= (now.daily?.day || "") ? next.daily : now.daily
+  };
 }
 
 // `current` is the account's save (or null), `incoming` the device's clean
