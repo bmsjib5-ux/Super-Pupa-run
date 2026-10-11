@@ -14,7 +14,12 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const MAX_LEVEL = 30;
+  // A card's level cap: 30, and 10 more for each star it has been raised
+  // (awakened) to, up to MAX_AWAKE stars (see awaken below).
+  const MAX_AWAKE = 5;
+  const BASE_CAP = 30;
+  const MAX_LEVEL = BASE_CAP + 10 * MAX_AWAKE;
+  const capFor = (awake = 0) => BASE_CAP + 10 * Math.max(0, Math.min(MAX_AWAKE, awake));
   const TEAM_SIZE = 5;
   const FRONT_SLOTS = 2;
   // Stats grow by a tenth of the level-1 value per level.
@@ -313,6 +318,33 @@
       ]
     }
   });
+  // Chapter 5: shadows. They drain, break armour and burn with dark fire.
+  const DUSK = "rgba(190,110,255,.95)";
+  const SHADE = "hue-rotate(40deg) saturate(1.6) brightness(.75) contrast(1.25)";
+  Object.assign(FOES, {
+    shadowshroom: { name: "เห็ดเงา", role: "balance", art: "walker", look: SHADE, glow: DUSK, tier: 1.6, skills: [{ name: "สปอร์ความมืด", cd: 3, target: "front", power: 1.15, drain: .4 }] },
+    voidbat: { name: "ค้างคาวห้วงมืด", role: "attack", art: "bat", look: SHADE, glow: DUSK, tier: 1.6, spd: 118, skills: [{ name: "เขี้ยวสุริยคราส", cd: 3, target: "back", power: 1.1, drain: .5 }] },
+    shadowcrab: { name: "ปูเงาทมิฬ", role: "attack", art: "crab", hue: 250, glow: DUSK, tier: 1.6, def: 1.4, skills: [{ name: "ก้ามเงาฉีก", cd: 3, target: "one", power: 2.3, fx: [{ k: "defDown", v: .3, turns: 2 }] }] },
+    voidjelly: { name: "แมงกะพรุนห้วงมืด", role: "support", art: "jelly", hue: 90, glow: DUSK, tier: 1.6, skills: [{ name: "พรแห่งความมืด", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "atkUp", v: .25, turns: 2 }] }] },
+    duskroller: { name: "ตัวกลิ้งสนธยา", role: "defense", art: "roller", hue: 230, glow: DUSK, tier: 1.6, atk: 1.3, skills: [{ name: "กลิ้งเงาบดขยี้", cd: 3, target: "front", power: 1.4, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    duskurchin: { name: "เม่นเงา", role: "defense", art: "urchin", look: SHADE, glow: DUSK, tier: 1.6, skills: [{ name: "หนามเงาสะท้อน", cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }] },
+    nightflower: { name: "ดอกไม้ราตรีมืด", role: "magic", art: "spitter", hue: 60, glow: DUSK, tier: 1.6, skills: [{ name: "ฝนไฟเงา", cd: 3, target: "all", power: .85, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    wraithbird: { name: "นกโคมวิญญาณ", role: "attack", art: "swooper", hue: 230, glow: DUSK, tier: 1.6, spd: 116, skills: [{ name: "ดิ่งวิญญาณ", cd: 3, target: "back", power: 1.4, drain: .4, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    shadowking: {
+      name: "ราชาเห็ดเงา", role: "balance", art: "king", look: SHADE, glow: DUSK, tier: 1.6, boss: true, hp: 4.2, atk: 1.3, def: 1.3,
+      skills: [
+        { name: "คลื่นความมืดกลืนกิน", cd: 3, target: "all", power: 1.2, drain: .3, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "บัลลังก์เงา", cd: 4, first: 1, target: "self", shield: 3, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }
+      ]
+    },
+    eclipsequeen: {
+      name: "ราชินีสุริยคราส", role: "magic", art: "queen", look: SHADE, glow: DUSK, tier: 1.6, boss: true, hp: 4.2, atk: 1.35, def: 1.2, spd: 118,
+      skills: [
+        { name: "สุริยคราสเพลิงมืด", cd: 3, target: "all", power: 1.35, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จุมพิตห้วงมืด", cd: 4, first: 1, target: "one", power: 3, drain: .8, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -322,7 +354,8 @@
     { name: "บทที่ 1 · ป่าเชอร์รี่ยามค่ำ", from: 1, to: 10 },
     { name: "บทที่ 2 · ทะเลสาบภาพฝัน", from: 11, to: 20 },
     { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 },
-    { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 }
+    { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 },
+    { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -364,7 +397,17 @@
     ["หุบเขาลมหนาว", 37, ["glacierroller,glacierroller/frostjelly,frostflower,snowbat", "iceurchin,icecrab/blizzardbird,blizzardbird,frostjelly", "icecrab,frostshroom/frostflower,frostflower,frostjelly"]],
     ["ยอดผาน้ำแข็ง", 38, ["iceurchin,iceurchin/frostflower,frostflower,blizzardbird", "icecrab,glacierroller/frostjelly,frostjelly,snowbat", "glacierroller,icecrab/blizzardbird,frostflower,frostjelly"]],
     ["วิหารออโรรา", 38, ["icecrab,glacierroller/frostjelly,frostflower,blizzardbird", "iceurchin,frostshroom/frostjelly,snowbat,frostflower", "frostking/frostjelly,blizzardbird"]],
-    ["บัลลังก์ราชินีหิมะ", 39, ["glacierroller,icecrab/frostjelly,frostflower,blizzardbird", "iceurchin,iceurchin/frostjelly,frostjelly,snowbat", "frostking,icequeen/frostjelly"]]
+    ["บัลลังก์ราชินีหิมะ", 39, ["glacierroller,icecrab/frostjelly,frostflower,blizzardbird", "iceurchin,iceurchin/frostjelly,frostjelly,snowbat", "frostking,icequeen/frostjelly"]],
+    ["ประตูสุริยคราส", 38, ["shadowshroom,shadowshroom/voidbat", "shadowcrab,shadowshroom/nightflower", "shadowcrab,duskroller/voidbat,nightflower"]],
+    ["ทุ่งเงาราตรี", 39, ["duskroller,shadowshroom/voidjelly", "duskurchin,shadowcrab/nightflower,voidbat", "duskroller,shadowcrab/voidjelly,wraithbird"]],
+    ["ป่าวิญญาณ", 40, ["shadowcrab,shadowcrab/nightflower,voidbat", "duskurchin,duskroller/voidjelly,nightflower", "shadowcrab,duskroller/wraithbird,wraithbird,voidjelly"]],
+    ["ถ้ำผลึกมืด", 41, ["duskurchin,shadowshroom/nightflower,nightflower", "duskroller,duskroller/voidjelly,voidbat", "duskurchin,shadowcrab/voidjelly,nightflower,wraithbird"]],
+    ["ปราสาทเงา", 42, ["shadowshroom,shadowcrab/voidbat,nightflower", "duskroller,duskurchin/voidjelly,voidjelly", "shadowking/nightflower,voidbat"]],
+    ["สะพานห้วงมืด", 43, ["shadowcrab,duskroller/wraithbird,voidbat,nightflower", "duskurchin,shadowshroom/voidjelly,wraithbird", "shadowcrab,shadowcrab/voidjelly,nightflower,voidbat"]],
+    ["หอคอยไร้แสง", 44, ["duskroller,duskroller/voidjelly,nightflower,voidbat", "duskurchin,shadowcrab/wraithbird,wraithbird,voidjelly", "shadowcrab,shadowshroom/nightflower,nightflower,voidjelly"]],
+    ["ห้องโถงพระจันทร์ดับ", 45, ["duskurchin,duskurchin/nightflower,nightflower,wraithbird", "shadowcrab,duskroller/voidjelly,voidjelly,voidbat", "duskroller,shadowcrab/wraithbird,nightflower,voidjelly"]],
+    ["แท่นบูชาความมืด", 46, ["shadowcrab,duskroller/voidjelly,nightflower,wraithbird", "duskurchin,shadowshroom/voidjelly,voidbat,nightflower", "shadowking/voidjelly,wraithbird"]],
+    ["บัลลังก์ราชินีสุริยคราส", 47, ["duskroller,shadowcrab/voidjelly,nightflower,wraithbird", "duskurchin,duskurchin/voidjelly,voidjelly,voidbat", "shadowking,eclipsequeen/voidjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
@@ -384,7 +427,9 @@
       repeat: 5 + num,           // every clear after that
       // characters come only from card pulls now: the first clear gives
       // gems for them instead (the old card prize stages give more)
-      gems: card ? 80 : parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 60 : 25
+      gems: card ? 80 : parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 60 : 25,
+      // star dust for the first clear, from chapter 4 on
+      dust: num > 30 ? (parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 20 : 8) : 0
     };
   });
 
@@ -811,10 +856,12 @@
   const xpNeed = (lv) => 40 * lv;
   // Adds XP to { units, xp } for one card; returns how many levels it rose.
   function giveXp(cards, id, amount) {
+    const cap = capFor(cards.awake?.[id]);
     let lv = cards.units[id], xp = (cards.xp[id] || 0) + Math.round(amount), ups = 0;
-    while (lv < MAX_LEVEL && xp >= xpNeed(lv)) { xp -= xpNeed(lv); lv++; ups++; }
+    while (lv < cap && xp >= xpNeed(lv)) { xp -= xpNeed(lv); lv++; ups++; }
     cards.units[id] = lv;
-    cards.xp[id] = lv >= MAX_LEVEL ? 0 : xp;
+    // at the cap, XP waits (up to one level's worth) for the next star
+    cards.xp[id] = lv >= cap ? Math.min(xp, xpNeed(lv) - 1) : xp;
     return ups;
   }
   // XP each card of the team gets from a stage.
@@ -859,15 +906,15 @@
     return {
       num: n, arena: true, name: `ลานประลอง ชั้น ${n}`, lv: 1 + n,
       waves: [wave], boss: Boolean(boss), par: 99,
-      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15
+      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2
     };
   }
   // The strongest cards first, tanks in front: who goes to the arena.
   function arenaTeam(cards) {
-    const ids = Object.keys(cards.units).filter(id => CARDS[id]).sort((a, b) => power(b, cards.units[b]) - power(a, cards.units[a])).slice(0, ARENA_SIZE);
+    const ids = Object.keys(cards.units).filter(id => CARDS[id]).sort((a, b) => power(b, cards.units[b]) * (1 + cardBonus(cards, b)) - power(a, cards.units[a]) * (1 + cardBonus(cards, a))).slice(0, ARENA_SIZE);
     const sturdy = (id) => ({ defense: 0, balance: 1, attack: 2, magic: 3, support: 4 })[CARDS[id].role];
     const front = [...ids].sort((a, b) => sturdy(a) - sturdy(b)).slice(0, Math.min(ARENA_FRONT, Math.ceil(ids.length / 2)));
-    return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0 }));
+    return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cardBonus(cards, id) }));
   }
 
   // ---- Daily dungeons: one clear a day each ----
@@ -891,7 +938,7 @@
       num: 0, dungeon: kind, name: d.name, lv, waves: d.waves.map(parseWave), par: 99, boss: kind === "coin",
       coins: kind === "coin" ? 120 + 30 * best : 20 + 5 * best,
       xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best,
-      gems: 20
+      gems: 20, dust: 5
     };
   }
 
@@ -901,7 +948,35 @@
   // next one a five-star, and ten at once always hold a four-star or better.
   // A card already owned turns into XP for that card instead.
   const GACHA = { one: 100, ten: 900, rates: { 5: .05, 4: .25, 3: .70 }, pity: 50 };
-  const DUPE_XP = { 3: 150, 4: 400, 5: 1000 };
+  // A card pulled again turns into shards of that card, for its stars.
+  const DUPE_SHARDS = { 3: 5, 4: 10, 5: 20 };
+
+  // ---- Stars (awakening) ----
+  // Raising a card a star costs its shards (star dust, earned in play, can
+  // stand in for any card's shards) and coins. Each star adds 10 to the
+  // level cap and AWAKE_BONUS to hp, attack and defence.
+  const AWAKE_SHARDS = [10, 20, 35, 55, 80];
+  const AWAKE_COINS = [300, 600, 1000, 1600, 2500];
+  const AWAKE_BONUS = .08;
+  // What the next star costs, and whether this save can pay it.
+  function awakeCost(cards, id) {
+    const at = cards.awake?.[id] || 0;
+    if (at >= MAX_AWAKE) return null;
+    const need = AWAKE_SHARDS[at], own = cards.shards?.[id] || 0;
+    const fromShards = Math.min(own, need), fromDust = need - fromShards;
+    return { star: at + 1, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0 };
+  }
+  // Pays and raises the star; coins is the save's coin balance (returned).
+  function awaken(cards, id, coins) {
+    const cost = awakeCost(cards, id);
+    if (!cost || !cards.units[id] || coins < cost.coins || cost.dust < cost.fromDust) return null;
+    cards.shards[id] = (cards.shards[id] || 0) - cost.fromShards;
+    cards.dust = cost.dust - cost.fromDust;
+    cards.awake[id] = cost.star;
+    return coins - cost.coins;
+  }
+  // Battle bonus from stars and a worn costume.
+  const cardBonus = (cards, id) => (cards.awake?.[id] || 0) * AWAKE_BONUS + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
   const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
   // state: { pity } (pulls since the last five-star); rnd: () => 0..1.
   function pullOne(state, rnd, atLeast = 3) {
@@ -926,7 +1001,7 @@
   }
 
   return {
-    GACHA, DUPE_XP, pull,
+    GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,

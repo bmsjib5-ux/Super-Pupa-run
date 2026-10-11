@@ -5879,7 +5879,8 @@
     const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
     return {
       ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
-      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2),
+      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 5), shards: most(a.shards, b.shards, 1e6),
+      dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
       arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
       dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
     };
@@ -6302,10 +6303,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-12a";
+  const NEWS_VERSION = "2026-10-12b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "อัปดาวการ์ด · บทที่ 5 อาณาจักรเงาราตรี", text: "การ์ดอัปได้ 5 ดาว ดาวละเพิ่มเลเวลสูงสุด 10 (ถึง Lv 80) และพลัง 8% ใช้เศษการ์ดจากการสุ่มได้ซ้ำ หรือผลึกดาวจากด่านประจำวัน ลานประลอง และด่านบท 4–5 ด่านใหม่ 41–50 ใต้สุริยคราส บอสราชาเห็ดเงา และราชินีสุริยคราส", image: "chapter5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", text: "ด่าน 31–40 ภูเขาหิมะและทะเลสาบเยือกแข็ง มอนสเตอร์น้ำแข็ง 8 ชนิดที่ทำให้มึนงงและลดเกราะ บอสราชาเห็ดน้ำแข็ง และราชินีหิมะ ผ่านครั้งแรกได้เพชร", image: "chapter4", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 3 · ดินแดนเปลวสุริยะ", text: "ด่าน 21–30 ภูเขาไฟและทุ่งถ่านแดง มอนสเตอร์ธาตุไฟ 7 ชนิด บอสราชาเห็ดลาวา และราชินีสุริยะ ผ่านครั้งแรกได้เพชรไปสุ่มการ์ด", image: "chapter3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "เพลิง · เมฆา · ฟ้าใส", text: "สามตัวละครใหม่ในการสุ่มการ์ด อัศวินสาวหอกเพลิง ★5 จอมเวทน้อยขี่เมฆสายฟ้า ★4 และนักดนตรีสาวพิณจันทร์ ★3 เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha2", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
@@ -6434,10 +6436,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "chapter3" || kind === "chapter4") {
+    if (kind === "chapter3" || kind === "chapter4" || kind === "chapter5") {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

@@ -428,3 +428,12 @@ button.unit { cursor: crosshair; }
 .pull-dupe { color: #bdb0d2; font-size: .62rem; }
 .shop-gacha { background: linear-gradient(180deg, #e7c8ff, #b888ff); }
 @media (prefers-reduced-motion: reduce) { .pull-card, .pull-face, .pull-card.r5 .tcard { animation: none; } }
+
+/* ---- Stars (awakening) ---- */
+.sheet-awake { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .15rem .6rem; margin-top: .55rem; padding: .5rem .7rem; border: 1px solid rgba(195,139,255,.5); border-radius: .7rem; background: rgba(195,139,255,.1); }
+.sheet-awake b { color: #e6c8ff; font-size: .85rem; letter-spacing: .05em; }
+.sheet-awake span { grid-row: 2; color: #cfc4e2; font-size: .68rem; }
+.sheet-awake button { grid-row: span 2; }
+.sheet-awake small { grid-column: 1 / -1; color: #bdb0d2; font-size: .64rem; }
+.tcard[class*="awake-"] { box-shadow: 0 0 .7rem rgba(195,139,255,.55); }
+.tcard.awake-5 { box-shadow: 0 0 1.1rem rgba(255,215,106,.85); }

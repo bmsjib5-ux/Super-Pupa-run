@@ -47,7 +47,9 @@
   // A monster's picture; the burning ones of chapter 3 are recoloured.
   function foeArt(id) {
     const art = portrait(E.FOES[id].art);
-    if (E.FOES[id].hue) art.style.filter = `hue-rotate(${E.FOES[id].hue}deg) saturate(1.4) drop-shadow(0 0 .3rem ${E.FOES[id].glow || "rgba(255,120,40,.7)"})`;
+    const foe = E.FOES[id], glow = `drop-shadow(0 0 .3rem ${foe.glow || "rgba(255,120,40,.7)"})`;
+    if (foe.look) art.style.filter = `${foe.look} ${glow}`;
+    else if (foe.hue) art.style.filter = `hue-rotate(${foe.hue}deg) saturate(1.4) ${glow}`;
     return art;
   }
   function portrait(kind) {
@@ -129,7 +131,7 @@
     const xp = {}, outfit = {};
     for (const id of Object.keys(units)) {
       const n = Math.max(0, Math.floor(Number(raw.xp?.[id]) || 0));
-      if (n > 0) xp[id] = Math.min(n, E.xpNeed(units[id]) - 1);
+      if (n > 0) xp[id] = n;
       const o = Math.floor(Number(raw.outfit?.[id]) || 0);
       if (o === 1 || o === 2) outfit[id] = o;
     }
@@ -137,7 +139,16 @@
     const idleAt = Math.min(now, Math.max(0, Math.floor(Number(raw.idleAt) || 0))) || now;
     const daily = raw.daily && typeof raw.daily.day === "string" ? { day: raw.daily.day.slice(0, 10), streak: Math.max(1, Math.min(7, Math.floor(Number(raw.daily.streak) || 1))) } : null;
     const dungeon = raw.dungeon && raw.dungeon.day === today() ? { day: today(), exp: raw.dungeon.exp === true, coin: raw.dungeon.coin === true } : { day: today(), exp: false, coin: false };
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    const awake = {}, shards = {};
+    for (const id of E.CARD_IDS) {
+      const a = Math.min(E.MAX_AWAKE, Math.floor(Number(raw.awake?.[id]) || 0));
+      if (a > 0 && units[id]) awake[id] = a;
+      const sh = Math.max(0, Math.floor(Number(raw.shards?.[id]) || 0));
+      if (sh > 0) shards[id] = sh;
+      if (units[id]) units[id] = Math.min(units[id], E.capFor(awake[id]));
+    }
+    const dust = Math.max(0, Math.floor(Number(raw.dust) || 0));
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   const cards = () => save().cards;
@@ -295,7 +306,7 @@
     const row = el("div", "pull-faces");
     for (const id of ["phloeng", "chantra", "mekha", "ratri", "fasai"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id)); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
-    const odds = el("p", "pull-odds", `อัตรา: ★5 ${g.rates[5] * 100}% · ★4 ${g.rates[4] * 100}% · ★3 ${g.rates[3] * 100}% · การันตี ★5 ภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ ★4 ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็น EXP ของการ์ดนั้น`);
+    const odds = el("p", "pull-odds", `อัตรา: ★5 ${g.rates[5] * 100}% · ★4 ${g.rates[4] * 100}% · ★3 ${g.rates[3] * 100}% · การันตี ★5 ภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ ★4 ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (★3 5 · ★4 10 · ★5 20)`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
     const one = button("primary-button", `สุ่ม 1 ครั้ง · 💎 ${g.one}`, () => doPull(1));
     const ten = button("primary-button pull-ten", `สุ่ม 10 ครั้ง · 💎 ${g.ten}`, () => doPull(10));
@@ -326,9 +337,9 @@
         if (save().shop && !save().shop.owned.includes(id)) save().shop.owned.push(id);
         return { id, fresh: true };
       }
-      const xp = E.DUPE_XP[E.CARDS[id].rarity];
-      const ups = E.giveXp(c, id, xp);
-      return { id, fresh: false, xp, ups };
+      const shards = E.DUPE_SHARDS[E.CARDS[id].rarity];
+      c.shards[id] = (c.shards[id] || 0) + shards;
+      return { id, fresh: false, shards };
     });
     store(); showCoins();
     reveal(results);
@@ -342,7 +353,7 @@
       const slot = el("div", `pull-card r${def.rarity}`);
       slot.style.animationDelay = `${n * 180}ms`;
       const front = el("div", "pull-front");
-      front.append(cardTile(r.id, null), el("small", r.fresh ? "pull-new" : "pull-dupe", r.fresh ? "ใหม่!" : `ซ้ำ → EXP +${r.xp}`));
+      front.append(cardTile(r.id, null), el("small", r.fresh ? "pull-new" : "pull-dupe", r.fresh ? "ใหม่!" : `ซ้ำ → เศษ +${r.shards}`));
       slot.append(el("div", "pull-back", "✦"), front);
       grid.append(slot);
       const best = def.rarity === 5 ? [784, 988, 1175, 1568] : def.rarity === 4 ? [659, 880] : [523];
@@ -354,7 +365,7 @@
     const more = button("primary-button", results.length > 1 ? `สุ่มอีก 10 · 💎 ${g.ten}` : `สุ่มอีก · 💎 ${g.one}`, () => doPull(results.length));
     more.disabled = (save().gems || 0) < (results.length > 1 ? g.ten : g.one);
     again.append(more, button("secondary-button", "ดูการ์ด", () => { tab = "team"; closeSheet(); }));
-    openSheet([el("h3", "sheet-title", "ผลการสุ่ม"), grid, el("p", "sheet-sub", fresh.length ? `ได้ใหม่: ${fresh.join(" · ")}` : "ไม่มีการ์ดใหม่รอบนี้ การ์ดซ้ำเปลี่ยนเป็น EXP แล้ว"), again]);
+    openSheet([el("h3", "sheet-title", "ผลการสุ่ม"), grid, el("p", "sheet-sub", fresh.length ? `ได้ใหม่: ${fresh.join(" · ")}` : "ไม่มีการ์ดใหม่รอบนี้ การ์ดซ้ำเปลี่ยนเป็นเศษไว้อัปดาวแล้ว"), again]);
     announce(`ผลการสุ่ม: ${results.map(r => `${E.CARDS[r.id].name} ${E.CARDS[r.id].rarity} ดาว${r.fresh ? " ใหม่" : " ซ้ำ"}`).join(", ")}`);
   }
 
@@ -396,12 +407,13 @@
       c.dungeon[stage.dungeon] = true;
       save().coins += stage.coins;
       addGems(stage.gems);
+      cards().dust += stage.dust || 0;
     }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? E.DUNGEONS[stage.dungeon].icon : "☾"), el("h2", null, won ? "ผ่านด่านประจำวัน!" : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
+    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ✧ ผลึกดาว ${stage.dust} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     if (won) box.append(el("p", null, `ด่านนี้รับรางวัลได้อีกครั้งพรุ่งนี้ (อีก ${untilMidnight()})`));
     const actions = el("div", "title-actions");
@@ -447,7 +459,7 @@
       for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
         const openStage = isOpen(stage.num), done = isCleared(stage.num);
         const tile = button(`level-tile${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}`, null, () => stageSheet(stage));
-        tile.style.setProperty("--accent", stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
+        tile.style.setProperty("--accent", stage.num > 40 ? "#b067ff" : stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
         tile.disabled = !openStage;
         tile.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
         tile.append(el("b", null, openStage ? String(stage.num) : "🔒"), el("span", "level-name", stage.name));
@@ -498,7 +510,9 @@
     tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ${def.rarity} ดาว${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}`);
     const art = el("span", "tcard-art");
     art.append(portrait(id));
-    tile.append(art, el("span", "tcard-rare", "★".repeat(def.rarity)), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}` : "🔒"));
+    const awake = cards().awake?.[id] || 0;
+    tile.append(art, el("span", "tcard-rare", "★".repeat(def.rarity)), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}${awake ? ` · ✦${awake}` : ""}` : "🔒"));
+    if (awake) tile.classList.add(`awake-${awake}`);
     return tile;
   }
 
@@ -530,8 +544,10 @@
     const art = el("div", `sheet-art r${def.rarity}`);
     art.append(portrait(id));
     const info = el("div", "sheet-info");
-    info.append(el("h3", null, def.name), el("p", "sheet-sub", `${"★".repeat(def.rarity)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.MAX_LEVEL}` : "ยังไม่มี"}`), el("p", "sheet-text", def.text));
-    const now = E.cardStats(id, lv || 1), then = lv && lv < E.MAX_LEVEL ? E.cardStats(id, lv + 1) : null;
+    info.append(el("h3", null, def.name), el("p", "sheet-sub", `${"★".repeat(def.rarity)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.capFor(c.awake[id])}` : "ยังไม่มี"}`), el("p", "sheet-text", def.text));
+    const boost = (st) => { const k = 1 + E.cardBonus(c, id); return { ...st, hp: Math.round(st.hp * k), atk: Math.round(st.atk * k), def: Math.round(st.def * k) }; };
+    const cap = E.capFor(c.awake[id]);
+    const now = boost(E.cardStats(id, lv || 1)), then = lv && lv < cap ? boost(E.cardStats(id, lv + 1)) : null;
     const table = el("dl", "sheet-stats");
     for (const [key, label] of [["hp", "พลังชีวิต"], ["atk", "โจมตี"], ["def", "ป้องกัน"], ["spd", "ความเร็ว"]]) {
       table.append(el("dt", null, label), el("dd", null, then ? `${fmt(now[key])} → ${fmt(then[key])}` : fmt(now[key])));
@@ -539,7 +555,7 @@
     info.append(table);
     top.append(art, info);
     const parts = [top];
-    if (lv && lv < E.MAX_LEVEL) {
+    if (lv && lv < cap) {
       const need = E.xpNeed(lv), have = c.xp[id] || 0;
       const bar = el("div", "sheet-xp");
       bar.append(el("span", null, `EXP ${fmt(have)} / ${fmt(need)}`), el("i"));
@@ -547,6 +563,21 @@
       parts.push(bar);
     }
     if (def.passive) parts.push(el("p", "sheet-passive", `ติดตัว · ${def.passive.text}`));
+    if (lv) {
+      // stars: shards of this card (or star dust) and coins
+      const at = c.awake[id] || 0, cost = E.awakeCost(c, id);
+      const box = el("div", "sheet-awake");
+      box.append(el("b", null, `อัปดาว ${"✦".repeat(at)}${"✧".repeat(E.MAX_AWAKE - at)}`), el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round(E.AWAKE_BONUS * 100)}%`));
+      if (cost) {
+        const ok = cost.dust >= cost.fromDust && save().coins >= cost.coins;
+        const up = button("shop-buy", `✦${cost.star} · เศษ ${cost.need} ● ${fmt(cost.coins)}`, () => awakenCard(id));
+        up.disabled = !ok;
+        up.setAttribute("aria-label", `อัปดาว${def.name}เป็น ${cost.star} ดาว ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} และ ${cost.coins} เหรียญ`);
+        box.append(up);
+        if (cost.fromDust) box.append(el("small", null, cost.dust >= cost.fromDust ? `ใช้ผลึกดาวแทน ${cost.fromDust}` : `เศษไม่พอ ขาด ${cost.fromDust - cost.dust}`));
+      } else box.append(el("span", "sheet-max", "ดาวเต็มแล้ว"));
+      parts.push(box);
+    }
     if (lv) {
       const own = c.outfit[id];
       const row = el("div", "sheet-costume");
@@ -576,13 +607,13 @@
         actions.append(button("secondary-button", slot < E.FRONT_SLOTS ? "ย้ายไปแถวหลัง" : "ย้ายไปแถวหน้า", () => moveRow(id)));
         actions.append(button("secondary-button", "ถอดจากทีม", () => setTeam(id, false)));
       } else actions.append(button("primary-button", "ใส่ทีม", () => setTeam(id, true)));
-      if (lv < E.MAX_LEVEL) {
+      if (lv < cap) {
         const cost = E.levelCost(lv);
         const up = button("shop-buy sheet-up", `อัปเลเวล ● ${fmt(cost)}`, () => levelUp(id));
         up.disabled = save().coins < cost;
         up.setAttribute("aria-label", `อัปเลเวล${def.name}เป็นเลเวล ${lv + 1} ใช้ ${cost} เหรียญ`);
         actions.append(up);
-      } else actions.append(el("span", "sheet-max", "เลเวลสูงสุดแล้ว"));
+      } else actions.append(el("span", "sheet-max", (c.awake[id] || 0) < E.MAX_AWAKE ? "เลเวลเต็ม · อัปดาวเพื่อไปต่อ" : "เลเวลสูงสุดแล้ว"));
     } else {
       actions.append(el("p", "sheet-lock", "🔒 ได้จากการสุ่มการ์ดเท่านั้น"), button("primary-button", "🎴 ไปสุ่มการ์ด", () => { tab = "pulls"; closeSheet(); }));
     }
@@ -621,9 +652,20 @@
     cardSheet(id);
   }
 
+  function awakenCard(id) {
+    const c = cards(), left = E.awaken(c, id, save().coins);
+    if (left == null) { tone(150, .12, "square", .05); return; }
+    save().coins = left;
+    E.giveXp(c, id, 0); // XP waiting at the old cap counts now
+    store(); showCoins();
+    [523, 659, 784, 1047, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
+    announce(`${E.CARDS[id].name} อัปเป็น ${c.awake[id]} ดาว เลเวลสูงสุด ${E.capFor(c.awake[id])}`);
+    cardSheet(id);
+  }
+
   function levelUp(id) {
     const c = cards(), lv = c.units[id], cost = E.levelCost(lv);
-    if (lv >= E.MAX_LEVEL || save().coins < cost) { tone(150, .12, "square", .05); return; }
+    if (lv >= E.capFor(c.awake[id]) || save().coins < cost) { tone(150, .12, "square", .05); return; }
     save().coins -= cost;
     c.units[id] = lv + 1;
     store();
@@ -647,7 +689,7 @@
     parts.push(foes);
     const reward = el("p", "sheet-reward");
     reward.textContent = first
-      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins} + 💎 ${stage.gems}`
+      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins} + 💎 ${stage.gems}${stage.dust ? ` + ✧ ผลึกดาว ${stage.dust}` : ""}`
       : `รางวัลเล่นซ้ำ: ● ${stage.repeat}`;
     parts.push(reward, el("p", "sheet-goals", `★ ชนะ · ★ ไม่มีการ์ดล้ม · ★ ชนะภายใน ${stage.par} เทิร์น`));
     const team = el("div", "sheet-team");
@@ -665,7 +707,7 @@
     if (!c.team.some(Boolean)) return;
     if (stage.dungeon && doneToday(stage.dungeon)) { tone(150, .12, "square", .05); announce("ด่านนี้ผ่านแล้ววันนี้ มาใหม่พรุ่งนี้"); return; }
     closeSheet(true);
-    const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: c.outfit[id] === 2 ? E.COSTUME_BONUS : 0 } : null));
+    const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: E.cardBonus(c, id) } : null));
     const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
     battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0 };
     frame.classList.add("is-battle");
@@ -703,7 +745,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: Math.min(4, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: Math.min(5, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -1057,7 +1099,7 @@
     if (won) {
       coins = first ? stage.coins : stage.repeat;
       if (c.team.includes("pupa")) coins = Math.round(coins * (1 + E.CARDS.pupa.passive.coins));
-      if (first) { gems = stage.gems; addGems(gems); }
+      if (first) { gems = stage.gems; addGems(gems); c.dust += stage.dust || 0; }
       c.stars[stage.num] = Math.max(c.stars[stage.num] || 0, got);
       save().coins += coins;
       store();
@@ -1077,7 +1119,7 @@
         goals.append(el("li", okay ? "is-done" : "", `${okay ? "★" : "☆"} ${text}`));
       }
       box.append(goals);
-      box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
+      box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}${first && stage.dust ? `✧ ผลึกดาว ${stage.dust} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
       if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
       if (gems) [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
     } else box.append(el("p", null, `ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
@@ -1101,12 +1143,12 @@
     const b = v.state, tier = v.stage, c = cards(), won = b.result === "won";
     const xp = Math.round(tier.xp * (won ? 1 : .3));
     const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
-    if (won) { save().coins += tier.coins; addGems(tier.gems); c.arena = Math.max(c.arena, tier.num + 1); }
+    if (won) { save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.arena = Math.max(c.arena, tier.num + 1); }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? "✦" : "☾"), el("h2", null, won ? `ผ่านชั้น ${tier.num}!` : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
+    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ✧ ${tier.dust} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     const actions = el("div", "title-actions");
     if (won) actions.append(button("primary-button", `ชั้น ${tier.num + 1} ▶`, () => { battle = null; startBattle(E.arenaTier(tier.num + 1)); }));

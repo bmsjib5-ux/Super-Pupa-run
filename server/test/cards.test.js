@@ -5,8 +5,8 @@ import { createRequire } from "node:module";
 
 const E = createRequire(import.meta.url)("../../dist/cards-engine.js");
 
-function play(stage, lv, seed, ids) {
-  const team = ids ? ids.map(id => ({ id, lv })) : E.STARTER_TEAM.map(id => (id ? { id, lv } : null));
+function play(stage, lv, seed, ids, bonus = 0) {
+  const team = ids ? ids.map(id => ({ id, lv, bonus })) : E.STARTER_TEAM.map(id => (id ? { id, lv } : null));
   if (!ids) { team[3] = { id: "pangji", lv }; team[4] = { id: "baitoey", lv }; }
   const b = E.createBattle({ team, stage, seed });
   for (let n = 0; b.phase !== "done" && n < 300; n++) {
@@ -21,7 +21,8 @@ test("cards: every stage finishes, and a strong team wins it", () => {
     // from chapter 3 on it takes a levelled team of rarer cards; a hard
     // stage may need a few tries, as in play
     const strong = ["thongkham", "phloeng", "chantra", "mekha", "pupav2"];
-    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
+    // chapter 5 needs raised stars: level 50 with two stars
+    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 40 ? play(stage, 50, stage.num * 31 + n, strong, 2 * E.AWAKE_BONUS) : stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
     const b = tries.find(t => t.result === "won");
     assert.ok(b, `stage ${stage.num}`);
     assert.ok(tries.every(t => t.phase === "done"));
@@ -78,4 +79,22 @@ test("cards: daily dungeons can be won at the furthest stage's level", () => {
     }
     assert.ok(wins >= 7, `${kind} won ${wins}/10`);
   }
+});
+
+test("cards: stars raise the level cap, cost shards or star dust, and stop at five", () => {
+  const cards = { units: { ikuya: 30 }, xp: {}, awake: {}, shards: { ikuya: 4 }, dust: 6 };
+  assert.equal(E.giveXp(cards, "ikuya", 100000), 0); // capped at 30 without stars
+  assert.equal(E.awaken(cards, "ikuya", 100), null); // not enough coins
+  assert.equal(E.awaken(cards, "ikuya", 1000), 700); // 4 shards + 6 dust + 300 coins
+  assert.equal(cards.awake.ikuya, 1);
+  assert.equal(cards.shards.ikuya, 0);
+  assert.equal(cards.dust, 0);
+  assert.ok(E.giveXp(cards, "ikuya", 100000) > 0);
+  assert.ok(cards.units.ikuya <= E.capFor(1));
+  assert.equal(E.awaken(cards, "ikuya", 1e9), null); // no shards left
+  cards.shards.ikuya = 1000;
+  for (let n = 1; n < E.MAX_AWAKE; n++) assert.notEqual(E.awaken(cards, "ikuya", 1e9), null);
+  assert.equal(cards.awake.ikuya, E.MAX_AWAKE);
+  assert.equal(E.awakeCost(cards, "ikuya"), null);
+  assert.equal(E.cardBonus(cards, "ikuya"), E.MAX_AWAKE * E.AWAKE_BONUS);
 });
