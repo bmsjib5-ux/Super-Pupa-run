@@ -50,6 +50,26 @@
     game().paintPortrait(canvas, kind, 1000);
     return canvas;
   }
+  // Which 2D effect each skill shows (see cards-fx.js), by "card:skill".
+  const LOOK = {
+    "pupa:0": "ribbon", "pupa:1": "shield", "jibjib:0": "peck", "jibjib:1": "wind",
+    "baitoey:0": "leaf", "baitoey:1": "leaf", "ikuya:0": "wind", "ikuya:1": "moon",
+    "pangji:0": "shield", "pangji:1": "steam", "pupav2:0": "bolt", "pupav2:1": "bolt",
+    "firefly:0": "heal", "firefly:1": "buff", "kitten:0": "slash", "kitten:1": "peck",
+    "minibat:0": "bite", "minibat:1": "sonic", "starsprite:0": "shield", "starsprite:1": "star",
+    "dragon:0": "fire", "dragon:1": "fire",
+    "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
+    "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",
+    "king:0": "stomp", "king:1": "spore", "queen:0": "sonic", "queen:1": "bite"
+  };
+  function lookOf(u, s) {
+    if (s >= 0 && LOOK[`${u.id}:${s}`]) return LOOK[`${u.id}:${s}`];
+    const ranged = u.role === "magic" || u.role === "support";
+    return u.side === "foe" ? (ranged ? "foeOrb" : "foeSlash") : ranged ? "orb" : "slash";
+  }
+  let show = null;           // the battle's 2D effects (cards-fx.js)
+  const stopShow = () => { show?.destroy(); show = null; };
+
   const stars = (n, max = 3) => "★".repeat(n) + "☆".repeat(max - n);
   const STATUS = {
     shield: ["🛡", "เกราะ"], stun: ["💫", "มึนงง"], burn: ["🔥", "ไฟลวก"], atkUp: ["⚔", "พลังโจมตีเพิ่ม"],
@@ -137,6 +157,7 @@
 
   // ---- Hub: stages and team ----
   function showHub() {
+    stopShow();
     battle = null;
     sheet = null;
     frame.classList.remove("is-battle");
@@ -400,6 +421,9 @@
     view.append(top, field, v.hintLine, v.bar, v.result);
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
+    stopShow();
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.num > 10 ? 2 : 1 }) || null;
+    show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
     drawTop();
@@ -453,7 +477,9 @@
     tile.querySelector(".unit-hp-fill").style.width = `${fill * 100}%`;
     tile.querySelector(".unit-hp-shield").style.width = `${Math.min(1, snap.sh / snap.maxHp) * 100}%`;
     tile.classList.toggle("is-low", fill < .3);
+    if (snap.alive === false && !tile.classList.contains("is-ko") && tile.isConnected) show?.knockout(tile);
     tile.classList.toggle("is-ko", !snap.alive);
+    tile.status = snap.alive ? snap.st : [];
     const fx = tile.querySelector(".unit-fx");
     fx.replaceChildren(...[...new Set(snap.st)].filter(k => STATUS[k]).map(k => { const s = el("i", null, STATUS[k][0]); s.title = STATUS[k][1]; return s; }));
     const u = (side === "hero" ? battle.state.heroes : battle.state.foes)[i];
@@ -608,7 +634,8 @@
 
   // Animate what happened, one event at a time.
   async function play(v, events) {
-    for (const ev of events) {
+    let look = "slash";
+    for (const [index, ev] of events.entries()) {
       if (v.token.stopped) return;
       const side = ev.side, tile = side ? v.tiles[side]?.[ev.i] : null;
       switch (ev.t) {
@@ -617,6 +644,17 @@
           const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i];
           if (tile) { tile.classList.remove("is-acting"); void tile.offsetWidth; tile.classList.add("is-acting"); }
           if (ev.name) banner(ev.name, side);
+          if (u && tile && show) {
+            // everyone this action reaches, up to the next action
+            look = lookOf(u, ev.s);
+            const reached = [];
+            for (const next of events.slice(index + 1)) {
+              if (["act", "skip", "turn", "status", "wave", "end"].includes(next.t)) break;
+              const node = v.tiles[next.side]?.[next.i];
+              if (node && next.side !== side && !reached.includes(node)) reached.push(node);
+            }
+            show.cast(tile, reached, look, side);
+          }
           if (side === "hero" && ev.s >= 0) v.queue = v.queue.filter(q => q.i !== ev.i);
           markQueue();
           if (ev.s >= 0) { tone(side === "hero" ? 784 : 330, .09, "triangle", .05); tone(side === "hero" ? 1047 : 247, .1, "triangle", .04, .07); }
@@ -628,17 +666,19 @@
         case "hit":
           paintUnit(side, ev.i, ev.u);
           if (tile) { tile.classList.remove("is-hit"); void tile.offsetWidth; tile.classList.add("is-hit"); }
+          if (tile) show?.impact(tile, look, ev.crit, (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]?.boss);
           pop(tile, `${ev.crit ? "คริ! " : ""}-${fmt(ev.v)}`, ev.crit ? "is-crit" : "is-dmg");
           tone(ev.crit ? 180 : 140, .07, "square", ev.crit ? .06 : .04);
           if (ev.ko) { tone(110, .25, "sawtooth", .05); const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]; if (u) announce(`${u.name} ล้มแล้ว`); }
           break;
-        case "heal": paintUnit(side, ev.i, ev.u); if (ev.v > 0) { pop(tile, `+${fmt(ev.v)}`, "is-heal"); tone(880, .08, "sine", .04); } break;
-        case "shield": paintUnit(side, ev.i, ev.u); pop(tile, "เกราะ", "is-shield"); break;
-        case "fx": paintUnit(side, ev.i, ev.u); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
-        case "burn": paintUnit(side, ev.i, ev.u); pop(tile, `🔥-${fmt(ev.v)}`, "is-dmg"); break;
+        case "heal": paintUnit(side, ev.i, ev.u); if (tile) show?.heal(tile, look === "leaf"); if (ev.v > 0) { pop(tile, `+${fmt(ev.v)}`, "is-heal"); tone(880, .08, "sine", .04); } break;
+        case "shield": paintUnit(side, ev.i, ev.u); if (tile) show?.shield(tile); pop(tile, "เกราะ", "is-shield"); break;
+        case "fx": paintUnit(side, ev.i, ev.u); if (tile && ["atkUp", "defUp", "defDown"].includes(ev.k)) show?.buff(tile, ev.k === "defDown"); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
+        case "burn": paintUnit(side, ev.i, ev.u); if (tile) show?.impact(tile, "fire", false, false); pop(tile, `🔥-${fmt(ev.v)}`, "is-dmg"); break;
         case "status": paintUnit(side, ev.i, ev.u); break;
         case "wave":
-          drawSide("foe"); drawTop();
+          drawSide("foe"); drawTop(); show?.wave();
+          v.tiles.foe.forEach((node, n) => { if (node) { node.style.animationDelay = `${n * 70}ms`; node.classList.add("is-arriving"); setTimeout(() => node.classList.remove("is-arriving"), 1000); } });
           banner(`คลื่นที่ ${ev.n}/${ev.total}`, "wave");
           announce(`มอนสเตอร์คลื่นที่ ${ev.n} มาแล้ว`);
           [392, 523, 659].forEach((note, n) => tone(note, .1, "triangle", .05, n * .08));
