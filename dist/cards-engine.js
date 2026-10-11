@@ -401,6 +401,35 @@
       ]
     }
   });
+  // Chapter 8: the deep sea, under crushing water: ink that breaks armour,
+  // coral shields, poison and lights that drink life.
+  const DEEP = "rgba(90,255,210,.95)";
+  // each picture turned to the blues and teals of deep water
+  const ABYSS = (deg) => `hue-rotate(${deg}deg) saturate(1.9) contrast(1.1) brightness(1.05)`;
+  Object.assign(FOES, {
+    deepshroom: { name: "เห็ดทะเลลึก", role: "balance", art: "walker", look: ABYSS(220), glow: DEEP, tier: 3.2, skills: [{ name: "สปอร์หมึกดำ", cd: 3, target: "front", power: 1.25, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    anglerbat: { name: "ค้างคาวตะเกียงลึก", role: "attack", art: "bat", look: ABYSS(320), glow: DEEP, tier: 3.2, spd: 124, skills: [{ name: "แสงล่อดูดชีวิต", cd: 3, target: "back", power: 1.25, drain: .4 }] },
+    abysscrab: { name: "ปูยักษ์ห้วงลึก", role: "attack", art: "crab", look: ABYSS(160), glow: DEEP, tier: 3.2, def: 1.6, skills: [{ name: "ก้ามแรงดันน้ำ", cd: 3, target: "one", power: 2.5, fx: [{ k: "stun", chance: .35, turns: 1 }] }] },
+    glowjelly: { name: "แมงกะพรุนเรืองแสง", role: "support", art: "jelly", look: ABYSS(0), glow: DEEP, tier: 3.2, skills: [{ name: "แสงเรืองใต้สมุทร", cd: 3, target: "allies", heal: 1.2, shield: .6, fx: [{ k: "shield", turns: 2 }, { k: "cleanse" }] }] },
+    tideroller: { name: "ตัวกลิ้งกระแสน้ำ", role: "defense", art: "roller", look: ABYSS(160), glow: DEEP, tier: 3.2, atk: 1.4, skills: [{ name: "กลิ้งคลื่นยักษ์", cd: 3, target: "front", power: 1.5, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    coralurchin: { name: "เม่นปะการัง", role: "defense", art: "urchin", look: ABYSS(320), glow: DEEP, tier: 3.2, skills: [{ name: "เกราะปะการัง", cd: 4, target: "self", shield: 2.6, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .45, turns: 2 }] }] },
+    poisonflower: { name: "ดอกไม้ทะเลพิษ", role: "magic", art: "spitter", look: ABYSS(320), glow: DEEP, tier: 3.2, skills: [{ name: "หมอกพิษใต้น้ำ", cd: 3, target: "all", power: 1, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    sharkbird: { name: "นกโคมฉลาม", role: "attack", art: "swooper", look: ABYSS(160), glow: DEEP, tier: 3.2, spd: 122, skills: [{ name: "ดิ่งครีบฉลาม", cd: 3, target: "back", power: 1.55, drain: .4, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    abyssking: {
+      name: "ราชาเห็ดห้วงลึก", role: "balance", art: "king", look: ABYSS(240), glow: DEEP, tier: 3.2, boss: true, hp: 4.4, atk: 1.4, def: 1.4,
+      skills: [
+        { name: "สึนามิถล่ม", cd: 3, target: "all", power: 1.35, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+        { name: "น้ำวนดูดกลืน", cd: 4, first: 1, target: "front", power: 1.9, drain: .5 }
+      ]
+    },
+    krakenqueen: {
+      name: "ราชินีคราเคน", role: "magic", art: "queen", look: ABYSS(280), glow: DEEP, tier: 3.2, boss: true, hp: 4.4, atk: 1.5, def: 1.3, spd: 124,
+      skills: [
+        { name: "หนวดคราเคนฟาด", cd: 3, target: "all", power: 1.5, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จุมพิตห้วงลึก", cd: 4, first: 1, target: "one", power: 3.4, drain: .7, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -413,7 +442,8 @@
     { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 },
     { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 },
     { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 },
-    { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 }
+    { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 },
+    { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -485,7 +515,17 @@
     ["หลุมดำนิรันดร์", 62, ["meteorroller,meteorroller/cosmicjelly,galaxyflower,cometbat", "voidurchin,starcrab/orbitbird,orbitbird,cosmicjelly", "starcrab,nebulashroom/galaxyflower,galaxyflower,cosmicjelly"]],
     ["ซูเปอร์โนวา", 63, ["voidurchin,voidurchin/galaxyflower,galaxyflower,orbitbird", "starcrab,meteorroller/cosmicjelly,cosmicjelly,cometbat", "meteorroller,starcrab/orbitbird,galaxyflower,cosmicjelly"]],
     ["แท่นกำเนิดดวงดาว", 63, ["starcrab,meteorroller/cosmicjelly,galaxyflower,orbitbird", "voidurchin,nebulashroom/cosmicjelly,cometbat,galaxyflower", "cosmicking/cosmicjelly,orbitbird"]],
-    ["บัลลังก์ราชินีเนบิวลา", 57, ["meteorroller,starcrab/cosmicjelly,galaxyflower,orbitbird", "voidurchin,voidurchin/cosmicjelly,cosmicjelly,cometbat", "cosmicking,nebulaqueen/cosmicjelly"]]
+    ["บัลลังก์ราชินีเนบิวลา", 57, ["meteorroller,starcrab/cosmicjelly,galaxyflower,orbitbird", "voidurchin,voidurchin/cosmicjelly,cosmicjelly,cometbat", "cosmicking,nebulaqueen/cosmicjelly"]],
+    ["ประตูสู่ห้วงลึก", 58, ["deepshroom,deepshroom/anglerbat", "abysscrab,deepshroom/poisonflower", "abysscrab,tideroller/anglerbat,poisonflower"]],
+    ["แนวปะการังเรืองแสง", 59, ["tideroller,deepshroom/glowjelly", "coralurchin,abysscrab/poisonflower,anglerbat", "tideroller,abysscrab/glowjelly,sharkbird"]],
+    ["ป่าสาหร่ายยักษ์", 60, ["abysscrab,abysscrab/poisonflower,anglerbat", "coralurchin,tideroller/glowjelly,poisonflower", "abysscrab,tideroller/sharkbird,sharkbird,glowjelly"]],
+    ["ซากเรืออับปาง", 61, ["coralurchin,deepshroom/poisonflower,poisonflower", "tideroller,tideroller/glowjelly,anglerbat", "coralurchin,abysscrab/glowjelly,poisonflower,sharkbird"]],
+    ["ถ้ำมุกนิรันดร์", 62, ["deepshroom,abysscrab/anglerbat,poisonflower", "tideroller,coralurchin/glowjelly,glowjelly", "abyssking/poisonflower,anglerbat"]],
+    ["เหวมืดใต้สมุทร", 63, ["abysscrab,tideroller/sharkbird,anglerbat,poisonflower", "coralurchin,deepshroom/glowjelly,sharkbird", "abysscrab,abysscrab/glowjelly,poisonflower,anglerbat"]],
+    ["เมืองบาดาลที่สาบสูญ", 64, ["tideroller,tideroller/glowjelly,poisonflower,anglerbat", "coralurchin,abysscrab/sharkbird,sharkbird,glowjelly", "abysscrab,deepshroom/poisonflower,poisonflower,glowjelly"]],
+    ["น้ำวนยักษ์", 64, ["coralurchin,coralurchin/poisonflower,poisonflower,sharkbird", "abysscrab,tideroller/glowjelly,glowjelly,anglerbat", "tideroller,abysscrab/sharkbird,poisonflower,glowjelly"]],
+    ["วิหารมุกดำ", 63, ["abysscrab,tideroller/glowjelly,poisonflower,sharkbird", "coralurchin,deepshroom/glowjelly,anglerbat,poisonflower", "abyssking/glowjelly,sharkbird"]],
+    ["บัลลังก์ราชินีคราเคน", 55, ["tideroller,abysscrab/glowjelly,poisonflower,sharkbird", "coralurchin,coralurchin/glowjelly,glowjelly,anglerbat", "abyssking,krakenqueen/glowjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");

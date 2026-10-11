@@ -793,7 +793,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: Math.min(7, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: Math.min(8, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");

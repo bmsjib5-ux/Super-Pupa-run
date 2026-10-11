@@ -79,9 +79,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter >= 7;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter >= 8;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (cosmos) { sky.addColorStop(0, "#040418"); sky.addColorStop(.6, "#14103a"); sky.addColorStop(1, "#08061c"); }
+      if (abyss) { sky.addColorStop(0, "#0a4a5c"); sky.addColorStop(.45, "#06283c"); sky.addColorStop(1, "#020a16"); }
+      else if (cosmos) { sky.addColorStop(0, "#040418"); sky.addColorStop(.6, "#14103a"); sky.addColorStop(1, "#08061c"); }
       else if (holy) { sky.addColorStop(0, "#3a5ab8"); sky.addColorStop(.5, "#9fc4ff"); sky.addColorStop(1, "#ffe7b0"); }
       else if (dark) { sky.addColorStop(0, "#05020c"); sky.addColorStop(.55, "#241038"); sky.addColorStop(1, "#0a0414"); }
       else if (ice) { sky.addColorStop(0, "#0e1a3a"); sky.addColorStop(.55, "#3a5a8a"); sky.addColorStop(1, "#1a2a48"); }
@@ -97,19 +98,31 @@
           s.fillStyle = n; s.fillRect(0, 0, w, h);
         }
       }
+      if (abyss) {
+        // light falling from the far surface
+        s.save(); s.globalCompositeOperation = "lighter";
+        for (const [x, k] of [[w * .18, 1], [w * .42, .7], [w * .63, 1.2], [w * .86, .8]]) {
+          const ray = s.createLinearGradient(0, 0, 0, h * .6);
+          ray.addColorStop(0, `rgba(150,255,240,${.16 * k})`); ray.addColorStop(1, "rgba(150,255,240,0)");
+          s.fillStyle = ray; s.beginPath(); s.moveTo(x - 18 * k, 0); s.lineTo(x + 18 * k, 0); s.lineTo(x + 70 * k, h * .6); s.lineTo(x - 30 * k, h * .6); s.fill();
+        }
+        s.restore();
+      }
       // stars
-      for (let i = 0; i < 70; i++) {
+      for (let i = 0; i < (abyss ? 0 : 70); i++) {
         const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
-      // moon
+      // moon (under the sea: the shimmer of the surface)
+      if (abyss) s.globalAlpha = 0;
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, cosmos ? "rgba(120,220,255,.4)" : holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = halo; s.beginPath(); s.arc(mx, my, mr * 3.2, 0, TAU); s.fill();
       s.fillStyle = cosmos ? "#5a6cd8" : holy ? "#fffbe8" : dark ? "#0a0410" : ice ? "#f4fbff" : fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
+      s.globalAlpha = 1;
       if (cosmos) {
         // a ringed planet, and a small moon
         s.save(); s.translate(mx, my); s.rotate(-.35);
@@ -133,6 +146,30 @@
           for (let k = 0; k < 7; k++) { const a = k * TAU / 7, rr = r * (.8 + ((i + k) % 3) * .12); s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
           s.fill(); s.fillStyle = "rgba(255,255,255,.12)"; s.beginPath(); s.arc(x - r * .3, y - r * .3, r * .3, 0, TAU); s.fill();
         }
+      }
+      if (abyss) {
+        // coral reefs and swaying kelp behind the hills, glowing jellyfish above
+        for (const [x, k] of [[w * .08, 1], [w * .3, .7], [w * .7, 1.1], [w * .94, .85]]) {
+          const base = ground + 4, tall = h * .2 * k;
+          s.strokeStyle = "#0d4a4a"; s.lineWidth = 5 * k; s.lineCap = "round";
+          for (let b = -2; b <= 2; b++) {
+            s.beginPath(); s.moveTo(x, base); s.quadraticCurveTo(x + b * 14 * k, base - tall * .5, x + b * 22 * k, base - tall * (.7 + (b & 1) * .25)); s.stroke();
+          }
+          s.fillStyle = "rgba(255,120,170,.55)";
+          for (let b = -2; b <= 2; b++) { s.beginPath(); s.arc(x + b * 22 * k, base - tall * (.7 + (b & 1) * .25), 4 * k, 0, TAU); s.fill(); }
+        }
+        s.strokeStyle = "rgba(40,140,90,.7)"; s.lineWidth = 3;
+        for (let i = 0; i < 9; i++) {
+          const x = (i * 151.7 + 20) % w, tall = h * (.12 + (i % 3) * .05);
+          s.beginPath(); s.moveTo(x, ground + 6); s.bezierCurveTo(x + 14, ground - tall * .3, x - 14, ground - tall * .7, x + 6, ground - tall); s.stroke();
+        }
+        for (const [x, y, r] of [[w * .22, ground * .3, 14], [w * .55, ground * .18, 10], [w * .8, ground * .4, 12]]) {
+          s.fillStyle = "rgba(140,230,255,.35)"; s.shadowColor = "#7ff0ff"; s.shadowBlur = 16;
+          s.beginPath(); s.arc(x, y, r, Math.PI, 0); s.fill();
+          s.strokeStyle = "rgba(140,230,255,.45)"; s.lineWidth = 1.5;
+          for (let t = -2; t <= 2; t++) { s.beginPath(); s.moveTo(x + t * r * .35, y); s.quadraticCurveTo(x + t * r * .35 + 4, y + r, x + t * r * .35, y + r * 1.8); s.stroke(); }
+        }
+        s.shadowBlur = 0;
       }
       if (holy) {
         // floating islands with golden temples, and soft clouds
@@ -181,11 +218,24 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (cosmos) {
+      if (abyss) {
+        // the sea floor: dark sand, shells and glowing anemones
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#14485a"); floor.addColorStop(1, "#03121c");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        s.strokeStyle = "rgba(160,240,230,.12)"; s.lineWidth = 2;
+        for (let i = 1; i < 6; i++) { const y = ground + (h - ground) * i / 6; s.beginPath(); for (let x = 0; x <= w; x += 24) s.lineTo(x, y + Math.sin(x * .03 + i) * 3); s.stroke(); }
+        for (let i = 0; i < 18; i++) {
+          const x = (i * 139.3) % w, y = ground + 14 + ((i * 63.1) % (h - ground - 18)), k = .5 + (y - ground) / (h - ground);
+          s.fillStyle = i % 3 ? "rgba(90,255,210,.5)" : "rgba(255,150,200,.5)"; s.shadowColor = s.fillStyle; s.shadowBlur = 8;
+          s.beginPath(); s.arc(x, y, 3 * k, 0, TAU); s.fill();
+        }
+        s.shadowBlur = 0;
+      } else if (cosmos) {
         // a floor of dark glass with a grid of starlight
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#221c52"); floor.addColorStop(1, "#06051a");
@@ -259,7 +309,7 @@
       // a glowing circle of runes in the middle of the field
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -267,7 +317,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       // soft spotlight where the two sides meet
@@ -285,10 +335,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter >= 7;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter >= 8;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos, ember: fire || ice || dark || holy || cosmos
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss, ember: fire || ice || dark || holy || cosmos
       };
     }
 
