@@ -18,7 +18,8 @@ function play(stage, lv, seed) {
 
 test("cards: every stage finishes, and a strong team wins it", () => {
   for (const stage of E.STAGES) {
-    const b = play(stage, 20, stage.num);
+    // chapter 3 asks for a better-levelled team
+    const b = play(stage, stage.num > 20 ? 30 : 20, stage.num);
     assert.equal(b.result, "won", `stage ${stage.num}`);
     assert.ok(E.starsFor(b, stage) >= 1);
   }

@@ -79,9 +79,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter >= 2;
+      const lake = chapter === 2, fire = chapter >= 3;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (lake) { sky.addColorStop(0, "#0c1a46"); sky.addColorStop(.55, "#1d4a7a"); sky.addColorStop(1, "#0b2a3a"); }
+      if (fire) { sky.addColorStop(0, "#2a0a1a"); sky.addColorStop(.5, "#7a2418"); sky.addColorStop(1, "#2a0c0c"); }
+      else if (lake) { sky.addColorStop(0, "#0c1a46"); sky.addColorStop(.55, "#1d4a7a"); sky.addColorStop(1, "#0b2a3a"); }
       else { sky.addColorStop(0, "#160b38"); sky.addColorStop(.6, "#4a1f5c"); sky.addColorStop(1, "#1a0d2e"); }
       s.fillStyle = sky; s.fillRect(0, 0, w, h);
       // stars
@@ -94,16 +95,40 @@
       // moon
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
-      halo.addColorStop(0, lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
+      halo.addColorStop(0, fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = halo; s.beginPath(); s.arc(mx, my, mr * 3.2, 0, TAU); s.fill();
-      s.fillStyle = lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
+      s.fillStyle = fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
       // far hills
       const ground = h * .34; // the fighters stand below this line
-      s.fillStyle = lake ? "#123a5c" : "#2c1450";
+      if (fire) {
+        // volcanoes with glowing tops behind the hills
+        for (const [x, k] of [[w * .18, 1], [w * .62, 1.3], [w * .92, .8]]) {
+          const top = ground - (h * .2) * k, half = w * .12 * k;
+          s.fillStyle = "#3a1414"; s.beginPath(); s.moveTo(x - half, ground); s.lineTo(x - half * .18, top); s.lineTo(x + half * .18, top); s.lineTo(x + half, ground); s.fill();
+          const lava = s.createRadialGradient(x, top, 2, x, top, half * .6);
+          lava.addColorStop(0, "rgba(255,170,60,.9)"); lava.addColorStop(1, "rgba(255,80,20,0)");
+          s.fillStyle = lava; s.beginPath(); s.arc(x, top, half * .6, 0, TAU); s.fill();
+          s.strokeStyle = "rgba(255,120,40,.6)"; s.lineWidth = 2;
+          s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
+        }
+      }
+      s.fillStyle = fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (lake) {
+      if (fire) {
+        // scorched ground with cracks of lava
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#3a1612"); floor.addColorStop(1, "#140606");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        s.strokeStyle = "rgba(255,110,40,.45)"; s.lineWidth = 1.6;
+        for (let i = 0; i < 16; i++) {
+          let x = (i * 151.3) % w, y = ground + 16 + ((i * 67.1) % (h - ground - 20));
+          s.beginPath(); s.moveTo(x, y);
+          for (let n = 0; n < 4; n++) { x += 10 + (n * 7 + i) % 14; y += ((n + i) % 3 - 1) * 5; s.lineTo(x, y); }
+          s.stroke();
+        }
+      } else if (lake) {
         // water with moonlight
         const water = s.createLinearGradient(0, ground, 0, h);
         water.addColorStop(0, "#1b5d86"); water.addColorStop(1, "#08202f");
@@ -127,7 +152,7 @@
       // a glowing circle of runes in the middle of the field
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -135,7 +160,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       // soft spotlight where the two sides meet
@@ -153,10 +178,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter >= 2;
+      const lake = chapter === 2, fire = chapter >= 3;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: rand(2.5, 5), colour: lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), colour: fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire, ember: fire
       };
     }
 
@@ -274,7 +299,8 @@
         if (p.bubble && p.y < -10) { p.y = h + 10; p.x = rand(0, w); }
         if (!p.bubble && (p.y > h + 10 || p.x > w + 20)) petals[i] = newPetal(false);
         bg.save(); bg.translate(p.x, p.y); bg.rotate(p.spin);
-        if (p.bubble) { bg.strokeStyle = p.colour; bg.lineWidth = 1.2; bg.beginPath(); bg.arc(0, 0, p.r, 0, TAU); bg.stroke(); }
+        if (p.ember) { bg.fillStyle = p.colour; bg.globalAlpha = .55 + Math.sin(t * 6 + i) * .3; bg.beginPath(); bg.arc(0, 0, p.r, 0, TAU); bg.fill(); }
+        else if (p.bubble) { bg.strokeStyle = p.colour; bg.lineWidth = 1.2; bg.beginPath(); bg.arc(0, 0, p.r, 0, TAU); bg.stroke(); }
         else { bg.fillStyle = p.colour; bg.globalAlpha = .7; bg.beginPath(); bg.ellipse(0, 0, p.r, p.r * .55, 0, 0, TAU); bg.fill(); }
         bg.restore();
       }

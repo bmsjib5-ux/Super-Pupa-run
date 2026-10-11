@@ -262,6 +262,31 @@
       ]
     }
   };
+  // Chapter 3: the same creatures, burning (hue turns their colours, as
+  // the art is shared with the cool ones). Hotter skills, a little tougher.
+  Object.assign(FOES, {
+    lavashroom: { name: "เห็ดลาวา", role: "balance", art: "walker", hue: 100, hp: 1.1, skills: [{ name: "สปอร์ลาวา", cd: 3, target: "front", power: 1.1, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    firebat: { name: "ค้างคาวอัคคี", role: "attack", art: "bat", hue: 150, spd: 115, skills: [{ name: "โฉบเพลิง", cd: 3, target: "back", power: 1, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    magmacrab: { name: "ปูหินหลอมเหลว", role: "attack", art: "crab", hue: 20, def: 1.3, skills: [{ name: "ก้ามหินร้อน", cd: 3, target: "one", power: 2.2, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    emberjelly: { name: "แมงกะพรุนถ่านแดง", role: "support", art: "jelly", hue: 160, skills: [{ name: "ไออุ่นฟื้นฟู", cd: 3, target: "allies", heal: 1.4, fx: [{ k: "atkUp", v: .2, turns: 2 }] }] },
+    cinderroller: { name: "ตัวกลิ้งถ่านหิน", role: "defense", art: "roller", hue: 330, atk: 1.3, skills: [{ name: "กลิ้งถ่านเพลิง", cd: 3, target: "front", power: 1.3, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    flamespitter: { name: "ดอกไม้ไฟ", role: "magic", art: "spitter", hue: 180, skills: [{ name: "ฝนประกายไฟ", cd: 3, target: "all", power: .8, fx: [{ k: "burn", power: .25, turns: 2 }] }] },
+    ashowl: { name: "นกโคมเถ้าถ่าน", role: "attack", art: "swooper", hue: 300, spd: 112, skills: [{ name: "ดิ่งเพลิงพสุธา", cd: 3, target: "back", power: 1.3, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    lavaking: {
+      name: "ราชาเห็ดลาวา", role: "balance", art: "king", hue: 100, boss: true, hp: 3.8, atk: 1.3, def: 1.25,
+      skills: [
+        { name: "ระเบิดภูเขาไฟ", cd: 3, target: "all", power: 1.2, fx: [{ k: "burn", power: .4, turns: 2 }] },
+        { name: "เหยียบลาวาสะเทือน", cd: 4, first: 1, target: "front", power: 1.6, fx: [{ k: "stun", chance: .35, turns: 1 }] }
+      ]
+    },
+    sunqueen: {
+      name: "ราชินีสุริยะ", role: "magic", art: "queen", hue: 150, boss: true, hp: 3.8, atk: 1.25, def: 1.2, spd: 112,
+      skills: [
+        { name: "สุริยคราสลุกไหม้", cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .4, turns: 2 }] },
+        { name: "จุมพิตเปลวตะวัน", cd: 4, first: 1, target: "one", power: 2.8, drain: .6 }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -269,7 +294,8 @@
   // level, card the card given for the first clear.
   const CHAPTERS = [
     { name: "บทที่ 1 · ป่าเชอร์รี่ยามค่ำ", from: 1, to: 10 },
-    { name: "บทที่ 2 · ทะเลสาบภาพฝัน", from: 11, to: 20 }
+    { name: "บทที่ 2 · ทะเลสาบภาพฝัน", from: 11, to: 20 },
+    { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -291,7 +317,17 @@
     ["สวนฝันกลับหัว", 11, ["hopper,roller/jelly,spitter", "urchin,crab/spitter,spitter,jelly", "roller,crab/swooper,jelly,spitter"]],
     ["ทะเลดาว", 10, ["crab,crab/bat,bat,jelly", "urchin,urchin/swooper,swooper,jelly", "roller,crab/spitter,swooper,jelly"], "dragon"],
     ["ประตูวังราตรี", 14, ["urchin,roller/jelly,jelly,spitter", "crab,crab/swooper,bat,jelly", "roller,urchin/swooper,spitter,jelly"]],
-    ["ราชาและราชินี", 13, ["crab,roller/jelly,swooper,spitter", "urchin,urchin/jelly,jelly,bat", "king,queen/jelly"]]
+    ["ราชาและราชินี", 13, ["crab,roller/jelly,swooper,spitter", "urchin,urchin/jelly,jelly,bat", "king,queen/jelly"]],
+    ["ประตูเปลวสุริยะ", 17, ["lavashroom,lavashroom/firebat", "magmacrab,lavashroom/flamespitter", "magmacrab,cinderroller/firebat,flamespitter"]],
+    ["ทุ่งถ่านแดง", 18, ["cinderroller,lavashroom/emberjelly", "magmacrab,magmacrab/flamespitter,firebat", "cinderroller,magmacrab/emberjelly,ashowl"]],
+    ["ถ้ำลาวาหลับใหล", 19, ["lavashroom,cinderroller/flamespitter,flamespitter", "magmacrab,urchin/emberjelly,firebat", "cinderroller,cinderroller/flamespitter,emberjelly,ashowl"]],
+    ["สะพานหินหลอมเหลว", 20, ["magmacrab,magmacrab/ashowl,ashowl", "cinderroller,lavashroom/emberjelly,flamespitter,firebat", "magmacrab,cinderroller/emberjelly,ashowl,flamespitter"]],
+    ["ปล่องภูเขาไฟ", 21, ["lavashroom,magmacrab/firebat,flamespitter", "cinderroller,cinderroller/emberjelly,emberjelly", "lavaking/flamespitter,firebat"]],
+    ["ป่าเถ้าถ่าน", 22, ["lavashroom,lavashroom/ashowl,firebat,flamespitter", "magmacrab,cinderroller/emberjelly,ashowl,ashowl", "magmacrab,magmacrab/emberjelly,flamespitter,firebat"]],
+    ["ทะเลสาบเพลิง", 23, ["cinderroller,magmacrab/emberjelly,flamespitter", "lavashroom,cinderroller/firebat,firebat,emberjelly", "magmacrab,cinderroller/ashowl,flamespitter,emberjelly"]],
+    ["หอคอยตะวันแดง", 24, ["magmacrab,magmacrab/flamespitter,flamespitter,ashowl", "cinderroller,lavashroom/emberjelly,emberjelly,firebat", "magmacrab,cinderroller/ashowl,ashowl,emberjelly"]],
+    ["ลานบูชาสุริยะ", 25, ["cinderroller,cinderroller/emberjelly,flamespitter,firebat", "magmacrab,lavashroom/ashowl,emberjelly,flamespitter", "lavaking/emberjelly,ashowl"]],
+    ["บัลลังก์ราชินีสุริยะ", 26, ["magmacrab,cinderroller/emberjelly,flamespitter,ashowl", "lavashroom,magmacrab/emberjelly,emberjelly,firebat", "lavaking,sunqueen/emberjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");

@@ -6302,10 +6302,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-11c";
+  const NEWS_VERSION = "2026-10-11d";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 3 · ดินแดนเปลวสุริยะ", text: "ด่าน 21–30 ภูเขาไฟและทุ่งถ่านแดง มอนสเตอร์ธาตุไฟ 7 ชนิด บอสราชาเห็ดลาวา และราชินีสุริยะ ผ่านครั้งแรกได้เพชรไปสุ่มการ์ด", image: "chapter3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "เพลิง · เมฆา · ฟ้าใส", text: "สามตัวละครใหม่ในการสุ่มการ์ด อัศวินสาวหอกเพลิง ★5 จอมเวทน้อยขี่เมฆสายฟ้า ★4 และนักดนตรีสาวพิณจันทร์ ★3 เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha2", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "สุ่มการ์ด · 8 ตัวใหม่", text: "ซากุระ จันทรา ทองคำ มิว ราตรี กระต่ายจันทร์ นกฮูกดาว หมาป่าเงิน ตัวละครและสัตว์เลี้ยงทุกตัวได้จากการสุ่มการ์ดด้วยเพชร เพชรได้จากผ่านด่านครั้งแรก รางวัลรายวัน ลานประลอง และด่านประจำวัน เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "โหมดใหม่", title: "ศึกการ์ดแสงจันทร์", text: "จัดทีมการ์ด 5 ใบ เลือกลำดับสกิลเองทุกเทิร์น สู้มอนสเตอร์ 20 ด่าน 2 บท พร้อมบอส ชนะแล้วได้เหรียญและการ์ดใหม่ ใช้เหรียญอัปเลเวลการ์ด ตัวละครและสัตว์เลี้ยงที่มีในเกมได้การ์ดของตัวนั้นด้วย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6431,6 +6432,12 @@
       img.src = pictures[kind];
       img.alt = "";
       return img;
+    }
+    if (kind === "chapter3") {
+      const scene = document.createElement("div");
+      scene.className = "news-scene news-scene-7";
+      scene.innerHTML = "<b>21–30</b>";
+      return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {
       const scene = document.createElement("div");

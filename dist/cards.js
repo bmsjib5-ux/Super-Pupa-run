@@ -44,6 +44,12 @@
   const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300 };
   const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ" };
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
+  // A monster's picture; the burning ones of chapter 3 are recoloured.
+  function foeArt(id) {
+    const art = portrait(E.FOES[id].art);
+    if (E.FOES[id].hue) art.style.filter = `hue-rotate(${E.FOES[id].hue}deg) saturate(1.4) drop-shadow(0 0 .3rem rgba(255,120,40,.7))`;
+    return art;
+  }
   function portrait(kind) {
     const art = plainPortrait(kind);
     if (E.CARDS[kind] && wearing(kind)) { art.classList.add("is-costume"); art.style.setProperty("--hue", `${COSTUME_HUE[kind] || 180}deg`); }
@@ -370,7 +376,7 @@
       const box = el("section", `dungeon-box is-${kind}${done ? " is-done" : ""}`);
       box.append(el("span", "dungeon-icon", d.icon), el("h3", null, d.name), el("p", "sheet-text", d.text));
       const foes = el("div", "sheet-foes");
-      for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) { const fig = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[id].art), el("figcaption", null, E.FOES[id].name)); foes.append(fig); }
+      for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) { const fig = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`); fig.append(foeArt(id), el("figcaption", null, E.FOES[id].name)); foes.append(fig); }
       box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)} + 💎 ${stage.gems}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด + 💎 ${stage.gems}`));
       const go = button(done ? "secondary-button" : "primary-button", done ? `ผ่านแล้ววันนี้ ✓ · มาใหม่ใน ${untilMidnight()}` : "เข้าด่าน ⚔", () => startBattle(stage));
       go.disabled = done;
@@ -418,7 +424,7 @@
     const box = el("section", "arena-box");
     box.append(el("h3", "sheet-title", `ชั้น ${tier.num}${tier.boss ? " · มีบอส" : ""}`), el("p", "sheet-sub", `มอนสเตอร์ 10 ตัว Lv ${tier.lv} · รางวัล 💎 ${tier.gems} · ● ${tier.coins} · EXP ${tier.xp} ต่อการ์ด`));
     const foes = el("div", "sheet-foes");
-    for (const f of tier.waves[0]) { const fig = el("figure", `sheet-foe${E.FOES[f.id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[f.id].art), el("figcaption", null, E.FOES[f.id].name)); foes.append(fig); }
+    for (const f of tier.waves[0]) { const fig = el("figure", `sheet-foe${E.FOES[f.id].boss ? " is-boss" : ""}`); fig.append(foeArt(f.id), el("figcaption", null, E.FOES[f.id].name)); foes.append(fig); }
     const mine = el("div", "arena-team");
     for (const t of team) mine.append(cardTile(t.id, () => cardSheet(t.id)));
     const go = button("primary-button", "เริ่มประลอง ⚔", () => startBattle(tier));
@@ -441,7 +447,7 @@
       for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
         const openStage = isOpen(stage.num), done = isCleared(stage.num);
         const tile = button(`level-tile${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}`, null, () => stageSheet(stage));
-        tile.style.setProperty("--accent", stage.num > 10 ? "#2fb6a6" : "#c5528a");
+        tile.style.setProperty("--accent", stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
         tile.disabled = !openStage;
         tile.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
         tile.append(el("b", null, openStage ? String(stage.num) : "🔒"), el("span", "level-name", stage.name));
@@ -635,7 +641,7 @@
     const foes = el("div", "sheet-foes");
     for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) {
       const foe = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`);
-      foe.append(portrait(E.FOES[id].art), el("figcaption", null, E.FOES[id].name));
+      foe.append(foeArt(id), el("figcaption", null, E.FOES[id].name));
       foes.append(foe);
     }
     parts.push(foes);
@@ -697,7 +703,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: v.stage.num > 10 ? 2 : 1 }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.num > 20 ? 3 : v.stage.num > 10 ? 2 : 1 }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -745,7 +751,7 @@
         tile.style.zIndex = String(Math.round(y));
         tile.style.setProperty("--depth", String(.82 + y / 500));
         const art = el("span", "unit-art");
-        art.append(portrait(side === "foe" ? E.FOES[u.id].art : u.id));
+        art.append(side === "foe" ? foeArt(u.id) : portrait(u.id));
         const head = el("span", "unit-head");
         const hp = el("span", "unit-hp");
         hp.append(el("i", "unit-hp-fill"), el("i", "unit-hp-shield"));
