@@ -47,7 +47,7 @@
   // A monster's picture; the burning ones of chapter 3 are recoloured.
   function foeArt(id) {
     const art = portrait(E.FOES[id].art);
-    if (E.FOES[id].hue) art.style.filter = `hue-rotate(${E.FOES[id].hue}deg) saturate(1.4) drop-shadow(0 0 .3rem rgba(255,120,40,.7))`;
+    if (E.FOES[id].hue) art.style.filter = `hue-rotate(${E.FOES[id].hue}deg) saturate(1.4) drop-shadow(0 0 .3rem ${E.FOES[id].glow || "rgba(255,120,40,.7)"})`;
     return art;
   }
   function portrait(kind) {
@@ -447,7 +447,7 @@
       for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
         const openStage = isOpen(stage.num), done = isCleared(stage.num);
         const tile = button(`level-tile${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}`, null, () => stageSheet(stage));
-        tile.style.setProperty("--accent", stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
+        tile.style.setProperty("--accent", stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
         tile.disabled = !openStage;
         tile.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
         tile.append(el("b", null, openStage ? String(stage.num) : "🔒"), el("span", "level-name", stage.name));
@@ -703,7 +703,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: v.stage.num > 20 ? 3 : v.stage.num > 10 ? 2 : 1 }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: Math.min(4, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");

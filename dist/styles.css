@@ -1137,3 +1137,5 @@ button { touch-action: manipulation; }
 .gift-toast[hidden] { display: none; }
 .gift-toast b { color: #fff; }
 @keyframes gift-in { from { opacity: 0; transform: translate(-50%, -1rem); } }
+.news-scene-ice { filter: hue-rotate(170deg) saturate(.7) brightness(1.15); }
+.news-scene-ice b { filter: hue-rotate(-170deg); }

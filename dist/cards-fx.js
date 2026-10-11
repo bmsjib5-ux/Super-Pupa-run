@@ -79,9 +79,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter >= 3;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter >= 4;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (fire) { sky.addColorStop(0, "#2a0a1a"); sky.addColorStop(.5, "#7a2418"); sky.addColorStop(1, "#2a0c0c"); }
+      if (ice) { sky.addColorStop(0, "#0e1a3a"); sky.addColorStop(.55, "#3a5a8a"); sky.addColorStop(1, "#1a2a48"); }
+      else if (fire) { sky.addColorStop(0, "#2a0a1a"); sky.addColorStop(.5, "#7a2418"); sky.addColorStop(1, "#2a0c0c"); }
       else if (lake) { sky.addColorStop(0, "#0c1a46"); sky.addColorStop(.55, "#1d4a7a"); sky.addColorStop(1, "#0b2a3a"); }
       else { sky.addColorStop(0, "#160b38"); sky.addColorStop(.6, "#4a1f5c"); sky.addColorStop(1, "#1a0d2e"); }
       s.fillStyle = sky; s.fillRect(0, 0, w, h);
@@ -95,11 +96,20 @@
       // moon
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
-      halo.addColorStop(0, fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
+      halo.addColorStop(0, ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = halo; s.beginPath(); s.arc(mx, my, mr * 3.2, 0, TAU); s.fill();
-      s.fillStyle = fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
+      s.fillStyle = ice ? "#f4fbff" : fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
       // far hills
       const ground = h * .34; // the fighters stand below this line
+      if (ice) {
+        // snowy peaks behind the hills
+        for (const [x, k] of [[w * .12, .9], [w * .38, 1.25], [w * .7, 1.05], [w * .95, .8]]) {
+          const top = ground - (h * .24) * k, half = w * .14 * k;
+          s.fillStyle = "#2c4670"; s.beginPath(); s.moveTo(x - half, ground); s.lineTo(x, top); s.lineTo(x + half, ground); s.fill();
+          s.fillStyle = "#e8f4ff"; s.beginPath(); s.moveTo(x - half * .32, top + (ground - top) * .32); s.lineTo(x, top); s.lineTo(x + half * .32, top + (ground - top) * .32);
+          s.lineTo(x + half * .12, top + (ground - top) * .26); s.lineTo(x, top + (ground - top) * .36); s.lineTo(x - half * .12, top + (ground - top) * .26); s.fill();
+        }
+      }
       if (fire) {
         // volcanoes with glowing tops behind the hills
         for (const [x, k] of [[w * .18, 1], [w * .62, 1.3], [w * .92, .8]]) {
@@ -112,11 +122,21 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (fire) {
+      if (ice) {
+        // a snowfield with blue shadows and ice crystals
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#cfe2f5"); floor.addColorStop(1, "#6f8fb8");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        for (let i = 0; i < 26; i++) {
+          const x = (i * 137.9) % w, y = ground + 12 + ((i * 61.7) % (h - ground - 16)), k = .5 + (y - ground) / (h - ground);
+          s.fillStyle = i % 2 ? "rgba(140,200,255,.55)" : "rgba(255,255,255,.7)";
+          s.beginPath(); s.moveTo(x, y - 12 * k); s.lineTo(x + 4 * k, y); s.lineTo(x - 4 * k, y); s.fill();
+        }
+      } else if (fire) {
         // scorched ground with cracks of lava
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#3a1612"); floor.addColorStop(1, "#140606");
@@ -152,7 +172,7 @@
       // a glowing circle of runes in the middle of the field
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -160,7 +180,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       // soft spotlight where the two sides meet
@@ -178,10 +198,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter >= 3;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter >= 4;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), colour: fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire, ember: fire
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire, ember: fire || ice
       };
     }
 

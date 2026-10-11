@@ -6302,10 +6302,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-11d";
+  const NEWS_VERSION = "2026-10-12a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", text: "ด่าน 31–40 ภูเขาหิมะและทะเลสาบเยือกแข็ง มอนสเตอร์น้ำแข็ง 8 ชนิดที่ทำให้มึนงงและลดเกราะ บอสราชาเห็ดน้ำแข็ง และราชินีหิมะ ผ่านครั้งแรกได้เพชร", image: "chapter4", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 3 · ดินแดนเปลวสุริยะ", text: "ด่าน 21–30 ภูเขาไฟและทุ่งถ่านแดง มอนสเตอร์ธาตุไฟ 7 ชนิด บอสราชาเห็ดลาวา และราชินีสุริยะ ผ่านครั้งแรกได้เพชรไปสุ่มการ์ด", image: "chapter3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "เพลิง · เมฆา · ฟ้าใส", text: "สามตัวละครใหม่ในการสุ่มการ์ด อัศวินสาวหอกเพลิง ★5 จอมเวทน้อยขี่เมฆสายฟ้า ★4 และนักดนตรีสาวพิณจันทร์ ★3 เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha2", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "สุ่มการ์ด · 8 ตัวใหม่", text: "ซากุระ จันทรา ทองคำ มิว ราตรี กระต่ายจันทร์ นกฮูกดาว หมาป่าเงิน ตัวละครและสัตว์เลี้ยงทุกตัวได้จากการสุ่มการ์ดด้วยเพชร เพชรได้จากผ่านด่านครั้งแรก รางวัลรายวัน ลานประลอง และด่านประจำวัน เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
@@ -6433,10 +6434,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "chapter3") {
+    if (kind === "chapter3" || kind === "chapter4") {
       const scene = document.createElement("div");
-      scene.className = "news-scene news-scene-7";
-      scene.innerHTML = "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

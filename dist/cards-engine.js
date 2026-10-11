@@ -287,6 +287,32 @@
       ]
     }
   });
+  // Chapter 4: frozen ones. Their skills freeze (stun) and crack armour.
+  const FROST = "rgba(140,210,255,.9)";
+  Object.assign(FOES, {
+    frostshroom: { name: "เห็ดน้ำแข็ง", role: "balance", art: "walker", hue: 270, glow: FROST, tier: 1.3, hp: 1.15, skills: [{ name: "สปอร์เกล็ดหิมะ", cd: 3, target: "front", power: 1.1, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    snowbat: { name: "ค้างคาวหิมะ", role: "attack", art: "bat", hue: 300, glow: FROST, tier: 1.3, spd: 116, skills: [{ name: "โฉบลมหนาว", cd: 3, target: "back", power: 1.05, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    icecrab: { name: "ปูผลึกน้ำแข็ง", role: "attack", art: "crab", hue: 180, glow: FROST, tier: 1.3, def: 1.4, skills: [{ name: "ก้ามน้ำแข็ง", cd: 3, target: "one", power: 2.2, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    frostjelly: { name: "แมงกะพรุนน้ำแข็ง", role: "support", art: "jelly", hue: 340, glow: FROST, tier: 1.3, skills: [{ name: "ม่านน้ำแข็ง", cd: 3, target: "allies", heal: 1.2, shield: .8, fx: [{ k: "shield", turns: 2 }] }] },
+    glacierroller: { name: "ตัวกลิ้งธารน้ำแข็ง", role: "defense", art: "roller", hue: 170, glow: FROST, tier: 1.3, atk: 1.3, skills: [{ name: "กลิ้งหิมะถล่ม", cd: 3, target: "front", power: 1.35, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    iceurchin: { name: "เม่นน้ำแข็ง", role: "defense", art: "urchin", hue: 340, glow: FROST, tier: 1.3, skills: [{ name: "หนามน้ำแข็ง", cd: 4, target: "self", fx: [{ k: "taunt", turns: 2 }, { k: "defUp", v: .5, turns: 2 }] }] },
+    frostflower: { name: "ดอกไม้หิมะ", role: "magic", art: "spitter", hue: 330, glow: FROST, tier: 1.3, skills: [{ name: "พายุเกล็ดหิมะ", cd: 3, target: "all", power: .85, fx: [{ k: "defDown", v: .15, turns: 2 }] }] },
+    blizzardbird: { name: "นกโคมพายุหิมะ", role: "attack", art: "swooper", hue: 170, glow: FROST, tier: 1.3, spd: 114, skills: [{ name: "ดิ่งพายุหิมะ", cd: 3, target: "back", power: 1.35, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    frostking: {
+      name: "ราชาเห็ดน้ำแข็ง", role: "balance", art: "king", hue: 270, glow: FROST, tier: 1.3, boss: true, hp: 4, atk: 1.3, def: 1.3,
+      skills: [
+        { name: "หิมะถล่มทลาย", cd: 3, target: "all", power: 1.2, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "เกราะธารน้ำแข็ง", cd: 4, first: 1, target: "self", shield: 3, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .4, turns: 2 }] }
+      ]
+    },
+    icequeen: {
+      name: "ราชินีหิมะ", role: "magic", art: "queen", hue: 300, glow: FROST, tier: 1.3, boss: true, hp: 4, atk: 1.3, def: 1.2, spd: 114,
+      skills: [
+        { name: "พายุน้ำแข็งนิรันดร์", cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "จุมพิตแช่แข็ง", cd: 4, first: 1, target: "one", power: 2.6, fx: [{ k: "stun", chance: .6, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -295,7 +321,8 @@
   const CHAPTERS = [
     { name: "บทที่ 1 · ป่าเชอร์รี่ยามค่ำ", from: 1, to: 10 },
     { name: "บทที่ 2 · ทะเลสาบภาพฝัน", from: 11, to: 20 },
-    { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 }
+    { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 },
+    { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -327,7 +354,17 @@
     ["ทะเลสาบเพลิง", 23, ["cinderroller,magmacrab/emberjelly,flamespitter", "lavashroom,cinderroller/firebat,firebat,emberjelly", "magmacrab,cinderroller/ashowl,flamespitter,emberjelly"]],
     ["หอคอยตะวันแดง", 24, ["magmacrab,magmacrab/flamespitter,flamespitter,ashowl", "cinderroller,lavashroom/emberjelly,emberjelly,firebat", "magmacrab,cinderroller/ashowl,ashowl,emberjelly"]],
     ["ลานบูชาสุริยะ", 25, ["cinderroller,cinderroller/emberjelly,flamespitter,firebat", "magmacrab,lavashroom/ashowl,emberjelly,flamespitter", "lavaking/emberjelly,ashowl"]],
-    ["บัลลังก์ราชินีสุริยะ", 26, ["magmacrab,cinderroller/emberjelly,flamespitter,ashowl", "lavashroom,magmacrab/emberjelly,emberjelly,firebat", "lavaking,sunqueen/emberjelly"]]
+    ["บัลลังก์ราชินีสุริยะ", 26, ["magmacrab,cinderroller/emberjelly,flamespitter,ashowl", "lavashroom,magmacrab/emberjelly,emberjelly,firebat", "lavaking,sunqueen/emberjelly"]],
+    ["เชิงเขาหิมะ", 31, ["frostshroom,frostshroom/snowbat", "icecrab,frostshroom/frostflower", "icecrab,glacierroller/snowbat,frostflower"]],
+    ["ป่าสนน้ำแข็ง", 32, ["glacierroller,frostshroom/frostjelly", "iceurchin,icecrab/frostflower,snowbat", "glacierroller,icecrab/frostjelly,blizzardbird"]],
+    ["ทะเลสาบเยือกแข็ง", 33, ["icecrab,icecrab/frostflower,snowbat", "iceurchin,glacierroller/frostjelly,frostflower", "icecrab,glacierroller/blizzardbird,blizzardbird,frostjelly"]],
+    ["ถ้ำผลึกน้ำแข็ง", 34, ["iceurchin,frostshroom/frostflower,frostflower", "glacierroller,glacierroller/frostjelly,snowbat", "iceurchin,icecrab/frostjelly,frostflower,blizzardbird"]],
+    ["ประตูพายุหิมะ", 35, ["frostshroom,icecrab/snowbat,frostflower", "glacierroller,iceurchin/frostjelly,frostjelly", "frostking/frostflower,snowbat"]],
+    ["สะพานธารน้ำแข็ง", 36, ["icecrab,glacierroller/blizzardbird,snowbat,frostflower", "iceurchin,frostshroom/frostjelly,blizzardbird", "icecrab,icecrab/frostjelly,frostflower,snowbat"]],
+    ["หุบเขาลมหนาว", 37, ["glacierroller,glacierroller/frostjelly,frostflower,snowbat", "iceurchin,icecrab/blizzardbird,blizzardbird,frostjelly", "icecrab,frostshroom/frostflower,frostflower,frostjelly"]],
+    ["ยอดผาน้ำแข็ง", 38, ["iceurchin,iceurchin/frostflower,frostflower,blizzardbird", "icecrab,glacierroller/frostjelly,frostjelly,snowbat", "glacierroller,icecrab/blizzardbird,frostflower,frostjelly"]],
+    ["วิหารออโรรา", 38, ["icecrab,glacierroller/frostjelly,frostflower,blizzardbird", "iceurchin,frostshroom/frostjelly,snowbat,frostflower", "frostking/frostjelly,blizzardbird"]],
+    ["บัลลังก์ราชินีหิมะ", 39, ["glacierroller,icecrab/frostjelly,frostflower,blizzardbird", "iceurchin,iceurchin/frostjelly,frostjelly,snowbat", "frostking,icequeen/frostjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
@@ -358,8 +395,9 @@
     const scale = foe ? FOE_SCALE : { hp: 1, atk: 1, def: 1 };
     const g = growth(lv);
     return {
-      hp: Math.round(role.hp * HP_SCALE * (def.hp || 1) * rare * scale.hp * g),
-      atk: Math.round(role.atk * (def.atk || 1) * rare * scale.atk * g),
+      // tier: a later chapter's monsters hit and last a little harder
+      hp: Math.round(role.hp * HP_SCALE * (def.hp || 1) * (def.tier || 1) * rare * scale.hp * g),
+      atk: Math.round(role.atk * (def.atk || 1) * (def.tier || 1) * rare * scale.atk * g),
       def: Math.round(role.def * (def.def || 1) * rare * scale.def * g),
       spd: Math.round((def.spd || role.spd) + (lv - 1) * .5),
       crit: def.crit || role.crit
