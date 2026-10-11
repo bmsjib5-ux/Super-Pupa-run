@@ -373,6 +373,34 @@
       ]
     }
   });
+  // Chapter 7: creatures of the nebula, all the tricks at once: drain,
+  // burn, freeze and armour breaking.
+  const NEBULA = "rgba(120,230,255,.95)";
+  const STARRY = "hue-rotate(70deg) saturate(2.4) contrast(1.1) brightness(1.15)";
+  Object.assign(FOES, {
+    nebulashroom: { name: "เห็ดเนบิวลา", role: "balance", art: "walker", look: STARRY, glow: NEBULA, tier: 2.8, skills: [{ name: "สปอร์ดาวหาง", cd: 3, target: "front", power: 1.2, drain: .3, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    cometbat: { name: "ค้างคาวดาวหาง", role: "attack", art: "bat", look: STARRY, glow: NEBULA, tier: 2.8, spd: 122, skills: [{ name: "โฉบหางดาวหาง", cd: 3, target: "back", power: 1.2, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    starcrab: { name: "ปูดวงดาว", role: "attack", art: "crab", look: STARRY, glow: NEBULA, tier: 2.8, def: 1.5, skills: [{ name: "ก้ามแรงโน้มถ่วง", cd: 3, target: "one", power: 2.4, fx: [{ k: "stun", chance: .35, turns: 1 }] }] },
+    cosmicjelly: { name: "แมงกะพรุนจักรวาล", role: "support", art: "jelly", look: STARRY, glow: NEBULA, tier: 2.8, skills: [{ name: "คลื่นแสงเนบิวลา", cd: 3, target: "allies", heal: 1.4, fx: [{ k: "atkUp", v: .25, turns: 2 }, { k: "cleanse" }] }] },
+    meteorroller: { name: "ตัวกลิ้งอุกกาบาต", role: "defense", art: "roller", look: STARRY, glow: NEBULA, tier: 2.8, atk: 1.35, skills: [{ name: "อุกกาบาตกลิ้ง", cd: 3, target: "front", power: 1.45, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    voidurchin: { name: "เม่นหลุมดำ", role: "defense", art: "urchin", look: STARRY, glow: NEBULA, tier: 2.8, skills: [{ name: "สนามแรงโน้มถ่วง", cd: 4, target: "self", shield: 2.5, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .4, turns: 2 }] }] },
+    galaxyflower: { name: "ดอกไม้กาแล็กซี", role: "magic", art: "spitter", look: STARRY, glow: NEBULA, tier: 2.8, skills: [{ name: "ฝนดาวเหนือ", cd: 3, target: "all", power: .95, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
+    orbitbird: { name: "นกโคมวงโคจร", role: "attack", art: "swooper", look: STARRY, glow: NEBULA, tier: 2.8, spd: 120, skills: [{ name: "ดิ่งวงโคจร", cd: 3, target: "back", power: 1.5, drain: .4 }] },
+    cosmicking: {
+      name: "ราชาเห็ดจักรวาล", role: "balance", art: "king", look: STARRY, glow: NEBULA, tier: 2.8, boss: true, hp: 4.6, atk: 1.35, def: 1.35,
+      skills: [
+        { name: "บิ๊กแบงถล่ม", cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .4, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+        { name: "หลุมดำกลืนกิน", cd: 4, first: 1, target: "front", power: 1.8, drain: .5, fx: [{ k: "defDown", v: .3, turns: 2 }] }
+      ]
+    },
+    nebulaqueen: {
+      name: "ราชินีเนบิวลา", role: "magic", art: "queen", look: STARRY, glow: NEBULA, tier: 2.8, boss: true, hp: 4.6, atk: 1.45, def: 1.25, spd: 122,
+      skills: [
+        { name: "พายุซูเปอร์โนวา", cd: 3, target: "all", power: 1.45, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จุมพิตกาแล็กซี", cd: 4, first: 1, target: "one", power: 3.3, drain: .7, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -384,7 +412,8 @@
     { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 },
     { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 },
     { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 },
-    { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 }
+    { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 },
+    { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -446,7 +475,17 @@
     ["หอระฆังแสง", 53, ["sunroller,sunroller/lightjelly,starflower,seraphbat", "haloburchin,goldcrab/angelbird,angelbird,lightjelly", "goldcrab,haloshroom/starflower,starflower,lightjelly"]],
     ["ห้องโถงทางช้างเผือก", 54, ["haloburchin,haloburchin/starflower,starflower,angelbird", "goldcrab,sunroller/lightjelly,lightjelly,seraphbat", "sunroller,goldcrab/angelbird,starflower,lightjelly"]],
     ["แท่นบูชาสุริยจันทรา", 55, ["goldcrab,sunroller/lightjelly,starflower,angelbird", "haloburchin,haloshroom/lightjelly,seraphbat,starflower", "heavenking/lightjelly,angelbird"]],
-    ["บัลลังก์ราชินีดวงดาว", 56, ["sunroller,goldcrab/lightjelly,starflower,angelbird", "haloburchin,haloburchin/lightjelly,lightjelly,seraphbat", "heavenking,starqueen/lightjelly"]]
+    ["บัลลังก์ราชินีดวงดาว", 56, ["sunroller,goldcrab/lightjelly,starflower,angelbird", "haloburchin,haloburchin/lightjelly,lightjelly,seraphbat", "heavenking,starqueen/lightjelly"]],
+    ["ประตูสู่ห้วงอวกาศ", 56, ["nebulashroom,nebulashroom/cometbat", "starcrab,nebulashroom/galaxyflower", "starcrab,meteorroller/cometbat,galaxyflower"]],
+    ["ทุ่งอุกกาบาต", 57, ["meteorroller,nebulashroom/cosmicjelly", "voidurchin,starcrab/galaxyflower,cometbat", "meteorroller,starcrab/cosmicjelly,orbitbird"]],
+    ["สวนดาวหาง", 58, ["starcrab,starcrab/galaxyflower,cometbat", "voidurchin,meteorroller/cosmicjelly,galaxyflower", "starcrab,meteorroller/orbitbird,orbitbird,cosmicjelly"]],
+    ["วงแหวนดาวเคราะห์", 59, ["voidurchin,nebulashroom/galaxyflower,galaxyflower", "meteorroller,meteorroller/cosmicjelly,cometbat", "voidurchin,starcrab/cosmicjelly,galaxyflower,orbitbird"]],
+    ["ใจกลางเนบิวลา", 60, ["nebulashroom,starcrab/cometbat,galaxyflower", "meteorroller,voidurchin/cosmicjelly,cosmicjelly", "cosmicking/galaxyflower,cometbat"]],
+    ["สะพานทางช้างเผือก", 61, ["starcrab,meteorroller/orbitbird,cometbat,galaxyflower", "voidurchin,nebulashroom/cosmicjelly,orbitbird", "starcrab,starcrab/cosmicjelly,galaxyflower,cometbat"]],
+    ["หลุมดำนิรันดร์", 62, ["meteorroller,meteorroller/cosmicjelly,galaxyflower,cometbat", "voidurchin,starcrab/orbitbird,orbitbird,cosmicjelly", "starcrab,nebulashroom/galaxyflower,galaxyflower,cosmicjelly"]],
+    ["ซูเปอร์โนวา", 63, ["voidurchin,voidurchin/galaxyflower,galaxyflower,orbitbird", "starcrab,meteorroller/cosmicjelly,cosmicjelly,cometbat", "meteorroller,starcrab/orbitbird,galaxyflower,cosmicjelly"]],
+    ["แท่นกำเนิดดวงดาว", 63, ["starcrab,meteorroller/cosmicjelly,galaxyflower,orbitbird", "voidurchin,nebulashroom/cosmicjelly,cometbat,galaxyflower", "cosmicking/cosmicjelly,orbitbird"]],
+    ["บัลลังก์ราชินีเนบิวลา", 57, ["meteorroller,starcrab/cosmicjelly,galaxyflower,orbitbird", "voidurchin,voidurchin/cosmicjelly,cosmicjelly,cometbat", "cosmicking,nebulaqueen/cosmicjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");

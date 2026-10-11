@@ -459,7 +459,7 @@
       for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
         const openStage = isOpen(stage.num), done = isCleared(stage.num);
         const tile = button(`level-tile${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}`, null, () => stageSheet(stage));
-        tile.style.setProperty("--accent", stage.num > 50 ? "#ffd76a" : stage.num > 40 ? "#b067ff" : stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
+        tile.style.setProperty("--accent", stage.num > 60 ? "#7fe8ff" : stage.num > 50 ? "#ffd76a" : stage.num > 40 ? "#b067ff" : stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
         tile.disabled = !openStage;
         tile.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
         tile.append(el("b", null, openStage ? String(stage.num) : "🔒"), el("span", "level-name", stage.name));
@@ -745,7 +745,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: Math.min(6, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: Math.min(7, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");

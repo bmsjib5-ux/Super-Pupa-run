@@ -22,7 +22,7 @@ test("cards: every stage finishes, and a strong team wins it", () => {
     // stage may need a few tries, as in play
     const strong = ["thongkham", "phloeng", "chantra", "mekha", "pupav2"];
     // chapter 5 needs raised stars: level 50 with two stars
-    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 50 ? play(stage, 75, stage.num * 31 + n, strong, 4 * E.AWAKE_BONUS) : stage.num > 40 ? play(stage, 50, stage.num * 31 + n, strong, 2 * E.AWAKE_BONUS) : stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
+    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 60 ? play(stage, 80, stage.num * 31 + n, strong, 5 * E.AWAKE_BONUS) : stage.num > 50 ? play(stage, 75, stage.num * 31 + n, strong, 4 * E.AWAKE_BONUS) : stage.num > 40 ? play(stage, 50, stage.num * 31 + n, strong, 2 * E.AWAKE_BONUS) : stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
     const b = tries.find(t => t.result === "won");
     assert.ok(b, `stage ${stage.num}`);
     assert.ok(tries.every(t => t.phase === "done"));

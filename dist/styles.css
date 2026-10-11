@@ -1141,3 +1141,4 @@ button { touch-action: manipulation; }
 .news-scene-ice b { filter: hue-rotate(-170deg); }
 .news-scene-dark { filter: hue-rotate(60deg) saturate(1.3) brightness(.55) contrast(1.3); }
 .news-scene-dark b { filter: hue-rotate(-60deg) brightness(1.8); }
+.news-scene-cosmos { filter: hue-rotate(200deg) saturate(1.8) brightness(.7) contrast(1.2); }

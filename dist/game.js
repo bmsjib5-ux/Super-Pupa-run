@@ -6303,10 +6303,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-12c";
+  const NEWS_VERSION = "2026-10-12d";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 7 · ห้วงจักรวาลเนบิวลา", text: "ด่าน 61–70 กลางอวกาศ เมฆเนบิวลา ดาวเคราะห์วงแหวน และพื้นคริสตัล มอนสเตอร์จักรวาล 8 ชนิดที่ใช้ทุกลูกเล่น บอสราชาเห็ดจักรวาล และราชินีเนบิวลา ด่านสุดท้ายสำหรับการ์ดดาวเต็ม", image: "chapter7", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 6 · วิหารสวรรค์ดวงดาว", text: "ด่าน 51–60 เมืองบนเมฆทองคำ เกาะลอยฟ้าและวิหารแสง ผู้พิทักษ์สวรรค์ 8 ชนิดที่ฟื้นพลัง กางเกราะ และบัฟกันเอง บอสราชาเห็ดสวรรค์ และราชินีดวงดาว ต้องอัปดาวการ์ดถึงจะไหว", image: "chapter6", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "อัปดาวการ์ด · บทที่ 5 อาณาจักรเงาราตรี", text: "การ์ดอัปได้ 5 ดาว ดาวละเพิ่มเลเวลสูงสุด 10 (ถึง Lv 80) และพลัง 8% ใช้เศษการ์ดจากการสุ่มได้ซ้ำ หรือผลึกดาวจากด่านประจำวัน ลานประลอง และด่านบท 4–5 ด่านใหม่ 41–50 ใต้สุริยคราส บอสราชาเห็ดเงา และราชินีสุริยคราส", image: "chapter5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", text: "ด่าน 31–40 ภูเขาหิมะและทะเลสาบเยือกแข็ง มอนสเตอร์น้ำแข็ง 8 ชนิดที่ทำให้มึนงงและลดเกราะ บอสราชาเห็ดน้ำแข็ง และราชินีหิมะ ผ่านครั้งแรกได้เพชร", image: "chapter4", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6437,10 +6438,10 @@
       img.alt = "";
       return img;
     }
-    if (kind === "chapter3" || kind === "chapter4" || kind === "chapter5" || kind === "chapter6") {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {
