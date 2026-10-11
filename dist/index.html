@@ -13,12 +13,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261010a">
-    <script src="game.js?v=20261010a" defer></script>
-    <script type="module" src="pupa3d.js?v=20261010a"></script>
+    <link rel="stylesheet" href="styles.css?v=20261011a">
+    <link rel="stylesheet" href="cards.css?v=20261011a">
+    <script src="cards-engine.js?v=20261011a" defer></script>
+    <script src="game.js?v=20261011a" defer></script>
+    <script src="cards.js?v=20261011a" defer></script>
+    <script type="module" src="pupa3d.js?v=20261011a"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
-    <script src="config.js?v=20261010a"></script>
-    <script type="module" src="account.js?v=20261010a"></script>
+    <script src="config.js?v=20261011a"></script>
+    <script type="module" src="account.js?v=20261011a"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -109,6 +112,7 @@
                     <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
                     <button class="secondary-button shop-button" type="button" data-open-levels>ทุกด่าน</button>
                     <button class="secondary-button shop-button runner-button" type="button" data-open-runner>🏃 วิ่งหลบ</button>
+                    <button class="secondary-button shop-button cards-button" type="button" data-open-cards>🃏 ศึกการ์ด</button>
                     <button id="newsBtn" class="secondary-button shop-button" type="button">มีอะไรใหม่</button>
                     <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
                   </div>
@@ -208,6 +212,9 @@
             <div id="levelList" class="shop-list level-list"></div>
           </div>
         </div>
+
+        <!-- Card battles: filled in by cards.js. -->
+        <div id="cardsScreen" class="overlay shop-overlay cards-overlay" role="dialog" aria-modal="true" aria-labelledby="cardsTitle" hidden></div>
 
         <!-- Paying for a coin pack: pick TrueMoney Wallet or PromptPay, then
              follow the payment until the coins arrive. -->

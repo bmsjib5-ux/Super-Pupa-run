@@ -20,7 +20,7 @@
   // Stats grow by a tenth of the level-1 value per level.
   const growth = (lv) => 1 + .1 * (lv - 1);
   // Coins to go from lv to lv + 1.
-  const levelCost = (lv) => 10 * lv + 10;
+  const levelCost = (lv) => 5 * lv + 10;
 
   const ROLES = {
     attack: { name: "โจมตี", icon: "⚔", hp: 900, atk: 110, def: 45, spd: 100, crit: .15 },
@@ -29,6 +29,8 @@
     support: { name: "สนับสนุน", icon: "✚", hp: 920, atk: 86, def: 50, spd: 106, crit: .05 },
     balance: { name: "สมดุล", icon: "◆", hp: 1020, atk: 96, def: 56, spd: 95, crit: .1 }
   };
+  // Keeps fights short: about half a role's listed hp.
+  const HP_SCALE = .5;
   // Rarer cards start stronger.
   const RARITY = { 3: 1, 4: 1.12, 5: 1.25 };
 
@@ -152,14 +154,14 @@
     roller: { name: "ตัวกลิ้งหนาม", role: "defense", art: "roller", atk: 1.3, skills: [{ name: "กลิ้งบดขยี้", cd: 3, target: "front", power: 1.3 }] },
     swooper: { name: "นกโคมดิ่ง", role: "attack", art: "swooper", spd: 108, skills: [{ name: "ดิ่งพสุธา", cd: 3, target: "back", power: 1.2, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
     king: {
-      name: "ราชาเห็ดหนาม", role: "balance", art: "king", boss: true, hp: 4.5, atk: 1.25, def: 1.2,
+      name: "ราชาเห็ดหนาม", role: "balance", art: "king", boss: true, hp: 3.5, atk: 1.25, def: 1.2,
       skills: [
         { name: "เหยียบสะเทือนป่า", cd: 3, target: "all", power: 1.1, fx: [{ k: "stun", chance: .25, turns: 1 }] },
         { name: "สปอร์ราชา", cd: 4, first: 1, target: "all", power: .6, fx: [{ k: "burn", power: .45, turns: 2 }] }
       ]
     },
     queen: {
-      name: "ราชินีค้างคาว", role: "magic", art: "queen", boss: true, hp: 4.5, atk: 1.2, def: 1.2, spd: 110,
+      name: "ราชินีค้างคาว", role: "magic", art: "queen", boss: true, hp: 3.5, atk: 1.2, def: 1.2, spd: 110,
       skills: [
         { name: "พายุปีกราตรี", cd: 3, target: "all", power: 1.2 },
         { name: "จุมพิตดูดพลัง", cd: 4, first: 1, target: "one", power: 2.6, drain: .6 }
@@ -186,15 +188,15 @@
     ["หุบเขาลมหนาว", 5, ["hopper,hopper/bat,bat", "walker,urchin/spitter,spitter", "hopper,urchin/bat,spitter,bat"]],
     ["ป่าลึกยามดึก", 6, ["walker,walker/bat,spitter", "urchin,hopper/bat,bat,spitter", "urchin,walker/spitter,spitter,bat"]],
     ["รังราชินีค้างคาว", 6, ["bat,bat/bat,bat", "urchin,urchin/spitter,spitter", "queen/bat,bat"], "ikuya"],
-    ["ชายหาดแมงกะพรุน", 7, ["crab,crab", "crab/jelly", "crab,crab/jelly"]],
+    ["ชายหาดแมงกะพรุน", 8, ["crab,crab/jelly", "crab,roller/jelly", "crab,crab/jelly,swooper"]],
     ["แนวปะการัง", 7, ["roller,crab/jelly", "roller,roller/swooper", "crab,roller/jelly,swooper"], "starsprite"],
     ["ท่าเรือโคมลอย", 8, ["crab/swooper,swooper", "roller,urchin/swooper,jelly", "crab,crab/swooper,swooper,jelly"]],
     ["ถ้ำคริสตัล", 9, ["roller,roller/spitter", "urchin,roller/jelly,spitter", "roller,roller/jelly,spitter,swooper"]],
     ["ราชาเห็ดคืนชีพ", 9, ["crab,roller/jelly,swooper", "urchin,crab/jelly,jelly,spitter", "king/jelly,swooper"], "pupav2"],
     ["เกาะลอยฟ้า", 10, ["crab,crab/swooper,swooper", "roller,urchin/jelly,bat,swooper", "crab,roller/swooper,jelly,bat"]],
     ["สวนฝันกลับหัว", 11, ["hopper,roller/jelly,spitter", "urchin,crab/spitter,spitter,jelly", "roller,crab/swooper,jelly,spitter"]],
-    ["ทะเลดาว", 11, ["crab,crab/bat,bat,jelly", "urchin,urchin/swooper,swooper,jelly", "roller,crab/spitter,swooper,jelly"], "dragon"],
-    ["ประตูวังราตรี", 12, ["urchin,roller/jelly,jelly,spitter", "crab,crab/swooper,bat,jelly", "roller,urchin/swooper,spitter,jelly"]],
+    ["ทะเลดาว", 10, ["crab,crab/bat,bat,jelly", "urchin,urchin/swooper,swooper,jelly", "roller,crab/spitter,swooper,jelly"], "dragon"],
+    ["ประตูวังราตรี", 14, ["urchin,roller/jelly,jelly,spitter", "crab,crab/swooper,bat,jelly", "roller,urchin/swooper,spitter,jelly"]],
     ["ราชาและราชินี", 13, ["crab,roller/jelly,swooper,spitter", "urchin,urchin/jelly,jelly,bat", "king,queen/jelly"]]
   ];
   const parseWave = (text) => {
@@ -223,7 +225,7 @@
     const scale = foe ? FOE_SCALE : { hp: 1, atk: 1, def: 1 };
     const g = growth(lv);
     return {
-      hp: Math.round(role.hp * (def.hp || 1) * rare * scale.hp * g),
+      hp: Math.round(role.hp * HP_SCALE * (def.hp || 1) * rare * scale.hp * g),
       atk: Math.round(role.atk * (def.atk || 1) * rare * scale.atk * g),
       def: Math.round(role.def * (def.def || 1) * rare * scale.def * g),
       spd: Math.round((def.spd || role.spd) + (lv - 1) * .5),

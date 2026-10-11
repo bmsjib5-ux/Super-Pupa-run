@@ -19,6 +19,14 @@ const intMap = (value, max) => {
   return out;
 };
 
+// Card battles: each card's level, the best stars per stage, the team of
+// five ("" for an empty slot) and two switches.
+const cleanCards = (raw) => {
+  const cards = raw && typeof raw === "object" ? raw : {};
+  const team = Array.isArray(cards.team) ? cards.team.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) : [];
+  return { units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true };
+};
+
 const maxMap = (a = {}, b = {}) => {
   const out = { ...a };
   for (const [key, value] of Object.entries(b)) out[key] = Math.max(out[key] || 0, value);
@@ -34,11 +42,18 @@ export function cleanSave(raw) {
     cleared: numberList(raw.cleared),
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
+    cards: cleanCards(raw.cards),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
   if (shop.bring && typeof shop.bring === "object") for (const [key, on] of Object.entries(shop.bring)) if (/^[a-z0-9]{1,30}$/.test(key)) out.shop.bring[key] = on !== false;
   return out;
+}
+
+// Higher card levels and stars win; the team and switches come from the device.
+function mergeCards(current, incoming) {
+  const now = cleanCards(current), next = cleanCards(incoming);
+  return { ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team };
 }
 
 // `current` is the account's save (or null), `incoming` the device's clean
@@ -62,6 +77,7 @@ export function mergeSave(current, incoming, baseCoins) {
     cleared: [...new Set([...current.cleared, ...incoming.cleared])].sort((a, b) => a - b),
     stars: maxMap(current.stars, incoming.stars),
     worldRewards: [...new Set([...(current.worldRewards || []), ...incoming.worldRewards])].sort((a, b) => a - b),
+    cards: mergeCards(current.cards, incoming.cards),
     shop
   };
 }

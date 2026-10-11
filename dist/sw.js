@@ -1,14 +1,17 @@
 // Offline support for the installed game. Network first, so a new release is
 // picked up as soon as the device is online; the cache is only a fallback.
-const CACHE = "super-pupa-run-v4-topup";
+const CACHE = "super-pupa-run-v5-cards";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=20261010a",
-  "./game.js?v=20261010a",
-  "./pupa3d.js?v=20261010a",
-  "./config.js?v=20261010a",
-  "./account.js?v=20261010a",
+  "./styles.css?v=20261011a",
+  "./game.js?v=20261011a",
+  "./cards-engine.js?v=20261011a",
+  "./cards.js?v=20261011a",
+  "./cards.css?v=20261011a",
+  "./pupa3d.js?v=20261011a",
+  "./config.js?v=20261011a",
+  "./account.js?v=20261011a",
   "./manifest.json",
   "./vendor/three-bundle.min.js",
   "./assets/apple-touch-icon.png",
