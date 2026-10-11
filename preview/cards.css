@@ -277,3 +277,22 @@ button.unit { cursor: crosshair; }
 @media (prefers-reduced-motion: reduce) {
   .unit.is-acting, .unit.is-hit { animation: none; }
 }
+
+/* ---- 2D show (cards-fx.js) ---- */
+.battle-scene, .battle-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.battle-scene { z-index: 0; border-radius: inherit; }
+.battle-fx { z-index: 3; }
+.battle-field > .battle-side { position: relative; z-index: 1; }
+.unit { background: rgba(13,8,36,.5); backdrop-filter: blur(3px); }
+/* cards breathe while they wait, each a little out of step */
+.unit-art { animation: unit-idle 2.6s ease-in-out infinite; }
+.battle-row .unit:nth-child(2) .unit-art { animation-delay: -.9s; }
+.battle-row .unit:nth-child(3) .unit-art { animation-delay: -1.7s; }
+.unit.is-foe .unit-art { animation-duration: 2.2s; }
+.unit.is-ko .unit-art { animation: unit-fall .5s ease-in forwards; }
+@keyframes unit-idle { 50% { transform: translateY(-3px) scale(1.03); } }
+@keyframes unit-fall { to { transform: translateY(6px) rotate(-70deg) scale(.85); opacity: .6; } }
+.unit.is-arriving { animation: unit-arrive .5s cubic-bezier(.2,.8,.3,1.2) both; }
+@keyframes unit-arrive { from { transform: translateX(3rem); opacity: 0; } }
+@media (orientation: portrait) { @keyframes unit-arrive { from { transform: translateY(-2rem); opacity: 0; } } }
+@media (prefers-reduced-motion: reduce) { .unit-art, .unit.is-arriving { animation: none; } }
