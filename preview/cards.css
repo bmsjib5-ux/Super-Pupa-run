@@ -354,3 +354,37 @@ button.unit { cursor: crosshair; }
   .unit.is-boss { width: clamp(5rem, 14vw, 7.5rem); }
   .skill-face { width: 1.5rem; height: 1.5rem; }
 }
+
+/* ---- Auto hunting, login rewards, arena, costumes ---- */
+.idle-banner { display: flex; align-items: center; gap: .7rem; margin: .5rem 1rem 0; padding: .45rem .7rem; border: 1px solid rgba(255,215,106,.35); border-radius: 1rem; background: linear-gradient(90deg, rgba(70,30,110,.8), rgba(30,14,60,.8)); }
+.idle-scene { position: relative; flex: none; display: flex; align-items: flex-end; width: clamp(8rem, 26vw, 15rem); height: 3.4rem; overflow: hidden; border-radius: .7rem; background: linear-gradient(180deg, #2a1452 0 55%, #3d1b55 55%); }
+.idle-hero { width: 2.3rem; height: 2.3rem; margin-right: -.6rem; animation: idle-walk .55s ease-in-out infinite alternate; }
+.idle-foe { position: absolute; right: .3rem; bottom: .2rem; width: 2.4rem; height: 2.4rem; animation: idle-hit 1.1s ease-in-out infinite; }
+@keyframes idle-walk { to { transform: translateY(-4px); } }
+@keyframes idle-hit { 40% { transform: translateX(4px); filter: brightness(2); } 60% { transform: none; } }
+.idle-text { display: grid; flex: 1; min-width: 0; font-size: .74rem; color: var(--muted); }
+.idle-text b { color: #ffe5a5; font-size: .85rem; }
+.idle-loot { color: var(--gold); font-weight: 800; }
+.idle-claim { flex: none; }
+.daily-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; margin: .6rem 0; }
+.daily-day { display: grid; gap: .15rem; padding: .5rem .2rem; border: 1px solid rgba(255,255,255,.15); border-radius: .7rem; text-align: center; background: rgba(255,255,255,.05); }
+.daily-day small { color: var(--muted); font-size: .58rem; }
+.daily-day b { color: var(--gold); font-size: .66rem; line-height: 1.25; }
+.daily-day.is-done { opacity: .45; }
+.daily-day.is-today { border-color: var(--gold); background: rgba(255,215,106,.18); box-shadow: 0 0 .8rem rgba(255,215,106,.35); }
+@media (max-width: 30rem) { .daily-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.arena-box { margin-top: .4rem; padding: .8rem 1rem; border: 1px solid rgba(255,255,255,.15); border-radius: 1rem; background: rgba(255,255,255,.04); }
+.arena-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr)); gap: .4rem; }
+.arena-team .tcard-art { width: 3rem; height: 3rem; }
+.arena-team .tcard-name { font-size: .64rem; }
+.cards-card.is-arena .battle-bar { display: none; }
+.unit.is-crowd { width: clamp(3.4rem, 8vw, 5.6rem); }
+@media (orientation: portrait) { .unit.is-crowd { width: clamp(2.9rem, 14vw, 4.4rem); } }
+.sheet-xp { display: grid; gap: .2rem; margin-top: .6rem; font-size: .72rem; color: var(--muted); }
+.sheet-xp i { display: block; height: .45rem; border-radius: 999px; background: linear-gradient(90deg, #7fd4ff var(--fill), rgba(255,255,255,.12) var(--fill)); }
+.sheet-costume { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem .6rem; margin-top: .55rem; padding: .5rem .7rem; border: 1px solid rgba(255,215,106,.35); border-radius: .7rem; background: rgba(255,215,106,.07); }
+.sheet-costume b { font-size: .82rem; color: #ffe5a5; }
+.sheet-costume span { grid-row: 2; color: #cfc4e2; font-size: .7rem; }
+.sheet-costume button { grid-row: span 2; }
+.card-art.is-costume { filter: hue-rotate(var(--hue)) saturate(1.25) drop-shadow(0 0 .35rem rgba(255,215,106,.9)); }
+.battle-ups { margin: .1rem 0 .5rem; color: var(--mint); font-size: .8rem; font-weight: 800; }
