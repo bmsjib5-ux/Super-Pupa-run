@@ -4,8 +4,8 @@ const CACHE = "super-pupa-run-v5-cards";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=20261011a",
-  "./game.js?v=20261011a",
+  "./styles.css?v=20261011b",
+  "./game.js?v=20261011b",
   "./cards-engine.js?v=20261011a",
   "./cards-fx.js?v=20261011c",
   "./cards.js?v=20261011c",

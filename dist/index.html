@@ -13,10 +13,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261011a">
+    <link rel="stylesheet" href="styles.css?v=20261011b">
     <link rel="stylesheet" href="cards.css?v=20261011c">
     <script src="cards-engine.js?v=20261011a" defer></script>
-    <script src="game.js?v=20261011a" defer></script>
+    <script src="game.js?v=20261011b" defer></script>
     <script src="cards-fx.js?v=20261011c" defer></script>
     <script src="cards.js?v=20261011c" defer></script>
     <script type="module" src="pupa3d.js?v=20261011a"></script>
@@ -115,6 +115,7 @@
                     <button class="secondary-button shop-button runner-button" type="button" data-open-runner>🏃 วิ่งหลบ</button>
                     <button class="secondary-button shop-button cards-button" type="button" data-open-cards>🃏 ศึกการ์ด</button>
                     <button id="newsBtn" class="secondary-button shop-button" type="button">มีอะไรใหม่</button>
+                    <button class="secondary-button shop-button" type="button" data-open-modes>🏠 เลือกโหมด</button>
                     <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
                   </div>
                   <p id="installHint" class="install-hint" hidden></p>
@@ -181,6 +182,32 @@
           <span><i class="status-dot"></i> <span id="levelName">ด่าน 1 · สวนเชอร์รี่เรืองแสง</span></span>
           <span class="desktop-only">เคล็ดลับ: เหยียบศัตรูจากด้านบน · โหม่งบล็อก ? เพื่อสุ่มไอเทม</span>
         </footer>
+
+        <!-- Picking a mode once loading is done. -->
+        <div id="modeScreen" class="overlay shop-overlay mode-overlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
+          <div class="mode-card">
+            <p class="mode-eyebrow">✦ SUPER PUPA RUN ✦</p>
+            <h2 id="modeTitle">เลือกโหมดที่จะเล่น</h2>
+            <div class="mode-list">
+              <button class="mode-item mode-adventure" type="button" data-mode="adventure">
+                <span class="mode-picture"><img src="assets/pupa-hero-3d.webp" alt=""></span>
+                <b>ผจญภัย</b>
+                <span>วิ่ง กระโดด ฝ่า 100 ด่านใน 10 โลก พร้อมบอส</span>
+              </button>
+              <button class="mode-item mode-runner" type="button" data-mode="runner">
+                <span class="mode-picture"><img src="assets/pupav2-hero.webp" alt=""></span>
+                <b>วิ่งหลบ</b>
+                <span>ถนน 3 เลน หลบสิ่งกีดขวาง เก็บเหรียญ</span>
+              </button>
+              <button class="mode-item mode-cards" type="button" data-mode="cards">
+                <span class="mode-picture mode-trio"><img src="assets/ikuya-hero.webp" alt=""><img src="assets/pangji-hero.webp" alt=""><img src="assets/baitoey-hero.webp" alt=""></span>
+                <b>ศึกการ์ดแสงจันทร์</b>
+                <span>จัดทีม 5 ใบ เลือกลำดับสกิล สู้มอนสเตอร์</span>
+                <i class="mode-new">ใหม่!</i>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- "What's new" page, shown when the game opens. -->
         <div id="newsScreen" class="overlay shop-overlay news-overlay" role="dialog" aria-modal="true" aria-labelledby="newsTitle" hidden>
