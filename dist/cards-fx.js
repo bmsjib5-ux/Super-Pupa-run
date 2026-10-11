@@ -79,9 +79,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter >= 5;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter >= 6;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (dark) { sky.addColorStop(0, "#05020c"); sky.addColorStop(.55, "#241038"); sky.addColorStop(1, "#0a0414"); }
+      if (holy) { sky.addColorStop(0, "#3a5ab8"); sky.addColorStop(.5, "#9fc4ff"); sky.addColorStop(1, "#ffe7b0"); }
+      else if (dark) { sky.addColorStop(0, "#05020c"); sky.addColorStop(.55, "#241038"); sky.addColorStop(1, "#0a0414"); }
       else if (ice) { sky.addColorStop(0, "#0e1a3a"); sky.addColorStop(.55, "#3a5a8a"); sky.addColorStop(1, "#1a2a48"); }
       else if (fire) { sky.addColorStop(0, "#2a0a1a"); sky.addColorStop(.5, "#7a2418"); sky.addColorStop(1, "#2a0c0c"); }
       else if (lake) { sky.addColorStop(0, "#0c1a46"); sky.addColorStop(.55, "#1d4a7a"); sky.addColorStop(1, "#0b2a3a"); }
@@ -97,9 +98,9 @@
       // moon
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
-      halo.addColorStop(0, dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
+      halo.addColorStop(0, holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = halo; s.beginPath(); s.arc(mx, my, mr * 3.2, 0, TAU); s.fill();
-      s.fillStyle = dark ? "#0a0410" : ice ? "#f4fbff" : fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
+      s.fillStyle = holy ? "#fffbe8" : dark ? "#0a0410" : ice ? "#f4fbff" : fire ? "#ffcf7a" : lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
       if (dark) {
         // an eclipse: a dark disc with a burning violet ring
         s.strokeStyle = "rgba(230,170,255,.95)"; s.lineWidth = 3; s.shadowColor = "#c47bff"; s.shadowBlur = 18;
@@ -107,6 +108,19 @@
       }
       // far hills
       const ground = h * .34; // the fighters stand below this line
+      if (holy) {
+        // floating islands with golden temples, and soft clouds
+        for (const [x, y, k] of [[w * .14, ground * .62, .9], [w * .5, ground * .42, 1.2], [w * .86, ground * .66, .8]]) {
+          const r = w * .07 * k;
+          s.fillStyle = "rgba(120,110,160,.55)"; s.beginPath(); s.moveTo(x - r, y); s.lineTo(x + r, y); s.lineTo(x, y + r * 1.1); s.fill();
+          s.fillStyle = "#fff7e0"; s.beginPath(); s.ellipse(x, y, r, r * .22, 0, 0, TAU); s.fill();
+          s.fillStyle = "#ffd76a";
+          for (let c = -2; c <= 2; c++) s.fillRect(x + c * r * .3 - 2, y - r * .55, 4, r * .55);
+          s.beginPath(); s.moveTo(x - r * .75, y - r * .55); s.lineTo(x, y - r * .95); s.lineTo(x + r * .75, y - r * .55); s.fill();
+        }
+        s.fillStyle = "rgba(255,255,255,.7)";
+        for (let i = 0; i < 6; i++) { const x = (i * 211.7) % w, y = ground * (.2 + (i % 3) * .22); s.beginPath(); s.ellipse(x, y, 40, 12, 0, 0, TAU); s.ellipse(x + 26, y - 6, 26, 12, 0, 0, TAU); s.fill(); }
+      }
       if (dark) {
         // broken spires and floating crystals
         for (const [x, k] of [[w * .1, 1], [w * .3, .7], [w * .74, 1.2], [w * .93, .85]]) {
@@ -141,11 +155,19 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (dark) {
+      if (holy) {
+        // a floor of clouds with golden tiles
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#fff4dc"); floor.addColorStop(1, "#c9b0e0");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        s.strokeStyle = "rgba(220,170,60,.4)"; s.lineWidth = 1.2;
+        for (let i = 1; i < 6; i++) { const y = ground + (h - ground) * i / 6; s.beginPath(); s.moveTo(0, y); s.lineTo(w, y); s.stroke(); }
+        for (let i = 0; i < 12; i++) { const x = w * i / 11; s.beginPath(); s.moveTo(w / 2 + (x - w / 2) * .4, ground); s.lineTo(x, h); s.stroke(); }
+      } else if (dark) {
         // dark ground veined with violet light
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#22113a"); floor.addColorStop(1, "#07030f");
@@ -203,7 +225,7 @@
       // a glowing circle of runes in the middle of the field
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -211,7 +233,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       // soft spotlight where the two sides meet
@@ -229,10 +251,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter >= 5;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter >= 6;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark, ember: fire || ice || dark
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy, ember: fire || ice || dark || holy
       };
     }
 

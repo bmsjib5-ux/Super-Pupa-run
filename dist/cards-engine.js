@@ -345,6 +345,34 @@
       ]
     }
   });
+  // Chapter 6: the guardians of heaven. They heal, shield and lift each
+  // other up, and strike with holy light.
+  const HALO = "rgba(255,225,120,.95)";
+  const GILD = "sepia(1) saturate(2.6) hue-rotate(-8deg) brightness(1.18)";
+  Object.assign(FOES, {
+    haloshroom: { name: "เห็ดรัศมี", role: "balance", art: "walker", look: GILD, glow: HALO, tier: 2.1, skills: [{ name: "สปอร์ศักดิ์สิทธิ์", cd: 3, target: "front", power: 1.2, fx: [{ k: "atkUp", v: .2, turns: 2, on: "allies" }] }] },
+    seraphbat: { name: "ค้างคาวเทวดา", role: "attack", art: "bat", look: GILD, glow: HALO, tier: 2.1, spd: 120, skills: [{ name: "ปีกแสงพุ่ง", cd: 3, target: "back", power: 1.15, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    goldcrab: { name: "ปูทองคำสวรรค์", role: "attack", art: "crab", look: GILD, glow: HALO, tier: 2.1, def: 1.5, skills: [{ name: "ก้ามทองคำ", cd: 3, target: "one", power: 2.3, fx: [{ k: "shield", turns: 2, on: "self" }] }] },
+    lightjelly: { name: "แมงกะพรุนแสงเทพ", role: "support", art: "jelly", look: GILD, glow: HALO, tier: 2.1, skills: [{ name: "ธารแสงเยียวยา", cd: 3, target: "allies", heal: 1.4, shield: .8, fx: [{ k: "shield", turns: 2 }, { k: "cleanse" }] }] },
+    sunroller: { name: "ตัวกลิ้งสุริยะ", role: "defense", art: "roller", look: GILD, glow: HALO, tier: 2.1, atk: 1.3, skills: [{ name: "กลิ้งแสงสุริยะ", cd: 3, target: "front", power: 1.4, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    haloburchin: { name: "เม่นรัศมี", role: "defense", art: "urchin", look: GILD, glow: HALO, tier: 2.1, skills: [{ name: "โล่แสงศักดิ์สิทธิ์", cd: 4, target: "allies", shield: 1.2, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .3, turns: 2 }] }] },
+    starflower: { name: "ดอกไม้ดารา", role: "magic", art: "spitter", look: GILD, glow: HALO, tier: 2.1, skills: [{ name: "ฝนดาวศักดิ์สิทธิ์", cd: 3, target: "all", power: .9, fx: [{ k: "defDown", v: .15, turns: 2 }] }] },
+    angelbird: { name: "นกโคมเทวดา", role: "attack", art: "swooper", look: GILD, glow: HALO, tier: 2.1, spd: 118, skills: [{ name: "ดิ่งแสงสวรรค์", cd: 3, target: "back", power: 1.45, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    heavenking: {
+      name: "ราชาเห็ดสวรรค์", role: "balance", art: "king", look: GILD, glow: HALO, tier: 2.1, boss: true, hp: 4.4, atk: 1.3, def: 1.35,
+      skills: [
+        { name: "ประกาศิตแห่งแสง", cd: 3, target: "all", power: 1.25, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "พรแห่งสวรรค์", cd: 4, first: 1, target: "allies", heal: 1.5, shield: 1.5, fx: [{ k: "shield", turns: 2 }, { k: "atkUp", v: .3, turns: 2 }] }
+      ]
+    },
+    starqueen: {
+      name: "ราชินีดวงดาว", role: "magic", art: "queen", look: GILD, glow: HALO, tier: 2.1, boss: true, hp: 4.4, atk: 1.4, def: 1.25, spd: 120,
+      skills: [
+        { name: "ทางช้างเผือกถล่ม", cd: 3, target: "all", power: 1.4, fx: [{ k: "defDown", v: .3, turns: 2 }] },
+        { name: "จุมพิตดาวตก", cd: 4, first: 1, target: "one", power: 3.2, drain: .5, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -355,7 +383,8 @@
     { name: "บทที่ 2 · ทะเลสาบภาพฝัน", from: 11, to: 20 },
     { name: "บทที่ 3 · ดินแดนเปลวสุริยะ", from: 21, to: 30 },
     { name: "บทที่ 4 · ยอดเขาน้ำแข็งนิรันดร์", from: 31, to: 40 },
-    { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 }
+    { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 },
+    { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -407,7 +436,17 @@
     ["หอคอยไร้แสง", 44, ["duskroller,duskroller/voidjelly,nightflower,voidbat", "duskurchin,shadowcrab/wraithbird,wraithbird,voidjelly", "shadowcrab,shadowshroom/nightflower,nightflower,voidjelly"]],
     ["ห้องโถงพระจันทร์ดับ", 45, ["duskurchin,duskurchin/nightflower,nightflower,wraithbird", "shadowcrab,duskroller/voidjelly,voidjelly,voidbat", "duskroller,shadowcrab/wraithbird,nightflower,voidjelly"]],
     ["แท่นบูชาความมืด", 46, ["shadowcrab,duskroller/voidjelly,nightflower,wraithbird", "duskurchin,shadowshroom/voidjelly,voidbat,nightflower", "shadowking/voidjelly,wraithbird"]],
-    ["บัลลังก์ราชินีสุริยคราส", 47, ["duskroller,shadowcrab/voidjelly,nightflower,wraithbird", "duskurchin,duskurchin/voidjelly,voidjelly,voidbat", "shadowking,eclipsequeen/voidjelly"]]
+    ["บัลลังก์ราชินีสุริยคราส", 47, ["duskroller,shadowcrab/voidjelly,nightflower,wraithbird", "duskurchin,duskurchin/voidjelly,voidjelly,voidbat", "shadowking,eclipsequeen/voidjelly"]],
+    ["บันไดสู่สวรรค์", 47, ["haloshroom,haloshroom/seraphbat", "goldcrab,haloshroom/starflower", "goldcrab,sunroller/seraphbat,starflower"]],
+    ["ทุ่งเมฆทองคำ", 48, ["sunroller,haloshroom/lightjelly", "haloburchin,goldcrab/starflower,seraphbat", "sunroller,goldcrab/lightjelly,angelbird"]],
+    ["สวนลอยฟ้า", 49, ["goldcrab,goldcrab/starflower,seraphbat", "haloburchin,sunroller/lightjelly,starflower", "goldcrab,sunroller/angelbird,angelbird,lightjelly"]],
+    ["ระเบียงดวงดาว", 50, ["haloburchin,haloshroom/starflower,starflower", "sunroller,sunroller/lightjelly,seraphbat", "haloburchin,goldcrab/lightjelly,starflower,angelbird"]],
+    ["ประตูทองคำ", 51, ["haloshroom,goldcrab/seraphbat,starflower", "sunroller,haloburchin/lightjelly,lightjelly", "heavenking/starflower,seraphbat"]],
+    ["สะพานสายรุ้งสวรรค์", 52, ["goldcrab,sunroller/angelbird,seraphbat,starflower", "haloburchin,haloshroom/lightjelly,angelbird", "goldcrab,goldcrab/lightjelly,starflower,seraphbat"]],
+    ["หอระฆังแสง", 53, ["sunroller,sunroller/lightjelly,starflower,seraphbat", "haloburchin,goldcrab/angelbird,angelbird,lightjelly", "goldcrab,haloshroom/starflower,starflower,lightjelly"]],
+    ["ห้องโถงทางช้างเผือก", 54, ["haloburchin,haloburchin/starflower,starflower,angelbird", "goldcrab,sunroller/lightjelly,lightjelly,seraphbat", "sunroller,goldcrab/angelbird,starflower,lightjelly"]],
+    ["แท่นบูชาสุริยจันทรา", 55, ["goldcrab,sunroller/lightjelly,starflower,angelbird", "haloburchin,haloshroom/lightjelly,seraphbat,starflower", "heavenking/lightjelly,angelbird"]],
+    ["บัลลังก์ราชินีดวงดาว", 56, ["sunroller,goldcrab/lightjelly,starflower,angelbird", "haloburchin,haloburchin/lightjelly,lightjelly,seraphbat", "heavenking,starqueen/lightjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
