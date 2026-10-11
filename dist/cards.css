@@ -399,3 +399,32 @@ button.unit { cursor: crosshair; }
 .dungeon-icon { position: absolute; top: .6rem; right: .8rem; font-size: 1.8rem; }
 .dungeon-box .sheet-actions .secondary-button { font-size: .8rem; }
 .cards-tabs button { padding-inline: .3rem; font-size: clamp(.72rem, 2.6vw, .95rem); }
+
+/* ---- Card pulls ---- */
+.gem { font-size: .85em; }
+.pull-banner { margin-top: .5rem; padding: .9rem 1rem; border: 1px solid rgba(255,215,106,.45); border-radius: 1.1rem; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(255,215,106,.25), transparent 60%), linear-gradient(160deg, rgba(120,60,180,.6), rgba(20,10,45,.85)); }
+.pull-banner h3 { margin: .1rem 0 .5rem; font-size: clamp(1rem, 3vw, 1.3rem); }
+.pull-faces { display: flex; justify-content: center; gap: .3rem; }
+.pull-face { width: clamp(3.4rem, 13vw, 5.6rem); height: clamp(4rem, 16vw, 6.6rem); border-radius: .8rem; border: 2px solid var(--frame); background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.18), rgba(13,8,36,.5)); animation: pull-float 2.4s ease-in-out infinite; }
+.pull-face:nth-child(2n) { animation-delay: -1.2s; }
+.pull-face.r4 { --frame: #c38bff; } .pull-face.r5 { --frame: #ffd76a; box-shadow: 0 0 1rem rgba(255,215,106,.5); }
+@keyframes pull-float { 50% { transform: translateY(-5px); } }
+.pull-odds { margin: .6rem auto .2rem; max-width: 40rem; color: #cfc4e2; font-size: .72rem; line-height: 1.45; }
+.pull-actions .primary-button { min-width: 11rem; }
+.pull-ten { background: linear-gradient(180deg, #ffe58f, #ff9a6b); }
+.pull-tier { margin: .2rem 0; color: #cfc4e2; font-size: .74rem; line-height: 1.5; }
+.pull-tier b { color: var(--gold); }
+.pull-reveal { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr)); gap: .45rem; margin: .6rem 0; perspective: 40rem; }
+.pull-reveal:not(.is-ten) { grid-template-columns: minmax(7rem, 9rem); justify-content: center; }
+.pull-card { position: relative; animation: pull-flip .55s ease-out both; transform-style: preserve-3d; }
+@keyframes pull-flip { from { transform: rotateY(180deg) scale(.7); opacity: 0; } 60% { transform: rotateY(0) scale(1.08); opacity: 1; } }
+.pull-card.r5 .tcard { box-shadow: 0 0 1.2rem rgba(255,215,106,.9); animation: pull-glow 1.4s ease-in-out infinite alternate; }
+.pull-card.r4 .tcard { box-shadow: 0 0 .8rem rgba(195,139,255,.8); }
+@keyframes pull-glow { to { box-shadow: 0 0 2rem rgba(255,215,106,1); } }
+.pull-back { display: none; }
+.pull-front { display: grid; gap: .2rem; justify-items: center; }
+.pull-front .tcard { width: 100%; cursor: default; }
+.pull-new { color: var(--mint); font-weight: 900; font-size: .7rem; }
+.pull-dupe { color: #bdb0d2; font-size: .62rem; }
+.shop-gacha { background: linear-gradient(180deg, #e7c8ff, #b888ff); }
+@media (prefers-reduced-motion: reduce) { .pull-card, .pull-face, .pull-card.r5 .tcard { animation: none; } }

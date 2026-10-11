@@ -138,6 +138,75 @@
       ]
     }
   };
+  // The second set: heroes and pets found only in card pulls.
+  Object.assign(CARDS, {
+    sakura: {
+      name: "ซากุระ", role: "attack", rarity: 4, art: "sakura", from: "hero",
+      text: "นินจาสาวแห่งดอกซากุระ ใบมีดคู่ไวดั่งลม",
+      skills: [
+        { name: "ใบมีดซากุระ", icon: "🌸", cd: 3, target: "random", hits: 4, power: .62 },
+        { name: "พายุกลีบซากุระ", icon: "🌪", cd: 5, first: 2, target: "all", power: 1.3, fx: [{ k: "defDown", v: .2, turns: 2 }] }
+      ]
+    },
+    chantra: {
+      name: "จันทรา", role: "support", rarity: 5, art: "chantra", from: "hero",
+      text: "นักบวชแห่งจันทร์เต็มดวง แสงของเธอรักษาทุกบาดแผล",
+      skills: [
+        { name: "แสงจันทร์โอบอุ้ม", icon: "🌕", cd: 3, target: "allies", heal: 1.6, fx: [{ k: "cleanse" }] },
+        { name: "พรแห่งจันทร์เต็มดวง", icon: "✨", cd: 5, first: 1, target: "allies", shield: 1.2, fx: [{ k: "shield", turns: 2 }, { k: "atkUp", v: .35, turns: 2 }] }
+      ]
+    },
+    thongkham: {
+      name: "ทองคำ", role: "defense", rarity: 4, art: "thongkham", from: "hero",
+      text: "อัศวินน้อยเกราะทอง โล่ใหญ่ของเขาไม่เคยแตก",
+      passive: { shield: .2, text: "เกราะทองคำ: เริ่มการต่อสู้พร้อมเกราะ 20% ของพลังชีวิต" },
+      skills: [
+        { name: "โล่ทองคำ", icon: "🛡", cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .5, turns: 2 }] },
+        { name: "ฟาดโล่สะท้าน", icon: "💥", cd: 4, first: 1, target: "front", power: 1.2, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    },
+    miu: {
+      name: "มิว", role: "magic", rarity: 4, art: "miu", from: "hero",
+      text: "แม่มดน้อยหูแมว ไม้กายสิทธิ์เรียกดาวได้",
+      skills: [
+        { name: "ดาวแมวเหมียว", icon: "⭐", cd: 3, target: "one", power: 2.3 },
+        { name: "ฝนดาวตก", icon: "☄", cd: 5, first: 2, target: "all", power: 1.5, fx: [{ k: "burn", power: .3, turns: 2 }] }
+      ]
+    },
+    ratri: {
+      name: "ราตรี", role: "attack", rarity: 5, art: "ratri", from: "hero", crit: .35,
+      text: "นักธนูเงาราตรี ศรเงินไม่เคยพลาดเป้า",
+      passive: { text: "ตาเหยี่ยวราตรี: โอกาสคริติคอล 35%" },
+      skills: [
+        { name: "ศรเงาราตรี", icon: "🏹", cd: 3, target: "one", power: 2.8 },
+        { name: "ฝนศรจันทร์ดับ", icon: "🌑", cd: 5, first: 2, target: "back", power: 1.8, fx: [{ k: "stun", chance: .3, turns: 1 }] }
+      ]
+    },
+    moonrabbit: {
+      name: "กระต่ายจันทร์", role: "support", rarity: 3, art: "moonrabbit", from: "pet",
+      text: "กระต่ายขาวจากดวงจันทร์ พกโมจิมาแจกเพื่อน",
+      skills: [
+        { name: "โมจิพลังจันทร์", icon: "🍡", cd: 3, target: "ally", heal: 2.4 },
+        { name: "กระโดดเชียร์", icon: "🐰", cd: 4, first: 1, target: "allies", fx: [{ k: "atkUp", v: .25, turns: 2 }] }
+      ]
+    },
+    starowl: {
+      name: "นกฮูกดาว", role: "magic", rarity: 4, art: "starowl", from: "pet",
+      text: "นกฮูกขนดาวผู้รู้ทุกความลับของท้องฟ้า",
+      skills: [
+        { name: "ดวงตาดารา", icon: "👁", cd: 3, target: "one", power: 1.8, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "คืนพันดาว", icon: "🌌", cd: 4, first: 1, target: "all", power: 1.2 }
+      ]
+    },
+    silverwolf: {
+      name: "หมาป่าเงิน", role: "attack", rarity: 5, art: "silverwolf", from: "pet", crit: .25,
+      text: "ลูกหมาป่าขนเงิน หอนเรียกพลังจันทร์เต็มดวง",
+      skills: [
+        { name: "เขี้ยวเงิน", icon: "🐺", cd: 3, target: "one", power: 2.2, drain: .3 },
+        { name: "หอนจันทร์เต็มดวง", icon: "🌕", cd: 5, first: 1, target: "all", power: 1.4, fx: [{ k: "atkUp", v: .2, turns: 2, on: "allies" }] }
+      ]
+    }
+  });
   const CARD_IDS = Object.keys(CARDS);
   const STARTER = ["pupa", "jibjib", "firefly"];
   const STARTER_TEAM = ["jibjib", "pupa", "firefly", "", ""];
@@ -214,7 +283,10 @@
       // the third star: win within this many hero turns
       par: parsed.length * 2 + 2,
       coins: 20 + 5 * num,       // first clear
-      repeat: 5 + num            // every clear after that
+      repeat: 5 + num,           // every clear after that
+      // characters come only from card pulls now: the first clear gives
+      // gems for them instead (the old card prize stages give more)
+      gems: card ? 80 : parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 60 : 25
     };
   });
 
@@ -659,7 +731,7 @@
 
   // Login rewards, one a day in a cycle of seven.
   const DAILY = [
-    { coins: 50 }, { xp: 120 }, { coins: 100 }, { xp: 200 }, { coins: 150 }, { xp: 300 }, { coins: 400, xp: 400 }
+    { coins: 50, gems: 20 }, { xp: 120, gems: 20 }, { coins: 100, gems: 30 }, { xp: 200, gems: 30 }, { coins: 150, gems: 40 }, { xp: 300, gems: 50 }, { coins: 400, xp: 400, gems: 150 }
   ];
 
   // Costumes: one per card, bought with coins; worn, it changes the look
@@ -688,7 +760,7 @@
     return {
       num: n, arena: true, name: `ลานประลอง ชั้น ${n}`, lv: 1 + n,
       waves: [wave], boss: Boolean(boss), par: 99,
-      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n
+      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15
     };
   }
   // The strongest cards first, tanks in front: who goes to the arena.
@@ -719,11 +791,43 @@
     return {
       num: 0, dungeon: kind, name: d.name, lv, waves: d.waves.map(parseWave), par: 99, boss: kind === "coin",
       coins: kind === "coin" ? 120 + 30 * best : 20 + 5 * best,
-      xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best
+      xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best,
+      gems: 20
     };
   }
 
+  // ---- Card pulls ----
+  // Characters and pets are only found here. Gems pay for a pull. The odds
+  // are shown on the pull page; PITY pulls without a five-star make the
+  // next one a five-star, and ten at once always hold a four-star or better.
+  // A card already owned turns into XP for that card instead.
+  const GACHA = { one: 100, ten: 900, rates: { 5: .05, 4: .25, 3: .70 }, pity: 50 };
+  const DUPE_XP = { 3: 150, 4: 400, 5: 1000 };
+  const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
+  // state: { pity } (pulls since the last five-star); rnd: () => 0..1.
+  function pullOne(state, rnd, atLeast = 3) {
+    let rarity;
+    if (state.pity + 1 >= GACHA.pity) rarity = 5;
+    else {
+      const roll = rnd();
+      rarity = roll < GACHA.rates[5] ? 5 : roll < GACHA.rates[5] + GACHA.rates[4] ? 4 : 3;
+    }
+    rarity = Math.max(rarity, atLeast);
+    state.pity = rarity === 5 ? 0 : state.pity + 1;
+    const pool = byRarity(rarity);
+    return pool[Math.floor(rnd() * pool.length)];
+  }
+  function pull(state, rnd, count) {
+    const out = [];
+    for (let n = 0; n < count; n++) {
+      const last = count >= 10 && n === count - 1 && !out.some(id => CARDS[id].rarity >= 4);
+      out.push(pullOne(state, rnd, last ? 4 : 3));
+    }
+    return out;
+  }
+
   return {
+    GACHA, DUPE_XP, pull,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,

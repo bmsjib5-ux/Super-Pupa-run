@@ -149,3 +149,14 @@ test("merge: a daily dungeon cleared on either device stays cleared that day", (
   const c = mergeSave(b, cleanSave(device(0, { cards: { dungeon: { day: "2026-10-12", exp: false, coin: false } } })), 0);
   assert.deepEqual(c.cards.dungeon, { day: "2026-10-12", exp: false, coin: false });
 });
+
+test("merge: gems move like coins, only by how they changed since the last sync", () => {
+  const first = mergeSave(null, cleanSave(device(0, { gems: 300 })), 0, 0);
+  assert.equal(first.gems, 300);
+  // another device spent 100 meanwhile
+  const other = mergeSave(first, cleanSave(device(0, { gems: 200 })), 0, 300);
+  assert.equal(other.gems, 200);
+  // this device earned 50 since it last synced at 300
+  const back = mergeSave(other, cleanSave(device(0, { gems: 350 })), 0, 300);
+  assert.equal(back.gems, 250);
+});

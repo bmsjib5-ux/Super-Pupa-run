@@ -51,6 +51,15 @@
     ikuya: image("assets/ikuya-hero.webp"),
     pangji: image("assets/pangji-hero.webp"),
     pupav2: image("assets/pupav2-hero.webp"),
+    // found only in card pulls (see cards-engine.js)
+    sakura: image("assets/sakura-hero.webp"),
+    chantra: image("assets/chantra-hero.webp"),
+    thongkham: image("assets/thongkham-hero.webp"),
+    miu: image("assets/miu-hero.webp"),
+    ratri: image("assets/ratri-hero.webp"),
+    moonrabbit: image("assets/moonrabbit-pet.webp"),
+    starowl: image("assets/starowl-pet.webp"),
+    silverwolf: image("assets/silverwolf-pet.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1863,7 +1872,13 @@
       { id: "baitoey", name: "ใบเตย", desc: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม", price: 350, headTop: .2, spriteHead: .03, ability: ["ใบไม้ร่อน", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
       { id: "ikuya", name: "อิคุยะ", desc: "หนุ่มน้อยนักสู้ผมขาว ผ้าพันคอฟ้าคราม", price: 450, headTop: .2, spriteHead: .02, ability: ["หมัดคลื่นลม", "กดโจมตีปล่อยคลื่นลมได้เสมอ แม้ไม่มีไอเทม"] },
       { id: "pangji", name: "ปังจิ", desc: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน", price: 300, headTop: .2, spriteHead: .04, ability: ["ซาลาเปานุ่มนิ่ม", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
-      { id: "pupav2", name: "Pupa V2", desc: "Pupa ร่างใหม่ ผมยาวสีกุหลาบ ชุดนักผจญภัยสีเขียว ใช้สีชุดจากตลาดได้", price: 600, headTop: .2, spriteHead: .03, ability: ["สายฟ้าสีกุหลาบ", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
+      { id: "pupav2", name: "Pupa V2", desc: "Pupa ร่างใหม่ ผมยาวสีกุหลาบ ชุดนักผจญภัยสีเขียว ใช้สีชุดจากตลาดได้", price: 600, headTop: .2, spriteHead: .03, ability: ["สายฟ้าสีกุหลาบ", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] },
+      // Picture-only heroes from card pulls; `like` borrows another hero's ability.
+      { id: "sakura", name: "ซากุระ", desc: "นินจาสาวแห่งดอกซากุระ ใบมีดคู่ไวดั่งลม", price: 400, flat: true, like: "jibjib", headTop: .2, spriteHead: .03, ability: ["ก้าวกลีบซากุระ", "กระโดดกลางอากาศได้ 2 ครั้ง (รวม 3 สเต็ป)"] },
+      { id: "chantra", name: "จันทรา", desc: "นักบวชแห่งจันทร์เต็มดวง", price: 600, flat: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["แสงจันทร์ดึงดูด", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
+      { id: "thongkham", name: "ทองคำ", desc: "อัศวินน้อยเกราะทอง", price: 400, flat: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะทองคำ", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
+      { id: "miu", name: "มิว", desc: "แม่มดน้อยหูแมว", price: 400, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาวไม้กายสิทธิ์", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -1899,6 +1914,9 @@
       { id: "kitten", name: "ลูกแมวเชอร์รี่", desc: "ดูดเหรียญได้ไกลขึ้น", price: 250, magnet: 170 },
       { id: "minibat", name: "ค้างคาวจิ๋ว", desc: "ดูดเหรียญ และพุ่งกัดศัตรูใกล้ ๆ ทุก 10 วินาที", price: 400, magnet: 130, bite: 10 },
       { id: "starsprite", name: "ภูตดาว", desc: "ดูดเหรียญไกลมาก และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 600, magnet: 230, shield: true },
+      { id: "moonrabbit", name: "กระต่ายจันทร์", desc: "ดูดเหรียญ และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 300, magnet: 160, shield: true },
+      { id: "starowl", name: "นกฮูกดาว", desc: "ดูดเหรียญไกล และโฉบจิกศัตรูใกล้ ๆ ทุก 9 วินาที", price: 500, magnet: 210, bite: 9 },
+      { id: "silverwolf", name: "หมาป่าเงิน", desc: "ดูดเหรียญไกลมาก กัดศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1200, magnet: 250, bite: 6, shield: true },
       { id: "dragon", name: "มังกรน้อยเปลวแสง", desc: "สัตว์เลี้ยงสุดยอด ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 7 วินาที และให้เกราะฟรีทุกด่าน", price: 1500, magnet: 270, bite: 7, shield: true, fire: true }
     ],
     items: [
@@ -1940,7 +1958,11 @@
   //   pupa: pulls nearby coins in; jibjib: two mid-air jumps; baitoey: falls
   //   slowly; ikuya: a wind blast on attack even without an item; pangji:
   //   starts each level with a bubble shield; pupav2: runs and jumps further.
-  const heroIs = (id) => save.shop.hero === id;
+  const heroIs = (id) => save.shop.hero === id || SHOP_INDEX[save.shop.hero]?.like === id;
+  // Heroes and pets now come only from card pulls (cards.js); the free
+  // starters and what was bought before stay.
+  const gachaOnly = (entry) => ["heroes", "pets"].includes(SHOP_INDEX[entry.id]?.group) && !FREE_IDS.includes(entry.id);
+  const openPulls = () => { if (shopOpen) closeShop(); window.PupaCards?.openPulls(); };
   const airJumpsFor = () => heroIs("jibjib") ? 2 : 1;
   const COIN_CHARM_RANGE = 130;
   const LEAF_FALL_SPEED = 380;
@@ -1950,12 +1972,12 @@
   // grows: across levels, game overs, replays and visits. Coins add up the
   // same way and are spent only in the market.
   const SAVE_KEY = "superPupaRunSave";
-  const save = { best: 0, points: null, coins: 0, plays: 0, wins: 0, cleared: [] };
+  const save = { best: 0, points: null, coins: 0, gems: 0, plays: 0, wins: 0, cleared: [] };
   try {
     Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"));
     save.best = Math.max(Number(save.best) || 0, Number(localStorage.getItem(BEST_KEY)) || 0);
     if (save.points == null) save.points = save.best; // saves from before totals existed
-    for (const key of ["points", "coins", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
+    for (const key of ["points", "coins", "gems", "plays", "wins"]) save[key] = Math.max(0, Math.floor(Number(save[key]) || 0));
   } catch { save.points = 0; /* storage unavailable: play on without saving */ }
   // Level numbers cleared at least once (for the level select).
   save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
@@ -4464,6 +4486,7 @@
 
   function buy(id) {
     const entry = SHOP_INDEX[id];
+    if (entry && gachaOnly(entry) && !owns(id)) { openPulls(); return false; }
     if (!entry || entry.reward || save.coins < entry.price) { tone(150, .12, "square", .05); return false; }
     if (entry.group === "items") {
       if (save.shop.items[id] >= 99) return false;
@@ -4892,7 +4915,16 @@
   }
 
   // Pets are drawn around (0, 0) at roughly 50 px across.
+  const picturePet = (img, glow) => (t) => {
+    drawGlow(glow, 40);
+    if (!img.complete || !img.naturalWidth) return;
+    const w = 70, h = w * img.naturalHeight / img.naturalWidth;
+    ctx.drawImage(img, -w / 2, -h / 2 + Math.sin((t || 0) * .006) * 2, w, h);
+  };
   const petArt = {
+    moonrabbit: picturePet(art.moonrabbit, "#fff2c8"),
+    starowl: picturePet(art.starowl, "#9fb6ff"),
+    silverwolf: picturePet(art.silverwolf, "#bfe6ff"),
     firefly(t) {
       drawGlow("#fff2a0", 38);
       const flap = Math.sin(t * .04) * .5;
@@ -5394,6 +5426,12 @@
       button.setAttribute("aria-label", `รางวัลเมื่อได้ดาวครบ 30 ดวงในโลก ${entry.reward}`);
       button.disabled = true;
       actions.append(button);
+    } else if (!owns(entry.id) && gachaOnly(entry)) {
+      button.className = "shop-buy shop-gacha";
+      button.textContent = "🎴 สุ่มการ์ด";
+      button.setAttribute("aria-label", `${entry.name} ได้จากการสุ่มการ์ดเท่านั้น เปิดหน้าสุ่มการ์ด`);
+      button.addEventListener("click", openPulls);
+      actions.append(button);
     } else if (!owns(entry.id)) {
       button.className = "shop-buy";
       button.textContent = priceLabel(entry.price);
@@ -5550,6 +5588,7 @@
   const lobbyUi = {
     screen: ui.start,
     coins: document.querySelector("#lobbyCoins"),
+    gems: document.querySelector("#lobbyGems"),
     preview: document.querySelector("#lobbyPreview"),
     heroName: document.querySelector("#lobbyHeroName"),
     heroNote: document.querySelector("#lobbyHeroNote"),
@@ -5614,11 +5653,13 @@
     button.classList.toggle("shop-buy", !owned);
     if (chosen) { button.textContent = "ใช้อยู่ ✓"; button.disabled = true; }
     else if (owned) { button.textContent = "เลือกตัวนี้"; button.disabled = false; }
+    else if (gachaOnly(hero)) { button.textContent = "🎴 ได้จากสุ่มการ์ด"; button.disabled = false; }
     else {
       button.textContent = `ซื้อ ● ${formatPoints(hero.price)}`;
       button.disabled = save.coins < hero.price;
     }
-    button.setAttribute("aria-label", chosen ? `${hero.name} ใช้อยู่` : owned ? `เลือก${hero.name}` : `ซื้อ${hero.name} ${hero.price} เหรียญ`);
+    button.setAttribute("aria-label", chosen ? `${hero.name} ใช้อยู่` : owned ? `เลือก${hero.name}` : gachaOnly(hero) ? `${hero.name} ได้จากการสุ่มการ์ด` : `ซื้อ${hero.name} ${hero.price} เหรียญ`);
+    if (lobbyUi.gems) lobbyUi.gems.textContent = formatPoints(save.gems);
     // level
     const [num, title] = level.name.split(" · ");
     lobbyUi.levelNum.textContent = num;
@@ -5745,21 +5786,25 @@
     get save() { return save; },
     exportSave() { const { cloud, ...rest } = save; return JSON.parse(JSON.stringify(rest)); },
     cloudBase(uid) { return !save.cloud ? 0 : save.cloud.uid === uid ? save.cloud.coins : save.coins; },
-    markSynced(uid, coins) { save.cloud = { uid, coins }; writeSave(true); },
+    // gems sync the same way as coins: only how they moved since the last sync
+    cloudBaseGems(uid) { return !save.cloud ? 0 : save.cloud.uid === uid ? (save.cloud.gems || 0) : save.gems; },
+    markSynced(uid, coins, gems = save.gems) { save.cloud = { uid, coins, gems }; writeSave(true); },
     // `full` right after signing in: the account's save replaces this
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
-    applyCloudSave(remote, uid, sentCoins, full) {
+    applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
       const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards;
       if (full) {
         Object.assign(save, remote);
       } else {
         save.coins = Math.max(0, remote.coins + (save.coins - sentCoins));
+        save.gems = Math.max(0, (remote.gems || 0) + (save.gems - sentGems));
         save.points = Math.max(save.points, remote.points);
         save.cleared = [...new Set([...save.cleared, ...remote.cleared])].sort((a, b) => a - b);
         for (const id of remote.shop?.owned || []) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
       }
-      save.cloud = { uid, coins: remote.coins };
+      save.cloud = { uid, coins: remote.coins, gems: remote.gems || 0 };
+      save.gems = Math.max(0, Math.floor(Number(save.gems) || 0));
       normalizeStars(full ? stars : remote.stars, full ? rewards : remote.worldRewards);
       normalizeShop();
       mergeHeroXp(xp);
@@ -6213,10 +6258,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-11a";
+  const NEWS_VERSION = "2026-10-11b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "สุ่มการ์ด · 8 ตัวใหม่", text: "ซากุระ จันทรา ทองคำ มิว ราตรี กระต่ายจันทร์ นกฮูกดาว หมาป่าเงิน ตัวละครและสัตว์เลี้ยงทุกตัวได้จากการสุ่มการ์ดด้วยเพชร เพชรได้จากผ่านด่านครั้งแรก รางวัลรายวัน ลานประลอง และด่านประจำวัน เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "โหมดใหม่", title: "ศึกการ์ดแสงจันทร์", text: "จัดทีมการ์ด 5 ใบ เลือกลำดับสกิลเองทุกเทิร์น สู้มอนสเตอร์ 20 ด่าน 2 บท พร้อมบอส ชนะแล้วได้เหรียญและการ์ดใหม่ ใช้เหรียญอัปเลเวลการ์ด ตัวละครและสัตว์เลี้ยงที่มีในเกมได้การ์ดของตัวนั้นด้วย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "ด่านวิ่งหลบ", text: "5 ด่านพิเศษ วิ่งบนถนน 3 เลน ฉากไหลเข้ามาจากด้านบน ปัดหรือกดซ้ายขวาเปลี่ยนเลน กระโดดข้ามรั้ว หมอบลอดคาน เก็บเหรียญและไอเทมตลอดทาง เล่นได้เลยไม่ต้องปลดล็อก", image: "runner", open: () => { closeNews(); openRunnerLevels(); } },
     { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 70% ได้อีก 1 ดาว ไม่เสียหัวใจได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
@@ -6312,10 +6358,10 @@
       });
       return icon;
     }
-    if (kind === "cards") {
+    if (kind === "cards" || kind === "gacha") {
       const row = document.createElement("div");
       row.className = "news-trio news-cards";
-      for (const id of ["ikuya", "pupav2", "pangji"]) {
+      for (const id of kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = `assets/${id}-hero.webp`;
         img.alt = "";
@@ -7888,8 +7934,12 @@
   // The first dodge-run stage is open from the start, like level 1.
   const isOpenLevel = (num) => num === 1 || num === RUNNER_FIRST || isCleared(num) || (num !== RUNNER_FIRST && isCleared(num - 1));
 
+  // A level cleared for the first time also gives gems for card pulls.
   function markCleared(num) {
     if (isCleared(num)) return;
+    const gems = levels[num - 1]?.boss ? 20 : 5;
+    save.gems += gems;
+    announce(`ผ่านด่านครั้งแรก ได้ ${gems} เพชร`);
     save.cleared.push(num);
     save.cleared.sort((a, b) => a - b);
     writeSave();

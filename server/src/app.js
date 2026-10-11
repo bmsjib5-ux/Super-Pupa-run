@@ -55,11 +55,12 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
       const syncId = typeof req.body?.syncId === "string" ? req.body.syncId.slice(0, 64) : null;
       if (!incoming || !syncId) return res.status(400).json({ error: "bad_save" });
       const baseCoins = Number(req.body.baseCoins) || 0;
+      const baseGems = Number(req.body.baseGems) || 0;
       const user = await store.updateUser(req.user.uid, current => {
         const base = current ?? { uid: req.user.uid, save: null, topupCoins: 0, createdAt: Date.now() };
         // The same sync sent twice (a lost reply) must not count twice.
         if (base.lastSyncId === syncId) return base;
-        return { ...base, save: mergeSave(base.save, incoming, baseCoins), lastSyncId: syncId, updatedAt: Date.now() };
+        return { ...base, save: mergeSave(base.save, incoming, baseCoins, baseGems), lastSyncId: syncId, updatedAt: Date.now() };
       });
       res.json({ save: user.save, topupCoins: user.topupCoins || 0 });
     } catch (error) { next(error); }
