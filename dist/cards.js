@@ -148,7 +148,8 @@
       if (units[id]) units[id] = Math.min(units[id], E.capFor(awake[id]));
     }
     const dust = Math.max(0, Math.floor(Number(raw.dust) || 0));
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   const cards = () => save().cards;
@@ -205,6 +206,7 @@
     tone(587, .07, "triangle", .04);
     closeButton.focus();
     if (cards().daily?.day !== today()) dailySheet();
+    else payStarBonus(true);
   }
 
   function close() {
@@ -290,6 +292,7 @@
       [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
       announce(`รับรางวัลวันที่ ${day} แล้ว${ups.length ? ` เลเวลอัป: ${ups.join(", ")}` : ""}`);
       closeSheet();
+      payStarBonus(true);
     });
     openSheet([el("h3", "sheet-title", "รางวัลเข้าเกมรายวัน"), el("p", "sheet-sub", "เข้ามาทุกวันติดกัน รางวัลยิ่งใหญ่ขึ้น ครบ 7 วันเริ่มรอบใหม่ · EXP แจกให้การ์ดทุกใบในทีม"), grid, el("div", "title-actions sheet-actions", null)]);
     sheet.querySelector(".sheet-actions").append(take);
@@ -445,6 +448,22 @@
     panel.append(box);
   }
 
+  // Pays every five-stage group that has just reached full stars; returns
+  // the gems given. `show` opens a panel saying so.
+  function payStarBonus(show) {
+    const c = cards(), due = E.dueStarBonus(c.stars, c.starPaid);
+    if (!due.length) return 0;
+    const gems = due.length * E.STAR_BONUS;
+    c.starPaid = [...c.starPaid, ...due].sort((a, b) => a - b);
+    addGems(gems);
+    store(); showCoins();
+    const ranges = due.map(n => `ด่าน ${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP}`);
+    announce(`ดาวครบ ${ranges.join(", ")} ได้รับ ${gems} เพชร`);
+    [784, 988, 1175, 1568].forEach((note, i) => tone(note, .14, "triangle", .06, i * .09));
+    if (show) openSheet([el("h3", "sheet-title", "🌟 โบนัสดาวครบ!"), el("p", "sheet-reward", `ได้รับ 💎 ${fmt(gems)}`), el("p", "sheet-sub", `เก็บครบ 15 ดาวใน ${ranges.join(" · ")} · ทุก 5 ด่านที่ได้ดาวครบ รับ 💎 ${E.STAR_BONUS}`)]);
+    return gems;
+  }
+
   function renderStages(panel) {
     const next = E.STAGES.find(stage => isOpen(stage.num) && !isCleared(stage.num));
     const intro = el("p", "cards-intro");
@@ -455,6 +474,14 @@
       const got = E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).reduce((sum, s) => sum + (cards().stars[s.num] || 0), 0);
       const heading = el("h3", "shop-heading", chapter.name);
       heading.append(el("span", "world-stars", `★ ${got}/${(chapter.to - chapter.from + 1) * 3}`));
+      // the star bonus of each five-stage group in this chapter
+      const groups = el("div", "star-groups");
+      for (const n of E.starGroups().filter(n => (n - 1) * E.STAR_GROUP + 1 >= chapter.from && n * E.STAR_GROUP <= chapter.to)) {
+        const have = E.groupStars(cards().stars, n), paid = cards().starPaid.includes(n);
+        const chip = el("span", `star-group${paid ? " is-paid" : ""}`, `${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} ★${have}/15 · ${paid ? "รับแล้ว ✓" : `💎 ${E.STAR_BONUS}`}`);
+        chip.title = `เก็บครบ 15 ดาวในด่าน ${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} รับ ${E.STAR_BONUS} เพชร`;
+        groups.append(chip);
+      }
       const grid = el("div", "level-grid cards-stage-grid");
       for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
         const openStage = isOpen(stage.num), done = isCleared(stage.num);
@@ -473,7 +500,7 @@
         }
         grid.append(tile);
       }
-      section.append(heading, grid);
+      section.append(heading, groups, grid);
       panel.append(section);
     }
   }
@@ -1129,6 +1156,8 @@
     actions.append(button(won ? "secondary-button" : "primary-button", "เล่นอีกครั้ง", () => { battle = null; startBattle(stage); }));
     if (!won) actions.append(button("secondary-button", "จัดทีม", () => { battle = null; tab = "team"; showHub(); }));
     actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "stages"; showHub(); }));
+    const bonus = won ? payStarBonus(false) : 0;
+    if (bonus) box.append(el("p", "battle-ups star-bonus-line", `🌟 ดาวครบ 5 ด่าน! ได้โบนัส 💎 ${fmt(bonus)}`));
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;

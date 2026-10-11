@@ -193,3 +193,9 @@ test("merge: card stars, shards and star dust keep the larger count", () => {
   assert.equal(b.cards.shards.ikuya, 12);
   assert.equal(b.cards.dust, 50);
 });
+
+test("merge: star bonuses paid on either device stay paid", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { starPaid: [1, 2] } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { starPaid: [3] } })), 0);
+  assert.deepEqual(b.cards.starPaid, [1, 2, 3]);
+});

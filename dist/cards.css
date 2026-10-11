@@ -437,3 +437,9 @@ button.unit { cursor: crosshair; }
 .sheet-awake small { grid-column: 1 / -1; color: #bdb0d2; font-size: .64rem; }
 .tcard[class*="awake-"] { box-shadow: 0 0 .7rem rgba(195,139,255,.55); }
 .tcard.awake-5 { box-shadow: 0 0 1.1rem rgba(255,215,106,.85); }
+
+/* ---- Star bonus per five stages ---- */
+.star-groups { display: flex; flex-wrap: wrap; gap: .35rem; margin: -.2rem 0 .5rem; }
+.star-group { padding: .15rem .55rem; border: 1px solid rgba(255,215,106,.45); border-radius: 999px; color: #ffe5a5; font-size: .66rem; background: rgba(255,215,106,.08); }
+.star-group.is-paid { color: var(--mint); border-color: rgba(137,240,192,.5); background: rgba(137,240,192,.08); }
+.star-bonus-line { color: var(--gold); font-size: .9rem; }

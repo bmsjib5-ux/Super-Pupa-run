@@ -98,3 +98,15 @@ test("cards: stars raise the level cap, cost shards or star dust, and stop at fi
   assert.equal(E.awakeCost(cards, "ikuya"), null);
   assert.equal(E.cardBonus(cards, "ikuya"), E.MAX_AWAKE * E.AWAKE_BONUS);
 });
+
+test("cards: every five stages at full stars give the star bonus once", () => {
+  const stars = {};
+  for (let n = 1; n <= 5; n++) stars[n] = 3;
+  for (let n = 6; n <= 10; n++) stars[n] = n === 10 ? 2 : 3;
+  assert.deepEqual(E.dueStarBonus(stars, []), [1]);
+  assert.deepEqual(E.dueStarBonus(stars, [1]), []);
+  stars[10] = 3;
+  assert.deepEqual(E.dueStarBonus(stars, [1]), [2]);
+  assert.equal(E.groupStars(stars, 2), 15);
+  assert.equal(E.starGroups().length, Math.ceil(E.STAGES.length / 5));
+});

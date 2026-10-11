@@ -1078,7 +1078,19 @@
     return out;
   }
 
+  // ---- Star bonus ----
+  // Every five stages (1-5, 6-10, ...) at full stars (15) give STAR_BONUS
+  // gems, once. group n covers stages 5n-4 to 5n.
+  const STAR_BONUS = 250;
+  const STAR_GROUP = 5;
+  const starGroups = () => Array.from({ length: Math.ceil(STAGES.length / STAR_GROUP) }, (_, n) => n + 1);
+  const groupStages = (n) => STAGES.filter(s => s.num > (n - 1) * STAR_GROUP && s.num <= n * STAR_GROUP);
+  const groupStars = (stars, n) => groupStages(n).reduce((sum, s) => sum + Math.min(3, stars[s.num] || 0), 0);
+  // The groups now at full stars and not yet paid.
+  const dueStarBonus = (stars, paid = []) => starGroups().filter(n => !paid.includes(n) && groupStars(stars, n) >= groupStages(n).length * 3);
+
   return {
+    STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
