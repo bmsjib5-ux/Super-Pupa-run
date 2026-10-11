@@ -13,16 +13,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261011g">
+    <link rel="stylesheet" href="styles.css?v=20261011h">
     <link rel="stylesheet" href="cards.css?v=20261011f">
     <script src="cards-engine.js?v=20261011f" defer></script>
-    <script src="game.js?v=20261011g" defer></script>
+    <script src="game.js?v=20261011h" defer></script>
     <script src="cards-fx.js?v=20261011f" defer></script>
     <script src="cards.js?v=20261011f" defer></script>
     <script type="module" src="pupa3d.js?v=20261011a"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
     <script src="config.js?v=20261011a"></script>
-    <script type="module" src="account.js?v=20261011f"></script>
+    <script type="module" src="account.js?v=20261011h"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -182,6 +182,8 @@
           <span><i class="status-dot"></i> <span id="levelName">ด่าน 1 · สวนเชอร์รี่เรืองแสง</span></span>
           <span class="desktop-only">เคล็ดลับ: เหยียบศัตรูจากด้านบน · โหม่งบล็อก ? เพื่อสุ่มไอเทม</span>
         </footer>
+
+        <p id="giftToast" class="gift-toast" role="status" hidden>🎁 ของขวัญชดเชยผู้เล่นเดิม: ได้รับ <b></b> ไว้สุ่มการ์ด ขอบคุณที่เล่นมาตลอด!</p>
 
         <!-- Picking a mode once loading is done. -->
         <div id="modeScreen" class="overlay shop-overlay mode-overlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>

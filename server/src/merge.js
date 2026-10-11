@@ -100,3 +100,21 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     shop
   };
 }
+
+// The one-time gem gift for players from before card pulls, given by the
+// server so an account gets it once however many devices it plays on:
+// 500 gems plus what the levels already cleared would give now (5 each,
+// 20 for a boss level, every fifth up to 100). Changes `save` and returns
+// the gems given (0 if none: already given, or nothing played yet).
+export const GIFT_ID = "gacha-2026-10";
+const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
+export function grantGift(save) {
+  if (!save || save.gift === GIFT_ID) return 0;
+  const cleared = save.cleared || [];
+  const played = save.points > 0 || save.plays > 0 || cleared.length > 0 || save.coins > 0 || (save.shop?.owned || []).some(id => !FREE_IDS.includes(id));
+  save.gift = GIFT_ID;
+  if (!played) return 0;
+  const gems = 500 + cleared.reduce((sum, num) => sum + (num % 5 === 0 && num <= 100 ? 20 : 5), 0);
+  save.gems = (save.gems || 0) + gems;
+  return gems;
+}

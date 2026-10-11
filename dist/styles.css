@@ -1133,3 +1133,7 @@ button { touch-action: manipulation; }
 .mode-gift { width: min(36rem, 100%); margin: -.4rem auto .9rem; padding: .55rem 1rem; border: 1px solid rgba(255,215,106,.6); border-radius: 1rem; color: #ffe5a5; font-size: .85rem; background: linear-gradient(90deg, rgba(255,215,106,.18), rgba(195,139,255,.18)); box-shadow: 0 0 1.2rem rgba(255,215,106,.25); }
 .mode-gift[hidden] { display: none; }
 .mode-gift b { color: #fff; font-size: 1.05rem; }
+.gift-toast { position: absolute; z-index: 30; left: 50%; top: max(1rem, env(safe-area-inset-top)); width: min(30rem, calc(100% - 2rem)); margin: 0; padding: .7rem 1rem; border: 1px solid rgba(255,215,106,.7); border-radius: 1rem; color: #ffe5a5; font-size: .85rem; text-align: center; background: linear-gradient(90deg, rgba(60,24,90,.96), rgba(40,16,70,.96)); box-shadow: 0 .8rem 2rem rgba(0,0,0,.45), 0 0 1.2rem rgba(255,215,106,.3); transform: translateX(-50%); animation: gift-in .4s ease-out; }
+.gift-toast[hidden] { display: none; }
+.gift-toast b { color: #fff; }
+@keyframes gift-in { from { opacity: 0; transform: translate(-50%, -1rem); } }

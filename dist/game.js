@@ -1989,7 +1989,9 @@
   // now (see markCleared). Shown on the mode picker.
   const GIFT_ID = "gacha-2026-10";
   let giftGems = 0;
-  if (save.gift !== GIFT_ID) {
+  // A device that syncs with an account leaves it to the server (one gift
+  // per account, see server/src/merge.js grantGift); others get it here.
+  if (save.gift !== GIFT_ID && !save.cloud?.uid) {
     const played = save.plays > 0 || save.points > 0 || save.cleared.length > 0 || save.coins > 0 || save.shop.owned.some(id => !FREE_IDS.includes(id));
     if (played) {
       giftGems = 500 + save.cleared.reduce((sum, num) => sum + (levels[num - 1]?.boss ? 20 : 5), 0);
@@ -5819,6 +5821,7 @@
         for (const id of remote.shop?.owned || []) if (!save.shop.owned.includes(id)) save.shop.owned.push(id);
       }
       save.cloud = { uid, coins: remote.coins, gems: remote.gems || 0 };
+      if (remote.gift) save.gift = remote.gift;
       save.gems = Math.max(0, Math.floor(Number(save.gems) || 0));
       normalizeStars(full ? stars : remote.stars, full ? rewards : remote.worldRewards);
       normalizeShop();
@@ -5829,6 +5832,8 @@
       refreshCoins();
     },
     onSaveWritten(listener) { saveListeners.push(listener); },
+    // The server gave the one-time gem gift during a sync.
+    showGift(gems) { giftGems = gems; if (modesOpen) showModes(); else giftToast(gems); renderLobby(); },
     // For the card battles (cards.js).
     writeSave() { writeSave(); refreshCoins(); renderLobby(); },
     tone(...args) { tone(...args); },
@@ -6242,6 +6247,17 @@
   const skipModes = ["level", "cards"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
+
+  function giftToast(gems) {
+    const toast = document.querySelector("#giftToast");
+    if (!toast) return;
+    toast.querySelector("b").textContent = `💎 ${formatPoints(gems)}`;
+    toast.hidden = false;
+    announce(`ของขวัญชดเชยผู้เล่นเดิม ได้รับ ${gems} เพชร สำหรับสุ่มการ์ด`);
+    [659, 784, 988].forEach((note, i) => tone(note, .1, "triangle", .05, i * .08));
+    giftGems = 0;
+    setTimeout(() => { toast.hidden = true; }, 7000);
+  }
 
   function showModes() {
     if (!modeUi.screen) return;

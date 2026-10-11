@@ -13,7 +13,7 @@ import { randomUUID } from "node:crypto";
 import express from "express";
 import cors from "cors";
 import { PACKS, METHODS, APP_RETURN_URL, missingSettings, firebaseKeyStatus } from "./config.js";
-import { cleanSave, mergeSave } from "./merge.js";
+import { cleanSave, mergeSave, grantGift } from "./merge.js";
 import { chargeOutcome, OmiseError } from "./omise.js";
 import { requireUser } from "./auth.js";
 
@@ -56,13 +56,16 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
       if (!incoming || !syncId) return res.status(400).json({ error: "bad_save" });
       const baseCoins = Number(req.body.baseCoins) || 0;
       const baseGems = Number(req.body.baseGems) || 0;
+      let giftGems = 0;
       const user = await store.updateUser(req.user.uid, current => {
         const base = current ?? { uid: req.user.uid, save: null, topupCoins: 0, createdAt: Date.now() };
         // The same sync sent twice (a lost reply) must not count twice.
         if (base.lastSyncId === syncId) return base;
-        return { ...base, save: mergeSave(base.save, incoming, baseCoins, baseGems), lastSyncId: syncId, updatedAt: Date.now() };
+        const save = mergeSave(base.save, incoming, baseCoins, baseGems);
+        giftGems = grantGift(save);
+        return { ...base, save, lastSyncId: syncId, updatedAt: Date.now() };
       });
-      res.json({ save: user.save, topupCoins: user.topupCoins || 0 });
+      res.json({ save: user.save, topupCoins: user.topupCoins || 0, giftGems });
     } catch (error) { next(error); }
   });
 

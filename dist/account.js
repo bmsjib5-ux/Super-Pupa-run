@@ -138,6 +138,7 @@ export async function sync(full = false) {
   const body = { save: g.exportSave(), baseCoins: g.cloudBase(state.user.uid), baseGems: g.cloudBaseGems?.(state.user.uid) || 0, syncId: crypto.randomUUID() };
   syncing = api("/api/save", { method: "PUT", body }).then(result => {
     g.applyCloudSave(result.save, state.user.uid, sentCoins, full, sentGems);
+    if (result.giftGems > 0) g.showGift?.(result.giftGems);
     state.topupCoins = result.topupCoins || 0;
     changed();
     return result;
