@@ -198,6 +198,31 @@
         { name: "คืนพันดาว", icon: "🌌", cd: 4, first: 1, target: "all", power: 1.2 }
       ]
     },
+    phloeng: {
+      name: "เพลิง", role: "attack", rarity: 5, art: "phloeng", from: "hero",
+      text: "อัศวินสาวหอกเพลิง ไฟในใจไม่เคยมอด",
+      passive: { text: "หัวใจเปลวเพลิง: โอกาสคริติคอล 25%" }, crit: .25,
+      skills: [
+        { name: "หอกเปลวสุริยะ", icon: "🔱", cd: 3, target: "front", power: 1.8, fx: [{ k: "burn", power: .35, turns: 2 }] },
+        { name: "ทะเลเพลิงพิฆาต", icon: "🔥", cd: 5, first: 2, target: "all", power: 1.8, fx: [{ k: "burn", power: .45, turns: 2 }] }
+      ]
+    },
+    mekha: {
+      name: "เมฆา", role: "magic", rarity: 4, art: "mekha", from: "hero",
+      text: "จอมเวทน้อยขี่เมฆ เรียกฟ้าผ่าได้ดั่งใจ",
+      skills: [
+        { name: "ฟ้าผ่าเมฆน้อย", icon: "⚡", cd: 3, target: "random", hits: 3, power: .85, fx: [{ k: "stun", chance: .2, turns: 1 }] },
+        { name: "พายุเมฆคำราม", icon: "⛈", cd: 5, first: 2, target: "all", power: 1.4, fx: [{ k: "stun", chance: .25, turns: 1 }] }
+      ]
+    },
+    fasai: {
+      name: "ฟ้าใส", role: "support", rarity: 3, art: "fasai", from: "hero",
+      text: "นักดนตรีสาวพิณจันทร์ เพลงของเธอปลุกพลังเพื่อน",
+      skills: [
+        { name: "บทเพลงเยียวยา", icon: "🎵", cd: 3, target: "allies", heal: 1.1 },
+        { name: "ทำนองปลุกใจ", icon: "🎶", cd: 4, first: 1, target: "allies", fx: [{ k: "atkUp", v: .25, turns: 2 }, { k: "defUp", v: .2, turns: 2 }] }
+      ]
+    },
     silverwolf: {
       name: "หมาป่าเงิน", role: "attack", rarity: 5, art: "silverwolf", from: "pet", crit: .25,
       text: "ลูกหมาป่าขนเงิน หอนเรียกพลังจันทร์เต็มดวง",

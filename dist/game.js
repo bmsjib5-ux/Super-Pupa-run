@@ -57,6 +57,9 @@
     thongkham: image("assets/thongkham-hero.webp"),
     miu: image("assets/miu-hero.webp"),
     ratri: image("assets/ratri-hero.webp"),
+    phloeng: image("assets/phloeng-hero.webp"),
+    mekha: image("assets/mekha-hero.webp"),
+    fasai: image("assets/fasai-hero.webp"),
     moonrabbit: image("assets/moonrabbit-pet.webp"),
     starowl: image("assets/starowl-pet.webp"),
     silverwolf: image("assets/silverwolf-pet.webp"),
@@ -1878,6 +1881,9 @@
       { id: "chantra", name: "จันทรา", desc: "นักบวชแห่งจันทร์เต็มดวง", price: 600, flat: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["แสงจันทร์ดึงดูด", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
       { id: "thongkham", name: "ทองคำ", desc: "อัศวินน้อยเกราะทอง", price: 400, flat: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะทองคำ", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
       { id: "miu", name: "มิว", desc: "แม่มดน้อยหูแมว", price: 400, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาวไม้กายสิทธิ์", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "phloeng", name: "เพลิง", desc: "อัศวินสาวหอกเพลิง", price: 600, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["หอกเปลวเพลิง", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "mekha", name: "เมฆา", desc: "จอมเวทน้อยขี่เมฆ", price: 400, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ขี่เมฆร่อน", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
+      { id: "fasai", name: "ฟ้าใส", desc: "นักดนตรีสาวพิณจันทร์", price: 300, flat: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["เพลงเรียกเหรียญ", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
       { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
     ],
     skins: [
@@ -6296,10 +6302,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-11b";
+  const NEWS_VERSION = "2026-10-11c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "เพลิง · เมฆา · ฟ้าใส", text: "สามตัวละครใหม่ในการสุ่มการ์ด อัศวินสาวหอกเพลิง ★5 จอมเวทน้อยขี่เมฆสายฟ้า ★4 และนักดนตรีสาวพิณจันทร์ ★3 เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha2", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "สุ่มการ์ด · 8 ตัวใหม่", text: "ซากุระ จันทรา ทองคำ มิว ราตรี กระต่ายจันทร์ นกฮูกดาว หมาป่าเงิน ตัวละครและสัตว์เลี้ยงทุกตัวได้จากการสุ่มการ์ดด้วยเพชร เพชรได้จากผ่านด่านครั้งแรก รางวัลรายวัน ลานประลอง และด่านประจำวัน เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "โหมดใหม่", title: "ศึกการ์ดแสงจันทร์", text: "จัดทีมการ์ด 5 ใบ เลือกลำดับสกิลเองทุกเทิร์น สู้มอนสเตอร์ 20 ด่าน 2 บท พร้อมบอส ชนะแล้วได้เหรียญและการ์ดใหม่ ใช้เหรียญอัปเลเวลการ์ด ตัวละครและสัตว์เลี้ยงที่มีในเกมได้การ์ดของตัวนั้นด้วย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "ด่านวิ่งหลบ", text: "5 ด่านพิเศษ วิ่งบนถนน 3 เลน ฉากไหลเข้ามาจากด้านบน ปัดหรือกดซ้ายขวาเปลี่ยนเลน กระโดดข้ามรั้ว หมอบลอดคาน เก็บเหรียญและไอเทมตลอดทาง เล่นได้เลยไม่ต้องปลดล็อก", image: "runner", open: () => { closeNews(); openRunnerLevels(); } },
@@ -6396,10 +6403,10 @@
       });
       return icon;
     }
-    if (kind === "cards" || kind === "gacha") {
+    if (kind === "cards" || kind === "gacha" || kind === "gacha2") {
       const row = document.createElement("div");
       row.className = "news-trio news-cards";
-      for (const id of kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
+      for (const id of kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = `assets/${id}-hero.webp`;
         img.alt = "";

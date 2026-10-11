@@ -37,11 +37,12 @@
     dragon: "assets/dragon-pet.webp",
     sakura: "assets/sakura-hero.webp", chantra: "assets/chantra-hero.webp", thongkham: "assets/thongkham-hero.webp",
     miu: "assets/miu-hero.webp", ratri: "assets/ratri-hero.webp",
+    phloeng: "assets/phloeng-hero.webp", mekha: "assets/mekha-hero.webp", fasai: "assets/fasai-hero.webp",
     moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp"
   };
   // A worn costume recolours the card and adds a golden glow.
-  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330 };
-  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี" };
+  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300 };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ" };
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   function portrait(kind) {
     const art = plainPortrait(kind);
@@ -73,6 +74,7 @@
     "sakura:0": "peck", "sakura:1": "wind", "chantra:0": "heal", "chantra:1": "shield", "thongkham:0": "shield", "thongkham:1": "stomp",
     "miu:0": "star", "miu:1": "star", "ratri:0": "orb", "ratri:1": "star", "moonrabbit:0": "heal", "moonrabbit:1": "buff",
     "starowl:0": "orb", "starowl:1": "star", "silverwolf:0": "bite", "silverwolf:1": "sonic",
+    "phloeng:0": "fire", "phloeng:1": "fire", "mekha:0": "bolt", "mekha:1": "bolt", "fasai:0": "heal", "fasai:1": "buff",
     "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
     "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",
     "king:0": "stomp", "king:1": "spore", "queen:0": "sonic", "queen:1": "bite"
@@ -285,7 +287,7 @@
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
-    for (const id of ["sakura", "chantra", "ratri", "silverwolf", "miu"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id)); row.append(f); }
+    for (const id of ["phloeng", "chantra", "mekha", "ratri", "fasai"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id)); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
     const odds = el("p", "pull-odds", `อัตรา: ★5 ${g.rates[5] * 100}% · ★4 ${g.rates[4] * 100}% · ★3 ${g.rates[3] * 100}% · การันตี ★5 ภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ ★4 ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็น EXP ของการ์ดนั้น`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
