@@ -6162,7 +6162,9 @@
       const icon = document.createElement("canvas");
       icon.width = icon.height = 160;
       paintOn(icon.getContext("2d"), () => {
-        ctx.fillStyle = vgrad(0, 160, ["#3a5ab8", "#ff9ac0"]); ctx.fillRect(0, 0, 160, 70);
+        // (not vgrad: that helper is declared further down, and this runs at load)
+        const sky = ctx.createLinearGradient(0, 0, 0, 70); sky.addColorStop(0, "#3a5ab8"); sky.addColorStop(1, "#ff9ac0");
+        ctx.fillStyle = sky; ctx.fillRect(0, 0, 160, 70);
         ctx.fillStyle = "#3a6a4a"; ctx.fillRect(0, 70, 160, 90);
         ctx.fillStyle = "#2a1a40"; ctx.beginPath(); ctx.moveTo(66, 70); ctx.lineTo(94, 70); ctx.lineTo(160, 160); ctx.lineTo(0, 160); ctx.fill();
         ctx.strokeStyle = "#ffd76a"; ctx.lineWidth = 2.5;
