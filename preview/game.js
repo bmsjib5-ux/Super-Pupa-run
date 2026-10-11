@@ -6168,6 +6168,41 @@
   if (accountUi.screen) onTap(accountUi.close, closeTopup);
   renderAccountButton();
 
+  // ---- Choosing a mode ----
+  // Once loading is done the player picks what to play: the adventure
+  // (the lobby), the dodge run or the card battles. The lobby's
+  // "เลือกโหมด" button comes back here.
+  const modeUi = { screen: document.querySelector("#modeScreen") };
+  const skipModes = ["level", "cards"].some(key => new URLSearchParams(location.search).has(key));
+  let newsWaiting = false;
+  let modesOpen = false;
+
+  function showModes() {
+    if (!modeUi.screen) return;
+    if (state === "playing") togglePause(true);
+    modesOpen = true;
+    modeUi.screen.hidden = false;
+    document.body.classList.add("dialog-open");
+    modeUi.screen.querySelector("button")?.focus();
+  }
+
+  function pickMode(mode) {
+    modesOpen = false;
+    modeUi.screen.hidden = true;
+    document.body.classList.remove("dialog-open");
+    [523, 659, 784].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
+    if (mode === "cards") { window.PupaCards?.open(); return; }
+    if (mode === "runner") openRunnerLevels();
+    else ui.startBtn.focus();
+    // what's new waits for the adventure, where it fits
+    if (newsWaiting && mode === "adventure") { newsWaiting = false; openNews(); }
+  }
+
+  if (modeUi.screen) {
+    modeUi.screen.querySelectorAll("[data-mode]").forEach(button => onTap(button, () => pickMode(button.dataset.mode)));
+    document.querySelectorAll("[data-open-modes]").forEach(button => onTap(button, () => showModes()));
+  }
+
   // ---- What's new ----
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
@@ -6406,7 +6441,12 @@
     let seen = null;
     try { seen = localStorage.getItem(NEWS_SEEN_KEY); } catch { /* ignore */ }
     // Not when a test link jumps straight into a level.
-    if (seen !== NEWS_VERSION && !new URLSearchParams(location.search).has("level")) openNews();
+    // Not when a test link jumps straight into a level, and not over the
+    // mode picker: it waits until a mode has been chosen (see pickMode).
+    if (seen !== NEWS_VERSION && !new URLSearchParams(location.search).has("level")) {
+      if (modeUi.screen && !skipModes) newsWaiting = true;
+      else openNews();
+    }
   }
 
   // Open a dialog straight from the finger lifting, not from the click a
@@ -7964,6 +8004,7 @@
   window.addEventListener("keydown", (event) => {
     // The market takes the keyboard while it is open: Escape closes it.
     if (cardsOpen) { window.PupaCards?.key?.(event); return; }
+    if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (loadingBusy) return;
@@ -8707,6 +8748,7 @@
     // A slow network never keeps the player out for long.
     await Promise.race([bootSteps(), pause(20000)]);
     hideLoading();
+    if (!skipModes) showModes();
   }
 
   async function bootSteps() {
