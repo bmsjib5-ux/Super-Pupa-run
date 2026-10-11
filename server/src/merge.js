@@ -19,6 +19,19 @@ const intMap = (value, max) => {
   return out;
 };
 
+// Card battles: each card's level, the best stars per stage, the team of
+// five ("" for an empty slot) and two switches.
+const cleanCards = (raw) => {
+  const cards = raw && typeof raw === "object" ? raw : {};
+  const team = Array.isArray(cards.team) ? cards.team.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) : [];
+  const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
+  return {
+    units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true,
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
+    dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
+  };
+};
+
 const maxMap = (a = {}, b = {}) => {
   const out = { ...a };
   for (const [key, value] of Object.entries(b)) out[key] = Math.max(out[key] || 0, value);
@@ -34,11 +47,28 @@ export function cleanSave(raw) {
     cleared: numberList(raw.cleared),
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
+    cards: cleanCards(raw.cards),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
   if (shop.bring && typeof shop.bring === "object") for (const [key, on] of Object.entries(shop.bring)) if (/^[a-z0-9]{1,30}$/.test(key)) out.shop.bring[key] = on !== false;
   return out;
+}
+
+// Higher card levels and stars win; the team and switches come from the device.
+function mergeCards(current, incoming) {
+  const now = cleanCards(current), next = cleanCards(incoming);
+  return {
+    ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team,
+    xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), arena: Math.max(now.arena, next.arena),
+    // the later claim wins, so a hunt or a day's reward is not taken twice
+    idleAt: Math.max(now.idleAt, next.idleAt),
+    daily: (next.daily?.day || "") >= (now.daily?.day || "") ? next.daily : now.daily,
+    // a dungeon cleared today on either copy stays cleared
+    dungeon: now.dungeon && next.dungeon && now.dungeon.day === next.dungeon.day
+      ? { day: now.dungeon.day, exp: now.dungeon.exp || next.dungeon.exp, coin: now.dungeon.coin || next.dungeon.coin }
+      : (next.dungeon?.day || "") >= (now.dungeon?.day || "") ? next.dungeon : now.dungeon
+  };
 }
 
 // `current` is the account's save (or null), `incoming` the device's clean
@@ -62,6 +92,7 @@ export function mergeSave(current, incoming, baseCoins) {
     cleared: [...new Set([...current.cleared, ...incoming.cleared])].sort((a, b) => a - b),
     stars: maxMap(current.stars, incoming.stars),
     worldRewards: [...new Set([...(current.worldRewards || []), ...incoming.worldRewards])].sort((a, b) => a - b),
+    cards: mergeCards(current.cards, incoming.cards),
     shop
   };
 }

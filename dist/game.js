@@ -5750,7 +5750,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -5764,12 +5764,91 @@
       normalizeShop();
       mergeHeroXp(xp);
       mergeHeroXp(remote.shop?.heroXp);
+      save.cards = mergeCards(cards, remote.cards, !full);
       writeSave(true);
       refreshCoins();
     },
     onSaveWritten(listener) { saveListeners.push(listener); },
+    // For the card battles (cards.js).
+    writeSave() { writeSave(); refreshCoins(); renderLobby(); },
+    tone(...args) { tone(...args); },
+    announce(message) { announce(message); },
+    onTap(button, handler) { onTap(button, handler); },
+    paintPortrait(target, kind, time) { paintPortrait(target, kind, time); },
+    // The card screen covers the game: pause a running level and keep the
+    // keyboard away from it while open.
+    setCardsOpen(open) {
+      cardsOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
+
+  let cardsOpen = false;
+
+  // Card progress from two copies of a save (see cards.js): every card at
+  // the higher level, the best stars of each stage; the team comes from
+  // this device unless it has none.
+  function mergeCards(mine, theirs, keepTeam = true) {
+    const a = mine && typeof mine === "object" ? mine : {}, b = theirs && typeof theirs === "object" ? theirs : {};
+    const most = (x, y, max) => {
+      const out = {};
+      for (const source of [x, y]) {
+        if (!source || typeof source !== "object") continue;
+        for (const [key, value] of Object.entries(source)) {
+          const n = Math.min(max, Math.floor(Number(value) || 0));
+          if (/^[a-z0-9]{1,30}$/.test(key) && n > 0) out[key] = Math.max(out[key] || 0, n);
+        }
+      }
+      return out;
+    };
+    const team = (keepTeam && Array.isArray(a.team) && a.team.some(Boolean)) ? a.team : Array.isArray(b.team) ? b.team : a.team;
+    const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
+    return {
+      ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
+      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2),
+      arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
+      dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
+    };
+  }
+
+  // A card portrait: a pet or a monster from the levels drawn into any canvas.
+  function paintPortrait(target, kind, time = 0) {
+    const g = target.getContext("2d");
+    const size = target.width;
+    g.clearRect(0, 0, size, size);
+    paintOn(g, () => {
+      ctx.save();
+      ctx.translate(size / 2, size / 2);
+      if (petArt[kind]) { ctx.scale(size / 52, size / 52); petArt[kind](time); ctx.restore(); return; }
+      if (kind === "king" || kind === "queen") {
+        const keep = { boss, cameraX };
+        cameraX = 0;
+        boss = kind === "king"
+          ? { kind: "king", x: -60, y: -120, w: 120, h: 120, alive: true, hurt: 0, facing: -1, mode: "walk" }
+          : { kind: "queen", x: -60, y: -40, w: 120, h: 80, alive: true, hurt: 0, facing: -1, mode: "fly" };
+        try {
+          if (kind === "king") { ctx.scale(size / 270, size / 270); ctx.translate(0, 125); }
+          else { ctx.scale(size / 170, size / 170); }
+          drawBoss(time);
+        } finally { boss = keep.boss; cameraX = keep.cameraX; }
+        ctx.restore();
+        return;
+      }
+      const sizes = enemySizes[kind];
+      if (!sizes) { ctx.restore(); return; }
+      const foe = makeEnemy(kind, -sizes[0] / 2, -sizes[1] / 2, 1);
+      foe.vx = -1; foe.dir = -1; foe.wait = 1; foe.vy = 0;
+      const draw = { bat: drawBat, hopper: drawHopper, urchin: drawUrchin, spitter: drawSpitter }[kind] || FOE_ART[kind];
+      const reach = kind === "spitter" ? 100 : kind === "bat" ? 120 : 96;
+      ctx.scale(size / reach, size / reach);
+      if (draw) draw(foe, foe.x, time);
+      else if (art.enemy.complete && art.enemy.naturalWidth) ctx.drawImage(art.enemy, -46, -48, 92, 92);
+      ctx.restore();
+    });
+  }
 
   function refreshCoins() {
     if (player) updateHud();
@@ -6095,14 +6174,50 @@
   if (accountUi.screen) onTap(accountUi.close, closeTopup);
   renderAccountButton();
 
+  // ---- Choosing a mode ----
+  // Once loading is done the player picks what to play: the adventure
+  // (the lobby), the dodge run or the card battles. The lobby's
+  // "เลือกโหมด" button comes back here.
+  const modeUi = { screen: document.querySelector("#modeScreen") };
+  const skipModes = ["level", "cards"].some(key => new URLSearchParams(location.search).has(key));
+  let newsWaiting = false;
+  let modesOpen = false;
+
+  function showModes() {
+    if (!modeUi.screen) return;
+    if (state === "playing") togglePause(true);
+    modesOpen = true;
+    modeUi.screen.hidden = false;
+    document.body.classList.add("dialog-open");
+    modeUi.screen.querySelector("button")?.focus();
+  }
+
+  function pickMode(mode) {
+    modesOpen = false;
+    modeUi.screen.hidden = true;
+    document.body.classList.remove("dialog-open");
+    [523, 659, 784].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
+    if (mode === "cards") { window.PupaCards?.open(); return; }
+    if (mode === "runner") openRunnerLevels();
+    else ui.startBtn.focus();
+    // what's new waits for the adventure, where it fits
+    if (newsWaiting && mode === "adventure") { newsWaiting = false; openNews(); }
+  }
+
+  if (modeUi.screen) {
+    modeUi.screen.querySelectorAll("[data-mode]").forEach(button => onTap(button, () => pickMode(button.dataset.mode)));
+    document.querySelectorAll("[data-open-modes]").forEach(button => onTap(button, () => showModes()));
+  }
+
   // ---- What's new ----
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-10a";
-  const NEWS_DATE = "9 ต.ค. 2569";
+  const NEWS_VERSION = "2026-10-11a";
+  const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "ศึกการ์ดแสงจันทร์", text: "จัดทีมการ์ด 5 ใบ เลือกลำดับสกิลเองทุกเทิร์น สู้มอนสเตอร์ 20 ด่าน 2 บท พร้อมบอส ชนะแล้วได้เหรียญและการ์ดใหม่ ใช้เหรียญอัปเลเวลการ์ด ตัวละครและสัตว์เลี้ยงที่มีในเกมได้การ์ดของตัวนั้นด้วย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "ด่านวิ่งหลบ", text: "5 ด่านพิเศษ วิ่งบนถนน 3 เลน ฉากไหลเข้ามาจากด้านบน ปัดหรือกดซ้ายขวาเปลี่ยนเลน กระโดดข้ามรั้ว หมอบลอดคาน เก็บเหรียญและไอเทมตลอดทาง เล่นได้เลยไม่ต้องปลดล็อก", image: "runner", open: () => { closeNews(); openRunnerLevels(); } },
     { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 70% ได้อีก 1 ดาว ไม่เสียหัวใจได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ด่านใหม่", title: "โลก 10 · หุบเขาไดโนเสาร์", text: "ด่าน 91–100 หุบเขาไดโนเสาร์ ป่าเฟิร์นยักษ์ ถ้ำฟอสซิลอำพัน ภูเขาไฟ จนถึงฝนดาวตกวันสิ้นยุค พร้อมบอสราชาทีเร็กซ์เพลิง และจักรพรรดิไดโนเสาร์อุกกาบาต", image: "world10", open: () => { closeNews(); openLevels(); } },
@@ -6196,6 +6311,17 @@
         }
       });
       return icon;
+    }
+    if (kind === "cards") {
+      const row = document.createElement("div");
+      row.className = "news-trio news-cards";
+      for (const id of ["ikuya", "pupav2", "pangji"]) {
+        const img = document.createElement("img");
+        img.src = `assets/${id}-hero.webp`;
+        img.alt = "";
+        row.append(img);
+      }
+      return row;
     }
     if (kind === "trio") {
       const row = document.createElement("div");
@@ -6321,7 +6447,12 @@
     let seen = null;
     try { seen = localStorage.getItem(NEWS_SEEN_KEY); } catch { /* ignore */ }
     // Not when a test link jumps straight into a level.
-    if (seen !== NEWS_VERSION && !new URLSearchParams(location.search).has("level")) openNews();
+    // Not when a test link jumps straight into a level, and not over the
+    // mode picker: it waits until a mode has been chosen (see pickMode).
+    if (seen !== NEWS_VERSION && !new URLSearchParams(location.search).has("level")) {
+      if (modeUi.screen && !skipModes) newsWaiting = true;
+      else openNews();
+    }
   }
 
   // Open a dialog straight from the finger lifting, not from the click a
@@ -7878,6 +8009,8 @@
   const keyMap = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump", j: "attack", J: "attack", x: "attack", X: "attack", f: "attack", F: "attack", ArrowDown: "down", s: "down", S: "down" };
   window.addEventListener("keydown", (event) => {
     // The market takes the keyboard while it is open: Escape closes it.
+    if (cardsOpen) { window.PupaCards?.key?.(event); return; }
+    if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
     if (loadingBusy) return;
@@ -7918,7 +8051,7 @@
     shell.addEventListener(type, (event) => event.preventDefault());
   }
   shell.addEventListener("touchmove", (event) => {
-    if (event.cancelable && !event.target.closest(".shop-list, .news-list")) event.preventDefault();
+    if (event.cancelable && !event.target.closest(".shop-list, .news-list, .cards-scroll")) event.preventDefault();
   }, { passive: false });
   let lastTouchEnd = 0;
   shell.addEventListener("touchend", (event) => {
@@ -8621,6 +8754,7 @@
     // A slow network never keeps the player out for long.
     await Promise.race([bootSteps(), pause(20000)]);
     hideLoading();
+    if (!skipModes) showModes();
   }
 
   async function bootSteps() {

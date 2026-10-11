@@ -116,3 +116,36 @@ test("api: webhook settles a PromptPay charge, even for a player who never synce
     assert.equal((await call("GET", `/api/orders/${bad.orderId}`, { token: "dev:cat" })).json.balance, 1030);
   } finally { close(); }
 });
+
+test("merge: card battles keep the higher card levels and stars, the device's team", () => {
+  const first = mergeSave(null, cleanSave(device(100, { cards: { units: { pupa: 4, kitten: 2, "BAD key": 9 }, stars: { 1: 3, 2: 1 }, team: ["pupa", "", "kitten", 5, ""], auto: true } })), 0);
+  assert.deepEqual(first.cards.units, { pupa: 4, kitten: 2 });
+  assert.deepEqual(first.cards.team, ["pupa", "", "kitten", "", ""]);
+  assert.equal(first.cards.auto, true);
+  const second = mergeSave(first, cleanSave(device(100, { cards: { units: { pupa: 2, ikuya: 1 }, stars: { 2: 3, 3: 2 }, team: ["ikuya", "pupa", "", "", ""] } })), 100);
+  assert.deepEqual(second.cards.units, { pupa: 4, kitten: 2, ikuya: 1 });
+  assert.deepEqual(second.cards.stars, { 1: 3, 2: 3, 3: 2 });
+  assert.deepEqual(second.cards.team, ["ikuya", "pupa", "", "", ""]);
+  // an old device that knows nothing of cards loses nothing
+  const third = mergeSave(second, cleanSave(device(100)), 100);
+  assert.deepEqual(third.cards.units, second.cards.units);
+  assert.deepEqual(third.cards.team, second.cards.team);
+});
+
+test("merge: card hunting, login rewards, costumes and the arena keep the furthest along", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { pupa: 3 }, xp: { pupa: 50 }, outfit: { pupa: 2 }, arena: 4, idleAt: 1000, daily: { day: "2026-10-11", streak: 3 } } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { units: { pupa: 3 }, xp: { pupa: 20 }, arena: 2, idleAt: 500, daily: { day: "2026-10-09", streak: 1 } } })), 0);
+  assert.equal(b.cards.xp.pupa, 50);
+  assert.equal(b.cards.outfit.pupa, 2);
+  assert.equal(b.cards.arena, 4);
+  assert.equal(b.cards.idleAt, 1000);
+  assert.deepEqual(b.cards.daily, { day: "2026-10-11", streak: 3 });
+});
+
+test("merge: a daily dungeon cleared on either device stays cleared that day", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { dungeon: { day: "2026-10-11", exp: true, coin: false } } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { dungeon: { day: "2026-10-11", exp: false, coin: true } } })), 0);
+  assert.deepEqual(b.cards.dungeon, { day: "2026-10-11", exp: true, coin: true });
+  const c = mergeSave(b, cleanSave(device(0, { cards: { dungeon: { day: "2026-10-12", exp: false, coin: false } } })), 0);
+  assert.deepEqual(c.cards.dungeon, { day: "2026-10-12", exp: false, coin: false });
+});
