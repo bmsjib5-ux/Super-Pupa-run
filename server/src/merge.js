@@ -43,7 +43,7 @@ export function cleanSave(raw) {
   if (!raw || typeof raw !== "object" || JSON.stringify(raw).length > MAX_SAVE_BYTES) return null;
   const shop = raw.shop && typeof raw.shop === "object" ? raw.shop : {};
   const out = {
-    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), gems: int(raw.gems), cardPity: int(raw.cardPity, 1000), plays: int(raw.plays), wins: int(raw.wins),
+    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), gems: int(raw.gems), cardPity: int(raw.cardPity, 1000), gift: typeof raw.gift === "string" ? raw.gift.slice(0, 40) : "", plays: int(raw.plays), wins: int(raw.wins),
     cleared: numberList(raw.cleared),
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
@@ -90,6 +90,8 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
   for (const [id, xp] of Object.entries(incoming.shop.heroXp || {})) shop.heroXp[id] = Math.max(shop.heroXp[id] || 0, xp);
   return {
     best: Math.max(current.best, incoming.best), points: Math.max(current.points, incoming.points), coins, gems, cardPity: incoming.cardPity,
+    // the newer one-time gift wins, so a gift given on one device is not given again on another
+    gift: [current.gift || "", incoming.gift || ""].sort().pop(),
     plays: Math.max(current.plays, incoming.plays), wins: Math.max(current.wins, incoming.wins),
     cleared: [...new Set([...current.cleared, ...incoming.cleared])].sort((a, b) => a - b),
     stars: maxMap(current.stars, incoming.stars),

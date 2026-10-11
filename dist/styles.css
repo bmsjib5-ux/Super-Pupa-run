@@ -1130,3 +1130,6 @@ button { touch-action: manipulation; }
   .mode-card h2 { margin-bottom: .5rem; }
   .mode-picture { height: 34vh; }
 }
+.mode-gift { width: min(36rem, 100%); margin: -.4rem auto .9rem; padding: .55rem 1rem; border: 1px solid rgba(255,215,106,.6); border-radius: 1rem; color: #ffe5a5; font-size: .85rem; background: linear-gradient(90deg, rgba(255,215,106,.18), rgba(195,139,255,.18)); box-shadow: 0 0 1.2rem rgba(255,215,106,.25); }
+.mode-gift[hidden] { display: none; }
+.mode-gift b { color: #fff; font-size: 1.05rem; }

@@ -160,3 +160,9 @@ test("merge: gems move like coins, only by how they changed since the last sync"
   const back = mergeSave(other, cleanSave(device(0, { gems: 350 })), 0, 300);
   assert.equal(back.gems, 250);
 });
+
+test("merge: the one-time gift mark survives a device that has not had it", () => {
+  const a = mergeSave(null, cleanSave(device(0, { gift: "gacha-2026-10", gems: 600 })), 0, 0);
+  const b = mergeSave(a, cleanSave(device(0, { gems: 600 })), 0, 600);
+  assert.equal(b.gift, "gacha-2026-10");
+});

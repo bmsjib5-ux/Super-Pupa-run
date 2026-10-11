@@ -1983,6 +1983,21 @@
   save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
   normalizeStars();
   normalizeShop();
+  // Once per save: gems for players from before card pulls, who may have
+  // been saving coins for a hero the market no longer sells. 500 to start
+  // with, plus the gems every level they had already cleared would give
+  // now (see markCleared). Shown on the mode picker.
+  const GIFT_ID = "gacha-2026-10";
+  let giftGems = 0;
+  if (save.gift !== GIFT_ID) {
+    const played = save.plays > 0 || save.points > 0 || save.cleared.length > 0 || save.coins > 0 || save.shop.owned.some(id => !FREE_IDS.includes(id));
+    if (played) {
+      giftGems = 500 + save.cleared.reduce((sum, num) => sum + (levels[num - 1]?.boss ? 20 : 5), 0);
+      save.gems += giftGems;
+    }
+    save.gift = GIFT_ID;
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
+  }
   // For trying things out: open the game with ?unlock=heroes to own every
   // character on this device, or ?unlock=all for every character, outfit,
   // hat and pet. The grant is saved, so the link is only needed once.
@@ -6232,6 +6247,13 @@
     if (!modeUi.screen) return;
     if (state === "playing") togglePause(true);
     modesOpen = true;
+    const gift = modeUi.screen.querySelector("#modeGift");
+    if (gift && giftGems) {
+      gift.hidden = false;
+      gift.querySelector("b").textContent = `💎 ${formatPoints(giftGems)}`;
+      announce(`ของขวัญชดเชยผู้เล่นเดิม ได้รับ ${giftGems} เพชร สำหรับสุ่มการ์ด`);
+      giftGems = 0;
+    } else if (gift) gift.hidden = true;
     modeUi.screen.hidden = false;
     document.body.classList.add("dialog-open");
     modeUi.screen.querySelector("button")?.focus();
