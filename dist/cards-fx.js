@@ -86,19 +86,19 @@
       s.fillStyle = sky; s.fillRect(0, 0, w, h);
       // stars
       for (let i = 0; i < 70; i++) {
-        const x = (i * 97.3) % w, y = (i * 53.7) % (h * .55);
+        const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
       // moon
-      const mx = w * .78, my = h * .2, mr = Math.min(w, h) * .09;
+      const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = halo; s.beginPath(); s.arc(mx, my, mr * 3.2, 0, TAU); s.fill();
       s.fillStyle = lake ? "#e6f6ff" : "#fff1d6"; s.beginPath(); s.arc(mx, my, mr, 0, TAU); s.fill();
       // far hills
-      const ground = h * .62;
+      const ground = h * .34; // the fighters stand below this line
       s.fillStyle = lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
@@ -115,8 +115,29 @@
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#3d1b55"); floor.addColorStop(1, "#140a26");
         s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
-        for (const [x, k] of [[w * .06, 1], [w * .2, .7], [w * .9, 1.1], [w * .66, .6]]) tree(s, x, ground + 6, Math.min(w, h) * .28 * k);
+        for (const [x, k] of [[w * .04, 1], [w * .2, .7], [w * .93, 1.1], [w * .68, .6], [w * .45, .45]]) tree(s, x, ground + 4, Math.min(w, h) * .26 * k);
+        // grass tufts and stones across the field
+        for (let i = 0; i < 40; i++) {
+          const x = (i * 131.7) % w, y = ground + 14 + ((i * 71.3) % (h - ground - 14));
+          const k = .5 + (y - ground) / (h - ground);
+          s.fillStyle = i % 3 ? "rgba(120,200,140,.25)" : "rgba(255,170,210,.22)";
+          s.beginPath(); s.moveTo(x - 6 * k, y); s.lineTo(x - 2 * k, y - 9 * k); s.lineTo(x, y); s.lineTo(x + 3 * k, y - 11 * k); s.lineTo(x + 6 * k, y); s.fill();
+        }
       }
+      // a glowing circle of runes in the middle of the field
+      const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
+      s.save();
+      s.strokeStyle = lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.lineWidth = 2;
+      for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
+      s.lineWidth = 1.2;
+      s.beginPath();
+      for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
+      s.stroke();
+      const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
+      core.addColorStop(0, lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
+      s.restore();
       // soft spotlight where the two sides meet
       const spot = s.createRadialGradient(w / 2, h * .62, 10, w / 2, h * .62, Math.max(w, h) * .55);
       spot.addColorStop(0, "rgba(255,200,230,.14)"); spot.addColorStop(1, "rgba(0,0,0,.35)");

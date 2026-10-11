@@ -237,16 +237,6 @@ button.unit { cursor: crosshair; }
 
 /* Phones held upright: monsters on top, heroes below, skills in a grid. */
 @media (orientation: portrait) {
-  .battle-field { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-  .battle-side { flex-direction: column !important; }
-  .battle-side.is-foes { order: -1; }
-  .battle-side.is-heroes { flex-direction: column-reverse !important; }
-  .battle-row { flex-direction: row; flex: none; width: 100%; max-width: none; justify-content: center; }
-  .battle-side { min-height: 0; gap: .3rem; }
-  .battle-row { gap: .3rem; }
-  .battle-row .unit { flex: 1; max-width: 9rem; gap: .25rem; padding: .25rem .3rem; }
-  .unit-art, .unit.is-boss .unit-art { width: 2.3rem; height: 2.3rem; }
-  .unit-name { font-size: .64rem; }
   .battle-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .skill-group { grid-template-columns: 1fr; }
   .battle-go { grid-column: 1 / -1; width: 100%; }
@@ -294,5 +284,73 @@ button.unit { cursor: crosshair; }
 @keyframes unit-fall { to { transform: translateY(6px) rotate(-70deg) scale(.85); opacity: .6; } }
 .unit.is-arriving { animation: unit-arrive .5s cubic-bezier(.2,.8,.3,1.2) both; }
 @keyframes unit-arrive { from { transform: translateX(3rem); opacity: 0; } }
-@media (orientation: portrait) { @keyframes unit-arrive { from { transform: translateY(-2rem); opacity: 0; } } }
 @media (prefers-reduced-motion: reduce) { .unit-art, .unit.is-arriving { animation: none; } }
+
+/* ---- Fighters on the field (like a stage, not a table) ---- */
+.battle-field { display: block; padding: 0; overflow: hidden; }
+.battle-field > .battle-side { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.unit {
+  position: absolute;
+  display: block;
+  width: clamp(4.2rem, 10.5vw, 7.6rem);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  transform: translate(-50%, -100%) scale(var(--depth, 1));
+  transform-origin: 50% 100%;
+  pointer-events: auto;
+}
+.unit.is-boss { width: clamp(6.6rem, 17vw, 12rem); box-shadow: none; border: 0; }
+.unit .unit-art, .unit.is-boss .unit-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.unit .card-art { filter: drop-shadow(0 .25rem .3rem rgba(0,0,0,.55)); }
+.unit.is-foe .card-art { transform: none; }
+.battle-side.is-heroes .unit .card-art { transform: scaleX(1); }
+.unit-shadow { position: absolute; left: 15%; right: 15%; bottom: -4%; height: 14%; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.55), transparent 70%); }
+.unit-head { position: absolute; left: 12%; right: 12%; top: -14%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .05rem .2rem; }
+.unit-head .unit-fx { grid-column: 1 / -1; justify-content: center; min-height: .8rem; font-size: .66rem; }
+.unit-head .unit-hp { grid-column: 1; height: .38rem; border: 1px solid rgba(0,0,0,.6); box-shadow: 0 0 0 1px rgba(255,255,255,.15); }
+.unit-head .unit-lv { grid-column: 2; padding: 0 .25rem; border-radius: 999px; color: #fff; font-size: .5rem; font-weight: 800; background: rgba(13,8,36,.75); }
+.unit-queue { top: 4%; left: -2%; }
+.unit-focus { top: auto; right: auto; left: 50%; bottom: -10%; width: 80%; height: 22%; border: 2px solid var(--gold); border-radius: 50%; transform: translateX(-50%); font-size: 0; box-shadow: 0 0 .6rem rgba(255,215,106,.7); animation: focus-spin 1.2s ease-in-out infinite; }
+@keyframes focus-spin { 50% { opacity: .5; } }
+.unit.is-focus { border: 0; }
+.unit.is-ko { filter: grayscale(1) brightness(.5); }
+.unit.is-ko .unit-head { visibility: hidden; }
+.unit.is-acting { animation: fighter-hop .35s ease; }
+.is-foes .unit.is-acting { animation-name: fighter-hop; }
+.unit.is-hit { animation: fighter-hit .3s ease; }
+@keyframes fighter-hop { 40% { transform: translate(-50%, -112%) scale(calc(var(--depth, 1) * 1.08)); } }
+@keyframes fighter-hit { 25% { transform: translate(-56%, -100%) scale(var(--depth, 1)); filter: brightness(2) saturate(.3); } 60% { transform: translate(-46%, -100%) scale(var(--depth, 1)); } }
+.unit.is-arriving { animation: fighter-arrive .5s cubic-bezier(.2,.8,.3,1.2) both; }
+@keyframes fighter-arrive { from { transform: translate(40%, -100%) scale(var(--depth, 1)); opacity: 0; } }
+
+/* big damage numbers, like an action game */
+.unit-pop { top: 10%; font-size: clamp(1rem, 2.6vw, 1.5rem); font-style: italic; -webkit-text-stroke: 1px rgba(60,10,10,.9); text-shadow: 0 .12rem 0 #5a1010, 0 0 .5rem rgba(0,0,0,.6); }
+.unit-pop.is-dmg { color: #ffcf6b; }
+.unit-pop.is-crit { color: #ff6b3d; font-size: clamp(1.3rem, 3.4vw, 2rem); }
+.unit.is-foe .unit-pop.is-dmg { color: #ffe08a; }
+.battle-side.is-heroes .unit-pop.is-dmg { color: #ff8a8a; }
+
+/* the party bar: a face and health for each hero over their skills */
+.skill-owner { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; gap: 0 .3rem; text-align: left; }
+.skill-face { grid-row: span 2; width: 1.9rem; height: 1.9rem; overflow: hidden; border: 2px solid rgba(255,215,106,.6); border-radius: .5rem; background: rgba(255,255,255,.08); }
+.skill-face .card-art { transform: scale(1.5) translateY(12%); }
+.skill-owner b { overflow: hidden; font-size: .6rem; text-overflow: ellipsis; white-space: nowrap; }
+.skill-hp { display: block; height: .3rem; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.15); }
+.skill-hp i { display: block; height: 100%; background: linear-gradient(90deg, #5fe39a, #b5ff7a); transition: width .25s ease; }
+@media (orientation: portrait) {
+  .unit { width: clamp(3.6rem, 19vw, 6rem); }
+  .unit.is-boss { width: clamp(5.4rem, 30vw, 9rem); }
+  .skill-owner { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .skill-face { grid-row: auto; }
+  .skill-owner b { display: none; }
+  .skill-hp { width: 100%; }
+}
+@media (orientation: landscape) and (max-height: 35rem) {
+  .unit { width: clamp(3.4rem, 9vw, 5rem); }
+  .unit.is-boss { width: clamp(5rem, 14vw, 7.5rem); }
+  .skill-face { width: 1.5rem; height: 1.5rem; }
+}

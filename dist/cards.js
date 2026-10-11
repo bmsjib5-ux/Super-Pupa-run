@@ -438,36 +438,69 @@
     v.fast.setAttribute("aria-pressed", String(cards().fast));
   }
 
-  // One side of the field: front row nearest the middle.
+  // Where each fighter stands, as a share of the field: heroes on the
+  // left facing right, monsters on the right, front rows near the middle.
+  // y is where the feet touch the ground.
+  const STAND_X = { hero: { front: 37, back: 15 }, foe: { front: 63, back: 85 } };
+  function standAt(count, n) {
+    if (count === 1) return 70;
+    const top = 44, bottom = 90;
+    return top + (bottom - top) * n / (count - 1);
+  }
+
+  // One side of the field: every fighter standing on the ground.
   function drawSide(side) {
     const v = battle, b = v.state;
     const list = side === "hero" ? b.heroes : b.foes;
     const box = side === "hero" ? v.heroSide : v.foeSide;
-    const rows = { front: el("div", "battle-row is-front"), back: el("div", "battle-row is-back") };
     v.tiles[side] = [];
-    list.forEach((u, i) => {
-      if (!u) return;
-      const tile = side === "foe" ? button("unit is-foe", null, () => setFocus(i)) : el("div", "unit");
-      if (u.boss) tile.classList.add("is-boss");
-      const art = el("span", "unit-art");
-      art.append(portrait(side === "foe" ? E.FOES[u.id].art : u.id));
-      const info = el("span", "unit-info");
-      const name = el("b", "unit-name", u.name);
-      const lv = el("small", "unit-lv", `Lv ${u.lv}`);
-      const hp = el("span", "unit-hp");
-      hp.append(el("i", "unit-hp-fill"), el("i", "unit-hp-shield"));
-      const fx = el("span", "unit-fx");
-      info.append(name, lv, hp, fx);
-      tile.append(art, info);
-      if (side === "hero") tile.append(el("span", "unit-queue"));
-      else tile.append(el("span", "unit-focus", "🎯"));
-      rows[u.row].append(tile);
-      v.tiles[side][i] = tile;
-      paintUnit(side, i, { hp: u.hp, maxHp: u.maxHp, sh: u.status.find(s => s.k === "shield")?.v || 0, st: u.status.map(s => s.k), alive: u.alive });
-    });
-    box.replaceChildren(rows.back, rows.front);
+    const nodes = [];
+    for (const row of ["back", "front"]) {
+      const inRow = list.filter(u => u && u.row === row);
+      inRow.forEach((u, n) => {
+        const i = list.indexOf(u);
+        const tile = side === "foe" ? button("unit is-foe", null, () => setFocus(i)) : el("div", "unit");
+        if (u.boss) tile.classList.add("is-boss");
+        const y = standAt(inRow.length, n);
+        tile.style.left = `${STAND_X[side][row] + (inRow.length > 2 ? (n % 2 ? 3 : -3) * (side === "hero" ? 1 : -1) : 0)}%`;
+        tile.style.top = `${y}%`;
+        tile.style.zIndex = String(Math.round(y));
+        tile.style.setProperty("--depth", String(.82 + y / 500));
+        const art = el("span", "unit-art");
+        art.append(portrait(side === "foe" ? E.FOES[u.id].art : u.id));
+        const head = el("span", "unit-head");
+        const hp = el("span", "unit-hp");
+        hp.append(el("i", "unit-hp-fill"), el("i", "unit-hp-shield"));
+        head.append(el("span", "unit-fx"), hp, el("small", "unit-lv", `Lv ${u.lv}`));
+        tile.append(el("span", "unit-shadow"), art, head);
+        if (side === "hero") tile.append(el("span", "unit-queue"));
+        else tile.append(el("span", "unit-focus"));
+        nodes.push(tile);
+        v.tiles[side][i] = tile;
+      });
+    }
+    box.replaceChildren(...nodes);
+    list.forEach((u, i) => { if (u) paintUnit(side, i, { hp: u.hp, maxHp: u.maxHp, sh: u.status.find(st => st.k === "shield")?.v || 0, st: u.status.map(st => st.k), alive: u.alive }); });
     markFocus();
     markQueue();
+  }
+
+  // Close-range fighters run up to their target and back.
+  const MELEE = new Set(["slash", "peck", "bite", "foeSlash", "stomp"]);
+  function dash(v, tile, target) {
+    if (!tile || !target || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const a = tile.getBoundingClientRect(), t = target.getBoundingClientRect();
+    const toward = Math.sign(t.left - a.left) || 1;
+    const dx = t.left - a.left - toward * a.width * .55, dy = t.top - a.top;
+    const time = 150 * speed();
+    tile.style.transition = `translate ${time}ms ease-in`;
+    tile.style.translate = `${dx}px ${dy}px`;
+    tile.style.zIndex = "200";
+    setTimeout(() => {
+      tile.style.transition = `translate ${time * 1.6}ms ease-out`;
+      tile.style.translate = "";
+      setTimeout(() => { tile.style.zIndex = String(Math.round(parseFloat(tile.style.top))); }, time * 1.6);
+    }, time + 260 * speed());
   }
 
   function paintUnit(side, i, snap) {
@@ -480,6 +513,7 @@
     if (snap.alive === false && !tile.classList.contains("is-ko") && tile.isConnected) show?.knockout(tile);
     tile.classList.toggle("is-ko", !snap.alive);
     tile.status = snap.alive ? snap.st : [];
+    if (side === "hero") { const bar = battle.bar.querySelectorAll(".skill-group")[battle.state.heroes.slice(0, i).filter(Boolean).length]?.querySelector(".skill-hp i"); if (bar) bar.style.width = `${fill * 100}%`; }
     const fx = tile.querySelector(".unit-fx");
     fx.replaceChildren(...[...new Set(snap.st)].filter(k => STATUS[k]).map(k => { const s = el("i", null, STATUS[k][0]); s.title = STATUS[k][1]; return s; }));
     const u = (side === "hero" ? battle.state.heroes : battle.state.foes)[i];
@@ -507,7 +541,14 @@
     b.heroes.forEach((u, i) => {
       if (!u) return;
       const group = el("div", `skill-group${u.alive ? "" : " is-ko"}`);
-      group.append(el("span", "skill-owner", u.name));
+      const owner = el("span", "skill-owner");
+      const face = el("span", "skill-face");
+      face.append(portrait(u.id));
+      const bar = el("span", "skill-hp");
+      bar.append(el("i"));
+      bar.firstChild.style.width = `${Math.max(0, u.hp / u.maxHp) * 100}%`;
+      owner.append(face, el("b", null, u.name), bar);
+      group.append(owner);
       const stunned = u.status.some(s => s.k === "stun");
       u.skills.forEach((skill, s) => {
         const queued = v.queue.findIndex(q => q.i === i && q.s === s);
@@ -654,6 +695,7 @@
               if (node && next.side !== side && !reached.includes(node)) reached.push(node);
             }
             show.cast(tile, reached, look, side);
+            if (MELEE.has(look) && reached.length === 1) dash(v, tile, reached[0]);
           }
           if (side === "hero" && ev.s >= 0) v.queue = v.queue.filter(q => q.i !== ev.i);
           markQueue();
