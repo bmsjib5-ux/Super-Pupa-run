@@ -5854,6 +5854,7 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
 

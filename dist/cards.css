@@ -443,3 +443,15 @@ button.unit { cursor: crosshair; }
 .star-group { padding: .15rem .55rem; border: 1px solid rgba(255,215,106,.45); border-radius: 999px; color: #ffe5a5; font-size: .66rem; background: rgba(255,215,106,.08); }
 .star-group.is-paid { color: var(--mint); border-color: rgba(137,240,192,.5); background: rgba(137,240,192,.08); }
 .star-bonus-line { color: var(--gold); font-size: .9rem; }
+
+/* ---- Full screen ---- */
+/* The card mode is a mode of its own: it covers the whole window, edge to
+   edge, and keeps only the safe areas clear. */
+.cards-overlay {
+  position: fixed;
+  z-index: 40;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: #0d0824;
+}
+.cards-overlay .cards-card { width: 100%; height: 100%; max-width: none; max-height: none; border: 0; border-radius: 0; }
+.cards-overlay .shop-head .cards-home { order: -1; font-size: 1.2rem; }

@@ -176,8 +176,9 @@
   const wallet = el("div", "shop-wallet");
   wallet.setAttribute("aria-label", "เหรียญที่มี");
   wallet.innerHTML = "<i>●</i> <b></b> <span class=\"gem\">💎</span> <b class=\"gems\"></b>";
-  const closeButton = button("icon-button", "✕", () => close(), "ปิดศึกการ์ด");
-  head.append(title, wallet, closeButton);
+  // The card mode fills the screen; home goes back to choosing a mode.
+  const closeButton = button("icon-button cards-home", "🏠", () => goHome(), "กลับหน้าเลือกโหมด");
+  head.append(closeButton, title, wallet);
   const body = el("div", "cards-body");
   frame.append(head, body);
   screen.append(frame);
@@ -212,10 +213,30 @@
   function close() {
     if (battle) { leaveBattle(); return; }
     if (sheet) { closeSheet(); return; }
+    goHome();
+  }
+
+  // Back to the mode picker. A battle still running needs a second tap.
+  let homeArmed = 0;
+  function goHome() {
+    const v = battle;
+    if (v && v.state.phase !== "done" && Date.now() - homeArmed > 2500) {
+      homeArmed = Date.now();
+      closeButton.textContent = "ออก?";
+      setTimeout(() => { closeButton.textContent = "🏠"; }, 2500);
+      tone(330, .08, "square", .04);
+      announce("กดอีกครั้งเพื่อยอมแพ้และกลับหน้าเลือกโหมด");
+      return;
+    }
+    homeArmed = 0;
+    closeButton.textContent = "🏠";
+    if (v) { v.token.stopped = true; stopShow(); battle = null; }
+    if (sheet) closeSheet(true);
+    tab = "stages";
     isShown = false;
     screen.hidden = true;
     game().setCardsOpen(false);
-    opener?.focus?.();
+    if (game().showModes) game().showModes(); else opener?.focus?.();
   }
 
   // ---- Hub: stages and team ----
