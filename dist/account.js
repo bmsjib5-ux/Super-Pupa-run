@@ -134,10 +134,10 @@ export async function sync(full = false) {
   const g = game();
   if (!state.user || !g) return null;
   if (syncing) return syncing;
-  const sentCoins = g.save.coins;
-  const body = { save: g.exportSave(), baseCoins: g.cloudBase(state.user.uid), syncId: crypto.randomUUID() };
+  const sentCoins = g.save.coins, sentGems = g.save.gems || 0;
+  const body = { save: g.exportSave(), baseCoins: g.cloudBase(state.user.uid), baseGems: g.cloudBaseGems?.(state.user.uid) || 0, syncId: crypto.randomUUID() };
   syncing = api("/api/save", { method: "PUT", body }).then(result => {
-    g.applyCloudSave(result.save, state.user.uid, sentCoins, full);
+    g.applyCloudSave(result.save, state.user.uid, sentCoins, full, sentGems);
     state.topupCoins = result.topupCoins || 0;
     changed();
     return result;
@@ -156,10 +156,10 @@ async function flushSync() {
   const g = game();
   if (!state.user || !g || document.visibilityState !== "hidden") return;
   window.clearTimeout(syncTimer);
-  if (g.save.cloud?.uid === state.user.uid && g.save.cloud.coins === g.save.coins) return;
-  const body = { save: g.exportSave(), baseCoins: g.cloudBase(state.user.uid), syncId: crypto.randomUUID() };
+  if (g.save.cloud?.uid === state.user.uid && g.save.cloud.coins === g.save.coins && (g.save.cloud.gems || 0) === (g.save.gems || 0)) return;
+  const body = { save: g.exportSave(), baseCoins: g.cloudBase(state.user.uid), baseGems: g.cloudBaseGems?.(state.user.uid) || 0, syncId: crypto.randomUUID() };
   const sentCoins = g.save.coins;
-  g.markSynced(state.user.uid, sentCoins);
+  g.markSynced(state.user.uid, sentCoins, g.save.gems || 0);
   api("/api/save", { method: "PUT", body, keepalive: true }).catch(() => { /* next visit syncs again */ });
 }
 

@@ -43,7 +43,7 @@ export function cleanSave(raw) {
   if (!raw || typeof raw !== "object" || JSON.stringify(raw).length > MAX_SAVE_BYTES) return null;
   const shop = raw.shop && typeof raw.shop === "object" ? raw.shop : {};
   const out = {
-    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), plays: int(raw.plays), wins: int(raw.wins),
+    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), gems: int(raw.gems), cardPity: int(raw.cardPity, 1000), plays: int(raw.plays), wins: int(raw.wins),
     cleared: numberList(raw.cleared),
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
@@ -73,9 +73,11 @@ function mergeCards(current, incoming) {
 
 // `current` is the account's save (or null), `incoming` the device's clean
 // save and `baseCoins` the device's coins at its last sync with this account.
-export function mergeSave(current, incoming, baseCoins) {
-  if (!current) return { ...incoming, coins: int(incoming.coins) };
+export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
+  if (!current) return { ...incoming, coins: int(incoming.coins), gems: int(incoming.gems) };
   const coins = int(current.coins + (incoming.coins - int(baseCoins)));
+  // gems for card pulls move the same way as coins
+  const gems = int((current.gems || 0) + (incoming.gems - int(baseGems)));
   const shop = {
     ...incoming.shop,
     owned: [...new Set([...current.shop.owned, ...incoming.shop.owned])],
@@ -87,7 +89,7 @@ export function mergeSave(current, incoming, baseCoins) {
   for (const [id, level] of Object.entries(incoming.shop.petLevels)) shop.petLevels[id] = Math.max(shop.petLevels[id] || 0, level);
   for (const [id, xp] of Object.entries(incoming.shop.heroXp || {})) shop.heroXp[id] = Math.max(shop.heroXp[id] || 0, xp);
   return {
-    best: Math.max(current.best, incoming.best), points: Math.max(current.points, incoming.points), coins,
+    best: Math.max(current.best, incoming.best), points: Math.max(current.points, incoming.points), coins, gems, cardPity: incoming.cardPity,
     plays: Math.max(current.plays, incoming.plays), wins: Math.max(current.wins, incoming.wins),
     cleared: [...new Set([...current.cleared, ...incoming.cleared])].sort((a, b) => a - b),
     stars: maxMap(current.stars, incoming.stars),

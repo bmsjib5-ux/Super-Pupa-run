@@ -34,11 +34,14 @@
   const PICTURES = {
     pupa: "assets/pupa-hero-3d.webp", jibjib: "assets/jibjib-hero.webp", baitoey: "assets/baitoey-hero.webp",
     ikuya: "assets/ikuya-hero.webp", pangji: "assets/pangji-hero.webp", pupav2: "assets/pupav2-hero.webp",
-    dragon: "assets/dragon-pet.webp"
+    dragon: "assets/dragon-pet.webp",
+    sakura: "assets/sakura-hero.webp", chantra: "assets/chantra-hero.webp", thongkham: "assets/thongkham-hero.webp",
+    miu: "assets/miu-hero.webp", ratri: "assets/ratri-hero.webp",
+    moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp"
   };
   // A worn costume recolours the card and adds a golden glow.
-  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140 };
-  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก" };
+  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330 };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี" };
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   function portrait(kind) {
     const art = plainPortrait(kind);
@@ -67,6 +70,9 @@
     "firefly:0": "heal", "firefly:1": "buff", "kitten:0": "slash", "kitten:1": "peck",
     "minibat:0": "bite", "minibat:1": "sonic", "starsprite:0": "shield", "starsprite:1": "star",
     "dragon:0": "fire", "dragon:1": "fire",
+    "sakura:0": "peck", "sakura:1": "wind", "chantra:0": "heal", "chantra:1": "shield", "thongkham:0": "shield", "thongkham:1": "stomp",
+    "miu:0": "star", "miu:1": "star", "ratri:0": "orb", "ratri:1": "star", "moonrabbit:0": "heal", "moonrabbit:1": "buff",
+    "starowl:0": "orb", "starowl:1": "star", "silverwolf:0": "bite", "silverwolf:1": "sonic",
     "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
     "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",
     "king:0": "stomp", "king:1": "spore", "queen:0": "sonic", "queen:1": "bite"
@@ -97,6 +103,8 @@
       if (lv > 0) units[id] = lv;
     }
     for (const id of [...E.STARTER, ...(s.shop?.owned || [])]) if (E.CARDS[id] && !units[id]) units[id] = 1;
+    // and every card's hero or pet can be played in the adventure too
+    if (s.shop?.owned) for (const id of Object.keys(units)) if (!s.shop.owned.includes(id)) s.shop.owned.push(id);
     const seen = new Set();
     let team = (Array.isArray(raw.team) ? raw.team : []).slice(0, E.TEAM_SIZE).map(id => {
       if (!units[id] || seen.has(id)) return "";
@@ -139,7 +147,6 @@
   }
   const teamPower = () => cards().team.filter(Boolean).reduce((sum, id) => sum + E.power(id, cards().units[id]), 0);
   // The stage a card is the first-clear prize of.
-  const prizeStage = (id) => E.STAGES.find(stage => stage.card === id);
 
   // ---- The frame ----
   const frame = el("div", "shop-card cards-card");
@@ -148,7 +155,7 @@
   title.id = "cardsTitle";
   const wallet = el("div", "shop-wallet");
   wallet.setAttribute("aria-label", "เหรียญที่มี");
-  wallet.innerHTML = "<i>●</i> <b></b>";
+  wallet.innerHTML = "<i>●</i> <b></b> <span class=\"gem\">💎</span> <b class=\"gems\"></b>";
   const closeButton = button("icon-button", "✕", () => close(), "ปิดศึกการ์ด");
   head.append(title, wallet, closeButton);
   const body = el("div", "cards-body");
@@ -161,7 +168,12 @@
   let sheet = null;          // the open detail panel
   let battle = null;         // the running battle view, if any
 
-  function showCoins() { wallet.querySelector("b").textContent = fmt(save().coins); }
+  function showCoins() {
+    wallet.querySelector("b").textContent = fmt(save().coins);
+    wallet.querySelector(".gems").textContent = fmt(save().gems || 0);
+    wallet.setAttribute("aria-label", `เหรียญ ${fmt(save().coins)} เพชร ${fmt(save().gems || 0)}`);
+  }
+  const addGems = (n) => { save().gems = (save().gems || 0) + n; };
 
   function open(event) {
     if (!game()) return;
@@ -194,7 +206,7 @@
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["daily", "ประจำวัน"], ["arena", "ประลอง 10v10"], ["team", "ทีม"]]) {
+    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["team", "ทีม"]]) {
       const t = button("", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
@@ -202,7 +214,7 @@
     }
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
-    if (tab === "stages") renderStages(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
+    if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
     body.replaceChildren(idleBanner(), tabs, panel);
   }
 
@@ -246,13 +258,14 @@
     const grid = el("div", "daily-grid");
     E.DAILY.forEach((r, n) => {
       const cell = el("div", `daily-day${n + 1 < day ? " is-done" : n + 1 === day ? " is-today" : ""}`);
-      cell.append(el("small", null, `วันที่ ${n + 1}`), el("b", null, [r.coins ? `● ${r.coins}` : "", r.xp ? `EXP ${r.xp}` : ""].filter(Boolean).join(" + ")));
+      cell.append(el("small", null, `วันที่ ${n + 1}`), el("b", null, [r.gems ? `💎 ${r.gems}` : "", r.coins ? `● ${r.coins}` : "", r.xp ? `EXP ${r.xp}` : ""].filter(Boolean).join(" + ")));
       grid.append(cell);
     });
     const take = button("primary-button", "รับรางวัลวันนี้", () => {
       const r = E.DAILY[day - 1];
       c.daily = { day: today(), streak: day };
       save().coins += r.coins || 0;
+      addGems(r.gems || 0);
       const ups = r.xp ? shareXp(c.team.filter(Boolean), r.xp) : [];
       store();
       [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
@@ -262,6 +275,79 @@
     openSheet([el("h3", "sheet-title", "รางวัลเข้าเกมรายวัน"), el("p", "sheet-sub", "เข้ามาทุกวันติดกัน รางวัลยิ่งใหญ่ขึ้น ครบ 7 วันเริ่มรอบใหม่ · EXP แจกให้การ์ดทุกใบในทีม"), grid, el("div", "title-actions sheet-actions", null)]);
     sheet.querySelector(".sheet-actions").append(take);
     take.focus();
+  }
+
+  // ---- Card pulls ----
+  // Characters and pets are found only here. Rolls happen on this device
+  // with gems, which are earned in play and never sold for money.
+  const pity = () => Math.max(0, Math.floor(Number(save().cardPity) || 0));
+  function renderPulls(panel) {
+    const g = E.GACHA, have = save().gems || 0;
+    const banner = el("section", "pull-banner");
+    const row = el("div", "pull-faces");
+    for (const id of ["sakura", "chantra", "ratri", "silverwolf", "miu"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id)); row.append(f); }
+    banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
+    const odds = el("p", "pull-odds", `อัตรา: ★5 ${g.rates[5] * 100}% · ★4 ${g.rates[4] * 100}% · ★3 ${g.rates[3] * 100}% · การันตี ★5 ภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ ★4 ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็น EXP ของการ์ดนั้น`);
+    const actions = el("div", "title-actions sheet-actions pull-actions");
+    const one = button("primary-button", `สุ่ม 1 ครั้ง · 💎 ${g.one}`, () => doPull(1));
+    const ten = button("primary-button pull-ten", `สุ่ม 10 ครั้ง · 💎 ${g.ten}`, () => doPull(10));
+    one.disabled = have < g.one; ten.disabled = have < g.ten;
+    actions.append(one, ten);
+    banner.append(odds, actions, el("p", "sheet-goals", `มีเพชร 💎 ${fmt(have)} · เพชรได้จากผ่านด่านครั้งแรก (ทั้งผจญภัยและศึกการ์ด) รางวัลรายวัน ลานประลอง และด่านประจำวัน`));
+    panel.append(banner);
+    const list = el("div", "pull-pool");
+    for (const r of [5, 4, 3]) {
+      const line = el("p", "pull-tier");
+      line.append(el("b", null, "★".repeat(r)), document.createTextNode(" " + E.CARD_IDS.filter(id => E.CARDS[id].rarity === r).map(id => `${E.CARDS[id].name}${cards().units[id] ? " ✓" : ""}`).join(" · ")));
+      list.append(line);
+    }
+    panel.append(el("h3", "shop-heading", "การ์ดที่สุ่มได้ (✓ = มีแล้ว)"), list);
+  }
+
+  function doPull(count) {
+    const g = E.GACHA, cost = count >= 10 ? g.ten : g.one;
+    if ((save().gems || 0) < cost) { tone(150, .12, "square", .05); return; }
+    save().gems -= cost;
+    const state = { pity: pity() };
+    const got = E.pull(state, Math.random, count);
+    save().cardPity = state.pity;
+    const c = cards();
+    const results = got.map(id => {
+      if (!c.units[id]) {
+        c.units[id] = 1;
+        if (save().shop && !save().shop.owned.includes(id)) save().shop.owned.push(id);
+        return { id, fresh: true };
+      }
+      const xp = E.DUPE_XP[E.CARDS[id].rarity];
+      const ups = E.giveXp(c, id, xp);
+      return { id, fresh: false, xp, ups };
+    });
+    store(); showCoins();
+    reveal(results);
+  }
+
+  // Cards turn over one after another, the rare ones with more light.
+  function reveal(results) {
+    const grid = el("div", `pull-reveal${results.length > 1 ? " is-ten" : ""}`);
+    results.forEach((r, n) => {
+      const def = E.CARDS[r.id];
+      const slot = el("div", `pull-card r${def.rarity}`);
+      slot.style.animationDelay = `${n * 180}ms`;
+      const front = el("div", "pull-front");
+      front.append(cardTile(r.id, null), el("small", r.fresh ? "pull-new" : "pull-dupe", r.fresh ? "ใหม่!" : `ซ้ำ → EXP +${r.xp}`));
+      slot.append(el("div", "pull-back", "✦"), front);
+      grid.append(slot);
+      const best = def.rarity === 5 ? [784, 988, 1175, 1568] : def.rarity === 4 ? [659, 880] : [523];
+      setTimeout(() => best.forEach((note, i) => tone(note, .1, "triangle", .05, i * .06)), n * 180 + 380);
+    });
+    const fresh = results.filter(r => r.fresh).map(r => E.CARDS[r.id].name);
+    const again = el("div", "title-actions sheet-actions");
+    const g = E.GACHA;
+    const more = button("primary-button", results.length > 1 ? `สุ่มอีก 10 · 💎 ${g.ten}` : `สุ่มอีก · 💎 ${g.one}`, () => doPull(results.length));
+    more.disabled = (save().gems || 0) < (results.length > 1 ? g.ten : g.one);
+    again.append(more, button("secondary-button", "ดูการ์ด", () => { tab = "team"; closeSheet(); }));
+    openSheet([el("h3", "sheet-title", "ผลการสุ่ม"), grid, el("p", "sheet-sub", fresh.length ? `ได้ใหม่: ${fresh.join(" · ")}` : "ไม่มีการ์ดใหม่รอบนี้ การ์ดซ้ำเปลี่ยนเป็น EXP แล้ว"), again]);
+    announce(`ผลการสุ่ม: ${results.map(r => `${E.CARDS[r.id].name} ${E.CARDS[r.id].rarity} ดาว${r.fresh ? " ใหม่" : " ซ้ำ"}`).join(", ")}`);
   }
 
   // ---- Daily dungeons ----
@@ -283,7 +369,7 @@
       box.append(el("span", "dungeon-icon", d.icon), el("h3", null, d.name), el("p", "sheet-text", d.text));
       const foes = el("div", "sheet-foes");
       for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) { const fig = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[id].art), el("figcaption", null, E.FOES[id].name)); foes.append(fig); }
-      box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด`));
+      box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)} + 💎 ${stage.gems}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด + 💎 ${stage.gems}`));
       const go = button(done ? "secondary-button" : "primary-button", done ? `ผ่านแล้ววันนี้ ✓ · มาใหม่ใน ${untilMidnight()}` : "เข้าด่าน ⚔", () => startBattle(stage));
       go.disabled = done;
       const actions = el("div", "title-actions sheet-actions");
@@ -301,12 +387,13 @@
       if (c.dungeon.day !== today()) c.dungeon = { day: today(), exp: false, coin: false };
       c.dungeon[stage.dungeon] = true;
       save().coins += stage.coins;
+      addGems(stage.gems);
     }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? E.DUNGEONS[stage.dungeon].icon : "☾"), el("h2", null, won ? "ผ่านด่านประจำวัน!" : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
+    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     if (won) box.append(el("p", null, `ด่านนี้รับรางวัลได้อีกครั้งพรุ่งนี้ (อีก ${untilMidnight()})`));
     const actions = el("div", "title-actions");
@@ -327,7 +414,7 @@
     const team = E.arenaTeam(c);
     panel.append(el("p", "cards-intro", `การ์ดที่แรงที่สุด ${team.length} ใบลงสนามเอง ตัวป้องกันยืนหน้า · สู้อัตโนมัติทั้งหมด · ชนะแล้วขึ้นชั้นต่อไป`));
     const box = el("section", "arena-box");
-    box.append(el("h3", "sheet-title", `ชั้น ${tier.num}${tier.boss ? " · มีบอส" : ""}`), el("p", "sheet-sub", `มอนสเตอร์ 10 ตัว Lv ${tier.lv} · รางวัล ● ${tier.coins} · EXP ${tier.xp} ต่อการ์ด`));
+    box.append(el("h3", "sheet-title", `ชั้น ${tier.num}${tier.boss ? " · มีบอส" : ""}`), el("p", "sheet-sub", `มอนสเตอร์ 10 ตัว Lv ${tier.lv} · รางวัล 💎 ${tier.gems} · ● ${tier.coins} · EXP ${tier.xp} ต่อการ์ด`));
     const foes = el("div", "sheet-foes");
     for (const f of tier.waves[0]) { const fig = el("figure", `sheet-foe${E.FOES[f.id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[f.id].art), el("figcaption", null, E.FOES[f.id].name)); foes.append(fig); }
     const mine = el("div", "arena-team");
@@ -359,9 +446,9 @@
         const badge = el("span", `level-badge${done ? " level-stars" : ""}`, done ? stars(cards().stars[stage.num]) : openStage ? "ด่านใหม่" : "ล็อก");
         tile.append(badge);
         if (stage.boss) tile.append(el("i", "level-boss", "บอส"));
-        if (stage.card && !done) {
-          const prize = el("i", "cards-prize", "🃏");
-          prize.title = `รางวัล: การ์ด${E.CARDS[stage.card].name}`;
+        if (!done) {
+          const prize = el("i", "cards-prize", `💎${stage.gems}`);
+          prize.title = `รางวัลผ่านครั้งแรก: ${stage.gems} เพชร`;
           tile.append(prize);
         }
         grid.append(tile);
@@ -489,9 +576,7 @@
         actions.append(up);
       } else actions.append(el("span", "sheet-max", "เลเวลสูงสุดแล้ว"));
     } else {
-      const stage = prizeStage(id);
-      const where = [stage ? `ผ่านด่าน ${stage.num} ${stage.name} ครั้งแรก` : "", "หรือซื้อตัวนี้ในตลาด"].filter(Boolean).join(" ");
-      actions.append(el("p", "sheet-lock", `🔒 ได้การ์ดนี้เมื่อ${where}`));
+      actions.append(el("p", "sheet-lock", "🔒 ได้จากการสุ่มการ์ดเท่านั้น"), button("primary-button", "🎴 ไปสุ่มการ์ด", () => { tab = "pulls"; closeSheet(); }));
     }
     parts.push(actions);
     openSheet(parts);
@@ -554,7 +639,7 @@
     parts.push(foes);
     const reward = el("p", "sheet-reward");
     reward.textContent = first
-      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins}${stage.card ? ` + การ์ด${E.CARDS[stage.card].name}` : ""}`
+      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins} + 💎 ${stage.gems}`
       : `รางวัลเล่นซ้ำ: ● ${stage.repeat}`;
     parts.push(reward, el("p", "sheet-goals", `★ ชนะ · ★ ไม่มีการ์ดล้ม · ★ ชนะภายใน ${stage.par} เทิร์น`));
     const team = el("div", "sheet-team");
@@ -957,14 +1042,14 @@
     if (stage.dungeon) { finishDungeon(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
-    let coins = 0, newCard = null;
+    let coins = 0, gems = 0;
     const xp = E.stageXp(stage, won);
     const ups = shareXp(c.team.filter(Boolean), xp);
     store();
     if (won) {
       coins = first ? stage.coins : stage.repeat;
       if (c.team.includes("pupa")) coins = Math.round(coins * (1 + E.CARDS.pupa.passive.coins));
-      if (first && stage.card && !c.units[stage.card]) { c.units[stage.card] = 1; newCard = stage.card; }
+      if (first) { gems = stage.gems; addGems(gems); }
       c.stars[stage.num] = Math.max(c.stars[stage.num] || 0, got);
       save().coins += coins;
       store();
@@ -984,14 +1069,9 @@
         goals.append(el("li", okay ? "is-done" : "", `${okay ? "★" : "☆"} ${text}`));
       }
       box.append(goals);
-      box.append(el("p", "end-reward battle-reward", `ได้รับ ● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
+      box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
       if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
-      if (newCard) {
-        const prize = el("div", "battle-prize");
-        prize.append(cardTile(newCard, null), el("p", null, `การ์ดใหม่! ${E.CARDS[newCard].name}`));
-        box.append(prize);
-        [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
-      }
+      if (gems) [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
     } else box.append(el("p", null, `ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
     const actions = el("div", "title-actions");
     const next = E.STAGES[stage.num];
@@ -1005,7 +1085,7 @@
     hint("");
     game().tone(won ? 784 : 220, .2, "triangle", .06);
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
-    announce(won ? `ชนะด่าน ${stage.num} ได้ ${got} ดาว และ ${coins} เหรียญ${newCard ? ` ได้การ์ด${E.CARDS[newCard].name}` : ""}` : "พ่ายแพ้ ลองอีกครั้ง");
+    announce(won ? `ชนะด่าน ${stage.num} ได้ ${got} ดาว และ ${coins} เหรียญ${gems ? ` และ ${gems} เพชร` : ""}` : "พ่ายแพ้ ลองอีกครั้ง");
     actions.querySelector("button")?.focus();
   }
 
@@ -1013,12 +1093,12 @@
     const b = v.state, tier = v.stage, c = cards(), won = b.result === "won";
     const xp = Math.round(tier.xp * (won ? 1 : .3));
     const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
-    if (won) { save().coins += tier.coins; c.arena = Math.max(c.arena, tier.num + 1); }
+    if (won) { save().coins += tier.coins; addGems(tier.gems); c.arena = Math.max(c.arena, tier.num + 1); }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? "✦" : "☾"), el("h2", null, won ? `ผ่านชั้น ${tier.num}!` : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
+    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     const actions = el("div", "title-actions");
     if (won) actions.append(button("primary-button", `ชั้น ${tier.num + 1} ▶`, () => { battle = null; startBattle(E.arenaTier(tier.num + 1)); }));
@@ -1039,7 +1119,9 @@
     if (battle && (event.key === "Enter" || event.key === " ") && battle.go && !event.target.closest?.("button")) { event.preventDefault(); goTurn(); }
   }
 
-  window.PupaCards = { open, close, key, get isOpen() { return isShown; } };
+  // Straight to the pulls, from the market or the lobby.
+  function openPulls() { tab = "pulls"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
+  window.PupaCards = { open, openPulls, close, key, get isOpen() { return isShown; } };
   document.querySelectorAll("[data-open-cards]").forEach(node => game()?.onTap(node, open));
   // Test link: ?cards opens straight into the card battles.
   if (new URLSearchParams(location.search).has("cards")) setTimeout(() => open(), 400);
