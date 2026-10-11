@@ -59,3 +59,18 @@ test("cards: XP raises levels, the hunt is capped, the arena fields ten", () => 
   }
   assert.equal(b.result, "won");
 });
+
+test("cards: daily dungeons can be won at the furthest stage's level", () => {
+  for (const kind of ["exp", "coin"]) {
+    const stage = E.dungeon(kind, 8);
+    assert.equal(stage.lv, E.STAGES[7].lv);
+    let wins = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+      const team = ["pangji", "ikuya", "pupav2", "dragon", "baitoey"].map(id => ({ id, lv: 8 }));
+      const b = E.createBattle({ team, stage, seed });
+      for (let n = 0; b.phase !== "done" && n < 300; n++) { if (b.phase === "hero") E.heroTurn(b, E.autoQueue(b)); else E.enemyTurn(b); }
+      wins += b.result === "won";
+    }
+    assert.ok(wins >= 7, `${kind} won ${wins}/10`);
+  }
+});

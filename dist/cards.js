@@ -120,7 +120,8 @@
     const now = Date.now();
     const idleAt = Math.min(now, Math.max(0, Math.floor(Number(raw.idleAt) || 0))) || now;
     const daily = raw.daily && typeof raw.daily.day === "string" ? { day: raw.daily.day.slice(0, 10), streak: Math.max(1, Math.min(7, Math.floor(Number(raw.daily.streak) || 1))) } : null;
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    const dungeon = raw.dungeon && raw.dungeon.day === today() ? { day: today(), exp: raw.dungeon.exp === true, coin: raw.dungeon.coin === true } : { day: today(), exp: false, coin: false };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   const cards = () => save().cards;
@@ -193,7 +194,7 @@
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["arena", "ลานประลอง 10v10"], ["team", "ทีมและการ์ด"]]) {
+    for (const [key, label] of [["stages", "ด่าน"], ["daily", "ประจำวัน"], ["arena", "ประลอง 10v10"], ["team", "ทีม"]]) {
       const t = button("", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
@@ -201,7 +202,7 @@
     }
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
-    if (tab === "stages") renderStages(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
+    if (tab === "stages") renderStages(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
     body.replaceChildren(idleBanner(), tabs, panel);
   }
 
@@ -261,6 +262,63 @@
     openSheet([el("h3", "sheet-title", "รางวัลเข้าเกมรายวัน"), el("p", "sheet-sub", "เข้ามาทุกวันติดกัน รางวัลยิ่งใหญ่ขึ้น ครบ 7 วันเริ่มรอบใหม่ · EXP แจกให้การ์ดทุกใบในทีม"), grid, el("div", "title-actions sheet-actions", null)]);
     sheet.querySelector(".sheet-actions").append(take);
     take.focus();
+  }
+
+  // ---- Daily dungeons ----
+  // A day's clear of each is recorded in cards.dungeon; a lost run can be
+  // tried again the same day.
+  const doneToday = (kind) => { const d = cards().dungeon; return d.day === today() && d[kind]; };
+  function untilMidnight() {
+    const now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const mins = Math.ceil((next - now) / 60000);
+    return `${Math.floor(mins / 60)} ชม. ${mins % 60} นาที`;
+  }
+  function renderDungeons(panel) {
+    if (cards().dungeon.day !== today()) cards().dungeon = { day: today(), exp: false, coin: false };
+    panel.append(el("p", "cards-intro", `รับรางวัลได้ด่านละ 1 ครั้งต่อวัน · แพ้แล้วลองใหม่ได้ · รีเซ็ตใน ${untilMidnight()}`));
+    const grid = el("div", "dungeon-grid");
+    for (const kind of ["exp", "coin"]) {
+      const d = E.DUNGEONS[kind], stage = E.dungeon(kind, bestStage()), done = doneToday(kind);
+      const box = el("section", `dungeon-box is-${kind}${done ? " is-done" : ""}`);
+      box.append(el("span", "dungeon-icon", d.icon), el("h3", null, d.name), el("p", "sheet-text", d.text));
+      const foes = el("div", "sheet-foes");
+      for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) { const fig = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`); fig.append(portrait(E.FOES[id].art), el("figcaption", null, E.FOES[id].name)); foes.append(fig); }
+      box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด`));
+      const go = button(done ? "secondary-button" : "primary-button", done ? `ผ่านแล้ววันนี้ ✓ · มาใหม่ใน ${untilMidnight()}` : "เข้าด่าน ⚔", () => startBattle(stage));
+      go.disabled = done;
+      const actions = el("div", "title-actions sheet-actions");
+      actions.append(go);
+      box.append(actions);
+      grid.append(box);
+    }
+    panel.append(grid);
+  }
+  function finishDungeon(v) {
+    const b = v.state, stage = v.stage, c = cards(), won = b.result === "won";
+    const xp = won ? stage.xp : E.stageXp({ num: 1 }, false);
+    const ups = shareXp(c.team.filter(Boolean), xp);
+    if (won) {
+      if (c.dungeon.day !== today()) c.dungeon = { day: today(), exp: false, coin: false };
+      c.dungeon[stage.dungeon] = true;
+      save().coins += stage.coins;
+    }
+    store(); showCoins();
+    v.busy = true;
+    const box = el("div", "message-card battle-card");
+    box.append(el("span", "moon-icon", won ? E.DUNGEONS[stage.dungeon].icon : "☾"), el("h2", null, won ? "ผ่านด่านประจำวัน!" : "พ่ายแพ้…"));
+    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
+    if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
+    if (won) box.append(el("p", null, `ด่านนี้รับรางวัลได้อีกครั้งพรุ่งนี้ (อีก ${untilMidnight()})`));
+    const actions = el("div", "title-actions");
+    if (!won) actions.append(button("primary-button", "ลองอีกครั้ง", () => { battle = null; startBattle(stage); }));
+    actions.append(button(won ? "primary-button" : "secondary-button", "กลับ", () => { battle = null; tab = "daily"; showHub(); }));
+    box.append(actions);
+    v.result.replaceChildren(box);
+    v.result.hidden = false;
+    hint("");
+    if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
+    announce(won ? `ผ่าน${stage.name} ได้ ${stage.coins} เหรียญ และ EXP ${xp}` : "พ่ายแพ้ ลองใหม่ได้");
+    actions.querySelector("button")?.focus();
   }
 
   // ---- Arena: ten against ten ----
@@ -512,6 +570,7 @@
   function startBattle(stage) {
     const c = cards();
     if (!c.team.some(Boolean)) return;
+    if (stage.dungeon && doneToday(stage.dungeon)) { tone(150, .12, "square", .05); announce("ด่านนี้ผ่านแล้ววันนี้ มาใหม่พรุ่งนี้"); return; }
     closeSheet(true);
     const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: c.outfit[id] === 2 ? E.COSTUME_BONUS : 0 } : null));
     const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
@@ -561,7 +620,7 @@
 
   function drawTop() {
     const v = battle, b = v.state;
-    v.title.textContent = v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
+    v.title.textContent = v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
     v.wave.textContent = `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
     v.auto.setAttribute("aria-pressed", String(cards().auto));
     v.fast.setAttribute("aria-pressed", String(cards().fast));
@@ -767,7 +826,7 @@
     }
     v.token.stopped = true;
     battle = null;
-    tab = v.stage.arena ? "arena" : "stages";
+    tab = v.stage.arena ? "arena" : v.stage.dungeon ? "daily" : "stages";
     showHub();
   }
 
@@ -895,6 +954,7 @@
     const b = v.state, stage = v.stage, c = cards();
     const won = b.result === "won";
     if (stage.arena) { finishArena(v); return; }
+    if (stage.dungeon) { finishDungeon(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
     let coins = 0, newCard = null;

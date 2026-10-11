@@ -27,7 +27,8 @@ const cleanCards = (raw) => {
   const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
   return {
     units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true,
-    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
+    dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
   };
 };
 
@@ -62,7 +63,11 @@ function mergeCards(current, incoming) {
     xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), arena: Math.max(now.arena, next.arena),
     // the later claim wins, so a hunt or a day's reward is not taken twice
     idleAt: Math.max(now.idleAt, next.idleAt),
-    daily: (next.daily?.day || "") >= (now.daily?.day || "") ? next.daily : now.daily
+    daily: (next.daily?.day || "") >= (now.daily?.day || "") ? next.daily : now.daily,
+    // a dungeon cleared today on either copy stays cleared
+    dungeon: now.dungeon && next.dungeon && now.dungeon.day === next.dungeon.day
+      ? { day: now.dungeon.day, exp: now.dungeon.exp || next.dungeon.exp, coin: now.dungeon.coin || next.dungeon.coin }
+      : (next.dungeon?.day || "") >= (now.dungeon?.day || "") ? next.dungeon : now.dungeon
   };
 }
 

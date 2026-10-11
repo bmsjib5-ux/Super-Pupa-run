@@ -388,3 +388,14 @@ button.unit { cursor: crosshair; }
 .sheet-costume button { grid-row: span 2; }
 .card-art.is-costume { filter: hue-rotate(var(--hue)) saturate(1.25) drop-shadow(0 0 .35rem rgba(255,215,106,.9)); }
 .battle-ups { margin: .1rem 0 .5rem; color: var(--mint); font-size: .8rem; font-weight: 800; }
+
+/* ---- Daily dungeons ---- */
+.dungeon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .7rem; margin-top: .4rem; }
+.dungeon-box { position: relative; padding: .8rem 1rem; border: 1px solid rgba(255,255,255,.18); border-radius: 1rem; background: linear-gradient(160deg, var(--tint), rgba(13,8,36,.7)); }
+.dungeon-box.is-exp { --tint: rgba(90,168,255,.25); }
+.dungeon-box.is-coin { --tint: rgba(255,200,80,.25); }
+.dungeon-box.is-done { filter: saturate(.4) brightness(.8); }
+.dungeon-box h3 { margin: 0 0 .2rem; padding-right: 2.6rem; font-size: 1.1rem; }
+.dungeon-icon { position: absolute; top: .6rem; right: .8rem; font-size: 1.8rem; }
+.dungeon-box .sheet-actions .secondary-button { font-size: .8rem; }
+.cards-tabs button { padding-inline: .3rem; font-size: clamp(.72rem, 2.6vw, .95rem); }
