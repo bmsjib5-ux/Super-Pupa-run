@@ -699,7 +699,32 @@
     return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0 }));
   }
 
+  // ---- Daily dungeons: one clear a day each ----
+  // exp: a crystal cave of soft, quick monsters paying lots of card XP;
+  // coin: a treasure vault guarded by tough ones, paying coins. Both are
+  // pitched at the furthest stage cleared (best).
+  const DUNGEONS = {
+    exp: {
+      name: "ถ้ำผลึกปัญญา", icon: "📘", text: "มอนสเตอร์ผลึกตัวเปราะ ให้ EXP การ์ดจำนวนมาก",
+      waves: ["jelly,jelly/spitter", "hopper,jelly/spitter,spitter", "urchin,jelly/spitter,jelly,swooper"]
+    },
+    coin: {
+      name: "คลังสมบัติเห็ดทอง", icon: "💰", text: "ผู้พิทักษ์คลังทองตัวแกร่ง ให้เหรียญจำนวนมาก",
+      waves: ["walker,crab/walker", "crab,roller/walker,bat", "king/crab,walker"]
+    }
+  };
+  function dungeon(kind, best) {
+    const d = DUNGEONS[kind];
+    const lv = best > 0 ? STAGES[Math.min(best, STAGES.length) - 1].lv : 1;
+    return {
+      num: 0, dungeon: kind, name: d.name, lv, waves: d.waves.map(parseWave), par: 99, boss: kind === "coin",
+      coins: kind === "coin" ? 120 + 30 * best : 20 + 5 * best,
+      xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best
+    };
+  }
+
   return {
+    DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
