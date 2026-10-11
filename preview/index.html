@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <!-- Test build of the card pulls: pictures and the unchanged scripts
+         come from the live game in dist/, the new files sit here. -->
+    <base href="../dist/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#150b35">
+    <meta name="description" content="Super Pupa Run เกมแพลตฟอร์มผจญภัยในสวนเชอร์รี่ยามค่ำ เล่นได้ทั้งคีย์บอร์ดและมือถือ">
+    <title>Super Pupa Run · ทดสอบสุ่มการ์ด</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='18' width='64' height='64' fill='%23150b35'/%3E%3Cellipse cx='32' cy='35' rx='18' ry='21' fill='%23ff6b9b'/%3E%3Ccircle cx='26' cy='32' r='3' fill='%23150b35'/%3E%3Ccircle cx='38' cy='32' r='3' fill='%23150b35'/%3E%3Cpath d='M25 42q7 6 14 0' fill='none' stroke='%23150b35' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M40 15q10 1 9 10-9 1-12-5' fill='%237ee081'/%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pupa Run">
+    <link rel="stylesheet" href="../preview/styles.css?v=20261011b">
+    <link rel="stylesheet" href="../preview/cards.css?v=20261011f">
+    <script src="../preview/cards-engine.js?v=20261011f" defer></script>
+    <script src="../preview/game.js?v=20261011f" defer></script>
+    <script src="../preview/cards-fx.js?v=20261011f" defer></script>
+    <script src="../preview/cards.js?v=20261011f" defer></script>
+    <script type="module" src="pupa3d.js?v=20261011a"></script>
+    <!-- Online parts: sign-in, cloud save and coin top-ups. -->
+    <script src="config.js?v=20261011a"></script>
+    <script type="module" src="../preview/account.js?v=20261011f"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
+    <main id="game" tabindex="-1">
+      <section class="game-shell" aria-labelledby="game-title">
+        <div class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
+          <div class="loading-card">
+            <img class="loading-hero" src="assets/pupa-hero-3d.webp" alt="" width="160" height="160">
+            <p class="loading-title">Super Pupa Run</p>
+            <div class="loading-bar" id="loadingBar" role="progressbar" aria-label="ความคืบหน้าการโหลด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span class="loading-fill" id="loadingFill"></span>
+            </div>
+            <p class="loading-status"><span id="loadingText">กำลังโหลดเกม</span> <b id="loadingPercent">0%</b></p>
+            <p class="loading-tip" id="loadingTip"></p>
+          </div>
+        </div>
+        <script>
+          // If the game script never gets going, don't leave the loader up for ever.
+          setTimeout(() => document.getElementById("loadingScreen")?.classList.add("is-done"), 30000);
+        </script>
+        <header class="topbar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">✦</span>
+            <div>
+              <h1 id="game-title">SUPER PUPA RUN</h1>
+              <p>MOONLIT CHERRY TRAIL</p>
+            </div>
+          </div>
+          <div class="top-actions">
+            <button id="levelsBtn" class="icon-button accent" type="button" aria-label="เลือกด่าน" title="เลือกด่าน" data-open-levels><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M15 21v-7.5l5 2.2-5 2.3"/></svg></button>
+            <button id="shopBtn" class="icon-button accent" type="button" aria-label="ร้านค้า" title="ร้านค้า" data-open-shop><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1.2 12h-10.6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/><path d="M9.5 12.5a2.5 2.5 0 0 0 5 0"/></svg></button>
+            <button id="accountBtn" class="icon-button account-button" type="button" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ" hidden><span class="account-avatar" aria-hidden="true">👤</span></button>
+            <button id="soundBtn" class="icon-button" type="button" aria-label="ปิดเสียง" aria-pressed="false">♫</button>
+            <button id="pauseBtn" class="icon-button" type="button" aria-label="หยุดเกมชั่วคราว" aria-pressed="false">Ⅱ</button>
+            <button id="fullscreenBtn" class="icon-button" type="button" aria-label="เปิดเต็มหน้าจอ">⛶</button>
+          </div>
+        </header>
+
+        <div class="stage-wrap">
+          <canvas id="gameCanvas" width="1280" height="720" aria-label="เกม Super Pupa Run เดินทางไปทางขวา เก็บเหรียญทอง กระโดดข้ามศัตรู และไปให้ถึงประตูแสงจันทร์"></canvas>
+
+          <div id="levelBadge" class="level-badge" aria-hidden="true"><b>ด่าน 1</b><span>สวนเชอร์รี่เรืองแสง</span></div>
+          <div class="hud" aria-hidden="true">
+            <div class="hud-card hearts"><span>ชีวิต</span><b id="hearts">♥ ♥ ♥</b></div>
+            <div class="hud-card score"><span>เหรียญ</span><b><i>●</i> <span id="score">0</span></b></div>
+            <div class="hud-card points"><span>คะแนน</span><b id="points">0</b></div>
+            <div class="hud-card distance"><span>ระยะทาง</span><b id="distance">0%</b></div>
+          </div>
+          <!-- Items kept for later: tap to use mid-level (keys 1-8). -->
+          <div id="quickItems" class="quick-items" aria-label="ไอเทมกดใช้" hidden></div>
+
+          <!-- The lobby: pick a hero, get items ready, choose a level, go. -->
+          <div id="startScreen" class="overlay lobby-overlay">
+            <div class="lobby-card">
+              <header class="lobby-head">
+                <div class="lobby-brand">
+                  <h2>SUPER <em>PUPA</em> RUN</h2>
+                  <p id="saveLine" class="save-line"></p>
+                </div>
+                <div class="shop-wallet" aria-label="เหรียญและเพชรที่มี"><i>●</i> <b id="lobbyCoins">0</b> <span class="gem">💎</span> <b id="lobbyGems">0</b></div>
+              </header>
+              <div class="lobby-body">
+                <section class="lobby-hero" aria-labelledby="lobbyHeroName">
+                  <canvas id="lobbyPreview" width="320" height="320" aria-hidden="true"></canvas>
+                  <div class="lobby-picker">
+                    <button id="lobbyHeroPrev" class="icon-button" type="button" aria-label="ตัวละครก่อนหน้า">◀</button>
+                    <div class="lobby-picker-label"><b id="lobbyHeroName">Pupa</b><span id="lobbyHeroNote"></span></div>
+                    <button id="lobbyHeroNext" class="icon-button" type="button" aria-label="ตัวละครถัดไป">▶</button>
+                  </div>
+                  <div id="lobbyHeroXp" class="lobby-xp">
+                    <b>Lv 1</b>
+                    <span class="xp-bar" role="progressbar" aria-label="ค่าประสบการณ์ถึงเลเวลถัดไป" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></span>
+                    <small>0 / 500 XP</small>
+                  </div>
+                  <p id="lobbyHeroAbility" class="lobby-ability"><b></b><span></span><em></em></p>
+                  <button id="lobbyHeroAction" class="shop-buy lobby-hero-action" type="button">ใช้อยู่ ✓</button>
+                </section>
+                <section class="lobby-side">
+                  <div class="lobby-picker lobby-level">
+                    <button id="lobbyLevelPrev" class="icon-button" type="button" aria-label="ด่านก่อนหน้า">◀</button>
+                    <div class="lobby-picker-label"><b id="lobbyLevelNum">ด่าน 1</b><span id="lobbyLevelName"></span></div>
+                    <button id="lobbyLevelNext" class="icon-button" type="button" aria-label="ด่านถัดไป">▶</button>
+                  </div>
+                  <h3 class="lobby-heading">ไอเทม <small>ติ๊ก = ใช้ตอนเริ่มด่าน · ไม่ติ๊ก = กดใช้เองระหว่างเล่น</small></h3>
+                  <div id="lobbyItems" class="lobby-items"></div>
+                  <div class="title-actions lobby-actions">
+                    <button id="startBtn" class="primary-button" type="button">เริ่มผจญภัย</button>
+                    <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+                    <button class="secondary-button shop-button" type="button" data-open-levels>ทุกด่าน</button>
+                    <button class="secondary-button shop-button runner-button" type="button" data-open-runner>🏃 วิ่งหลบ</button>
+                    <button class="secondary-button shop-button cards-button" type="button" data-open-cards>🃏 ศึกการ์ด</button>
+                    <button id="newsBtn" class="secondary-button shop-button" type="button">มีอะไรใหม่</button>
+                    <button class="secondary-button shop-button" type="button" data-open-modes>🏠 เลือกโหมด</button>
+                    <button id="installBtn" class="secondary-button" type="button" hidden>ติดตั้งเกม</button>
+                  </div>
+                  <p id="installHint" class="install-hint" hidden></p>
+                  <div class="controls-hint">
+                    <span><kbd>A</kbd><kbd>D</kbd> เคลื่อนที่</span>
+                    <span><kbd>SPACE</kbd> กระโดด ×2</span>
+                    <span><kbd>J</kbd> โจมตี</span>
+                    <span><kbd>1</kbd>–<kbd>8</kbd> ไอเทม</span>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div id="pauseScreen" class="overlay compact" hidden>
+            <div class="message-card">
+              <span class="moon-icon" aria-hidden="true">☾</span>
+              <h2>พักหายใจก่อน</h2>
+              <p>สวนเชอร์รี่จะรอคุณอยู่ตรงนี้</p>
+              <div class="title-actions">
+                <button id="resumeBtn" class="primary-button" type="button">เล่นต่อ</button>
+                <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+                <button class="secondary-button shop-button" type="button" data-exit-lobby>ออกไปหน้าหลัก</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="endScreen" class="overlay compact" hidden>
+            <div class="message-card">
+              <span id="endIcon" class="moon-icon" aria-hidden="true">✦</span>
+              <h2 id="endTitle">ถึงรังไหมแล้ว!</h2>
+              <p id="endText">Pupa กลับถึงบ้านอย่างปลอดภัย</p>
+              <div id="endStars" class="end-stars" role="img" aria-label="ดาวที่ได้" hidden></div>
+              <ul id="endGoals" class="end-goals" hidden></ul>
+              <div id="endReward" class="end-reward" role="status" hidden></div>
+              <div class="final-score tight"><span>เหรียญสะสม</span><b id="finalScore">0</b></div>
+              <div class="final-score tight"><span>คะแนนสะสม</span><b id="finalPoints">0</b></div>
+              <p id="bestPoints" class="best-line"></p>
+              <div class="title-actions">
+                <button id="nextBtn" class="primary-button" type="button" hidden>ด่านต่อไป ▶</button>
+                <button id="restartBtn" class="primary-button" type="button">เล่นอีกครั้ง</button>
+                <button id="replayBtn" class="secondary-button shop-button" type="button" hidden>เล่นซ้ำเก็บดาว</button>
+                <button class="secondary-button shop-button" type="button" data-open-shop>ร้านค้า</button>
+                <button class="secondary-button shop-button" type="button" data-exit-lobby>หน้าหลัก</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mobile-controls" aria-label="ปุ่มควบคุมเกมบนหน้าจอ">
+            <div class="dpad">
+              <button class="touch-button" data-key="left" type="button" aria-label="เดินซ้าย" data-icon="◀"></button>
+              <button class="touch-button" data-key="right" type="button" aria-label="เดินขวา" data-icon="▶"></button>
+            </div>
+            <div class="action-pad">
+              <button class="touch-button attack" data-key="attack" data-label="ATK" type="button" aria-label="โจมตี" data-icon="✸"></button>
+              <button class="touch-button jump" data-key="jump" type="button" aria-label="กระโดด" data-icon="↑"></button>
+            </div>
+          </div>
+
+          <p id="announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
+        </div>
+
+        <footer class="statusbar">
+          <span><i class="status-dot"></i> <span id="levelName">ด่าน 1 · สวนเชอร์รี่เรืองแสง</span></span>
+          <span class="desktop-only">เคล็ดลับ: เหยียบศัตรูจากด้านบน · โหม่งบล็อก ? เพื่อสุ่มไอเทม</span>
+        </footer>
+
+        <!-- Picking a mode once loading is done. -->
+        <div id="modeScreen" class="overlay shop-overlay mode-overlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
+          <div class="mode-card">
+            <p class="mode-eyebrow">✦ SUPER PUPA RUN ✦</p>
+            <h2 id="modeTitle">เลือกโหมดที่จะเล่น</h2>
+            <div class="mode-list">
+              <button class="mode-item mode-adventure" type="button" data-mode="adventure">
+                <span class="mode-picture"><img src="assets/pupa-hero-3d.webp" alt=""></span>
+                <b>ผจญภัย</b>
+                <span>วิ่ง กระโดด ฝ่า 100 ด่านใน 10 โลก พร้อมบอส</span>
+              </button>
+              <button class="mode-item mode-runner" type="button" data-mode="runner">
+                <span class="mode-picture"><img src="assets/pupav2-hero.webp" alt=""></span>
+                <b>วิ่งหลบ</b>
+                <span>ถนน 3 เลน หลบสิ่งกีดขวาง เก็บเหรียญ</span>
+              </button>
+              <button class="mode-item mode-cards" type="button" data-mode="cards">
+                <span class="mode-picture mode-trio"><img src="assets/ikuya-hero.webp" alt=""><img src="assets/pangji-hero.webp" alt=""><img src="assets/baitoey-hero.webp" alt=""></span>
+                <b>ศึกการ์ดแสงจันทร์</b>
+                <span>จัดทีม 5 ใบ เลือกลำดับสกิล สู้มอนสเตอร์</span>
+                <i class="mode-new">ใหม่!</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- "What's new" page, shown when the game opens. -->
+        <div id="newsScreen" class="overlay shop-overlay news-overlay" role="dialog" aria-modal="true" aria-labelledby="newsTitle" hidden>
+          <div class="shop-card news-card">
+            <header class="shop-head">
+              <div class="news-titles">
+                <p class="news-eyebrow">✦ อัปเดตเกม <span id="newsDate"></span></p>
+                <h2 id="newsTitle">มีอะไรใหม่ล่าสุด</h2>
+              </div>
+              <button id="newsClose" class="icon-button" type="button" aria-label="ปิดหน้าอัปเดต">✕</button>
+            </header>
+            <div id="newsList" class="news-list"></div>
+            <footer class="news-foot">
+              <label class="shop-toggle"><input id="newsHide" type="checkbox"> ไม่ต้องแสดงอีกจนกว่าจะมีอัปเดตใหม่</label>
+              <button id="newsGo" class="primary-button" type="button">ไปเล่นเลย</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- Market and level select cover the whole game, top bar included,
+             so nothing can sit on top of their close buttons. -->
+        <div id="levelScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="levelTitle" hidden>
+          <div class="shop-card level-card">
+            <header class="shop-head">
+              <h2 id="levelTitle">เลือกด่าน</h2>
+              <div id="levelProgress" class="shop-wallet">ผ่านแล้ว 0/60</div>
+              <button id="levelClose" class="icon-button" type="button" aria-label="ปิดหน้าเลือกด่าน">✕</button>
+            </header>
+            <p class="level-hint">ด่านที่ผ่านแล้วเล่นซ้ำได้ ด่านถัดไปจะปลดล็อกเมื่อผ่านด่านก่อนหน้า</p>
+            <div id="levelList" class="shop-list level-list"></div>
+          </div>
+        </div>
+
+        <!-- Card battles: filled in by cards.js. -->
+        <div id="cardsScreen" class="overlay shop-overlay cards-overlay" role="dialog" aria-modal="true" aria-labelledby="cardsTitle" hidden></div>
+
+        <!-- Paying for a coin pack: pick TrueMoney Wallet or PromptPay, then
+             follow the payment until the coins arrive. -->
+        <div id="topupScreen" class="overlay shop-overlay topup-overlay" role="dialog" aria-modal="true" aria-labelledby="topupTitle" hidden>
+          <div class="shop-card topup-card">
+            <header class="shop-head">
+              <h2 id="topupTitle">เติมเหรียญ</h2>
+              <button id="topupClose" class="icon-button" type="button" aria-label="ปิดหน้าเติมเหรียญ">✕</button>
+            </header>
+            <div id="topupBody" class="topup-body"></div>
+          </div>
+        </div>
+
+        <div id="shopScreen" class="overlay shop-overlay" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
+          <div class="shop-card">
+            <header class="shop-head">
+              <h2 id="shopTitle">ตลาดแสงจันทร์</h2>
+              <div class="shop-wallet" aria-label="เหรียญที่มี"><i>●</i> <b id="shopCoins">0</b></div>
+              <button id="shopClose" class="icon-button" type="button" aria-label="ปิดร้านค้า">✕</button>
+            </header>
+            <div class="shop-body">
+              <div class="shop-preview">
+                <canvas id="shopPreview" width="320" height="320" aria-hidden="true"></canvas>
+                <p id="shopPreviewName"></p>
+                <p class="shop-tip">แตะการ์ดเพื่อเลือก · ของที่ยังไม่มีจะได้ลองสวมก่อนซื้อ</p>
+              </div>
+              <div class="shop-main">
+                <div class="shop-tabs" role="tablist" aria-label="หมวดสินค้า">
+                  <button type="button" role="tab" data-tab="outfit" aria-selected="true">ชุดแต่งตัว</button>
+                  <button type="button" role="tab" data-tab="pet" aria-selected="false" tabindex="-1">สัตว์เลี้ยง</button>
+                  <button type="button" role="tab" data-tab="item" aria-selected="false" tabindex="-1">ไอเทม</button>
+                  <button type="button" role="tab" data-tab="topup" aria-selected="false" tabindex="-1" class="tab-topup">เติมเหรียญ</button>
+                </div>
+                <div id="shopList" class="shop-list" role="tabpanel" aria-labelledby="shopTitle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
