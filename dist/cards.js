@@ -151,11 +151,16 @@
     }
     const dust = Math.max(0, Math.floor(Number(raw.dust) || 0));
     // star-up wings; saves from before wings start with a gift of 3
-    const wings = raw.wings == null ? 3 : Math.max(0, Math.floor(Number(raw.wings) || 0));
+    let wings = raw.wings == null ? 3 : Math.max(0, Math.floor(Number(raw.wings) || 0));
+    // once per account: the wings boss stages and arena floors cleared
+    // before wings existed would have given (see E.wingCompensation)
+    const wingComp = raw.wingComp === true;
+    if (!wingComp) { wingGift = E.wingCompensation(best, Math.max(1, Math.floor(Number(raw.arena) || 1))); wings += wingGift; }
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
+  let wingGift = 0; // wings given back on this visit, shown once
   const cards = () => save().cards;
   // A card's grade badge (D to SSS) and its red awakening stars.
   const gradeOf = (id) => E.GRADES[E.CARDS[id].rarity];
@@ -215,7 +220,7 @@
     tone(587, .07, "triangle", .04);
     closeButton.focus();
     if (cards().daily?.day !== today()) dailySheet();
-    else payStarBonus(true);
+    else if (!showWingGift()) payStarBonus(true);
   }
 
   function close() {
@@ -322,7 +327,7 @@
       [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
       announce(`รับรางวัลวันที่ ${day} แล้ว${ups.length ? ` เลเวลอัป: ${ups.join(", ")}` : ""}`);
       closeSheet();
-      payStarBonus(true);
+      if (!showWingGift()) payStarBonus(true);
     });
     openSheet([el("h3", "sheet-title", "รางวัลเข้าเกมรายวัน"), el("p", "sheet-sub", "เข้ามาทุกวันติดกัน รางวัลยิ่งใหญ่ขึ้น ครบ 7 วันเริ่มรอบใหม่ · EXP แจกให้การ์ดทุกใบในทีม"), grid, el("div", "title-actions sheet-actions", null)]);
     sheet.querySelector(".sheet-actions").append(take);
@@ -482,6 +487,16 @@
 
   // Pays every five-stage group that has just reached full stars; returns
   // the gems given. `show` opens a panel saying so.
+  function showWingGift() {
+    if (!wingGift) return false;
+    const n = wingGift;
+    wingGift = 0;
+    store();
+    [659, 880, 1175].forEach((note, i) => tone(note, .12, "triangle", .05, i * .08));
+    announce(`ชดเชยปีกอัพดาว ${n} ชิ้น`);
+    openSheet([el("h3", "sheet-title", "🪽 ชดเชยปีกอัพดาว"), el("p", "sheet-reward", `ได้รับ 🪽 ${fmt(n)}`), el("p", "sheet-sub", `จากด่านบอสและชั้นลานประลองที่ผ่านไปแล้วก่อนมีปีกอัพดาว (ด่านบอสละ 🪽 2 · ลานประลองทุก 5 ชั้น 🪽 2) ใช้อัปดาวแดงได้เลย`)]);
+    return true;
+  }
   function payStarBonus(show) {
     const c = cards(), due = E.dueStarBonus(c.stars, c.starPaid);
     if (!due.length) return 0;

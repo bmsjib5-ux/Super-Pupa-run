@@ -1112,6 +1112,10 @@
   const AWAKE_COINS = [300, 600, 1000, 1600, 2500];
   const WING_PRICE = 80;
   const STAR_WINGS = 2;
+  // Wings owed to a save that cleared boss stages (stars: num -> stars) and
+  // arena floors (arena: the next floor) before wings were given out.
+  const wingCompensation = (stars, arena = 1) =>
+    STAGES.filter(s => s.wings && stars[s.num] > 0).reduce((sum, s) => sum + s.wings, 0) + 2 * Math.floor((Math.max(1, arena) - 1) / 5);
   const AWAKE_BONUS = .08;
   // What the next star costs, and whether this save can pay it.
   function awakeCost(cards, id) {
@@ -1168,7 +1172,7 @@
   const dueStarBonus = (stars, paid = []) => starGroups().filter(n => !paid.includes(n) && groupStars(stars, n) >= groupStages(n).length * 3);
 
   return {
-    GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS,
+    GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS, wingCompensation,
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,

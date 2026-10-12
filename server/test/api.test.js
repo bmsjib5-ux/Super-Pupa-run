@@ -207,3 +207,10 @@ test("merge: star-up wings keep the higher count, and stay unset until given", (
   const b = mergeSave(a, cleanSave(device(0, { cards: { wings: 2 } })), 0);
   assert.equal(b.cards.wings, 7);
 });
+
+test("merge: the wing compensation, once given, stays given", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { wingComp: true, wings: 9 } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { wings: 3 } })), 0);
+  assert.equal(b.cards.wingComp, true);
+  assert.equal(b.cards.wings, 9);
+});

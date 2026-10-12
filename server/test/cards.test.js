@@ -132,3 +132,13 @@ test("cards: every five stages at full stars give the star bonus once", () => {
   assert.equal(E.groupStars(stars, 2), 15);
   assert.equal(E.starGroups().length, Math.ceil(E.STAGES.length / 5));
 });
+
+test("cards: wings owed for boss stages and arena floors cleared before wings", () => {
+  const stars = {};
+  for (let n = 1; n <= 10; n++) stars[n] = 1;
+  const bosses = E.STAGES.filter(s => s.num <= 10 && s.wings).length;
+  assert.ok(bosses >= 2);
+  assert.equal(E.wingCompensation(stars, 1), bosses * 2);
+  assert.equal(E.wingCompensation({}, 12), 4); // floors 5 and 10
+  assert.equal(E.wingCompensation({}, 1), 0);
+});

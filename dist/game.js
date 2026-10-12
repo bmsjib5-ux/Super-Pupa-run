@@ -5891,6 +5891,7 @@
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
       // left out until the card screen first gives the starting wings
       wings: a.wings == null && b.wings == null ? undefined : Math.max(Number(a.wings) || 0, Number(b.wings) || 0),
+      wingComp: a.wingComp === true || b.wingComp === true || undefined,
       starPaid: [...new Set([...(Array.isArray(a.starPaid) ? a.starPaid : []), ...(Array.isArray(b.starPaid) ? b.starPaid : [])].map(Number).filter(n => Number.isInteger(n) && n > 0))].sort((x, y) => x - y),
       arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
       dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
@@ -6318,7 +6319,7 @@
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
-    { tag: "ระบบใหม่", title: "ระดับการ์ด D–SSS · ดาวแดง · ปีกอัพดาว", text: "การ์ดมี 6 ระดับ D C B A S และ SSS ระดับสูงยิ่งแรงและหายาก ตัวละคร SSS ใหม่ 3 ตัว เซราฟิน่า นักบุญปีกศักดิ์สิทธิ์ อัสนี อัศวินมังกรสายฟ้า และวิหคเพลิงทอง อัปดาวแดง 1–5 ดวงด้วยปีกอัพดาว ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 และโบนัสดาวครบ แจกปีกฟรี 3 ชิ้น", image: "gacha3", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
+    { tag: "ระบบใหม่", title: "ระดับการ์ด D–SSS · ดาวแดง · ปีกอัพดาว", text: "การ์ดมี 6 ระดับ D C B A S และ SSS ระดับสูงยิ่งแรงและหายาก ตัวละคร SSS ใหม่ 3 ตัว เซราฟิน่า นักบุญปีกศักดิ์สิทธิ์ อัสนี อัศวินมังกรสายฟ้า และวิหคเพลิงทอง อัปดาวแดง 1–5 ดวงด้วยปีกอัพดาว ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 และโบนัสดาวครบ แจกปีกฟรี 3 ชิ้น ใครผ่านด่านบอสหรือลานประลองไปแล้วได้ปีกชดเชยย้อนหลังด้วย", image: "gacha3", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 8 · มหาสมุทรห้วงลึก", text: "ด่าน 71–80 ใต้ทะเลลึก แสงส่องจากผิวน้ำ แนวปะการังเรืองแสง และป่าสาหร่าย มอนสเตอร์ทะเลลึก 8 ชนิดที่พ่นหมึกลดเกราะ ปล่อยพิษ และดูดชีวิต บอสราชาเห็ดห้วงลึก และราชินีคราเคน", image: "chapter8", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 7 · ห้วงจักรวาลเนบิวลา", text: "ด่าน 61–70 กลางอวกาศ เมฆเนบิวลา ดาวเคราะห์วงแหวน และพื้นคริสตัล มอนสเตอร์จักรวาล 8 ชนิดที่ใช้ทุกลูกเล่น บอสราชาเห็ดจักรวาล และราชินีเนบิวลา ด่านสุดท้ายสำหรับการ์ดดาวเต็ม", image: "chapter7", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 6 · วิหารสวรรค์ดวงดาว", text: "ด่าน 51–60 เมืองบนเมฆทองคำ เกาะลอยฟ้าและวิหารแสง ผู้พิทักษ์สวรรค์ 8 ชนิดที่ฟื้นพลัง กางเกราะ และบัฟกันเอง บอสราชาเห็ดสวรรค์ และราชินีดวงดาว ต้องอัปดาวการ์ดถึงจะไหว", image: "chapter6", open: () => { closeNews(); window.PupaCards?.open(); } },
