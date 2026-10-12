@@ -63,6 +63,9 @@
     moonrabbit: image("assets/moonrabbit-pet.webp"),
     starowl: image("assets/starowl-pet.webp"),
     silverwolf: image("assets/silverwolf-pet.webp"),
+    seraphina: image("assets/seraphina-hero.webp"),
+    asani: image("assets/asani-hero.webp"),
+    phoenix: image("assets/phoenix-pet.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1884,7 +1887,9 @@
       { id: "phloeng", name: "เพลิง", desc: "อัศวินสาวหอกเพลิง", price: 600, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["หอกเปลวเพลิง", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
       { id: "mekha", name: "เมฆา", desc: "จอมเวทน้อยขี่เมฆ", price: 400, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ขี่เมฆร่อน", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
       { id: "fasai", name: "ฟ้าใส", desc: "นักดนตรีสาวพิณจันทร์", price: 300, flat: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["เพลงเรียกเหรียญ", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
-      { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
+      { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] },
+      { id: "seraphina", name: "เซราฟิน่า", desc: "นักบุญแห่งปีกศักดิ์สิทธิ์ (SSS)", price: 900, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ปีกศักดิ์สิทธิ์", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
+      { id: "asani", name: "อัสนี", desc: "อัศวินมังกรสายฟ้าในตำนาน (SSS)", price: 900, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาบอัสนีบาต", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -1923,7 +1928,8 @@
       { id: "moonrabbit", name: "กระต่ายจันทร์", desc: "ดูดเหรียญ และให้เกราะฟรีทุกครั้งที่เริ่มด่าน", price: 300, magnet: 160, shield: true },
       { id: "starowl", name: "นกฮูกดาว", desc: "ดูดเหรียญไกล และโฉบจิกศัตรูใกล้ ๆ ทุก 9 วินาที", price: 500, magnet: 210, bite: 9 },
       { id: "silverwolf", name: "หมาป่าเงิน", desc: "ดูดเหรียญไกลมาก กัดศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1200, magnet: 250, bite: 6, shield: true },
-      { id: "dragon", name: "มังกรน้อยเปลวแสง", desc: "สัตว์เลี้ยงสุดยอด ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 7 วินาที และให้เกราะฟรีทุกด่าน", price: 1500, magnet: 270, bite: 7, shield: true, fire: true }
+      { id: "dragon", name: "มังกรน้อยเปลวแสง", desc: "สัตว์เลี้ยงสุดยอด ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 7 วินาที และให้เกราะฟรีทุกด่าน", price: 1500, magnet: 270, bite: 7, shield: true, fire: true },
+      { id: "phoenix", name: "วิหคเพลิงทอง", desc: "สัตว์เลี้ยงในตำนาน (SSS) ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1800, magnet: 280, bite: 6, shield: true, fire: true }
     ],
     items: [
       { id: "shield", name: "เกราะฟองสบู่", desc: "เริ่มด่านพร้อมเกราะกันโจมตี 1 ครั้ง", price: 40 },
@@ -4948,6 +4954,7 @@
     moonrabbit: picturePet(art.moonrabbit, "#fff2c8"),
     starowl: picturePet(art.starowl, "#9fb6ff"),
     silverwolf: picturePet(art.silverwolf, "#bfe6ff"),
+    phoenix: picturePet(art.phoenix, "#ffc46a"),
     firefly(t) {
       drawGlow("#fff2a0", 38);
       const flap = Math.sin(t * .04) * .5;
@@ -5882,6 +5889,8 @@
       ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
       xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 5), shards: most(a.shards, b.shards, 1e6),
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
+      // left out until the card screen first gives the starting wings
+      wings: a.wings == null && b.wings == null ? undefined : Math.max(Number(a.wings) || 0, Number(b.wings) || 0),
       starPaid: [...new Set([...(Array.isArray(a.starPaid) ? a.starPaid : []), ...(Array.isArray(b.starPaid) ? b.starPaid : [])].map(Number).filter(n => Number.isInteger(n) && n > 0))].sort((x, y) => x - y),
       arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
       dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
@@ -6305,10 +6314,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-12e";
+  const NEWS_VERSION = "2026-10-12f";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "ระดับการ์ด D–SSS · ดาวแดง · ปีกอัพดาว", text: "การ์ดมี 6 ระดับ D C B A S และ SSS ระดับสูงยิ่งแรงและหายาก ตัวละคร SSS ใหม่ 3 ตัว เซราฟิน่า นักบุญปีกศักดิ์สิทธิ์ อัสนี อัศวินมังกรสายฟ้า และวิหคเพลิงทอง อัปดาวแดง 1–5 ดวงด้วยปีกอัพดาว ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 และโบนัสดาวครบ แจกปีกฟรี 3 ชิ้น", image: "gacha3", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 8 · มหาสมุทรห้วงลึก", text: "ด่าน 71–80 ใต้ทะเลลึก แสงส่องจากผิวน้ำ แนวปะการังเรืองแสง และป่าสาหร่าย มอนสเตอร์ทะเลลึก 8 ชนิดที่พ่นหมึกลดเกราะ ปล่อยพิษ และดูดชีวิต บอสราชาเห็ดห้วงลึก และราชินีคราเคน", image: "chapter8", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 7 · ห้วงจักรวาลเนบิวลา", text: "ด่าน 61–70 กลางอวกาศ เมฆเนบิวลา ดาวเคราะห์วงแหวน และพื้นคริสตัล มอนสเตอร์จักรวาล 8 ชนิดที่ใช้ทุกลูกเล่น บอสราชาเห็ดจักรวาล และราชินีเนบิวลา ด่านสุดท้ายสำหรับการ์ดดาวเต็ม", image: "chapter7", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 6 · วิหารสวรรค์ดวงดาว", text: "ด่าน 51–60 เมืองบนเมฆทองคำ เกาะลอยฟ้าและวิหารแสง ผู้พิทักษ์สวรรค์ 8 ชนิดที่ฟื้นพลัง กางเกราะ และบัฟกันเอง บอสราชาเห็ดสวรรค์ และราชินีดวงดาว ต้องอัปดาวการ์ดถึงจะไหว", image: "chapter6", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6412,12 +6422,12 @@
       });
       return icon;
     }
-    if (kind === "cards" || kind === "gacha" || kind === "gacha2") {
+    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3") {
       const row = document.createElement("div");
       row.className = "news-trio news-cards";
-      for (const id of kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
+      for (const id of kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
-        img.src = `assets/${id}-hero.webp`;
+        img.src = id === "phoenix" ? "assets/phoenix-pet.webp" : `assets/${id}-hero.webp`;
         img.alt = "";
         row.append(img);
       }

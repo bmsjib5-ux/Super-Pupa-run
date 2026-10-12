@@ -36,8 +36,9 @@
   };
   // Keeps fights short: about half a role's listed hp.
   const HP_SCALE = .5;
-  // Rarer cards start stronger.
-  const RARITY = { 3: 1, 4: 1.12, 5: 1.25 };
+  // Card grades, rarity 1 to 6: D C B A S SSS. Rarer cards start stronger.
+  const GRADES = { 1: "D", 2: "C", 3: "B", 4: "A", 5: "S", 6: "SSS" };
+  const RARITY = { 1: 1, 2: 1.03, 3: 1.1, 4: 1.14, 5: 1.25, 6: 1.4 };
 
   // Skill fields: cd (turns between uses), first (turns to wait at the
   // start of a battle), target, power (damage as a share of ATK), hits (for
@@ -51,7 +52,7 @@
   // aim at this one), cleanse (clears stun, burn and defDown).
   const CARDS = {
     pupa: {
-      name: "Pupa", role: "balance", rarity: 3, art: "pupa", from: "hero",
+      name: "Pupa", role: "balance", rarity: 2, art: "pupa", from: "hero",
       text: "ดักแด้ไหมชมพู ตัวเอกของสวนเชอร์รี่",
       passive: { coins: .15, text: "เสน่ห์เหรียญทอง: เหรียญรางวัลจากด่าน +15%" },
       skills: [
@@ -60,7 +61,7 @@
       ]
     },
     jibjib: {
-      name: "จิ๊บจิ๊บแมน", role: "attack", rarity: 3, art: "jibjib", from: "hero",
+      name: "จิ๊บจิ๊บแมน", role: "attack", rarity: 2, art: "jibjib", from: "hero",
       text: "ลูกเจี๊ยบนักผจญภัย ผ้าพันคอแดงปลิวไสว",
       passive: { double: .3, text: "ปีกกระพือ: โจมตีปกติมีโอกาส 30% ตีซ้ำอีกครั้ง" },
       skills: [
@@ -69,7 +70,7 @@
       ]
     },
     baitoey: {
-      name: "ใบเตย", role: "support", rarity: 4, art: "baitoey", from: "hero",
+      name: "ใบเตย", role: "support", rarity: 3, art: "baitoey", from: "hero",
       text: "สาวน้อยภูตใบไม้ ผมใบเตยปลิวตามลม",
       skills: [
         { name: "ใบเตยเยียวยา", icon: "🌿", cd: 3, target: "allies", heal: 1.3 },
@@ -86,7 +87,7 @@
       ]
     },
     pangji: {
-      name: "ปังจิ", role: "defense", rarity: 4, art: "pangji", from: "hero",
+      name: "ปังจิ", role: "defense", rarity: 3, art: "pangji", from: "hero",
       text: "น้องซาลาเปาเนื้อนุ่ม ยิ้มหวานทั้งวัน",
       passive: { shield: .3, text: "ซาลาเปานุ่มนิ่ม: เริ่มการต่อสู้พร้อมเกราะ 30% ของพลังชีวิต" },
       skills: [
@@ -103,7 +104,7 @@
       ]
     },
     firefly: {
-      name: "หิ่งห้อยน้อย", role: "support", rarity: 3, art: "firefly", from: "pet",
+      name: "หิ่งห้อยน้อย", role: "support", rarity: 1, art: "firefly", from: "pet",
       text: "แสงอุ่น ๆ ที่คอยดูแลเพื่อน",
       skills: [
         { name: "แสงอุ่น", icon: "✨", cd: 3, target: "ally", heal: 2.6 },
@@ -111,7 +112,7 @@
       ]
     },
     kitten: {
-      name: "ลูกแมวเชอร์รี่", role: "attack", rarity: 3, art: "kitten", from: "pet",
+      name: "ลูกแมวเชอร์รี่", role: "attack", rarity: 1, art: "kitten", from: "pet",
       text: "ลูกแมวซนกรงเล็บคม",
       skills: [
         { name: "ข่วนเชอร์รี่", icon: "🐾", cd: 3, target: "one", power: 1.9 },
@@ -119,7 +120,7 @@
       ]
     },
     minibat: {
-      name: "ค้างคาวจิ๋ว", role: "magic", rarity: 4, art: "minibat", from: "pet",
+      name: "ค้างคาวจิ๋ว", role: "magic", rarity: 3, art: "minibat", from: "pet",
       text: "ค้างคาวตัวน้อยผู้พิทักษ์ราตรี",
       skills: [
         { name: "เขี้ยวดูดพลัง", icon: "🦇", cd: 3, target: "one", power: 1.7, drain: .5 },
@@ -127,7 +128,7 @@
       ]
     },
     starsprite: {
-      name: "ภูตดาว", role: "defense", rarity: 4, art: "starsprite", from: "pet",
+      name: "ภูตดาว", role: "defense", rarity: 3, art: "starsprite", from: "pet",
       text: "ภูตดวงดาวผู้กางเกราะให้ทุกคน",
       skills: [
         { name: "เกราะดวงดาว", icon: "⭐", cd: 3, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }] },
@@ -188,7 +189,7 @@
       ]
     },
     moonrabbit: {
-      name: "กระต่ายจันทร์", role: "support", rarity: 3, art: "moonrabbit", from: "pet",
+      name: "กระต่ายจันทร์", role: "support", rarity: 2, art: "moonrabbit", from: "pet",
       text: "กระต่ายขาวจากดวงจันทร์ พกโมจิมาแจกเพื่อน",
       skills: [
         { name: "โมจิพลังจันทร์", icon: "🍡", cd: 3, target: "ally", heal: 2.4 },
@@ -196,7 +197,7 @@
       ]
     },
     starowl: {
-      name: "นกฮูกดาว", role: "magic", rarity: 4, art: "starowl", from: "pet",
+      name: "นกฮูกดาว", role: "magic", rarity: 3, art: "starowl", from: "pet",
       text: "นกฮูกขนดาวผู้รู้ทุกความลับของท้องฟ้า",
       skills: [
         { name: "ดวงตาดารา", icon: "👁", cd: 3, target: "one", power: 1.8, fx: [{ k: "defDown", v: .25, turns: 2 }] },
@@ -221,7 +222,7 @@
       ]
     },
     fasai: {
-      name: "ฟ้าใส", role: "support", rarity: 3, art: "fasai", from: "hero",
+      name: "ฟ้าใส", role: "support", rarity: 2, art: "fasai", from: "hero",
       text: "นักดนตรีสาวพิณจันทร์ เพลงของเธอปลุกพลังเพื่อน",
       skills: [
         { name: "บทเพลงเยียวยา", icon: "🎵", cd: 3, target: "allies", heal: 1.1 },
@@ -234,6 +235,32 @@
       skills: [
         { name: "เขี้ยวเงิน", icon: "🐺", cd: 3, target: "one", power: 2.2, drain: .3 },
         { name: "หอนจันทร์เต็มดวง", icon: "🌕", cd: 5, first: 1, target: "all", power: 1.4, fx: [{ k: "atkUp", v: .2, turns: 2, on: "allies" }] }
+      ]
+    },
+    seraphina: {
+      name: "เซราฟิน่า", role: "support", rarity: 6, art: "seraphina", from: "hero",
+      text: "นักบุญแห่งปีกศักดิ์สิทธิ์ แสงของเธอปกป้องทั้งกองทัพ",
+      passive: { teamShield: .15, text: "ปีกศักดิ์สิทธิ์: เริ่มการต่อสู้ ทั้งทีมได้เกราะ 15% ของพลังชีวิต" },
+      skills: [
+        { name: "แสงปีกศักดิ์สิทธิ์", icon: "🪽", cd: 3, target: "allies", heal: 1.9, fx: [{ k: "cleanse" }, { k: "defUp", v: .25, turns: 2 }] },
+        { name: "พรแห่งสวรรค์", icon: "✝", cd: 5, first: 1, target: "allies", shield: 1.6, fx: [{ k: "shield", turns: 2 }, { k: "atkUp", v: .45, turns: 2 }] }
+      ]
+    },
+    asani: {
+      name: "อัสนี", role: "attack", rarity: 6, art: "asani", from: "hero", crit: .35,
+      text: "อัศวินมังกรสายฟ้าในตำนาน ดาบเดียวผ่าฟ้า",
+      passive: { text: "สายเลือดมังกร: โอกาสคริติคอล 35%" },
+      skills: [
+        { name: "ดาบอัสนีบาต", icon: "⚔", cd: 3, target: "one", power: 2.8, fx: [{ k: "stun", chance: .4, turns: 1 }] },
+        { name: "มังกรสายฟ้าคำราม", icon: "🐉", cd: 5, first: 2, target: "all", power: 2, fx: [{ k: "defDown", v: .3, turns: 2 }] }
+      ]
+    },
+    phoenix: {
+      name: "วิหคเพลิงทอง", role: "magic", rarity: 6, art: "phoenix", from: "pet",
+      text: "นกเพลิงทองคำในตำนาน ฟื้นคืนจากเถ้าถ่านได้ทุกครั้ง",
+      skills: [
+        { name: "ขนนกเพลิงทอง", icon: "🪶", cd: 3, target: "random", hits: 4, power: .8, fx: [{ k: "burn", power: .35, turns: 2 }] },
+        { name: "ปีกเพลิงนิรันดร์", icon: "🔥", cd: 5, first: 2, target: "all", power: 1.7, drain: .4, fx: [{ k: "burn", power: .5, turns: 2 }] }
       ]
     }
   });
@@ -547,7 +574,9 @@
       // gems for them instead (the old card prize stages give more)
       gems: card ? 80 : parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 60 : 25,
       // star dust for the first clear, from chapter 4 on
-      dust: num > 30 ? (parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 20 : 8) : 0
+      dust: num > 30 ? (parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 20 : 8) : 0,
+      // star-up wings for the first clear of a boss stage
+      wings: parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? 2 : 0
     };
   });
 
@@ -620,6 +649,8 @@
     }
     for (const hero of living(b.heroes)) {
       if (hero.passive?.shield) addStatus(hero, { k: "shield", v: Math.round(hero.maxHp * hero.passive.shield), turns: 2 });
+      // a guardian's passive shields the whole team
+      if (hero.passive?.teamShield) for (const ally of living(b.heroes)) addStatus(ally, { k: "shield", v: Math.round(ally.maxHp * hero.passive.teamShield), turns: 2 });
     }
     spawnWave(b);
     b.phase = average(living(b.foes)) > average(living(b.heroes)) ? "foe" : "hero";
@@ -995,7 +1026,7 @@
 
   // Login rewards, one a day in a cycle of seven.
   const DAILY = [
-    { coins: 50, gems: 20 }, { xp: 120, gems: 20 }, { coins: 100, gems: 30 }, { xp: 200, gems: 30 }, { coins: 150, gems: 40 }, { xp: 300, gems: 50 }, { coins: 400, xp: 400, gems: 150 }
+    { coins: 50, gems: 20 }, { xp: 120, gems: 20 }, { coins: 100, gems: 30 }, { xp: 200, gems: 30 }, { coins: 150, gems: 40 }, { xp: 300, gems: 50 }, { coins: 400, xp: 400, gems: 150, wings: 3 }
   ];
 
   // Costumes: one per card, bought with coins; worn, it changes the look
@@ -1024,7 +1055,7 @@
     return {
       num: n, arena: true, name: `ลานประลอง ชั้น ${n}`, lv: 1 + n,
       waves: [wave], boss: Boolean(boss), par: 99,
-      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2
+      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2, wings: n % 5 === 0 ? 2 : 0
     };
   }
   // The strongest cards first, tanks in front: who goes to the arena.
@@ -1056,25 +1087,31 @@
       num: 0, dungeon: kind, name: d.name, lv, waves: d.waves.map(parseWave), par: 99, boss: kind === "coin",
       coins: kind === "coin" ? 120 + 30 * best : 20 + 5 * best,
       xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best,
-      gems: 20, dust: 5
+      gems: 20, dust: 5, wings: 1
     };
   }
 
   // ---- Card pulls ----
   // Characters and pets are only found here. Gems pay for a pull. The odds
-  // are shown on the pull page; PITY pulls without a five-star make the
-  // next one a five-star, and ten at once always hold a four-star or better.
-  // A card already owned turns into XP for that card instead.
-  const GACHA = { one: 100, ten: 900, rates: { 5: .05, 4: .25, 3: .70 }, pity: 50 };
-  // A card pulled again turns into shards of that card, for its stars.
-  const DUPE_SHARDS = { 3: 5, 4: 10, 5: 20 };
+  // are shown on the pull page; PITY pulls without an S make the next one
+  // S or SSS, and ten at once always hold a B or better.
+  const GACHA = { one: 100, ten: 900, rates: { 6: .01, 5: .04, 4: .12, 3: .23, 2: .3, 1: .3 }, pity: 50, pitySSS: .2 };
+  // A card pulled again turns into shards of that card, for its stars; the
+  // top grades also give star-up wings.
+  const DUPE_SHARDS = { 1: 4, 2: 5, 3: 8, 4: 12, 5: 20, 6: 40 };
+  const DUPE_WINGS = { 5: 1, 6: 3 };
 
   // ---- Stars (awakening) ----
-  // Raising a card a star costs its shards (star dust, earned in play, can
-  // stand in for any card's shards) and coins. Each star adds 10 to the
-  // level cap and AWAKE_BONUS to hp, attack and defence.
+  // Raising a card a (red) star costs its shards (star dust, earned in play,
+  // can stand in for any card's shards), star-up wings and coins. Each star
+  // adds 10 to the level cap and AWAKE_BONUS to hp, attack and defence.
+  // Wings come from boss stages, daily dungeons, the arena, the daily
+  // reward, star bonuses, S/SSS duplicates, or gems (WING_PRICE).
   const AWAKE_SHARDS = [10, 20, 35, 55, 80];
+  const AWAKE_WINGS = [1, 2, 3, 5, 8];
   const AWAKE_COINS = [300, 600, 1000, 1600, 2500];
+  const WING_PRICE = 80;
+  const STAR_WINGS = 2;
   const AWAKE_BONUS = .08;
   // What the next star costs, and whether this save can pay it.
   function awakeCost(cards, id) {
@@ -1082,38 +1119,39 @@
     if (at >= MAX_AWAKE) return null;
     const need = AWAKE_SHARDS[at], own = cards.shards?.[id] || 0;
     const fromShards = Math.min(own, need), fromDust = need - fromShards;
-    return { star: at + 1, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0 };
+    return { star: at + 1, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0, wingsNeed: AWAKE_WINGS[at], wings: cards.wings || 0 };
   }
   // Pays and raises the star; coins is the save's coin balance (returned).
   function awaken(cards, id, coins) {
     const cost = awakeCost(cards, id);
-    if (!cost || !cards.units[id] || coins < cost.coins || cost.dust < cost.fromDust) return null;
+    if (!cost || !cards.units[id] || coins < cost.coins || cost.dust < cost.fromDust || cost.wings < cost.wingsNeed) return null;
     cards.shards[id] = (cards.shards[id] || 0) - cost.fromShards;
     cards.dust = cost.dust - cost.fromDust;
+    cards.wings = cost.wings - cost.wingsNeed;
     cards.awake[id] = cost.star;
     return coins - cost.coins;
   }
   // Battle bonus from stars and a worn costume.
   const cardBonus = (cards, id) => (cards.awake?.[id] || 0) * AWAKE_BONUS + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
   const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
-  // state: { pity } (pulls since the last five-star); rnd: () => 0..1.
-  function pullOne(state, rnd, atLeast = 3) {
-    let rarity;
-    if (state.pity + 1 >= GACHA.pity) rarity = 5;
+  // state: { pity } (pulls since the last S or SSS); rnd: () => 0..1.
+  function pullOne(state, rnd, atLeast = 1) {
+    let rarity = 1;
+    if (state.pity + 1 >= GACHA.pity) rarity = rnd() < GACHA.pitySSS ? 6 : 5;
     else {
-      const roll = rnd();
-      rarity = roll < GACHA.rates[5] ? 5 : roll < GACHA.rates[5] + GACHA.rates[4] ? 4 : 3;
+      let roll = rnd();
+      for (const r of [6, 5, 4, 3, 2, 1]) { if (roll < GACHA.rates[r]) { rarity = r; break; } roll -= GACHA.rates[r]; }
     }
     rarity = Math.max(rarity, atLeast);
-    state.pity = rarity === 5 ? 0 : state.pity + 1;
+    state.pity = rarity >= 5 ? 0 : state.pity + 1;
     const pool = byRarity(rarity);
     return pool[Math.floor(rnd() * pool.length)];
   }
   function pull(state, rnd, count) {
     const out = [];
     for (let n = 0; n < count; n++) {
-      const last = count >= 10 && n === count - 1 && !out.some(id => CARDS[id].rarity >= 4);
-      out.push(pullOne(state, rnd, last ? 4 : 3));
+      const last = count >= 10 && n === count - 1 && !out.some(id => CARDS[id].rarity >= 3);
+      out.push(pullOne(state, rnd, last ? 3 : 1));
     }
     return out;
   }
@@ -1130,6 +1168,7 @@
   const dueStarBonus = (stars, paid = []) => starGroups().filter(n => !paid.includes(n) && groupStars(stars, n) >= groupStages(n).length * 3);
 
   return {
+    GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS,
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,

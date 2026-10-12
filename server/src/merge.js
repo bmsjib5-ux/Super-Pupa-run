@@ -27,7 +27,7 @@ const cleanCards = (raw) => {
   const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
   return {
     units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true,
-    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 5), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 5), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
   };
 };
@@ -62,7 +62,7 @@ function mergeCards(current, incoming) {
     ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team,
     xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), awake: maxMap(now.awake, next.awake),
     // shards and star dust are spent on stars: this device's count, unless the account is ahead
-    shards: maxMap(now.shards, next.shards), dust: Math.max(now.dust, next.dust),
+    shards: maxMap(now.shards, next.shards), dust: Math.max(now.dust, next.dust), wings: now.wings == null && next.wings == null ? undefined : Math.max(now.wings || 0, next.wings || 0),
     // star bonuses paid on either copy stay paid
     starPaid: [...new Set([...now.starPaid, ...next.starPaid])].sort((a, b) => a - b), arena: Math.max(now.arena, next.arena),
     // the later claim wins, so a hunt or a day's reward is not taken twice

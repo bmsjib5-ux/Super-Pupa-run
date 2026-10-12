@@ -199,3 +199,11 @@ test("merge: star bonuses paid on either device stay paid", () => {
   const b = mergeSave(a, cleanSave(device(0, { cards: { starPaid: [3] } })), 0);
   assert.deepEqual(b.cards.starPaid, [1, 2, 3]);
 });
+
+test("merge: star-up wings keep the higher count, and stay unset until given", () => {
+  const none = mergeSave(null, cleanSave(device(0, { cards: { dust: 1 } })), 0);
+  assert.equal(none.cards.wings, undefined);
+  const a = mergeSave(none, cleanSave(device(0, { cards: { wings: 7 } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { wings: 2 } })), 0);
+  assert.equal(b.cards.wings, 7);
+});

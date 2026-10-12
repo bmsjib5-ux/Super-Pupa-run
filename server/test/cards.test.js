@@ -81,14 +81,18 @@ test("cards: daily dungeons can be won at the furthest stage's level", () => {
   }
 });
 
-test("cards: stars raise the level cap, cost shards or star dust, and stop at five", () => {
-  const cards = { units: { ikuya: 30 }, xp: {}, awake: {}, shards: { ikuya: 4 }, dust: 6 };
+test("cards: red stars raise the level cap, cost shards or star dust plus wings, and stop at five", () => {
+  const cards = { units: { ikuya: 30 }, xp: {}, awake: {}, shards: { ikuya: 4 }, dust: 6, wings: 0 };
   assert.equal(E.giveXp(cards, "ikuya", 100000), 0); // capped at 30 without stars
   assert.equal(E.awaken(cards, "ikuya", 100), null); // not enough coins
-  assert.equal(E.awaken(cards, "ikuya", 1000), 700); // 4 shards + 6 dust + 300 coins
+  assert.equal(E.awaken(cards, "ikuya", 1000), null); // no wings
+  cards.wings = 1;
+  assert.equal(E.awaken(cards, "ikuya", 1000), 700); // 4 shards + 6 dust + 1 wing + 300 coins
   assert.equal(cards.awake.ikuya, 1);
   assert.equal(cards.shards.ikuya, 0);
   assert.equal(cards.dust, 0);
+  assert.equal(cards.wings, 0);
+  cards.wings = 1000;
   assert.ok(E.giveXp(cards, "ikuya", 100000) > 0);
   assert.ok(cards.units.ikuya <= E.capFor(1));
   assert.equal(E.awaken(cards, "ikuya", 1e9), null); // no shards left
@@ -97,6 +101,24 @@ test("cards: stars raise the level cap, cost shards or star dust, and stop at fi
   assert.equal(cards.awake.ikuya, E.MAX_AWAKE);
   assert.equal(E.awakeCost(cards, "ikuya"), null);
   assert.equal(E.cardBonus(cards, "ikuya"), E.MAX_AWAKE * E.AWAKE_BONUS);
+});
+
+test("cards: six grades from D to SSS, SSS the rarest pull", () => {
+  assert.deepEqual(Object.values(E.GRADES), ["D", "C", "B", "A", "S", "SSS"]);
+  assert.ok(E.CARD_IDS.every(id => E.GRADES[E.CARDS[id].rarity]));
+  assert.deepEqual(E.CARD_IDS.filter(id => E.CARDS[id].rarity === 6).sort(), ["asani", "phoenix", "seraphina"]);
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const state = { pity: 0 }, count = {};
+  const got = E.pull(state, rnd, 20000);
+  for (const id of got) count[E.CARDS[id].rarity] = (count[E.CARDS[id].rarity] || 0) + 1;
+  for (let r = 1; r < 6; r++) assert.ok(count[r] > count[6], `grade ${r}`);
+  // ten pulls always hold a B or better
+  for (let n = 0; n < 50; n++) assert.ok(E.pull({ pity: 0 }, rnd, 10).some(id => E.CARDS[id].rarity >= 3));
+  // pity: the 50th pull without an S is S or SSS
+  const p = { pity: E.GACHA.pity - 1 };
+  assert.ok(E.CARDS[E.pull(p, () => .99, 1)[0]].rarity >= 5);
+  assert.equal(p.pity, 0);
 });
 
 test("cards: every five stages at full stars give the star bonus once", () => {

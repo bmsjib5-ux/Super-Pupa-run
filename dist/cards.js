@@ -38,11 +38,12 @@
     sakura: "assets/sakura-hero.webp", chantra: "assets/chantra-hero.webp", thongkham: "assets/thongkham-hero.webp",
     miu: "assets/miu-hero.webp", ratri: "assets/ratri-hero.webp",
     phloeng: "assets/phloeng-hero.webp", mekha: "assets/mekha-hero.webp", fasai: "assets/fasai-hero.webp",
-    moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp"
+    moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp",
+    seraphina: "assets/seraphina-hero.webp", asani: "assets/asani-hero.webp", phoenix: "assets/phoenix-pet.webp"
   };
   // A worn costume recolours the card and adds a golden glow.
-  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300 };
-  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ" };
+  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300, seraphina: 200, asani: 150, phoenix: 180 };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม" };
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   // A monster's picture; the burning ones of chapter 3 are recoloured.
   function foeArt(id) {
@@ -83,6 +84,7 @@
     "miu:0": "star", "miu:1": "star", "ratri:0": "orb", "ratri:1": "star", "moonrabbit:0": "heal", "moonrabbit:1": "buff",
     "starowl:0": "orb", "starowl:1": "star", "silverwolf:0": "bite", "silverwolf:1": "sonic",
     "phloeng:0": "fire", "phloeng:1": "fire", "mekha:0": "bolt", "mekha:1": "bolt", "fasai:0": "heal", "fasai:1": "buff",
+    "seraphina:0": "heal", "seraphina:1": "buff", "asani:0": "bolt", "asani:1": "bolt", "phoenix:0": "fire", "phoenix:1": "fire",
     "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
     "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",
     "king:0": "stomp", "king:1": "spore", "queen:0": "sonic", "queen:1": "bite"
@@ -148,11 +150,17 @@
       if (units[id]) units[id] = Math.min(units[id], E.capFor(awake[id]));
     }
     const dust = Math.max(0, Math.floor(Number(raw.dust) || 0));
+    // star-up wings; saves from before wings start with a gift of 3
+    const wings = raw.wings == null ? 3 : Math.max(0, Math.floor(Number(raw.wings) || 0));
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   const cards = () => save().cards;
+  // A card's grade badge (D to SSS) and its red awakening stars.
+  const gradeOf = (id) => E.GRADES[E.CARDS[id].rarity];
+  const gradeBadge = (id, cls = "grade") => el("span", `${cls} grade-${gradeOf(id).toLowerCase()}`, gradeOf(id));
+  const redStars = (n, max = 0) => { const row = el("span", "red-stars"); row.append(el("b", null, "★".repeat(n))); if (max > n) row.append(el("i", null, "★".repeat(max - n))); return row; };
   const isCleared = (num) => (cards().stars[num] || 0) > 0;
   const isOpen = (num) => num === 1 || isCleared(num - 1);
   const store = () => game().writeSave();
@@ -300,7 +308,7 @@
     const grid = el("div", "daily-grid");
     E.DAILY.forEach((r, n) => {
       const cell = el("div", `daily-day${n + 1 < day ? " is-done" : n + 1 === day ? " is-today" : ""}`);
-      cell.append(el("small", null, `วันที่ ${n + 1}`), el("b", null, [r.gems ? `💎 ${r.gems}` : "", r.coins ? `● ${r.coins}` : "", r.xp ? `EXP ${r.xp}` : ""].filter(Boolean).join(" + ")));
+      cell.append(el("small", null, `วันที่ ${n + 1}`), el("b", null, [r.gems ? `💎 ${r.gems}` : "", r.coins ? `● ${r.coins}` : "", r.xp ? `EXP ${r.xp}` : "", r.wings ? `🪽 ${r.wings}` : ""].filter(Boolean).join(" + ")));
       grid.append(cell);
     });
     const take = button("primary-button", "รับรางวัลวันนี้", () => {
@@ -308,6 +316,7 @@
       c.daily = { day: today(), streak: day };
       save().coins += r.coins || 0;
       addGems(r.gems || 0);
+      cards().wings += r.wings || 0;
       const ups = r.xp ? shareXp(c.team.filter(Boolean), r.xp) : [];
       store();
       [659, 784, 988, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
@@ -328,9 +337,9 @@
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
-    for (const id of ["phloeng", "chantra", "mekha", "ratri", "fasai"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id)); row.append(f); }
+    for (const id of ["seraphina", "phloeng", "asani", "chantra", "phoenix"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade")); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
-    const odds = el("p", "pull-odds", `อัตรา: ★5 ${g.rates[5] * 100}% · ★4 ${g.rates[4] * 100}% · ★3 ${g.rates[3] * 100}% · การันตี ★5 ภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ ★4 ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (★3 5 · ★4 10 · ★5 20)`);
+    const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
     const one = button("primary-button", `สุ่ม 1 ครั้ง · 💎 ${g.one}`, () => doPull(1));
     const ten = button("primary-button pull-ten", `สุ่ม 10 ครั้ง · 💎 ${g.ten}`, () => doPull(10));
@@ -339,9 +348,9 @@
     banner.append(odds, actions, el("p", "sheet-goals", `มีเพชร 💎 ${fmt(have)} · เพชรได้จากผ่านด่านครั้งแรก (ทั้งผจญภัยและศึกการ์ด) รางวัลรายวัน ลานประลอง และด่านประจำวัน`));
     panel.append(banner);
     const list = el("div", "pull-pool");
-    for (const r of [5, 4, 3]) {
+    for (const r of [6, 5, 4, 3, 2, 1]) {
       const line = el("p", "pull-tier");
-      line.append(el("b", null, "★".repeat(r)), document.createTextNode(" " + E.CARD_IDS.filter(id => E.CARDS[id].rarity === r).map(id => `${E.CARDS[id].name}${cards().units[id] ? " ✓" : ""}`).join(" · ")));
+      line.append(el("b", `grade grade-${E.GRADES[r].toLowerCase()}`, E.GRADES[r]), document.createTextNode(" " + E.CARD_IDS.filter(id => E.CARDS[id].rarity === r).map(id => `${E.CARDS[id].name}${cards().units[id] ? " ✓" : ""}`).join(" · ")));
       list.append(line);
     }
     panel.append(el("h3", "shop-heading", "การ์ดที่สุ่มได้ (✓ = มีแล้ว)"), list);
@@ -361,9 +370,10 @@
         if (save().shop && !save().shop.owned.includes(id)) save().shop.owned.push(id);
         return { id, fresh: true };
       }
-      const shards = E.DUPE_SHARDS[E.CARDS[id].rarity];
+      const shards = E.DUPE_SHARDS[E.CARDS[id].rarity], wings = E.DUPE_WINGS[E.CARDS[id].rarity] || 0;
       c.shards[id] = (c.shards[id] || 0) + shards;
-      return { id, fresh: false, shards };
+      c.wings += wings;
+      return { id, fresh: false, shards, wings };
     });
     store(); showCoins();
     reveal(results);
@@ -377,10 +387,10 @@
       const slot = el("div", `pull-card r${def.rarity}`);
       slot.style.animationDelay = `${n * 180}ms`;
       const front = el("div", "pull-front");
-      front.append(cardTile(r.id, null), el("small", r.fresh ? "pull-new" : "pull-dupe", r.fresh ? "ใหม่!" : `ซ้ำ → เศษ +${r.shards}`));
+      front.append(cardTile(r.id, null), el("small", r.fresh ? "pull-new" : "pull-dupe", r.fresh ? "ใหม่!" : `ซ้ำ → เศษ +${r.shards}${r.wings ? ` 🪽+${r.wings}` : ""}`));
       slot.append(el("div", "pull-back", "✦"), front);
       grid.append(slot);
-      const best = def.rarity === 5 ? [784, 988, 1175, 1568] : def.rarity === 4 ? [659, 880] : [523];
+      const best = def.rarity === 6 ? [784, 988, 1175, 1568, 1976] : def.rarity === 5 ? [784, 988, 1175, 1568] : def.rarity >= 3 ? [659, 880] : [523];
       setTimeout(() => best.forEach((note, i) => tone(note, .1, "triangle", .05, i * .06)), n * 180 + 380);
     });
     const fresh = results.filter(r => r.fresh).map(r => E.CARDS[r.id].name);
@@ -390,7 +400,7 @@
     more.disabled = (save().gems || 0) < (results.length > 1 ? g.ten : g.one);
     again.append(more, button("secondary-button", "ดูการ์ด", () => { tab = "team"; closeSheet(); }));
     openSheet([el("h3", "sheet-title", "ผลการสุ่ม"), grid, el("p", "sheet-sub", fresh.length ? `ได้ใหม่: ${fresh.join(" · ")}` : "ไม่มีการ์ดใหม่รอบนี้ การ์ดซ้ำเปลี่ยนเป็นเศษไว้อัปดาวแล้ว"), again]);
-    announce(`ผลการสุ่ม: ${results.map(r => `${E.CARDS[r.id].name} ${E.CARDS[r.id].rarity} ดาว${r.fresh ? " ใหม่" : " ซ้ำ"}`).join(", ")}`);
+    announce(`ผลการสุ่ม: ${results.map(r => `${E.CARDS[r.id].name} ระดับ ${gradeOf(r.id)}${r.fresh ? " ใหม่" : " ซ้ำ"}`).join(", ")}`);
   }
 
   // ---- Daily dungeons ----
@@ -412,7 +422,7 @@
       box.append(el("span", "dungeon-icon", d.icon), el("h3", null, d.name), el("p", "sheet-text", d.text));
       const foes = el("div", "sheet-foes");
       for (const id of [...new Set(stage.waves.flat().map(f => f.id))]) { const fig = el("figure", `sheet-foe${E.FOES[id].boss ? " is-boss" : ""}`); fig.append(foeArt(id), el("figcaption", null, E.FOES[id].name)); foes.append(fig); }
-      box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)} + 💎 ${stage.gems}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด + 💎 ${stage.gems}`));
+      box.append(foes, el("p", "sheet-sub", `มอนสเตอร์ Lv ${stage.lv} · 3 คลื่น`), el("p", "sheet-reward", kind === "exp" ? `รางวัล: EXP ${fmt(stage.xp)} ต่อการ์ด + ● ${fmt(stage.coins)} + 💎 ${stage.gems} + 🪽 ${stage.wings}` : `รางวัล: ● ${fmt(stage.coins)} + EXP ${fmt(stage.xp)} ต่อการ์ด + 💎 ${stage.gems} + 🪽 ${stage.wings}`));
       const go = button(done ? "secondary-button" : "primary-button", done ? `ผ่านแล้ววันนี้ ✓ · มาใหม่ใน ${untilMidnight()}` : "เข้าด่าน ⚔", () => startBattle(stage));
       go.disabled = done;
       const actions = el("div", "title-actions sheet-actions");
@@ -432,12 +442,13 @@
       save().coins += stage.coins;
       addGems(stage.gems);
       cards().dust += stage.dust || 0;
+      cards().wings += stage.wings || 0;
     }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? E.DUNGEONS[stage.dungeon].icon : "☾"), el("h2", null, won ? "ผ่านด่านประจำวัน!" : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ✧ ผลึกดาว ${stage.dust} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
+    box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ✧ ผลึกดาว ${stage.dust} · 🪽 ${stage.wings} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     if (won) box.append(el("p", null, `ด่านนี้รับรางวัลได้อีกครั้งพรุ่งนี้ (อีก ${untilMidnight()})`));
     const actions = el("div", "title-actions");
@@ -477,11 +488,12 @@
     const gems = due.length * E.STAR_BONUS;
     c.starPaid = [...c.starPaid, ...due].sort((a, b) => a - b);
     addGems(gems);
+    c.wings += due.length * E.STAR_WINGS;
     store(); showCoins();
     const ranges = due.map(n => `ด่าน ${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP}`);
     announce(`ดาวครบ ${ranges.join(", ")} ได้รับ ${gems} เพชร`);
     [784, 988, 1175, 1568].forEach((note, i) => tone(note, .14, "triangle", .06, i * .09));
-    if (show) openSheet([el("h3", "sheet-title", "🌟 โบนัสดาวครบ!"), el("p", "sheet-reward", `ได้รับ 💎 ${fmt(gems)}`), el("p", "sheet-sub", `เก็บครบ 15 ดาวใน ${ranges.join(" · ")} · ทุก 5 ด่านที่ได้ดาวครบ รับ 💎 ${E.STAR_BONUS}`)]);
+    if (show) openSheet([el("h3", "sheet-title", "🌟 โบนัสดาวครบ!"), el("p", "sheet-reward", `ได้รับ 💎 ${fmt(gems)} + 🪽 ${due.length * E.STAR_WINGS}`), el("p", "sheet-sub", `เก็บครบ 15 ดาวใน ${ranges.join(" · ")} · ทุก 5 ด่านที่ได้ดาวครบ รับ 💎 ${E.STAR_BONUS}`)]);
     return gems;
   }
 
@@ -555,11 +567,12 @@
   function cardTile(id, onPick, extra = "") {
     const def = E.CARDS[id], lv = cards().units[id];
     const tile = button(`tcard r${def.rarity}${lv ? "" : " is-locked"}${cards().team.includes(id) ? " is-picked" : ""} ${extra}`, null, onPick);
-    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ${def.rarity} ดาว${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}`);
+    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ระดับ ${gradeOf(id)}${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}${cards().awake?.[id] ? ` ดาวแดง ${cards().awake[id]}` : ""}`);
     const art = el("span", "tcard-art");
     art.append(portrait(id));
     const awake = cards().awake?.[id] || 0;
-    tile.append(art, el("span", "tcard-rare", "★".repeat(def.rarity)), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}${awake ? ` · ✦${awake}` : ""}` : "🔒"));
+    tile.append(art, gradeBadge(id, "tcard-rare grade"), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}` : "🔒"));
+    if (awake) { const st = redStars(awake); st.classList.add("tcard-stars"); tile.append(st); }
     if (awake) tile.classList.add(`awake-${awake}`);
     return tile;
   }
@@ -592,7 +605,10 @@
     const art = el("div", `sheet-art r${def.rarity}`);
     art.append(portrait(id));
     const info = el("div", "sheet-info");
-    info.append(el("h3", null, def.name), el("p", "sheet-sub", `${"★".repeat(def.rarity)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.capFor(c.awake[id])}` : "ยังไม่มี"}`), el("p", "sheet-text", def.text));
+    const head = el("h3", null, def.name); head.prepend(gradeBadge(id), " ");
+    info.append(head, el("p", "sheet-sub", `ระดับ ${gradeOf(id)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.capFor(c.awake[id])}` : "ยังไม่มี"}`));
+    if (c.awake[id]) info.append(redStars(c.awake[id], E.MAX_AWAKE));
+    info.append(el("p", "sheet-text", def.text));
     const boost = (st) => { const k = 1 + E.cardBonus(c, id); return { ...st, hp: Math.round(st.hp * k), atk: Math.round(st.atk * k), def: Math.round(st.def * k) }; };
     const cap = E.capFor(c.awake[id]);
     const now = boost(E.cardStats(id, lv || 1)), then = lv && lv < cap ? boost(E.cardStats(id, lv + 1)) : null;
@@ -612,18 +628,26 @@
     }
     if (def.passive) parts.push(el("p", "sheet-passive", `ติดตัว · ${def.passive.text}`));
     if (lv) {
-      // stars: shards of this card (or star dust) and coins
+      // red stars: shards of this card (or star dust), star-up wings and coins
       const at = c.awake[id] || 0, cost = E.awakeCost(c, id);
       const box = el("div", "sheet-awake");
-      box.append(el("b", null, `อัปดาว ${"✦".repeat(at)}${"✧".repeat(E.MAX_AWAKE - at)}`), el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round(E.AWAKE_BONUS * 100)}%`));
+      const title = el("b", null, "อัปดาว (อเวค) ");
+      title.append(redStars(at, E.MAX_AWAKE));
+      box.append(title, el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · 🪽 ปีกอัพดาว ${fmt(c.wings)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round(E.AWAKE_BONUS * 100)}%`));
       if (cost) {
-        const ok = cost.dust >= cost.fromDust && save().coins >= cost.coins;
-        const up = button("shop-buy", `✦${cost.star} · เศษ ${cost.need} ● ${fmt(cost.coins)}`, () => awakenCard(id));
+        const ok = cost.dust >= cost.fromDust && cost.wings >= cost.wingsNeed && save().coins >= cost.coins;
+        const up = button("shop-buy", `★${cost.star} · เศษ ${cost.need} 🪽 ${cost.wingsNeed} ● ${fmt(cost.coins)}`, () => awakenCard(id));
         up.disabled = !ok;
-        up.setAttribute("aria-label", `อัปดาว${def.name}เป็น ${cost.star} ดาว ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} และ ${cost.coins} เหรียญ`);
+        up.setAttribute("aria-label", `อัปดาว${def.name}เป็นดาวแดง ${cost.star} ดวง ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} ปีกอัพดาว ${cost.wingsNeed} และ ${cost.coins} เหรียญ`);
         box.append(up);
         if (cost.fromDust) box.append(el("small", null, cost.dust >= cost.fromDust ? `ใช้ผลึกดาวแทน ${cost.fromDust}` : `เศษไม่พอ ขาด ${cost.fromDust - cost.dust}`));
-      } else box.append(el("span", "sheet-max", "ดาวเต็มแล้ว"));
+        if (cost.wings < cost.wingsNeed) {
+          box.append(el("small", null, `ปีกอัพดาวไม่พอ ขาด ${cost.wingsNeed - cost.wings} · ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 โบนัสดาวครบ หรือสุ่มได้ S/SSS ซ้ำ`));
+          const buyWing = button("shop-buy wing-buy", `แลกปีก 🪽1 · 💎 ${E.WING_PRICE}`, () => buyWings(id));
+          buyWing.disabled = (save().gems || 0) < E.WING_PRICE;
+          box.append(buyWing);
+        }
+      } else box.append(el("span", "sheet-max", "ดาวแดงเต็มแล้ว"));
       parts.push(box);
     }
     if (lv) {
@@ -700,6 +724,15 @@
     cardSheet(id);
   }
 
+  function buyWings(id) {
+    if ((save().gems || 0) < E.WING_PRICE) { tone(150, .12, "square", .05); return; }
+    save().gems -= E.WING_PRICE;
+    cards().wings += 1;
+    store(); showCoins();
+    tone(880, .1, "triangle", .05);
+    announce(`แลกปีกอัพดาว 1 ชิ้น มีแล้ว ${cards().wings} ชิ้น`);
+    cardSheet(id);
+  }
   function awakenCard(id) {
     const c = cards(), left = E.awaken(c, id, save().coins);
     if (left == null) { tone(150, .12, "square", .05); return; }
@@ -707,7 +740,7 @@
     E.giveXp(c, id, 0); // XP waiting at the old cap counts now
     store(); showCoins();
     [523, 659, 784, 1047, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
-    announce(`${E.CARDS[id].name} อัปเป็น ${c.awake[id]} ดาว เลเวลสูงสุด ${E.capFor(c.awake[id])}`);
+    announce(`${E.CARDS[id].name} อัปเป็นดาวแดง ${c.awake[id]} ดวง เลเวลสูงสุด ${E.capFor(c.awake[id])}`);
     cardSheet(id);
   }
 
@@ -737,7 +770,7 @@
     parts.push(foes);
     const reward = el("p", "sheet-reward");
     reward.textContent = first
-      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins} + 💎 ${stage.gems}${stage.dust ? ` + ✧ ผลึกดาว ${stage.dust}` : ""}`
+      ? `รางวัลผ่านครั้งแรก: ● ${stage.coins} + 💎 ${stage.gems}${stage.dust ? ` + ✧ ผลึกดาว ${stage.dust}` : ""}${stage.wings ? ` + 🪽 ปีกอัพดาว ${stage.wings}` : ""}`
       : `รางวัลเล่นซ้ำ: ● ${stage.repeat}`;
     parts.push(reward, el("p", "sheet-goals", `★ ชนะ · ★ ไม่มีการ์ดล้ม · ★ ชนะภายใน ${stage.par} เทิร์น`));
     const team = el("div", "sheet-team");
@@ -1147,7 +1180,7 @@
     if (won) {
       coins = first ? stage.coins : stage.repeat;
       if (c.team.includes("pupa")) coins = Math.round(coins * (1 + E.CARDS.pupa.passive.coins));
-      if (first) { gems = stage.gems; addGems(gems); c.dust += stage.dust || 0; }
+      if (first) { gems = stage.gems; addGems(gems); c.dust += stage.dust || 0; c.wings += stage.wings || 0; }
       c.stars[stage.num] = Math.max(c.stars[stage.num] || 0, got);
       save().coins += coins;
       store();
@@ -1167,7 +1200,7 @@
         goals.append(el("li", okay ? "is-done" : "", `${okay ? "★" : "☆"} ${text}`));
       }
       box.append(goals);
-      box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}${first && stage.dust ? `✧ ผลึกดาว ${stage.dust} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
+      box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}${first && stage.dust ? `✧ ผลึกดาว ${stage.dust} · ` : ""}${first && stage.wings ? `🪽 ${stage.wings} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
       if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
       if (gems) [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
     } else box.append(el("p", null, `ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
@@ -1178,7 +1211,7 @@
     if (!won) actions.append(button("secondary-button", "จัดทีม", () => { battle = null; tab = "team"; showHub(); }));
     actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "stages"; showHub(); }));
     const bonus = won ? payStarBonus(false) : 0;
-    if (bonus) box.append(el("p", "battle-ups star-bonus-line", `🌟 ดาวครบ 5 ด่าน! ได้โบนัส 💎 ${fmt(bonus)}`));
+    if (bonus) box.append(el("p", "battle-ups star-bonus-line", `🌟 ดาวครบ 5 ด่าน! ได้โบนัส 💎 ${fmt(bonus)} + 🪽 ${E.STAR_WINGS}`));
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;
@@ -1193,12 +1226,12 @@
     const b = v.state, tier = v.stage, c = cards(), won = b.result === "won";
     const xp = Math.round(tier.xp * (won ? 1 : .3));
     const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
-    if (won) { save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.arena = Math.max(c.arena, tier.num + 1); }
+    if (won) { save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.wings += tier.wings || 0; c.arena = Math.max(c.arena, tier.num + 1); }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? "✦" : "☾"), el("h2", null, won ? `ผ่านชั้น ${tier.num}!` : "พ่ายแพ้…"));
-    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ✧ ${tier.dust} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
+    box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ✧ ${tier.dust}${tier.wings ? ` · 🪽 ${tier.wings}` : ""} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     const actions = el("div", "title-actions");
     if (won) actions.append(button("primary-button", `ชั้น ${tier.num + 1} ▶`, () => { battle = null; startBattle(E.arenaTier(tier.num + 1)); }));
