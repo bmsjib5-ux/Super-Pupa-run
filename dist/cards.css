@@ -568,3 +568,11 @@ button.unit { cursor: crosshair; }
   .map-dots { display: none; }
   .stage-map { height: max(15rem, calc(100vh - 10rem)); }
 }
+/* Safari draws the animated backdrop canvas over plain siblings: keep the
+   map its own stack and lift the paths and points onto their own layers. */
+.stage-map { isolation: isolate; width: max(42rem, 100%); }
+.stage-map > .battle-scene { z-index: 0; }
+.map-lines { transform: translateZ(0); will-change: transform; }
+.map-node { transform: translate3d(-50%, -1.45rem, 0); will-change: transform; }
+.map-node.is-boss { transform: translate3d(-50%, -1.75rem, 0); }
+.map-lock { z-index: 5; transform: translate3d(-50%, -50%, 0); }

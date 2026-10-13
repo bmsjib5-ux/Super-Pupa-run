@@ -6315,10 +6315,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-12f";
+  const NEWS_VERSION = "2026-10-13a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 9 · นครจักรกลลอยฟ้า", text: "ด่าน 81–90 เมืองทองเหลืองลอยฟ้ายามอาทิตย์ตก หอนาฬิกา เฟืองยักษ์ และเรือเหาะ มอนสเตอร์จักรกล 8 ชนิดเกราะหนา ช็อตไฟฟ้า สว่านเจาะเกราะ และไอน้ำลวก บอสราชาเห็ดจักรกล และราชินีกลไกทองเหลือง การ์ด SSS ช่วยได้มาก", image: "chapter9", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ระดับการ์ด D–SSS · ดาวแดง · ปีกอัพดาว", text: "การ์ดมี 6 ระดับ D C B A S และ SSS ระดับสูงยิ่งแรงและหายาก ตัวละคร SSS ใหม่ 3 ตัว เซราฟิน่า นักบุญปีกศักดิ์สิทธิ์ อัสนี อัศวินมังกรสายฟ้า และวิหคเพลิงทอง อัปดาวแดง 1–5 ดวงด้วยปีกอัพดาว ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 และโบนัสดาวครบ แจกปีกฟรี 3 ชิ้น ใครผ่านด่านบอสหรือลานประลองไปแล้วได้ปีกชดเชยย้อนหลังด้วย", image: "gacha3", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 8 · มหาสมุทรห้วงลึก", text: "ด่าน 71–80 ใต้ทะเลลึก แสงส่องจากผิวน้ำ แนวปะการังเรืองแสง และป่าสาหร่าย มอนสเตอร์ทะเลลึก 8 ชนิดที่พ่นหมึกลดเกราะ ปล่อยพิษ และดูดชีวิต บอสราชาเห็ดห้วงลึก และราชินีคราเคน", image: "chapter8", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 7 · ห้วงจักรวาลเนบิวลา", text: "ด่าน 61–70 กลางอวกาศ เมฆเนบิวลา ดาวเคราะห์วงแหวน และพื้นคริสตัล มอนสเตอร์จักรวาล 8 ชนิดที่ใช้ทุกลูกเล่น บอสราชาเห็ดจักรวาล และราชินีเนบิวลา ด่านสุดท้ายสำหรับการ์ดดาวเต็ม", image: "chapter7", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6452,10 +6453,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

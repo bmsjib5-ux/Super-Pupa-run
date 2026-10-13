@@ -457,6 +457,34 @@
       ]
     }
   });
+  // Chapter 9: the clockwork city in the sky, brass machines: thick armour,
+  // electric shocks, drills that break armour and steam that scalds.
+  const STEAM = "rgba(255,190,90,.95)";
+  const BRASS = "sepia(1) saturate(2.6) hue-rotate(-12deg) contrast(1.15) brightness(1.08)";
+  Object.assign(FOES, {
+    gearshroom: { name: "เห็ดเฟืองทองเหลือง", role: "balance", art: "walker", look: BRASS, glow: STEAM, tier: 3.6, def: 1.2, skills: [{ name: "สปอร์ไอน้ำร้อน", cd: 3, target: "front", power: 1.25, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    rotorbat: { name: "ค้างคาวใบพัด", role: "attack", art: "bat", look: BRASS, glow: STEAM, tier: 3.6, spd: 126, skills: [{ name: "ใบพัดเฉือน", cd: 3, target: "back", power: 1.3, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    drillcrab: { name: "ปูสว่านกล", role: "attack", art: "crab", look: BRASS, glow: STEAM, tier: 3.6, def: 1.7, skills: [{ name: "ก้ามสว่านเจาะเกราะ", cd: 3, target: "one", power: 2.5, fx: [{ k: "defDown", v: .35, turns: 2 }] }] },
+    oiljelly: { name: "แมงกะพรุนน้ำมันเครื่อง", role: "support", art: "jelly", look: BRASS, glow: STEAM, tier: 3.6, skills: [{ name: "หยอดน้ำมันซ่อมแซม", cd: 3, target: "allies", heal: 1.2, fx: [{ k: "defUp", v: .25, turns: 2 }] }] },
+    steamroller: { name: "รถบดไอน้ำ", role: "defense", art: "roller", look: BRASS, glow: STEAM, tier: 3.6, atk: 1.4, def: 1.2, skills: [{ name: "บดขยี้ไอน้ำ", cd: 3, target: "front", power: 1.5, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    cogurchin: { name: "เม่นเฟืองหนาม", role: "defense", art: "urchin", look: BRASS, glow: STEAM, tier: 3.6, skills: [{ name: "เกราะเฟืองหมุน", cd: 4, target: "self", shield: 2.6, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .45, turns: 2 }] }] },
+    teslaflower: { name: "ดอกไม้เทสลา", role: "magic", art: "spitter", look: BRASS, glow: STEAM, tier: 3.6, skills: [{ name: "สายฟ้าขดลวด", cd: 3, target: "all", power: 1, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    airshipbird: { name: "นกเรือเหาะ", role: "attack", art: "swooper", look: BRASS, glow: STEAM, tier: 3.6, spd: 124, skills: [{ name: "ทิ้งระเบิดไอน้ำ", cd: 3, target: "back", power: 1.55, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    clockking: {
+      name: "ราชาเห็ดจักรกล", role: "balance", art: "king", look: BRASS, glow: STEAM, tier: 3.6, boss: true, hp: 4.4, atk: 1.4, def: 1.5,
+      skills: [
+        { name: "หม้อไอน้ำระเบิด", cd: 3, target: "all", power: 1.35, fx: [{ k: "burn", power: .4, turns: 2 }] },
+        { name: "ค้อนลูกสูบ", cd: 4, first: 1, target: "front", power: 1.9, fx: [{ k: "stun", chance: .4, turns: 1 }, { k: "defDown", v: .25, turns: 2 }] }
+      ]
+    },
+    brassqueen: {
+      name: "ราชินีกลไกทองเหลือง", role: "magic", art: "queen", look: BRASS, glow: STEAM, tier: 3.6, boss: true, hp: 4.4, atk: 1.5, def: 1.35, spd: 126,
+      skills: [
+        { name: "พายุสายฟ้าเทสลา", cd: 3, target: "all", power: 1.5, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "เข็มนาฬิกาพิพากษา", cd: 4, first: 1, target: "one", power: 3.4, drain: .6, fx: [{ k: "defDown", v: .3, turns: 2 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -470,7 +498,8 @@
     { name: "บทที่ 5 · อาณาจักรเงาราตรี", from: 41, to: 50 },
     { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 },
     { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 },
-    { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 }
+    { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 },
+    { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -552,7 +581,17 @@
     ["เมืองบาดาลที่สาบสูญ", 64, ["tideroller,tideroller/glowjelly,poisonflower,anglerbat", "coralurchin,abysscrab/sharkbird,sharkbird,glowjelly", "abysscrab,deepshroom/poisonflower,poisonflower,glowjelly"]],
     ["น้ำวนยักษ์", 64, ["coralurchin,coralurchin/poisonflower,poisonflower,sharkbird", "abysscrab,tideroller/glowjelly,glowjelly,anglerbat", "tideroller,abysscrab/sharkbird,poisonflower,glowjelly"]],
     ["วิหารมุกดำ", 63, ["abysscrab,tideroller/glowjelly,poisonflower,sharkbird", "coralurchin,deepshroom/glowjelly,anglerbat,poisonflower", "abyssking/glowjelly,sharkbird"]],
-    ["บัลลังก์ราชินีคราเคน", 55, ["tideroller,abysscrab/glowjelly,poisonflower,sharkbird", "coralurchin,coralurchin/glowjelly,glowjelly,anglerbat", "abyssking,krakenqueen/glowjelly"]]
+    ["บัลลังก์ราชินีคราเคน", 55, ["tideroller,abysscrab/glowjelly,poisonflower,sharkbird", "coralurchin,coralurchin/glowjelly,glowjelly,anglerbat", "abyssking,krakenqueen/glowjelly"]],
+    ["ท่าเรือเหาะ", 56, ["gearshroom,gearshroom/rotorbat", "drillcrab,gearshroom/teslaflower", "drillcrab,steamroller/rotorbat,teslaflower"]],
+    ["โรงงานเฟืองยักษ์", 57, ["steamroller,gearshroom/oiljelly", "cogurchin,drillcrab/teslaflower,rotorbat", "steamroller,drillcrab/oiljelly,airshipbird"]],
+    ["ตลาดลอยฟ้า", 58, ["drillcrab,drillcrab/teslaflower,rotorbat", "cogurchin,steamroller/oiljelly,teslaflower", "drillcrab,steamroller/airshipbird,airshipbird,oiljelly"]],
+    ["หอนาฬิกาทองเหลือง", 59, ["cogurchin,gearshroom/teslaflower,teslaflower", "steamroller,steamroller/oiljelly,rotorbat", "cogurchin,drillcrab/oiljelly,teslaflower,airshipbird"]],
+    ["ห้องหม้อไอน้ำ", 60, ["gearshroom,drillcrab/rotorbat,teslaflower", "steamroller,cogurchin/oiljelly,oiljelly", "clockking/teslaflower,rotorbat"]],
+    ["รางรถไฟเมฆ", 60, ["drillcrab,steamroller/airshipbird,rotorbat,teslaflower", "cogurchin,gearshroom/oiljelly,airshipbird", "drillcrab,drillcrab/oiljelly,teslaflower,rotorbat"]],
+    ["สะพานขดลวดเทสลา", 60, ["steamroller,steamroller/oiljelly,teslaflower,rotorbat", "cogurchin,drillcrab/airshipbird,airshipbird,oiljelly", "drillcrab,gearshroom/teslaflower,teslaflower,oiljelly"]],
+    ["อู่เรือเหาะหลวง", 61, ["cogurchin,cogurchin/teslaflower,teslaflower,airshipbird", "drillcrab,steamroller/oiljelly,oiljelly,rotorbat", "steamroller,drillcrab/airshipbird,teslaflower,oiljelly"]],
+    ["แกนกลางจักรกล", 60, ["drillcrab,steamroller/oiljelly,teslaflower,airshipbird", "cogurchin,gearshroom/oiljelly,rotorbat,teslaflower", "clockking/oiljelly,airshipbird"]],
+    ["บัลลังก์ราชินีกลไก", 50, ["steamroller,drillcrab/oiljelly,teslaflower,airshipbird", "cogurchin,cogurchin/oiljelly,oiljelly,rotorbat", "clockking,brassqueen/oiljelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");

@@ -80,9 +80,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter >= 8;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter >= 9;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (abyss) { sky.addColorStop(0, "#0a4a5c"); sky.addColorStop(.45, "#06283c"); sky.addColorStop(1, "#020a16"); }
+      if (steam) { sky.addColorStop(0, "#2a1e48"); sky.addColorStop(.45, "#c8643a"); sky.addColorStop(1, "#3a2216"); }
+      else if (abyss) { sky.addColorStop(0, "#0a4a5c"); sky.addColorStop(.45, "#06283c"); sky.addColorStop(1, "#020a16"); }
       else if (cosmos) { sky.addColorStop(0, "#040418"); sky.addColorStop(.6, "#14103a"); sky.addColorStop(1, "#08061c"); }
       else if (holy) { sky.addColorStop(0, "#3a5ab8"); sky.addColorStop(.5, "#9fc4ff"); sky.addColorStop(1, "#ffe7b0"); }
       else if (dark) { sky.addColorStop(0, "#05020c"); sky.addColorStop(.55, "#241038"); sky.addColorStop(1, "#0a0414"); }
@@ -110,14 +111,14 @@
         s.restore();
       }
       // stars
-      for (let i = 0; i < (abyss ? 0 : 70); i++) {
+      for (let i = 0; i < (abyss ? 0 : steam ? 25 : 70); i++) {
         const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
       // moon (under the sea: the shimmer of the surface)
-      if (abyss) s.globalAlpha = 0;
+      if (abyss || steam) s.globalAlpha = 0;
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, cosmos ? "rgba(120,220,255,.4)" : holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
@@ -147,6 +148,33 @@
           for (let k = 0; k < 7; k++) { const a = k * TAU / 7, rr = r * (.8 + ((i + k) % 3) * .12); s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
           s.fill(); s.fillStyle = "rgba(255,255,255,.12)"; s.beginPath(); s.arc(x - r * .3, y - r * .3, r * .3, 0, TAU); s.fill();
         }
+      }
+      if (steam) {
+        // the sun low behind a floating city of brass towers, gears and an airship
+        const sun = s.createRadialGradient(w * .5, ground * .9, 4, w * .5, ground * .9, w * .35);
+        sun.addColorStop(0, "rgba(255,220,140,.9)"); sun.addColorStop(.25, "rgba(255,160,80,.45)"); sun.addColorStop(1, "rgba(255,120,60,0)");
+        s.fillStyle = sun; s.fillRect(0, 0, w, h);
+        const gear = (x, y, r, teeth, colour) => {
+          s.fillStyle = colour; s.beginPath();
+          for (let k = 0; k < teeth * 2; k++) { const a = k * Math.PI / teeth, rr = k % 2 ? r : r * 1.18; s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+          s.fill(); s.fillStyle = "#3a2216"; s.beginPath(); s.arc(x, y, r * .35, 0, TAU); s.fill();
+        };
+        for (const [x, k] of [[w * .1, .9], [w * .26, 1.3], [w * .44, .8], [w * .62, 1.5], [w * .8, 1], [w * .95, .7]]) {
+          const top = ground - h * .2 * k, half = w * .025 * k;
+          s.fillStyle = "#4a2c1c"; s.fillRect(x - half, top, half * 2, ground - top);
+          s.beginPath(); s.moveTo(x - half * 1.4, top); s.lineTo(x, top - h * .05 * k); s.lineTo(x + half * 1.4, top); s.fill();
+          s.fillStyle = "rgba(255,200,110,.85)";
+          for (let r = 1; r < 5; r++) s.fillRect(x - half * .4, top + (ground - top) * r / 5, half * .8, 3);
+        }
+        gear(w * .34, ground * .78, w * .045, 10, "#8a5a2a");
+        gear(w * .72, ground * .7, w * .06, 12, "#9a6a32");
+        gear(w * .78, ground * .9, w * .03, 8, "#7a4a22");
+        // an airship
+        const ax = w * .2, ay = ground * .32, ar = w * .07;
+        s.fillStyle = "#6a3e22"; s.beginPath(); s.ellipse(ax, ay, ar, ar * .32, 0, 0, TAU); s.fill();
+        s.strokeStyle = "rgba(255,210,140,.6)"; s.lineWidth = 1.5;
+        for (const k of [-.5, 0, .5]) { s.beginPath(); s.ellipse(ax, ay, ar, ar * .32 * Math.abs(k || .15), 0, 0, TAU); s.stroke(); }
+        s.fillStyle = "#3a2216"; s.fillRect(ax - ar * .3, ay + ar * .36, ar * .6, ar * .14);
       }
       if (abyss) {
         // coral reefs and swaying kelp behind the hills, glowing jellyfish above
@@ -219,11 +247,23 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (abyss) {
+      if (steam) {
+        // a floor of brass plates with rivets and glowing pipes
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#8a5a2c"); floor.addColorStop(1, "#2a160c");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        s.strokeStyle = "rgba(40,20,10,.55)"; s.lineWidth = 1.5;
+        for (let i = 1; i < 6; i++) { const y = ground + (h - ground) * (i / 6) ** 1.2; s.beginPath(); s.moveTo(0, y); s.lineTo(w, y); s.stroke(); }
+        for (let i = 0; i < 12; i++) { const x = w * i / 11; s.beginPath(); s.moveTo(w / 2 + (x - w / 2) * .35, ground); s.lineTo(x, h); s.stroke(); }
+        s.fillStyle = "rgba(255,220,150,.55)";
+        for (let i = 0; i < 40; i++) { const x = (i * 97.7) % w, y = ground + 10 + ((i * 41.3) % (h - ground - 12)); s.beginPath(); s.arc(x, y, 1.6, 0, TAU); s.fill(); }
+        s.strokeStyle = "rgba(255,170,70,.6)"; s.lineWidth = 3;
+        s.beginPath(); s.moveTo(0, ground + 8); s.bezierCurveTo(w * .3, ground + 2, w * .6, ground + 16, w, ground + 6); s.stroke();
+      } else if (abyss) {
         // the sea floor: dark sand, shells and glowing anemones
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#14485a"); floor.addColorStop(1, "#03121c");
@@ -311,7 +351,7 @@
       if (!map) {
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -319,7 +359,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       }
@@ -338,10 +378,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter >= 8;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter >= 9;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss, ember: fire || ice || dark || holy || cosmos
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam, ember: fire || ice || dark || holy || cosmos || steam
       };
     }
 
