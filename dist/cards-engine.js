@@ -485,6 +485,34 @@
       ]
     }
   });
+  // Chapter 10: the jade dragon valley, the last stand: warriors of jade
+  // that rouse each other, drink life, stun and wash their wounds clean.
+  const JADEGLOW = "rgba(120,255,170,.95)";
+  const JADE = "sepia(1) saturate(3) hue-rotate(85deg) contrast(1.15) brightness(1.05)";
+  Object.assign(FOES, {
+    jadeshroom: { name: "เห็ดหยก", role: "balance", art: "walker", look: JADE, glow: JADEGLOW, tier: 4, def: 1.2, skills: [{ name: "สปอร์หยกเขียว", cd: 3, target: "front", power: 1.3, drain: .3 }] },
+    lanternbat: { name: "ค้างคาวโคมแดง", role: "attack", art: "bat", look: JADE, glow: JADEGLOW, tier: 4, spd: 128, skills: [{ name: "โคมไฟพุ่งชน", cd: 3, target: "back", power: 1.3, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    jadecrab: { name: "ปูเกราะหยก", role: "attack", art: "crab", look: JADE, glow: JADEGLOW, tier: 4, def: 1.7, skills: [{ name: "ก้ามหยกบด", cd: 3, target: "one", power: 2.6, fx: [{ k: "stun", chance: .35, turns: 1 }] }] },
+    spiritjelly: { name: "แมงกะพรุนวิญญาณหยก", role: "support", art: "jelly", look: JADE, glow: JADEGLOW, tier: 4, skills: [{ name: "ธารหยกชำระ", cd: 3, target: "allies", heal: 1.2, fx: [{ k: "cleanse" }, { k: "atkUp", v: .2, turns: 2 }] }] },
+    stoneroller: { name: "ตัวกลิ้งศิลาหยก", role: "defense", art: "roller", look: JADE, glow: JADEGLOW, tier: 4, atk: 1.4, def: 1.2, skills: [{ name: "กลิ้งภูผาถล่ม", cd: 3, target: "front", power: 1.55, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    bambooburchin: { name: "เม่นไผ่หยก", role: "defense", art: "urchin", look: JADE, glow: JADEGLOW, tier: 4, skills: [{ name: "กำแพงไผ่หยก", cd: 4, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    lotusflower: { name: "บัวหยกพิษ", role: "magic", art: "spitter", look: JADE, glow: JADEGLOW, tier: 4, skills: [{ name: "กลีบบัวพายุ", cd: 3, target: "all", power: 1.05, fx: [{ k: "defDown", v: .15, turns: 2 }] }] },
+    cranebird: { name: "นกกระเรียนหยก", role: "attack", art: "swooper", look: JADE, glow: JADEGLOW, tier: 4, spd: 126, skills: [{ name: "จะงอยกระเรียนเหิน", cd: 3, target: "back", power: 1.6, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    jadeking: {
+      name: "ราชาเห็ดหยก", role: "balance", art: "king", look: JADE, glow: JADEGLOW, tier: 4, boss: true, hp: 4.5, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "คลื่นพลังหยก", cd: 3, target: "all", power: 1.4, drain: .3, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "ฝ่ามือภูผา", cd: 4, first: 1, target: "front", power: 2, fx: [{ k: "stun", chance: .45, turns: 1 }] }
+      ]
+    },
+    jadequeen: {
+      name: "ราชินีมังกรหยก", role: "magic", art: "queen", look: JADE, glow: JADEGLOW, tier: 4, boss: true, hp: 4.1, atk: 1.4, def: 1.3, spd: 128,
+      skills: [
+        { name: "ลมหายใจมังกรหยก", cd: 3, target: "all", power: 1.55, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "เขี้ยวมังกรสวรรค์", cd: 4, first: 1, target: "one", power: 3.1, drain: .7, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -499,7 +527,8 @@
     { name: "บทที่ 6 · วิหารสวรรค์ดวงดาว", from: 51, to: 60 },
     { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 },
     { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 },
-    { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 }
+    { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 },
+    { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -591,7 +620,17 @@
     ["สะพานขดลวดเทสลา", 60, ["steamroller,steamroller/oiljelly,teslaflower,rotorbat", "cogurchin,drillcrab/airshipbird,airshipbird,oiljelly", "drillcrab,gearshroom/teslaflower,teslaflower,oiljelly"]],
     ["อู่เรือเหาะหลวง", 61, ["cogurchin,cogurchin/teslaflower,teslaflower,airshipbird", "drillcrab,steamroller/oiljelly,oiljelly,rotorbat", "steamroller,drillcrab/airshipbird,teslaflower,oiljelly"]],
     ["แกนกลางจักรกล", 60, ["drillcrab,steamroller/oiljelly,teslaflower,airshipbird", "cogurchin,gearshroom/oiljelly,rotorbat,teslaflower", "clockking/oiljelly,airshipbird"]],
-    ["บัลลังก์ราชินีกลไก", 50, ["steamroller,drillcrab/oiljelly,teslaflower,airshipbird", "cogurchin,cogurchin/oiljelly,oiljelly,rotorbat", "clockking,brassqueen/oiljelly"]]
+    ["บัลลังก์ราชินีกลไก", 50, ["steamroller,drillcrab/oiljelly,teslaflower,airshipbird", "cogurchin,cogurchin/oiljelly,oiljelly,rotorbat", "clockking,brassqueen/oiljelly"]],
+    ["ประตูหุบเขาหยก", 57, ["jadeshroom,jadeshroom/lanternbat", "jadecrab,jadeshroom/lotusflower", "jadecrab,stoneroller/lanternbat,lotusflower"]],
+    ["ป่าไผ่หมอก", 58, ["stoneroller,jadeshroom/spiritjelly", "bambooburchin,jadecrab/lotusflower,lanternbat", "stoneroller,jadecrab/spiritjelly,cranebird"]],
+    ["ธารน้ำตกมรกต", 59, ["jadecrab,jadecrab/lotusflower,lanternbat", "bambooburchin,stoneroller/spiritjelly,lotusflower", "jadecrab,stoneroller/cranebird,cranebird,spiritjelly"]],
+    ["เจดีย์โคมแดง", 60, ["bambooburchin,jadeshroom/lotusflower,lotusflower", "stoneroller,stoneroller/spiritjelly,lanternbat", "bambooburchin,jadecrab/spiritjelly,lotusflower,cranebird"]],
+    ["ลานฝึกยุทธ์หยก", 60, ["jadeshroom,jadecrab/lanternbat,lotusflower", "stoneroller,bambooburchin/spiritjelly,spiritjelly", "jadeking/lotusflower,lanternbat"]],
+    ["สะพานเมฆเก้าชั้น", 59, ["jadecrab,stoneroller/cranebird,lanternbat,lotusflower", "bambooburchin,jadeshroom/spiritjelly,cranebird", "jadecrab,jadecrab/spiritjelly,lotusflower,lanternbat"]],
+    ["ถ้ำมุกมังกร", 59, ["stoneroller,stoneroller/spiritjelly,lotusflower,lanternbat", "bambooburchin,jadecrab/cranebird,cranebird,spiritjelly", "jadecrab,jadeshroom/lotusflower,lotusflower,spiritjelly"]],
+    ["ยอดเขาเทพเซียน", 57, ["bambooburchin,bambooburchin/lotusflower,lotusflower,cranebird", "jadecrab,stoneroller/spiritjelly,spiritjelly,lanternbat", "stoneroller,jadecrab/cranebird,lotusflower,spiritjelly"]],
+    ["ตำหนักหยกสวรรค์", 58, ["jadecrab,stoneroller/spiritjelly,lotusflower,cranebird", "bambooburchin,jadeshroom/spiritjelly,lanternbat,lotusflower", "jadeking/spiritjelly,cranebird"]],
+    ["บัลลังก์ราชินีมังกรหยก", 45, ["stoneroller,jadecrab/spiritjelly,lotusflower,cranebird", "bambooburchin,bambooburchin/spiritjelly,spiritjelly,lanternbat", "jadeking,jadequeen/spiritjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
