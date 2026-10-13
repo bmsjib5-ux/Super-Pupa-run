@@ -887,6 +887,34 @@
   }
 
   // A small card: picture, rarity, role, name and level.
+  // A holographic card: a rainbow foil and a glare that follow the finger
+  // or pointer, and a tilt toward it. Rarer cards shine more (cards.css).
+  const stillMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  function holo(node) {
+    node.classList.add("holo");
+    node.append(el("span", "holo-foil"), el("span", "holo-glare"));
+    const move = (event) => {
+      const box = node.getBoundingClientRect();
+      if (!box.width) return;
+      const x = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)), y = Math.min(1, Math.max(0, (event.clientY - box.top) / box.height));
+      node.style.setProperty("--mx", `${Math.round(x * 100)}%`);
+      node.style.setProperty("--my", `${Math.round(y * 100)}%`);
+      if (!stillMotion()) {
+        node.style.setProperty("--ry", `${((x - .5) * 22).toFixed(1)}deg`);
+        node.style.setProperty("--rx", `${((.5 - y) * 22).toFixed(1)}deg`);
+      }
+      node.classList.add("is-tilting");
+    };
+    const leave = () => {
+      node.classList.remove("is-tilting");
+      for (const key of ["--rx", "--ry"]) node.style.removeProperty(key);
+    };
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerdown", move);
+    node.addEventListener("pointerleave", leave);
+    node.addEventListener("pointercancel", leave);
+    return node;
+  }
   function cardTile(id, onPick, extra = "") {
     const def = E.CARDS[id], lv = cards().units[id];
     const tile = button(`tcard r${def.rarity}${lv ? "" : " is-locked"}${cards().team.includes(id) ? " is-picked" : ""} ${extra}`, null, onPick);
@@ -898,7 +926,7 @@
     if (awake) { const st = redStars(awake); st.classList.add("tcard-stars"); tile.append(st); }
     if (awake) tile.classList.add(`awake-${awake}`);
     if (awake > E.MAX_AWAKE) tile.classList.add("is-awake2");
-    return tile;
+    return holo(tile);
   }
 
   // ---- Detail panels ----
@@ -928,6 +956,7 @@
     const top = el("div", "sheet-card");
     const art = el("div", `sheet-art r${def.rarity}`);
     art.append(portrait(id));
+    holo(art);
     const info = el("div", "sheet-info");
     const head = el("h3", null, def.name); head.prepend(gradeBadge(id), " ");
     info.append(head, el("p", "sheet-sub", `ระดับ ${gradeOf(id)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.capFor(c.awake[id])}` : "ยังไม่มี"}`));

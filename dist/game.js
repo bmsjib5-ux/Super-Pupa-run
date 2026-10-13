@@ -6332,10 +6332,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13h";
+  const NEWS_VERSION = "2026-10-13i";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "การ์ดโฮโลแกรม", text: "การ์ดทุกใบเป็นการ์ดโฮโลแกรม ลากนิ้วหรือเมาส์บนการ์ดแล้วการ์ดเอียงตาม มีประกายรุ้งและแสงสะท้อน การ์ดระดับสูงยิ่งเงาวาว S และ SSS ประกายวิ่งตลอด SSS มีดาวระยิบระยับ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "🗼 หอคอยบอส 100 ชั้น · บอสใหม่", text: "แท็บใหม่ หอคอย สู้บอสทุกชั้น 100 ชั้น ทุก 10 ชั้นเจอบอสใหญ่ ผ่านครั้งแรกได้เพชร ผลึกดาว และปีก มอนสเตอร์ใหม่ 6 ชนิด สไลม์ ภูตผี วิญญาณไฟ หีบมิมิค ยักษ์หินจิ๋ว แมงมุมคริสตัล และบอสใหม่ประจำบท นาคีวารี ยักษ์ลาวา มังกรน้ำแข็ง ยมทูตเงา คราเคนยักษ์ ในด่านสุดท้ายของบท", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "จัดทีมประลองเองได้", text: "แท็บประลองมีปุ่ม จัดทีมประลอง ✎ เลือกการ์ด 10 ใบเอง และเลือกว่าใครยืนแถวหน้า 4 ใบ กด จัดอัตโนมัติ เพื่อกลับไปใช้การ์ดที่แรงที่สุดเหมือนเดิม", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ปลุกพลังขั้น 2 · ดาวทอง", text: "การ์ดระดับ S และ SSS ที่อัปดาวแดงครบ 5 ดวง ปลุกพลังขั้น 2 ต่อได้อีก 5 ดาวทอง ดาวละเลเวลสูงสุด +10 (ถึง Lv 130) และพลัง +10% ใช้เศษการ์ด ปีกอัพดาว และเหรียญ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
