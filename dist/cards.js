@@ -1039,11 +1039,12 @@
       title.append(redStars(at, E.MAX_AWAKE));
       box.append(title, el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · 🪽 ปีกอัพดาว ${fmt(c.wings)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round((second ? E.AWAKE2_BONUS : E.AWAKE_BONUS) * 100)}%${second ? " · ดาวแดงกลายเป็นดาวทองทีละดวง" : ""}`));
       if (cost) {
-        const ok = cost.dust >= cost.fromDust && cost.wings >= cost.wingsNeed && save().coins >= cost.coins;
+        const ok = cost.lv >= cost.lvNeed && cost.dust >= cost.fromDust && cost.wings >= cost.wingsNeed && save().coins >= cost.coins;
         const up = button("shop-buy", `${cost.second ? `ดาวทอง ${cost.star - E.MAX_AWAKE}` : `★${cost.star}`} · เศษ ${cost.need} 🪽 ${cost.wingsNeed} ● ${fmt(cost.coins)}`, () => awakenCard(id));
         up.disabled = !ok;
         up.setAttribute("aria-label", `อัปดาว${def.name}เป็นดาวแดง ${cost.star} ดวง ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} ปีกอัพดาว ${cost.wingsNeed} และ ${cost.coins} เหรียญ`);
         box.append(up);
+        if (cost.lv < cost.lvNeed) box.append(el("small", "awake-lv", `ต้องอัปเลเวลให้เต็ม Lv ${cost.lvNeed} ก่อน จึงอัปดาวได้ (ตอนนี้ Lv ${cost.lv})`));
         if (cost.fromDust) box.append(el("small", null, cost.dust >= cost.fromDust ? `ใช้ผลึกดาวแทน ${cost.fromDust}` : `เศษไม่พอ ขาด ${cost.fromDust - cost.dust}`));
         if (cost.wings < cost.wingsNeed) {
           box.append(el("small", null, `ปีกอัพดาวไม่พอ ขาด ${cost.wingsNeed - cost.wings} · ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 โบนัสดาวครบ หรือสุ่มได้ S/SSS ซ้ำ`));

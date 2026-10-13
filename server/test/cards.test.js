@@ -97,7 +97,10 @@ test("cards: red stars raise the level cap, cost shards or star dust plus wings,
   assert.ok(cards.units.ikuya <= E.capFor(1));
   assert.equal(E.awaken(cards, "ikuya", 1e9), null); // no shards left
   cards.shards.ikuya = 1000;
-  for (let n = 1; n < E.MAX_AWAKE; n++) assert.notEqual(E.awaken(cards, "ikuya", 1e9), null);
+  cards.units.ikuya = E.capFor(1) - 1;
+  assert.equal(E.awaken(cards, "ikuya", 1e9), null); // not at the level cap yet
+  assert.equal(E.awakeCost(cards, "ikuya").lvNeed, E.capFor(1));
+  for (let n = 1; n < E.MAX_AWAKE; n++) { cards.units.ikuya = E.capFor(n); assert.notEqual(E.awaken(cards, "ikuya", 1e9), null); }
   assert.equal(cards.awake.ikuya, E.MAX_AWAKE);
   assert.equal(E.awakeCost(cards, "ikuya"), null); // ikuya is an A card: no second awakening
   assert.equal(E.cardBonus(cards, "ikuya"), E.MAX_AWAKE * E.AWAKE_BONUS);
@@ -108,7 +111,7 @@ test("cards: S and SSS cards awaken a second time, five gold stars to Lv 130", (
   assert.equal(E.maxAwake("phloeng"), 10);
   assert.equal(E.maxAwake("pupa"), 5);
   assert.equal(E.awakeCost(cards, "phloeng").second, true);
-  for (let n = 5; n < 10; n++) assert.notEqual(E.awaken(cards, "phloeng", 1e9), null);
+  for (let n = 5; n < 10; n++) { cards.units.phloeng = E.capFor(n); assert.notEqual(E.awaken(cards, "phloeng", 1e9), null); }
   assert.equal(cards.awake.phloeng, 10);
   assert.equal(E.capFor(10), 130);
   assert.equal(E.awakeCost(cards, "phloeng"), null);

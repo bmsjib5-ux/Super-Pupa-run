@@ -1511,12 +1511,13 @@
     if (at >= maxAwake(id)) return null;
     const need = AWAKE_SHARDS[at], own = cards.shards?.[id] || 0;
     const fromShards = Math.min(own, need), fromDust = need - fromShards;
-    return { star: at + 1, second: at >= MAX_AWAKE, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0, wingsNeed: AWAKE_WINGS[at], wings: cards.wings || 0 };
+    // a card must reach its level cap before the next star
+    return { star: at + 1, second: at >= MAX_AWAKE, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0, wingsNeed: AWAKE_WINGS[at], wings: cards.wings || 0, lvNeed: capFor(at), lv: cards.units?.[id] || 0 };
   }
   // Pays and raises the star; coins is the save's coin balance (returned).
   function awaken(cards, id, coins) {
     const cost = awakeCost(cards, id);
-    if (!cost || !cards.units[id] || coins < cost.coins || cost.dust < cost.fromDust || cost.wings < cost.wingsNeed) return null;
+    if (!cost || !cards.units[id] || cost.lv < cost.lvNeed || coins < cost.coins || cost.dust < cost.fromDust || cost.wings < cost.wingsNeed) return null;
     cards.shards[id] = (cards.shards[id] || 0) - cost.fromShards;
     cards.dust = cost.dust - cost.fromDust;
     cards.wings = cost.wings - cost.wingsNeed;
