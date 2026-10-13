@@ -165,6 +165,9 @@ test("merge: the one-time gift mark survives a device that has not had it", () =
   const a = mergeSave(null, cleanSave(device(0, { gift: "gacha-2026-10", gems: 600 })), 0, 0);
   const b = mergeSave(a, cleanSave(device(0, { gems: 600 })), 0, 600);
   assert.equal(b.gift, "gacha-2026-10");
+  // the newer gift wins over the older one
+  const c = mergeSave(b, cleanSave(device(0, { gift: "gift-2026-10-13", gems: 600 })), 0, 600);
+  assert.equal(c.gift, "gift-2026-10-13");
 });
 
 test("save: the server gives the gem gift once per account, however many devices", async () => {
@@ -172,15 +175,15 @@ test("save: the server gives the gem gift once per account, however many devices
   try {
     const old = { ...device(100, { cleared: [1, 2, 3, 4, 5] }), gems: 0 };
     const first = await call("PUT", "/api/save", { body: { save: old, baseCoins: 0, baseGems: 0, syncId: "s1" } });
-    assert.equal(first.json.giftGems, 500 + 4 * 5 + 20);
-    assert.equal(first.json.save.gems, 540);
+    assert.equal(first.json.giftGems, 10000);
+    assert.equal(first.json.save.gems, 10000);
     // a second device with the same old save and no gift mark
     const second = await call("PUT", "/api/save", { body: { save: old, baseCoins: 100, baseGems: 0, syncId: "s2" } });
     assert.equal(second.json.giftGems, 0);
-    assert.equal(second.json.save.gems, 540);
-    // a brand-new player gets none
+    assert.equal(second.json.save.gems, 10000);
+    // a brand-new player gets it too
     const fresh = await call("PUT", "/api/save", { token: "dev:newbie", body: { save: { best: 0, points: 0, coins: 0, plays: 0, wins: 0, cleared: [], shop: { owned: [], items: {}, petLevels: {}, bring: {} } }, baseCoins: 0, syncId: "s3" } });
-    assert.equal(fresh.json.giftGems, 0);
+    assert.equal(fresh.json.giftGems, 10000);
   } finally { close(); }
 });
 

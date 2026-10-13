@@ -2001,20 +2001,15 @@
   save.cleared = [...new Set((Array.isArray(save.cleared) ? save.cleared : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= levels.length))].sort((a, b) => a - b);
   normalizeStars();
   normalizeShop();
-  // Once per save: gems for players from before card pulls, who may have
-  // been saving coins for a hero the market no longer sells. 500 to start
-  // with, plus the gems every level they had already cleared would give
-  // now (see markCleared). Shown on the mode picker.
-  const GIFT_ID = "gacha-2026-10";
+  // Once per save: a gift of 10000 gems for every player. Shown on the
+  // mode picker.
+  const GIFT_ID = "gift-2026-10-13";
   let giftGems = 0;
   // A device that syncs with an account leaves it to the server (one gift
   // per account, see server/src/merge.js grantGift); others get it here.
   if (save.gift !== GIFT_ID && !save.cloud?.uid) {
-    const played = save.plays > 0 || save.points > 0 || save.cleared.length > 0 || save.coins > 0 || save.shop.owned.some(id => !FREE_IDS.includes(id));
-    if (played) {
-      giftGems = 500 + save.cleared.reduce((sum, num) => sum + (levels[num - 1]?.boss ? 20 : 5), 0);
-      save.gems += giftGems;
-    }
+    giftGems = 10000;
+    save.gems += giftGems;
     save.gift = GIFT_ID;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* ignore */ }
   }
@@ -6303,7 +6298,7 @@
     if (gift && giftGems) {
       gift.hidden = false;
       gift.querySelector("b").textContent = `💎 ${formatPoints(giftGems)}`;
-      announce(`ของขวัญชดเชยผู้เล่นเดิม ได้รับ ${giftGems} เพชร สำหรับสุ่มการ์ด`);
+      announce(`ของขวัญพิเศษ ได้รับ ${giftGems} เพชร สำหรับสุ่มการ์ด`);
       giftGems = 0;
     } else if (gift) gift.hidden = true;
     modeUi.screen.hidden = false;
@@ -6332,10 +6327,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13k";
+  const NEWS_VERSION = "2026-10-13l";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ของขวัญ", title: "แจกเพชร 10,000 ทุกคน!", text: "ของขวัญพิเศษสำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดอัตโนมัติเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ไปสุ่มการ์ด S ใหม่ได้เลยที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
+    { tag: "ตัวละครใหม่", title: "S ใหม่ 5 ใบ · สายต่อสู้และป้องกัน", text: "ชาดา ซามูไรดาบโลหิตคริติคอลสูง · อัญชัน ซามูไรแฝดดาบน้ำแข็งทั้งฟันทั้งป้อง · พยัคฆ์ นักสู้หมัดเสือตีซ้ำได้ · วายุ แฝดเสือครามยืนรับแทนเพื่อน · ศิลา อัศวินโล่ศิลากางเกราะให้ทั้งทีม สุ่มได้ที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 13 · ป่าเห็ดนีออน", text: "ด่าน 121–130 ในป่าเห็ดยักษ์เรืองแสง สปอร์สีฟ้าและชมพูลอยทั่วป่า มอนสเตอร์ป่าเห็ด 8 ชนิด บอสราชาเห็ดนีออน และราชินีสปอร์ แนะนำการ์ด Lv 120 ปลุกพลังดาวทอง", image: "chapter13", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 12 · ยอดเขาพายุอสนี", text: "ด่าน 111–120 บนยอดเขาในพายุ เมฆดำ ฟ้าผ่า และหินลอยฟ้า มอนสเตอร์สายฟ้า 8 ชนิดที่เร็วจัด ช็อตให้มึนงง และยิงสายฟ้าหลายเป้า บอสราชาเห็ดอสนี และราชินีพายุ บทนี้ต้องปลุกพลังขั้น 2 การ์ดถึงดาวทอง", image: "chapter12", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "การ์ดโฮโลแกรม", text: "การ์ดทุกใบเป็นการ์ดโฮโลแกรม ลากนิ้วหรือเมาส์บนการ์ดแล้วการ์ดเอียงตาม มีประกายรุ้งและแสงสะท้อน การ์ดระดับสูงยิ่งเงาวาว S และ SSS ประกายวิ่งตลอด SSS มีดาวระยิบระยับ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6451,10 +6448,10 @@
       });
       return icon;
     }
-    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3" || kind === "gacha4") {
+    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3" || kind === "gacha4" || kind === "gacha5") {
       const row = document.createElement("div");
-      row.className = "news-trio news-cards";
-      for (const id of kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
+      row.className = `news-trio news-cards${kind === "gacha5" ? " news-five" : ""}`;
+      for (const id of kind === "gacha5" ? ["chada", "anchan", "phayak", "wayu", "sila"] : kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = id === "phoenix" || id === "qilin" ? `assets/${id}-pet.webp` : `assets/${id}-hero.webp`;
         img.alt = "";

@@ -676,6 +676,8 @@ button { touch-action: manipulation; }
 .news-picture .news-boss { filter: drop-shadow(0 0 .8rem rgba(255,80,120,.7)); }
 .news-trio { display: flex; align-items: flex-end; justify-content: center; gap: 2%; width: 92%; height: 82%; }
 .news-trio img { width: 32%; height: 100%; object-fit: contain; }
+.news-trio.news-five { gap: 0; width: 98%; }
+.news-trio.news-five img { width: 20%; height: 88%; }
 
 /* ---- Account and coin top-ups ---- */
 .account-button { padding: 0; overflow: hidden; }

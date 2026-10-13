@@ -240,6 +240,51 @@
         { name: "หอนจันทร์เต็มดวง", icon: "🌕", cd: 5, first: 1, target: "all", power: 1.4, fx: [{ k: "atkUp", v: .2, turns: 2, on: "allies" }] }
       ]
     },
+    chada: {
+      name: "ชาดา", role: "attack", rarity: 5, art: "chada", from: "hero", crit: .3,
+      text: "ซามูไรสาวดาบโลหิต ฟันเพียงครั้งเดียวไม่มีใครลุกขึ้น",
+      passive: { text: "ดาบโลหิต: โอกาสคริติคอล 30%" },
+      skills: [
+        { name: "ดาบพระจันทร์แดง", icon: "🗡", cd: 3, target: "one", power: 2.5, drain: .25, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "พันคมดาบโลหิต", icon: "🩸", cd: 5, first: 2, target: "random", hits: 5, power: .85, fx: [{ k: "burn", power: .3, turns: 2 }] }
+      ]
+    },
+    anchan: {
+      name: "อัญชัน", role: "balance", rarity: 5, art: "anchan", from: "hero", crit: .2,
+      text: "ซามูไรแฝดดาบน้ำแข็ง ฟันได้ ป้องได้ ไม่มีจุดอ่อน",
+      passive: { shield: .15, text: "ใจสงบดั่งน้ำ: เริ่มการต่อสู้พร้อมเกราะ 15% ของพลังชีวิต" },
+      skills: [
+        { name: "ดาบธาราสะท้าน", icon: "🌊", cd: 3, target: "front", power: 1.7, fx: [{ k: "stun", chance: .3, turns: 1 }] },
+        { name: "ท่าตั้งรับวารี", icon: "❄", cd: 4, first: 1, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .4, turns: 2 }, { k: "atkUp", v: .35, turns: 2, on: "self" }] }
+      ]
+    },
+    phayak: {
+      name: "พยัคฆ์", role: "attack", rarity: 5, art: "phayak", from: "hero", crit: .25,
+      text: "นักสู้หมัดเสือทอง ยิ่งสู้ยิ่งดุดัน",
+      passive: { double: .25, text: "หมัดเสือคู่: โจมตีปกติมีโอกาส 25% ตีซ้ำอีกครั้ง" },
+      skills: [
+        { name: "กรงเล็บเสือทอง", icon: "🐯", cd: 3, target: "front", power: 1.9, fx: [{ k: "defDown", v: .3, turns: 2 }] },
+        { name: "คำรามพยัคฆ์ทลายป่า", icon: "💥", cd: 5, first: 2, target: "all", power: 1.6, fx: [{ k: "atkUp", v: .3, turns: 2, on: "self" }, { k: "stun", chance: .2, turns: 1 }] }
+      ]
+    },
+    wayu: {
+      name: "วายุ", role: "defense", rarity: 5, art: "wayu", from: "hero",
+      text: "แฝดเสือคราม ยืนขวางหน้าเพื่อนทุกครั้งที่ศัตรูบุก",
+      passive: { shield: .25, text: "หนังเสือคราม: เริ่มการต่อสู้พร้อมเกราะ 25% ของพลังชีวิต" },
+      skills: [
+        { name: "ยืนหยัดเสือคราม", icon: "🐅", cd: 4, target: "self", shield: 2.2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .5, turns: 2 }] },
+        { name: "หมัดสวนลมกรด", icon: "🌀", cd: 4, first: 1, target: "front", power: 1.5, fx: [{ k: "stun", chance: .4, turns: 1 }, { k: "defDown", v: .2, turns: 2 }] }
+      ]
+    },
+    sila: {
+      name: "ศิลา", role: "defense", rarity: 5, art: "sila", from: "hero",
+      text: "อัศวินโล่ศิลาจารึก กำแพงที่ไม่เคยพังทลาย",
+      passive: { teamShield: .1, text: "กำแพงศิลา: เริ่มการต่อสู้ ทั้งทีมได้เกราะ 10% ของพลังชีวิต" },
+      skills: [
+        { name: "โล่ศิลาจารึก", icon: "🛡", cd: 4, target: "self", shield: 2.4, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .55, turns: 2 }] },
+        { name: "ป้อมหินคุ้มกัน", icon: "🪨", cd: 5, first: 1, target: "allies", shield: 1.2, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .25, turns: 2 }] }
+      ]
+    },
     seraphina: {
       name: "เซราฟิน่า", role: "support", rarity: 6, art: "seraphina", from: "hero",
       text: "นักบุญแห่งปีกศักดิ์สิทธิ์ แสงของเธอปกป้องทั้งกองทัพ",
