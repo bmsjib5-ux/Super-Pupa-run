@@ -185,11 +185,11 @@ test("save: the server gives the gem gift once per account, however many devices
 });
 
 test("merge: card stars, shards and star dust keep the larger count", () => {
-  const a = mergeSave(null, cleanSave(device(0, { cards: { awake: { ikuya: 2, bad: 9 }, shards: { ikuya: 12 }, dust: 30 } })), 0);
+  const a = mergeSave(null, cleanSave(device(0, { cards: { awake: { ikuya: 2, bad: 12 }, shards: { ikuya: 12 }, dust: 30 } })), 0);
   assert.equal(a.cards.awake.ikuya, 2);
-  assert.equal(a.cards.awake.bad, 5);
+  assert.equal(a.cards.awake.bad, 10);
   const b = mergeSave(a, cleanSave(device(0, { cards: { awake: { ikuya: 1, miu: 1 }, shards: { ikuya: 3 }, dust: 50 } })), 0);
-  assert.deepEqual(b.cards.awake, { ikuya: 2, bad: 5, miu: 1 });
+  assert.deepEqual(b.cards.awake, { ikuya: 2, bad: 10, miu: 1 });
   assert.equal(b.cards.shards.ikuya, 12);
   assert.equal(b.cards.dust, 50);
 });

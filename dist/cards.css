@@ -596,3 +596,10 @@ button.unit { cursor: crosshair; }
 .quest-all .primary-button { min-width: 14rem; }
 .pull-pity { margin: .5rem auto .1rem; color: #fff; font-size: .8rem; font-weight: 800; }
 .pull-pity .grade { font-size: .7rem; vertical-align: .05em; }
+
+/* ---- Second awakening (S and SSS): gold stars ---- */
+.red-stars em { font-style: normal; color: #ffd76a; text-shadow: 0 0 .35rem rgba(255,215,106,.95), 0 0 .8rem rgba(255,170,60,.6); }
+.tcard.is-awake2 { box-shadow: 0 0 1rem rgba(255,215,106,.9), 0 0 .3rem rgba(255,255,255,.6) inset; }
+.sheet-awake.is-second { border-color: rgba(255,215,106,.7); background: linear-gradient(90deg, rgba(255,215,106,.14), rgba(255,90,110,.08)); }
+.sheet-awake.is-second > b { color: #ffe8a8; }
+.sheet-awake2 { margin: .15rem 0 0; color: #ffd76a; font-size: .74rem; font-weight: 800; }

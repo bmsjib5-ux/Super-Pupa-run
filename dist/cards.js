@@ -145,7 +145,7 @@
     const dungeon = raw.dungeon && raw.dungeon.day === today() ? { day: today(), exp: raw.dungeon.exp === true, coin: raw.dungeon.coin === true } : { day: today(), exp: false, coin: false };
     const awake = {}, shards = {};
     for (const id of E.CARD_IDS) {
-      const a = Math.min(E.MAX_AWAKE, Math.floor(Number(raw.awake?.[id]) || 0));
+      const a = Math.min(E.maxAwake(id), Math.floor(Number(raw.awake?.[id]) || 0));
       if (a > 0 && units[id]) awake[id] = a;
       const sh = Math.max(0, Math.floor(Number(raw.shards?.[id]) || 0));
       if (sh > 0) shards[id] = sh;
@@ -170,7 +170,16 @@
   // A card's grade badge (D to SSS) and its red awakening stars.
   const gradeOf = (id) => E.GRADES[E.CARDS[id].rarity];
   const gradeBadge = (id, cls = "grade") => el("span", `${cls} grade-${gradeOf(id).toLowerCase()}`, gradeOf(id));
-  const redStars = (n, max = 0) => { const row = el("span", "red-stars"); row.append(el("b", null, "★".repeat(n))); if (max > n) row.append(el("i", null, "★".repeat(max - n))); return row; };
+  // red stars 1-5; the second awakening turns them gold one by one
+  const redStars = (n, max = 0) => {
+    const row = el("span", "red-stars");
+    const gold = Math.max(0, n - E.MAX_AWAKE), red = Math.min(n, E.MAX_AWAKE) - gold;
+    if (gold) row.append(el("em", null, "★".repeat(gold)));
+    if (red) row.append(el("b", null, "★".repeat(red)));
+    const empty = Math.min(max, E.MAX_AWAKE) - Math.min(n, E.MAX_AWAKE);
+    if (empty > 0) row.append(el("i", null, "★".repeat(empty)));
+    return row;
+  };
   const isCleared = (num) => (cards().stars[num] || 0) > 0;
   const isOpen = (num) => num === 1 || isCleared(num - 1);
   const store = () => game().writeSave();
@@ -749,13 +758,14 @@
   function cardTile(id, onPick, extra = "") {
     const def = E.CARDS[id], lv = cards().units[id];
     const tile = button(`tcard r${def.rarity}${lv ? "" : " is-locked"}${cards().team.includes(id) ? " is-picked" : ""} ${extra}`, null, onPick);
-    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ระดับ ${gradeOf(id)}${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}${cards().awake?.[id] ? ` ดาวแดง ${cards().awake[id]}` : ""}`);
+    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ระดับ ${gradeOf(id)}${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}${cards().awake?.[id] ? (cards().awake[id] > E.MAX_AWAKE ? ` ปลุกพลังขั้น 2 ดาวทอง ${cards().awake[id] - E.MAX_AWAKE}` : ` ดาวแดง ${cards().awake[id]}`) : ""}`);
     const art = el("span", "tcard-art");
     art.append(portrait(id));
     const awake = cards().awake?.[id] || 0;
     tile.append(art, gradeBadge(id, "tcard-rare grade"), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}` : "🔒"));
     if (awake) { const st = redStars(awake); st.classList.add("tcard-stars"); tile.append(st); }
     if (awake) tile.classList.add(`awake-${awake}`);
+    if (awake > E.MAX_AWAKE) tile.classList.add("is-awake2");
     return tile;
   }
 
@@ -790,6 +800,7 @@
     const head = el("h3", null, def.name); head.prepend(gradeBadge(id), " ");
     info.append(head, el("p", "sheet-sub", `ระดับ ${gradeOf(id)} · ${role.icon} ${role.name} · ${lv ? `Lv ${lv}/${E.capFor(c.awake[id])}` : "ยังไม่มี"}`));
     if (c.awake[id]) info.append(redStars(c.awake[id], E.MAX_AWAKE));
+    if ((c.awake[id] || 0) > E.MAX_AWAKE) info.append(el("p", "sheet-awake2", `✦ ปลุกพลังขั้น 2 · ดาวทอง ${c.awake[id] - E.MAX_AWAKE}/${E.MAX_AWAKE2 - E.MAX_AWAKE}`));
     info.append(el("p", "sheet-text", def.text));
     const boost = (st) => { const k = 1 + E.cardBonus(c, id); return { ...st, hp: Math.round(st.hp * k), atk: Math.round(st.atk * k), def: Math.round(st.def * k) }; };
     const cap = E.capFor(c.awake[id]);
@@ -813,12 +824,14 @@
       // red stars: shards of this card (or star dust), star-up wings and coins
       const at = c.awake[id] || 0, cost = E.awakeCost(c, id);
       const box = el("div", "sheet-awake");
-      const title = el("b", null, "อัปดาว (อเวค) ");
+      const second = at >= E.MAX_AWAKE && E.maxAwake(id) > E.MAX_AWAKE;
+      if (second) box.classList.add("is-second");
+      const title = el("b", null, second ? "ปลุกพลังขั้น 2 " : "อัปดาว (อเวค) ");
       title.append(redStars(at, E.MAX_AWAKE));
-      box.append(title, el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · 🪽 ปีกอัพดาว ${fmt(c.wings)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round(E.AWAKE_BONUS * 100)}%`));
+      box.append(title, el("span", null, `เศษ${def.name} ${fmt(c.shards[id] || 0)} · ผลึกดาว ${fmt(c.dust)} · 🪽 ปีกอัพดาว ${fmt(c.wings)} · ดาวละ: เลเวลสูงสุด +10 และพลัง +${Math.round((second ? E.AWAKE2_BONUS : E.AWAKE_BONUS) * 100)}%${second ? " · ดาวแดงกลายเป็นดาวทองทีละดวง" : ""}`));
       if (cost) {
         const ok = cost.dust >= cost.fromDust && cost.wings >= cost.wingsNeed && save().coins >= cost.coins;
-        const up = button("shop-buy", `★${cost.star} · เศษ ${cost.need} 🪽 ${cost.wingsNeed} ● ${fmt(cost.coins)}`, () => awakenCard(id));
+        const up = button("shop-buy", `${cost.second ? `ดาวทอง ${cost.star - E.MAX_AWAKE}` : `★${cost.star}`} · เศษ ${cost.need} 🪽 ${cost.wingsNeed} ● ${fmt(cost.coins)}`, () => awakenCard(id));
         up.disabled = !ok;
         up.setAttribute("aria-label", `อัปดาว${def.name}เป็นดาวแดง ${cost.star} ดวง ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} ปีกอัพดาว ${cost.wingsNeed} และ ${cost.coins} เหรียญ`);
         box.append(up);
@@ -829,7 +842,7 @@
           buyWing.disabled = (save().gems || 0) < E.WING_PRICE;
           box.append(buyWing);
         }
-      } else box.append(el("span", "sheet-max", "ดาวแดงเต็มแล้ว"));
+      } else box.append(el("span", "sheet-max", E.maxAwake(id) > E.MAX_AWAKE ? "ปลุกพลังขั้น 2 เต็มแล้ว" : "ดาวแดงเต็มแล้ว · ปลุกพลังขั้น 2 ได้เฉพาะการ์ด S และ SSS"));
       parts.push(box);
     }
     if (lv) {
@@ -867,7 +880,7 @@
         up.disabled = save().coins < cost;
         up.setAttribute("aria-label", `อัปเลเวล${def.name}เป็นเลเวล ${lv + 1} ใช้ ${cost} เหรียญ`);
         actions.append(up);
-      } else actions.append(el("span", "sheet-max", (c.awake[id] || 0) < E.MAX_AWAKE ? "เลเวลเต็ม · อัปดาวเพื่อไปต่อ" : "เลเวลสูงสุดแล้ว"));
+      } else actions.append(el("span", "sheet-max", (c.awake[id] || 0) < E.maxAwake(id) ? "เลเวลเต็ม · อัปดาวเพื่อไปต่อ" : "เลเวลสูงสุดแล้ว"));
     } else {
       actions.append(el("p", "sheet-lock", "🔒 ได้จากการสุ่มการ์ดเท่านั้น"), button("primary-button", "🎴 ไปสุ่มการ์ด", () => { tab = "pulls"; closeSheet(); }));
     }
@@ -922,7 +935,7 @@
     E.giveXp(c, id, 0); // XP waiting at the old cap counts now
     store(); showCoins();
     [523, 659, 784, 1047, 1319].forEach((note, i) => tone(note, .12, "triangle", .06, i * .08));
-    announce(`${E.CARDS[id].name} อัปเป็นดาวแดง ${c.awake[id]} ดวง เลเวลสูงสุด ${E.capFor(c.awake[id])}`);
+    announce(c.awake[id] > E.MAX_AWAKE ? `${E.CARDS[id].name} ปลุกพลังขั้น 2 ดาวทอง ${c.awake[id] - E.MAX_AWAKE} ดวง เลเวลสูงสุด ${E.capFor(c.awake[id])}` : `${E.CARDS[id].name} อัปเป็นดาวแดง ${c.awake[id]} ดวง เลเวลสูงสุด ${E.capFor(c.awake[id])}`);
     cardSheet(id);
   }
 

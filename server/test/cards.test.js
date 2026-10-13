@@ -99,8 +99,22 @@ test("cards: red stars raise the level cap, cost shards or star dust plus wings,
   cards.shards.ikuya = 1000;
   for (let n = 1; n < E.MAX_AWAKE; n++) assert.notEqual(E.awaken(cards, "ikuya", 1e9), null);
   assert.equal(cards.awake.ikuya, E.MAX_AWAKE);
-  assert.equal(E.awakeCost(cards, "ikuya"), null);
+  assert.equal(E.awakeCost(cards, "ikuya"), null); // ikuya is an A card: no second awakening
   assert.equal(E.cardBonus(cards, "ikuya"), E.MAX_AWAKE * E.AWAKE_BONUS);
+});
+
+test("cards: S and SSS cards awaken a second time, five gold stars to Lv 130", () => {
+  const cards = { units: { phloeng: 80 }, xp: {}, awake: { phloeng: 5 }, shards: { phloeng: 10000 }, dust: 0, wings: 1000 };
+  assert.equal(E.maxAwake("phloeng"), 10);
+  assert.equal(E.maxAwake("pupa"), 5);
+  assert.equal(E.awakeCost(cards, "phloeng").second, true);
+  for (let n = 5; n < 10; n++) assert.notEqual(E.awaken(cards, "phloeng", 1e9), null);
+  assert.equal(cards.awake.phloeng, 10);
+  assert.equal(E.capFor(10), 130);
+  assert.equal(E.awakeCost(cards, "phloeng"), null);
+  assert.ok(Math.abs(E.cardBonus(cards, "phloeng") - (5 * E.AWAKE_BONUS + 5 * E.AWAKE2_BONUS)) < 1e-9);
+  E.giveXp(cards, "phloeng", 1e9);
+  assert.equal(cards.units.phloeng, 130);
 });
 
 test("cards: six grades from D to SSS, SSS the rarest pull", () => {

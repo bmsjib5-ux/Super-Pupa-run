@@ -5894,7 +5894,7 @@
     const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
     return {
       ...b, ...a, units: most(a.units, b.units, 99), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
-      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 5), shards: most(a.shards, b.shards, 1e6),
+      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 10), shards: most(a.shards, b.shards, 1e6),
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
       // left out until the card screen first gives the starting wings
       wings: a.wings == null && b.wings == null ? undefined : Math.max(Number(a.wings) || 0, Number(b.wings) || 0),
@@ -6332,10 +6332,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13e";
+  const NEWS_VERSION = "2026-10-13f";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "ปลุกพลังขั้น 2 · ดาวทอง", text: "การ์ดระดับ S และ SSS ที่อัปดาวแดงครบ 5 ดวง ปลุกพลังขั้น 2 ต่อได้อีก 5 ดาวทอง ดาวละเลเวลสูงสุด +10 (ถึง Lv 130) และพลัง +10% ใช้เศษการ์ด ปีกอัพดาว และเหรียญ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "SSS ใหม่ · วชิระ · นภาลัย · กิเลนทอง", text: "การ์ดระดับ SSS ใหม่อีก 3 ใบ อัศวินผู้พิทักษ์เกราะเพชรที่กางเกราะให้ทั้งทีม จอมเวทแห่งดวงดาวเรียกฝนดาวตกถล่มทั้งสนาม และกิเลนทองสัตว์เลี้ยงนำโชค สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha4", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 11 · ปราสาทจันทร์สีเลือด", text: "ด่าน 101–110 ใต้จันทร์เลือดดวงยักษ์ ปราสาทโกธิค สุสานในหมอกแดง มอนสเตอร์แวมไพร์ 8 ชนิดที่ดูดเลือด สาปเกราะ และเผาด้วยไฟกุหลาบดำ บอสราชาเห็ดโลหิต และราชินีจันทร์เลือด การ์ด SSS ช่วยได้มาก", image: "chapter11", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "เควสรับเพชร", text: "แท็บใหม่ 📜 เควส ในศึกการ์ด เควสรายวัน 6 ข้อ ชนะการต่อสู้ รับรางวัลล่า ด่านประจำวัน ลานประลอง อัปเลเวล และสุ่มการ์ด ทำครบเปิดหีบ 💎100 + ปีก และภารกิจความสำเร็จ 29 ข้อ ผ่านด่าน เก็บดาว สะสมการ์ด อัปดาวแดง ใครทำสำเร็จไปแล้วกดรับเพชรได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },

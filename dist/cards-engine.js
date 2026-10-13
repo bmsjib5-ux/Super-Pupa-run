@@ -15,11 +15,13 @@
   "use strict";
 
   // A card's level cap: 30, and 10 more for each star it has been raised
-  // (awakened) to, up to MAX_AWAKE stars (see awaken below).
+  // (awakened) to: MAX_AWAKE red stars, then for S and SSS cards a second
+  // awakening of five gold stars, up to MAX_AWAKE2 in all (see awaken below).
   const MAX_AWAKE = 5;
+  const MAX_AWAKE2 = 10;
   const BASE_CAP = 30;
-  const MAX_LEVEL = BASE_CAP + 10 * MAX_AWAKE;
-  const capFor = (awake = 0) => BASE_CAP + 10 * Math.max(0, Math.min(MAX_AWAKE, awake));
+  const MAX_LEVEL = BASE_CAP + 10 * MAX_AWAKE2;
+  const capFor = (awake = 0) => BASE_CAP + 10 * Math.max(0, Math.min(MAX_AWAKE2, awake));
   const TEAM_SIZE = 5;
   const FRONT_SLOTS = 2;
   // Stats grow by a tenth of the level-1 value per level.
@@ -1251,9 +1253,11 @@
   // adds 10 to the level cap and AWAKE_BONUS to hp, attack and defence.
   // Wings come from boss stages, daily dungeons, the arena, the daily
   // reward, star bonuses, S/SSS duplicates, or gems (WING_PRICE).
-  const AWAKE_SHARDS = [10, 20, 35, 55, 80];
-  const AWAKE_WINGS = [1, 2, 3, 5, 8];
-  const AWAKE_COINS = [300, 600, 1000, 1600, 2500];
+  // stars 6-10 are the second awakening, for S and SSS cards only
+  const AWAKE_SHARDS = [10, 20, 35, 55, 80, 100, 130, 170, 220, 280];
+  const AWAKE_WINGS = [1, 2, 3, 5, 8, 10, 13, 16, 20, 25];
+  const AWAKE_COINS = [300, 600, 1000, 1600, 2500, 4000, 6000, 8500, 11500, 15000];
+  const maxAwake = (id) => (CARDS[id]?.rarity >= 5 ? MAX_AWAKE2 : MAX_AWAKE);
   const WING_PRICE = 80;
   const STAR_WINGS = 2;
   // Wings owed to a save that cleared boss stages (stars: num -> stars) and
@@ -1261,13 +1265,14 @@
   const wingCompensation = (stars, arena = 1) =>
     STAGES.filter(s => s.wings && stars[s.num] > 0).reduce((sum, s) => sum + s.wings, 0) + 2 * Math.floor((Math.max(1, arena) - 1) / 5);
   const AWAKE_BONUS = .08;
+  const AWAKE2_BONUS = .1;
   // What the next star costs, and whether this save can pay it.
   function awakeCost(cards, id) {
     const at = cards.awake?.[id] || 0;
-    if (at >= MAX_AWAKE) return null;
+    if (at >= maxAwake(id)) return null;
     const need = AWAKE_SHARDS[at], own = cards.shards?.[id] || 0;
     const fromShards = Math.min(own, need), fromDust = need - fromShards;
-    return { star: at + 1, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0, wingsNeed: AWAKE_WINGS[at], wings: cards.wings || 0 };
+    return { star: at + 1, second: at >= MAX_AWAKE, need, fromShards, fromDust, coins: AWAKE_COINS[at], dust: cards.dust || 0, wingsNeed: AWAKE_WINGS[at], wings: cards.wings || 0 };
   }
   // Pays and raises the star; coins is the save's coin balance (returned).
   function awaken(cards, id, coins) {
@@ -1280,7 +1285,8 @@
     return coins - cost.coins;
   }
   // Battle bonus from stars and a worn costume.
-  const cardBonus = (cards, id) => (cards.awake?.[id] || 0) * AWAKE_BONUS + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
+  const awakeBonus = (n = 0) => Math.min(n, MAX_AWAKE) * AWAKE_BONUS + Math.max(0, n - MAX_AWAKE) * AWAKE2_BONUS;
+  const cardBonus = (cards, id) => awakeBonus(cards.awake?.[id] || 0) + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
   const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
   // state: { pity, pity6 } (pulls since the last S or SSS, and since the
   // last SSS); rnd: () => 0..1.
@@ -1329,7 +1335,7 @@
   for (let n = 10; n <= 100; n += 10) ACHIEVEMENTS.push({ id: `stage${n}`, gems: 50 + 2 * n, text: `ผ่านศึกการ์ดด่าน ${n}`, need: n, have: (c) => Math.max(0, ...Object.keys(c.stars).map(Number).filter(k => c.stars[k] > 0)) });
   for (const n of [50, 100, 150, 200, 250, 300]) ACHIEVEMENTS.push({ id: `stars${n}`, gems: n, text: `เก็บดาวด่านรวม ${n} ดวง`, need: n, have: (c) => Object.values(c.stars).reduce((a, b) => a + Math.min(3, b), 0) });
   for (const [n, gems] of [[5, 50], [10, 80], [15, 120], [20, 160], [25, 200]]) ACHIEVEMENTS.push({ id: `cards${n}`, gems, text: `มีการ์ด ${n} ใบ`, need: n, have: (c) => Object.keys(c.units).filter(id => CARDS[id] && c.units[id] > 0).length });
-  for (const [n, gems] of [[1, 50], [3, 100], [5, 200]]) ACHIEVEMENTS.push({ id: `awake${n}`, gems, text: `อัปดาวแดงการ์ดใบใดก็ได้ถึง ${n} ดวง`, need: n, have: (c) => Math.max(0, ...Object.values(c.awake || {})) });
+  for (const [n, gems] of [[1, 50], [3, 100], [5, 200], [6, 250], [8, 300], [10, 500]]) ACHIEVEMENTS.push({ id: `awake${n}`, gems, text: n > MAX_AWAKE ? `ปลุกพลังขั้น 2 การ์ดใบใดก็ได้ถึงดาวทอง ${n - MAX_AWAKE} ดวง` : `อัปดาวแดงการ์ดใบใดก็ได้ถึง ${n} ดวง`, need: n, have: (c) => Math.max(0, ...Object.values(c.awake || {})) });
   ACHIEVEMENTS.push({ id: "sss1", gems: 200, text: "ได้การ์ดระดับ SSS ใบแรก", need: 1, have: (c) => CARD_IDS.filter(id => CARDS[id].rarity === 6 && c.units[id]).length });
   for (const [n, gems] of [[10, 80], [20, 120], [30, 160], [50, 250]]) ACHIEVEMENTS.push({ id: `arena${n}`, gems, text: `ผ่านลานประลองชั้น ${n}`, need: n, have: (c) => Math.max(0, (c.arena || 1) - 1) });
   // How far an achievement is: [have, need, done].
@@ -1350,7 +1356,7 @@
     DAILY_QUESTS, QUEST_CHEST, questFor, questDone, ACHIEVEMENTS, achvProgress,
     GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS, wingCompensation,
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
-    GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
+    GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
