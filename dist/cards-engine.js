@@ -939,7 +939,10 @@
   }
   const cardStats = (id, lv) => statsOf(CARDS[id], lv, false);
   // A rough strength number for the team screen.
-  const power = (id, lv) => { const s = cardStats(id, lv); return Math.round(s.hp / 10 + s.atk * 2 + s.def * 1.5 + s.spd / 2); };
+  // atkBonus: extra attack share, as from bonds (see bondAtk).
+  const power = (id, lv, atkBonus = 0) => { const s = cardStats(id, lv); return Math.round(s.hp / 10 + s.atk * (1 + atkBonus) * 2 + s.def * 1.5 + s.spd / 2); };
+  // A team's strength with its bonds counted.
+  const teamPowerOf = (team) => { const ids = team.map(t => t.id); return team.reduce((sum, t) => sum + power(t.id, t.lv, bondAtk(ids, t.id)), 0); };
 
   // Same seed, same battle (mulberry32).
   function random(b) {
@@ -1596,7 +1599,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

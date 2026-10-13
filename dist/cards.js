@@ -278,7 +278,7 @@
     for (const id of new Set(ids)) if (cards().units[id] && E.giveXp(cards(), id, amount)) ups.push(`${E.CARDS[id].name} Lv ${cards().units[id]}`);
     return ups;
   }
-  const teamPower = () => cards().team.filter(Boolean).reduce((sum, id) => sum + E.power(id, cards().units[id]), 0);
+  const teamPower = () => E.teamPowerOf(cards().team.filter(Boolean).map(id => ({ id, lv: cards().units[id] })));
   // The stage a card is the first-clear prize of.
 
   // ---- The frame ----
@@ -594,7 +594,7 @@
     for (const t of team) mine.append(cardTile(t.id, () => cardSheet(t.id), t.row === "front" ? "is-front" : ""));
     const go = button("primary-button", "เริ่มประลอง ⚔", () => startBattle(tier));
     const edit = button("secondary-button", "จัดทีมประลอง ✎", () => arenaSheet());
-    box.append(foes, el("p", "sheet-sub", `ทีมของคุณ ${team.length}/10 · พลังรวม ${fmt(team.reduce((sum, t) => sum + E.power(t.id, t.lv), 0))}`), mine, el("div", "title-actions sheet-actions"));
+    box.append(foes, el("p", "sheet-sub", `ทีมของคุณ ${team.length}/10 · พลังรวม ${fmt(E.teamPowerOf(team))}`), mine, el("div", "title-actions sheet-actions"));
     box.querySelector(".sheet-actions").append(edit, go);
     panel.append(box);
   }
@@ -641,7 +641,7 @@
       button("secondary-button", "จัดอัตโนมัติ", () => { c.arenaPick = []; c.arenaFront = []; store(); tone(523, .06, "triangle", .04); announce("ใช้ทีมประลองอัตโนมัติ"); closeSheet(); }),
       button("primary-button", "เสร็จ ✓", () => closeSheet())
     );
-    const power = c.arenaPick.reduce((sum, id) => sum + E.power(id, c.units[id]), 0);
+    const power = E.teamPowerOf(c.arenaPick.map(id => ({ id, lv: c.units[id] })));
     openSheet([el("h3", "sheet-title", "จัดทีมประลอง"), el("p", "sheet-sub", `${c.arenaPick.length}/${E.ARENA_SIZE} ใบ · พลังรวม ${fmt(power)} · แตะการ์ดในทีมเพื่อสลับแถวหน้า/หลัง · แตะการ์ดด้านล่างเพื่อเพิ่มหรือเอาออก`), rows, el("h3", "shop-heading", "การ์ดทั้งหมด (✓ = อยู่ในทีม)"), pool, actions]);
   }
 

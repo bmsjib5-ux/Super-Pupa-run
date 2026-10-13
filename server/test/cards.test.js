@@ -205,3 +205,10 @@ test("cards: bonds raise the attack of members fielded together", () => {
   assert.ok(Math.abs(E.bondAtk(["chada", "anchan", "ikuya"], "chada") - .25) < 1e-9);
   for (const bond of E.BONDS) for (const id of bond.ids) assert.ok(E.CARDS[id], `${bond.id}: ${id}`);
 });
+
+test("cards: team power counts bond bonuses", () => {
+  const pair = [{ id: "chada", lv: 10 }, { id: "anchan", lv: 10 }];
+  const plain = E.power("chada", 10) + E.power("anchan", 10);
+  assert.ok(E.teamPowerOf(pair) > plain);
+  assert.equal(E.teamPowerOf([{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }]), E.power("chada", 10) + E.power("pupa", 10));
+});
