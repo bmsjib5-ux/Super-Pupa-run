@@ -884,7 +884,12 @@
     const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า`);
     const heading = el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`);
     const grid = el("div", "cards-grid");
-    for (const id of E.CARD_IDS) grid.append(cardTile(id, () => cardSheet(id)));
+    // owned cards first, then each from the highest grade down, stars, level
+    const order = E.CARD_IDS.map((id, n) => ({ id, n })).sort((x, y) => {
+      const a = x.id, b = y.id, ha = c.units[a] ? 1 : 0, hb = c.units[b] ? 1 : 0;
+      return hb - ha || E.CARDS[b].rarity - E.CARDS[a].rarity || (c.awake[b] || 0) - (c.awake[a] || 0) || (c.units[b] || 0) - (c.units[a] || 0) || x.n - y.n;
+    }).map(o => o.id);
+    for (const id of order) grid.append(cardTile(id, () => cardSheet(id)));
     panel.append(formation, sum, heading, grid);
   }
 
