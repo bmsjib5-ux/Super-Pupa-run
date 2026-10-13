@@ -6325,10 +6325,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13c";
+  const NEWS_VERSION = "2026-10-13d";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 11 · ปราสาทจันทร์สีเลือด", text: "ด่าน 101–110 ใต้จันทร์เลือดดวงยักษ์ ปราสาทโกธิค สุสานในหมอกแดง มอนสเตอร์แวมไพร์ 8 ชนิดที่ดูดเลือด สาปเกราะ และเผาด้วยไฟกุหลาบดำ บอสราชาเห็ดโลหิต และราชินีจันทร์เลือด การ์ด SSS ช่วยได้มาก", image: "chapter11", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "เควสรับเพชร", text: "แท็บใหม่ 📜 เควส ในศึกการ์ด เควสรายวัน 6 ข้อ ชนะการต่อสู้ รับรางวัลล่า ด่านประจำวัน ลานประลอง อัปเลเวล และสุ่มการ์ด ทำครบเปิดหีบ 💎100 + ปีก และภารกิจความสำเร็จ 29 ข้อ ผ่านด่าน เก็บดาว สะสมการ์ด อัปดาวแดง ใครทำสำเร็จไปแล้วกดรับเพชรได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 10 · หุบเขามังกรหยก", text: "ด่าน 91–100 หุบเขาหมอกสีหยก เจดีย์แดง โคมลอยฟ้า และลานหินหยก นักรบหยก 8 ชนิดที่ปลุกพลังกัน ดูดชีวิต และล้างสถานะ บอสราชาเห็ดหยก และราชินีมังกรหยก ด่านที่ 100 ศึกสุดท้าย", image: "chapter10", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 9 · นครจักรกลลอยฟ้า", text: "ด่าน 81–90 เมืองทองเหลืองลอยฟ้ายามอาทิตย์ตก หอนาฬิกา เฟืองยักษ์ และเรือเหาะ มอนสเตอร์จักรกล 8 ชนิดเกราะหนา ช็อตไฟฟ้า สว่านเจาะเกราะ และไอน้ำลวก บอสราชาเห็ดจักรกล และราชินีกลไกทองเหลือง การ์ด SSS ช่วยได้มาก", image: "chapter9", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6465,10 +6466,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

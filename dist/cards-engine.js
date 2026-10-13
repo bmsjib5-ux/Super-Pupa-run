@@ -513,6 +513,34 @@
       ]
     }
   });
+  // Chapter 11: the castle under the blood moon: vampire creatures that
+  // drink life, curse armour, burn with dark fire and shield their lords.
+  const BLOODGLOW = "rgba(255,70,90,.95)";
+  const BLOOD = "sepia(1) saturate(4) hue-rotate(-55deg) contrast(1.2) brightness(.9)";
+  Object.assign(FOES, {
+    bloodshroom: { name: "เห็ดโลหิต", role: "balance", art: "walker", look: BLOOD, glow: BLOODGLOW, tier: 4.4, def: 1.2, skills: [{ name: "สปอร์ดูดเลือด", cd: 3, target: "front", power: 1.3, drain: .5 }] },
+    vampbat: { name: "ค้างคาวแวมไพร์", role: "attack", art: "bat", look: BLOOD, glow: BLOODGLOW, tier: 4.4, spd: 130, skills: [{ name: "เขี้ยวแวมไพร์", cd: 3, target: "back", power: 1.35, drain: .6 }] },
+    gravecrab: { name: "ปูหลุมศพ", role: "attack", art: "crab", look: BLOOD, glow: BLOODGLOW, tier: 4.4, def: 1.7, skills: [{ name: "ก้ามสาปเกราะ", cd: 3, target: "one", power: 2.6, fx: [{ k: "defDown", v: .35, turns: 2 }] }] },
+    bloodjelly: { name: "แมงกะพรุนโลหิต", role: "support", art: "jelly", look: BLOOD, glow: BLOODGLOW, tier: 4.4, skills: [{ name: "พิธีกรรมโลหิต", cd: 3, target: "allies", heal: 1.2, fx: [{ k: "atkUp", v: .25, turns: 2 }] }] },
+    coffinroller: { name: "โลงศพกลิ้ง", role: "defense", art: "roller", look: BLOOD, glow: BLOODGLOW, tier: 4.4, atk: 1.4, def: 1.3, skills: [{ name: "โลงศพถล่ม", cd: 3, target: "front", power: 1.55, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    thornurchin: { name: "เม่นกุหลาบดำ", role: "defense", art: "urchin", look: BLOOD, glow: BLOODGLOW, tier: 4.4, skills: [{ name: "กำแพงหนามกุหลาบ", cd: 4, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    roseflower: { name: "กุหลาบเพลิงดำ", role: "magic", art: "spitter", look: BLOOD, glow: BLOODGLOW, tier: 4.4, skills: [{ name: "ไฟกุหลาบดำ", cd: 3, target: "all", power: 1.05, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    ravenbird: { name: "อีกาโลหิต", role: "attack", art: "swooper", look: BLOOD, glow: BLOODGLOW, tier: 4.4, spd: 128, skills: [{ name: "จิกสาปแช่ง", cd: 3, target: "back", power: 1.6, drain: .4, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    bloodking: {
+      name: "ราชาเห็ดโลหิต", role: "balance", art: "king", look: BLOOD, glow: BLOODGLOW, tier: 4.4, boss: true, hp: 4.4, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "ทะเลโลหิต", cd: 3, target: "all", power: 1.35, drain: .4 },
+        { name: "คำสาปราชันย์", cd: 4, first: 1, target: "front", power: 1.9, fx: [{ k: "stun", chance: .4, turns: 1 }, { k: "defDown", v: .3, turns: 2 }] }
+      ]
+    },
+    bloodqueen: {
+      name: "ราชินีจันทร์เลือด", role: "magic", art: "queen", look: BLOOD, glow: BLOODGLOW, tier: 4.4, boss: true, hp: 4, atk: 1.4, def: 1.3, spd: 130,
+      skills: [
+        { name: "จันทร์เลือดสาดแสง", cd: 3, target: "all", power: 1.5, fx: [{ k: "burn", power: .4, turns: 2 }] },
+        { name: "จุมพิตแวมไพร์", cd: 4, first: 1, target: "one", power: 3.1, drain: .8, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -528,7 +556,8 @@
     { name: "บทที่ 7 · ห้วงจักรวาลเนบิวลา", from: 61, to: 70 },
     { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 },
     { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 },
-    { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 }
+    { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 },
+    { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -630,7 +659,17 @@
     ["ถ้ำมุกมังกร", 59, ["stoneroller,stoneroller/spiritjelly,lotusflower,lanternbat", "bambooburchin,jadecrab/cranebird,cranebird,spiritjelly", "jadecrab,jadeshroom/lotusflower,lotusflower,spiritjelly"]],
     ["ยอดเขาเทพเซียน", 57, ["bambooburchin,bambooburchin/lotusflower,lotusflower,cranebird", "jadecrab,stoneroller/spiritjelly,spiritjelly,lanternbat", "stoneroller,jadecrab/cranebird,lotusflower,spiritjelly"]],
     ["ตำหนักหยกสวรรค์", 58, ["jadecrab,stoneroller/spiritjelly,lotusflower,cranebird", "bambooburchin,jadeshroom/spiritjelly,lanternbat,lotusflower", "jadeking/spiritjelly,cranebird"]],
-    ["บัลลังก์ราชินีมังกรหยก", 45, ["stoneroller,jadecrab/spiritjelly,lotusflower,cranebird", "bambooburchin,bambooburchin/spiritjelly,spiritjelly,lanternbat", "jadeking,jadequeen/spiritjelly"]]
+    ["บัลลังก์ราชินีมังกรหยก", 45, ["stoneroller,jadecrab/spiritjelly,lotusflower,cranebird", "bambooburchin,bambooburchin/spiritjelly,spiritjelly,lanternbat", "jadeking,jadequeen/spiritjelly"]],
+    ["สุสานใต้จันทร์แดง", 54, ["bloodshroom,bloodshroom/vampbat", "gravecrab,bloodshroom/roseflower", "gravecrab,coffinroller/vampbat,roseflower"]],
+    ["สวนกุหลาบดำ", 55, ["coffinroller,bloodshroom/bloodjelly", "thornurchin,gravecrab/roseflower,vampbat", "coffinroller,gravecrab/bloodjelly,ravenbird"]],
+    ["สะพานโซ่เหล็ก", 56, ["gravecrab,gravecrab/roseflower,vampbat", "thornurchin,coffinroller/bloodjelly,roseflower", "gravecrab,coffinroller/ravenbird,ravenbird,bloodjelly"]],
+    ["ประตูปราสาท", 55, ["thornurchin,bloodshroom/roseflower,roseflower", "coffinroller,coffinroller/bloodjelly,vampbat", "thornurchin,gravecrab/bloodjelly,roseflower,ravenbird"]],
+    ["ห้องโถงโลหิต", 56, ["bloodshroom,gravecrab/vampbat,roseflower", "coffinroller,thornurchin/bloodjelly,bloodjelly", "bloodking/roseflower,vampbat"]],
+    ["ห้องสมุดต้องสาป", 54, ["gravecrab,coffinroller/ravenbird,vampbat,roseflower", "thornurchin,bloodshroom/bloodjelly,ravenbird", "gravecrab,gravecrab/bloodjelly,roseflower,vampbat"]],
+    ["หอระฆังอีกา", 52, ["coffinroller,coffinroller/bloodjelly,roseflower,vampbat", "thornurchin,gravecrab/ravenbird,ravenbird,bloodjelly", "gravecrab,bloodshroom/roseflower,roseflower,bloodjelly"]],
+    ["ห้องใต้ดินโลงศพ", 50, ["thornurchin,thornurchin/roseflower,roseflower,ravenbird", "gravecrab,coffinroller/bloodjelly,bloodjelly,vampbat", "coffinroller,gravecrab/ravenbird,roseflower,bloodjelly"]],
+    ["ระเบียงจันทร์เลือด", 53, ["gravecrab,coffinroller/bloodjelly,roseflower,ravenbird", "thornurchin,bloodshroom/bloodjelly,vampbat,roseflower", "bloodking/bloodjelly,ravenbird"]],
+    ["บัลลังก์ราชินีจันทร์เลือด", 45, ["coffinroller,gravecrab/bloodjelly,roseflower,ravenbird", "thornurchin,thornurchin/bloodjelly,bloodjelly,vampbat", "bloodking,bloodqueen/bloodjelly"]]
   ];
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");

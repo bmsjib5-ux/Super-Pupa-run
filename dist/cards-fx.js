@@ -80,9 +80,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter >= 10;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter >= 11;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (jade) { sky.addColorStop(0, "#14403a"); sky.addColorStop(.5, "#7fbf9a"); sky.addColorStop(1, "#f2e2b0"); }
+      if (blood) { sky.addColorStop(0, "#12020a"); sky.addColorStop(.5, "#5a0a1e"); sky.addColorStop(1, "#1a0410"); }
+      else if (jade) { sky.addColorStop(0, "#14403a"); sky.addColorStop(.5, "#7fbf9a"); sky.addColorStop(1, "#f2e2b0"); }
       else if (steam) { sky.addColorStop(0, "#2a1e48"); sky.addColorStop(.45, "#c8643a"); sky.addColorStop(1, "#3a2216"); }
       else if (abyss) { sky.addColorStop(0, "#0a4a5c"); sky.addColorStop(.45, "#06283c"); sky.addColorStop(1, "#020a16"); }
       else if (cosmos) { sky.addColorStop(0, "#040418"); sky.addColorStop(.6, "#14103a"); sky.addColorStop(1, "#08061c"); }
@@ -112,14 +113,14 @@
         s.restore();
       }
       // stars
-      for (let i = 0; i < (abyss || jade ? 0 : steam ? 25 : 70); i++) {
+      for (let i = 0; i < (abyss || jade ? 0 : steam || blood ? 25 : 70); i++) {
         const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
       // moon (under the sea: the shimmer of the surface)
-      if (abyss || steam || jade) s.globalAlpha = 0;
+      if (abyss || steam || jade || blood) s.globalAlpha = 0;
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, cosmos ? "rgba(120,220,255,.4)" : holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
@@ -148,6 +149,27 @@
           s.fillStyle = "#3a3458"; s.beginPath();
           for (let k = 0; k < 7; k++) { const a = k * TAU / 7, rr = r * (.8 + ((i + k) % 3) * .12); s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
           s.fill(); s.fillStyle = "rgba(255,255,255,.12)"; s.beginPath(); s.arc(x - r * .3, y - r * .3, r * .3, 0, TAU); s.fill();
+        }
+      }
+      if (blood) {
+        // a huge blood moon over a gothic castle, bats against it
+        const bx = w * .84, by = ground * .42, br = Math.min(w, h) * .15;
+        const glowB = s.createRadialGradient(bx, by, br * .6, bx, by, br * 2.4);
+        glowB.addColorStop(0, "rgba(255,60,70,.55)"); glowB.addColorStop(1, "rgba(255,40,60,0)");
+        s.fillStyle = glowB; s.fillRect(0, 0, w, h);
+        s.fillStyle = "#d8223a"; s.beginPath(); s.arc(bx, by, br, 0, TAU); s.fill();
+        s.fillStyle = "rgba(120,0,20,.35)";
+        for (const [dx, dy, r] of [[-.3, -.2, .18], [.25, .1, .12], [-.05, .35, .1]]) { s.beginPath(); s.arc(bx + dx * br, by + dy * br, r * br, 0, TAU); s.fill(); }
+        s.fillStyle = "#14040c";
+        const spire = (x, base, wd, ht) => { s.fillRect(x - wd / 2, base - ht, wd, ht); s.beginPath(); s.moveTo(x - wd * .7, base - ht); s.lineTo(x, base - ht - wd * 1.6); s.lineTo(x + wd * .7, base - ht); s.fill(); };
+        s.fillRect(w * .3, ground - h * .12, w * .4, h * .12);
+        for (const [x, wd, ht] of [[.3, .05, .2], [.38, .035, .26], [.45, .04, .16], [.5, .06, .32], [.56, .04, .18], [.62, .035, .25], [.7, .05, .21]]) spire(w * x, ground, w * wd, h * ht);
+        s.fillStyle = "rgba(255,200,120,.8)";
+        for (const [x, y] of [[.36, .08], [.5, .2], [.5, .12], [.64, .1], [.44, .06], [.57, .07]]) s.fillRect(w * x - 2, ground - h * y, 4, 7);
+        s.fillStyle = "#14040c";
+        for (let i = 0; i < 7; i++) {
+          const x = bx + Math.cos(i * 1.7) * br * (1.1 + (i % 3) * .3), y = by + Math.sin(i * 2.3) * br * .9, k = 4 + (i % 3) * 2;
+          s.beginPath(); s.moveTo(x, y); s.quadraticCurveTo(x - k, y - k * .9, x - k * 2.2, y - k * .2); s.quadraticCurveTo(x - k, y, x, y + k * .3); s.quadraticCurveTo(x + k, y, x + k * 2.2, y - k * .2); s.quadraticCurveTo(x + k, y - k * .9, x, y); s.fill();
         }
       }
       if (jade) {
@@ -273,11 +295,26 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = blood ? "#1c0812" : jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (jade) {
+      if (blood) {
+        // a graveyard of dark stone in red mist, tombstones at the edges
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#3a1020"); floor.addColorStop(1, "#0c0208");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        const mist = s.createLinearGradient(0, ground, 0, ground + (h - ground) * .5);
+        mist.addColorStop(0, "rgba(200,30,60,.35)"); mist.addColorStop(1, "rgba(200,30,60,0)");
+        s.fillStyle = mist; s.fillRect(0, ground, w, h - ground);
+        for (let i = 0; i < 12; i++) {
+          const left = i % 2 === 0, x = left ? w * (.02 + (i % 6) * .022) : w * (.86 + (i % 6) * .022), y = ground + 14 + ((i * 47.3) % (h - ground - 30)), k = .6 + (y - ground) / (h - ground);
+          s.fillStyle = "#2a1420"; s.beginPath(); s.moveTo(x - 7 * k, y); s.lineTo(x - 7 * k, y - 14 * k); s.arc(x, y - 14 * k, 7 * k, Math.PI, 0); s.lineTo(x + 7 * k, y); s.fill();
+          s.fillStyle = "rgba(255,90,110,.25)"; s.fillRect(x - 1, y - 18 * k, 2, 9 * k); s.fillRect(x - 4 * k, y - 15 * k, 8 * k, 2);
+        }
+        s.fillStyle = "rgba(255,60,90,.55)";
+        for (let i = 0; i < 14; i++) { const x = (i * 131.3) % w, y = ground + 10 + ((i * 59.7) % (h - ground - 14)); s.beginPath(); s.arc(x, y, 2, 0, TAU); s.fill(); }
+      } else if (jade) {
         // a courtyard of jade stone, with lily pads in still water at the edges
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#5fae8a"); floor.addColorStop(1, "#1a4a3a");
@@ -390,7 +427,7 @@
       if (!map) {
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = blood ? "rgba(255,70,100,.6)" : jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -398,7 +435,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, blood ? "rgba(255,40,70,.25)" : jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       }
@@ -417,10 +454,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter >= 10;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter >= 11;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam, ember: fire || ice || dark || holy || cosmos || steam
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: blood ? (Math.random() < .6 ? "rgba(255,60,80,.85)" : "rgba(255,180,190,.6)") : jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam || blood, ember: fire || ice || dark || holy || cosmos || steam || blood
       };
     }
 
