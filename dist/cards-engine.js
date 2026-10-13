@@ -262,6 +262,32 @@
         { name: "ขนนกเพลิงทอง", icon: "🪶", cd: 3, target: "random", hits: 4, power: .8, fx: [{ k: "burn", power: .35, turns: 2 }] },
         { name: "ปีกเพลิงนิรันดร์", icon: "🔥", cd: 5, first: 2, target: "all", power: 1.7, drain: .4, fx: [{ k: "burn", power: .5, turns: 2 }] }
       ]
+    },
+    vajira: {
+      name: "วชิระ", role: "defense", rarity: 6, art: "vajira", from: "hero",
+      text: "อัศวินผู้พิทักษ์เกราะเพชร ไม่มีใครผ่านโล่ของเขาไปได้",
+      passive: { shield: .3, text: "เกราะเพชร: เริ่มการต่อสู้พร้อมเกราะ 30% ของพลังชีวิต" },
+      skills: [
+        { name: "ป้อมปราการเพชร", icon: "💎", cd: 4, target: "self", shield: 2.6, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .6, turns: 2 }] },
+        { name: "โล่คริสตัลคุ้มภัย", icon: "🛡", cd: 5, first: 1, target: "allies", shield: 1.4, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .3, turns: 2 }, { k: "cleanse" }] }
+      ]
+    },
+    naphalai: {
+      name: "นภาลัย", role: "magic", rarity: 6, art: "naphalai", from: "hero",
+      text: "จอมเวทแห่งดวงดาว เรียกกลุ่มดาวลงมาถล่มศัตรู",
+      passive: { text: "ม่านดารา: โอกาสคริติคอล 25%" }, crit: .25,
+      skills: [
+        { name: "ฝนดาวตก", icon: "☄", cd: 3, target: "all", power: 1.4, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "สุริยคราสจักรวาล", icon: "🌌", cd: 5, first: 2, target: "all", power: 2.1, fx: [{ k: "defDown", v: .3, turns: 2 }, { k: "burn", power: .4, turns: 2 }] }
+      ]
+    },
+    qilin: {
+      name: "กิเลนทอง", role: "balance", rarity: 6, art: "qilin", from: "pet",
+      text: "กิเลนทองคำในตำนาน นำโชคและพลังมาสู่ผู้เป็นนาย",
+      skills: [
+        { name: "เขากิเลนทะลวง", icon: "🦌", cd: 3, target: "one", power: 2.4, drain: .4, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "เมฆมงคล", icon: "☁", cd: 5, first: 1, target: "allies", heal: 1.3, fx: [{ k: "atkUp", v: .4, turns: 2 }, { k: "cleanse" }] }
+      ]
     }
   });
   const CARD_IDS = Object.keys(CARDS);

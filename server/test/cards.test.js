@@ -106,7 +106,7 @@ test("cards: red stars raise the level cap, cost shards or star dust plus wings,
 test("cards: six grades from D to SSS, SSS the rarest pull", () => {
   assert.deepEqual(Object.values(E.GRADES), ["D", "C", "B", "A", "S", "SSS"]);
   assert.ok(E.CARD_IDS.every(id => E.GRADES[E.CARDS[id].rarity]));
-  assert.deepEqual(E.CARD_IDS.filter(id => E.CARDS[id].rarity === 6).sort(), ["asani", "phoenix", "seraphina"]);
+  assert.deepEqual(E.CARD_IDS.filter(id => E.CARDS[id].rarity === 6).sort(), ["asani", "naphalai", "phoenix", "qilin", "seraphina", "vajira"]);
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const state = { pity: 0 }, count = {};

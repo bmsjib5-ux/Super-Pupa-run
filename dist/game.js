@@ -66,6 +66,9 @@
     seraphina: image("assets/seraphina-hero.webp"),
     asani: image("assets/asani-hero.webp"),
     phoenix: image("assets/phoenix-pet.webp"),
+    vajira: image("assets/vajira-hero.webp"),
+    naphalai: image("assets/naphalai-hero.webp"),
+    qilin: image("assets/qilin-pet.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
   };
@@ -1889,7 +1892,9 @@
       { id: "fasai", name: "ฟ้าใส", desc: "นักดนตรีสาวพิณจันทร์", price: 300, flat: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["เพลงเรียกเหรียญ", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
       { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] },
       { id: "seraphina", name: "เซราฟิน่า", desc: "นักบุญแห่งปีกศักดิ์สิทธิ์ (SSS)", price: 900, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ปีกศักดิ์สิทธิ์", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
-      { id: "asani", name: "อัสนี", desc: "อัศวินมังกรสายฟ้าในตำนาน (SSS)", price: 900, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาบอัสนีบาต", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] }
+      { id: "asani", name: "อัสนี", desc: "อัศวินมังกรสายฟ้าในตำนาน (SSS)", price: 900, flat: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาบอัสนีบาต", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "vajira", name: "วชิระ", desc: "อัศวินผู้พิทักษ์เกราะเพชร (SSS)", price: 900, flat: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะเพชร", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
+      { id: "naphalai", name: "นภาลัย", desc: "จอมเวทแห่งดวงดาว (SSS)", price: 900, flat: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ม่านดารา", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
     ],
     skins: [
       { id: "cherry", name: "ชุดเชอร์รี่", desc: "ชุดสีชมพูตัวจริงของ Pupa", price: 0, hue: 0, sat: 1, bright: 1, swatch: "#ff78a8" },
@@ -1929,7 +1934,8 @@
       { id: "starowl", name: "นกฮูกดาว", desc: "ดูดเหรียญไกล และโฉบจิกศัตรูใกล้ ๆ ทุก 9 วินาที", price: 500, magnet: 210, bite: 9 },
       { id: "silverwolf", name: "หมาป่าเงิน", desc: "ดูดเหรียญไกลมาก กัดศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1200, magnet: 250, bite: 6, shield: true },
       { id: "dragon", name: "มังกรน้อยเปลวแสง", desc: "สัตว์เลี้ยงสุดยอด ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 7 วินาที และให้เกราะฟรีทุกด่าน", price: 1500, magnet: 270, bite: 7, shield: true, fire: true },
-      { id: "phoenix", name: "วิหคเพลิงทอง", desc: "สัตว์เลี้ยงในตำนาน (SSS) ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1800, magnet: 280, bite: 6, shield: true, fire: true }
+      { id: "phoenix", name: "วิหคเพลิงทอง", desc: "สัตว์เลี้ยงในตำนาน (SSS) ดูดเหรียญไกลที่สุด พ่นไฟใส่ศัตรูทุก 6 วินาที และให้เกราะฟรีทุกด่าน", price: 1800, magnet: 280, bite: 6, shield: true, fire: true },
+      { id: "qilin", name: "กิเลนทอง", desc: "สัตว์เลี้ยงในตำนาน (SSS) ดูดเหรียญไกลที่สุด พุ่งชนศัตรูทุก 5 วินาที และให้เกราะฟรีทุกด่าน", price: 1800, magnet: 290, bite: 5, shield: true }
     ],
     items: [
       { id: "shield", name: "เกราะฟองสบู่", desc: "เริ่มด่านพร้อมเกราะกันโจมตี 1 ครั้ง", price: 40 },
@@ -4955,6 +4961,7 @@
     starowl: picturePet(art.starowl, "#9fb6ff"),
     silverwolf: picturePet(art.silverwolf, "#bfe6ff"),
     phoenix: picturePet(art.phoenix, "#ffc46a"),
+    qilin: picturePet(art.qilin, "#9fffc8"),
     firefly(t) {
       drawGlow("#fff2a0", 38);
       const flap = Math.sin(t * .04) * .5;
@@ -6325,10 +6332,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13d";
+  const NEWS_VERSION = "2026-10-13e";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "SSS ใหม่ · วชิระ · นภาลัย · กิเลนทอง", text: "การ์ดระดับ SSS ใหม่อีก 3 ใบ อัศวินผู้พิทักษ์เกราะเพชรที่กางเกราะให้ทั้งทีม จอมเวทแห่งดวงดาวเรียกฝนดาวตกถล่มทั้งสนาม และกิเลนทองสัตว์เลี้ยงนำโชค สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha4", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 11 · ปราสาทจันทร์สีเลือด", text: "ด่าน 101–110 ใต้จันทร์เลือดดวงยักษ์ ปราสาทโกธิค สุสานในหมอกแดง มอนสเตอร์แวมไพร์ 8 ชนิดที่ดูดเลือด สาปเกราะ และเผาด้วยไฟกุหลาบดำ บอสราชาเห็ดโลหิต และราชินีจันทร์เลือด การ์ด SSS ช่วยได้มาก", image: "chapter11", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "เควสรับเพชร", text: "แท็บใหม่ 📜 เควส ในศึกการ์ด เควสรายวัน 6 ข้อ ชนะการต่อสู้ รับรางวัลล่า ด่านประจำวัน ลานประลอง อัปเลเวล และสุ่มการ์ด ทำครบเปิดหีบ 💎100 + ปีก และภารกิจความสำเร็จ 29 ข้อ ผ่านด่าน เก็บดาว สะสมการ์ด อัปดาวแดง ใครทำสำเร็จไปแล้วกดรับเพชรได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 10 · หุบเขามังกรหยก", text: "ด่าน 91–100 หุบเขาหมอกสีหยก เจดีย์แดง โคมลอยฟ้า และลานหินหยก นักรบหยก 8 ชนิดที่ปลุกพลังกัน ดูดชีวิต และล้างสถานะ บอสราชาเห็ดหยก และราชินีมังกรหยก ด่านที่ 100 ศึกสุดท้าย", image: "chapter10", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6437,12 +6445,12 @@
       });
       return icon;
     }
-    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3") {
+    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3" || kind === "gacha4") {
       const row = document.createElement("div");
       row.className = "news-trio news-cards";
-      for (const id of kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
+      for (const id of kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
-        img.src = id === "phoenix" ? "assets/phoenix-pet.webp" : `assets/${id}-hero.webp`;
+        img.src = id === "phoenix" || id === "qilin" ? `assets/${id}-pet.webp` : `assets/${id}-hero.webp`;
         img.alt = "";
         row.append(img);
       }
