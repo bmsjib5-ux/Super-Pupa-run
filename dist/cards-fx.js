@@ -38,7 +38,8 @@
     buff: { kind: "buff", colour: "#ffe58f", glow: "#ffb347" }
   };
 
-  function create(field, { chapter = 1 } = {}) {
+  // map: a backdrop for the stage map, without the battle's rune circle.
+  function create(field, { chapter = 1, map = false } = {}) {
     const back = document.createElement("canvas");
     const front = document.createElement("canvas");
     back.className = "battle-scene";
@@ -307,6 +308,7 @@
         }
       }
       // a glowing circle of runes in the middle of the field
+      if (!map) {
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
       s.strokeStyle = abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
@@ -320,6 +322,7 @@
       core.addColorStop(0, abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
+      }
       // soft spotlight where the two sides meet
       const spot = s.createRadialGradient(w / 2, h * .62, 10, w / 2, h * .62, Math.max(w, h) * .55);
       spot.addColorStop(0, "rgba(255,200,230,.14)"); spot.addColorStop(1, "rgba(0,0,0,.35)");

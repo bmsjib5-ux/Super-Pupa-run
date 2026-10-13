@@ -244,6 +244,8 @@
     homeArmed = 0;
     closeButton.textContent = "🏠";
     if (v) { v.token.stopped = true; stopShow(); battle = null; }
+    stopMap();
+    mapChapter = 0;
     if (sheet) closeSheet(true);
     tab = "stages";
     isShown = false;
@@ -255,6 +257,7 @@
   // ---- Hub: stages and team ----
   function showHub() {
     stopShow();
+    stopMap();
     battle = null;
     sheet = null;
     frame.classList.remove("is-battle", "is-arena");
@@ -512,45 +515,101 @@
     return gems;
   }
 
+  // ---- Stage map ----
+  // Each chapter is a painted map (its battle backdrop, alive) with the ten
+  // stages as points along a winding path; cleared paths glow, the team
+  // stands on the next stage. Arrows turn to the other chapters.
+  const MAP_PATH = [[7, 72], [17, 44], [28, 66], [38, 34], [48, 58], [58, 28], [67, 62], [77, 38], [86, 66], [94, 36]];
+  let mapChapter = 0;        // the chapter on the map (0 = the next stage's)
+  let mapShow = null;        // its backdrop
+  const stopMap = () => { mapShow?.destroy(); mapShow = null; };
+  const chapterOf = (num) => E.CHAPTERS.findIndex(ch => num >= ch.from && num <= ch.to) + 1;
   function renderStages(panel) {
     const next = E.STAGES.find(stage => isOpen(stage.num) && !isCleared(stage.num));
-    const intro = el("p", "cards-intro");
-    intro.textContent = `พลังทีม ${fmt(teamPower())} · ${next ? `ด่านถัดไป: ${next.num} ${next.name}` : "ผ่านครบทุกด่านแล้ว!"}`;
-    panel.append(intro);
-    for (const chapter of E.CHAPTERS) {
-      const section = el("section", "shop-section");
-      const got = E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).reduce((sum, s) => sum + (cards().stars[s.num] || 0), 0);
-      const heading = el("h3", "shop-heading", chapter.name);
-      heading.append(el("span", "world-stars", `★ ${got}/${(chapter.to - chapter.from + 1) * 3}`));
-      // the star bonus of each five-stage group in this chapter
-      const groups = el("div", "star-groups");
-      for (const n of E.starGroups().filter(n => (n - 1) * E.STAR_GROUP + 1 >= chapter.from && n * E.STAR_GROUP <= chapter.to)) {
-        const have = E.groupStars(cards().stars, n), paid = cards().starPaid.includes(n);
-        const chip = el("span", `star-group${paid ? " is-paid" : ""}`, `${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} ★${have}/15 · ${paid ? "รับแล้ว ✓" : `💎 ${E.STAR_BONUS}`}`);
-        chip.title = `เก็บครบ 15 ดาวในด่าน ${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} รับ ${E.STAR_BONUS} เพชร`;
-        groups.append(chip);
-      }
-      const grid = el("div", "level-grid cards-stage-grid");
-      for (const stage of E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to)) {
-        const openStage = isOpen(stage.num), done = isCleared(stage.num);
-        const tile = button(`level-tile${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}`, null, () => stageSheet(stage));
-        tile.style.setProperty("--accent", stage.num > 60 ? "#7fe8ff" : stage.num > 50 ? "#ffd76a" : stage.num > 40 ? "#b067ff" : stage.num > 30 ? "#7fd4ff" : stage.num > 20 ? "#ff7a3c" : stage.num > 10 ? "#2fb6a6" : "#c5528a");
-        tile.disabled = !openStage;
-        tile.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
-        tile.append(el("b", null, openStage ? String(stage.num) : "🔒"), el("span", "level-name", stage.name));
-        const badge = el("span", `level-badge${done ? " level-stars" : ""}`, done ? stars(cards().stars[stage.num]) : openStage ? "ด่านใหม่" : "ล็อก");
-        tile.append(badge);
-        if (stage.boss) tile.append(el("i", "level-boss", "บอส"));
-        if (!done) {
-          const prize = el("i", "cards-prize", `💎${stage.gems}`);
-          prize.title = `รางวัลผ่านครั้งแรก: ${stage.gems} เพชร`;
-          tile.append(prize);
-        }
-        grid.append(tile);
-      }
-      section.append(heading, groups, grid);
-      panel.append(section);
+    const last = E.CHAPTERS.length;
+    const nextChapter = next ? chapterOf(next.num) : last;
+    if (!mapChapter) mapChapter = nextChapter;
+    const chapter = E.CHAPTERS[mapChapter - 1];
+    const list = E.STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to);
+    const got = list.reduce((sum, s) => sum + (cards().stars[s.num] || 0), 0);
+    const chapterOpen = isOpen(chapter.from);
+
+    // chapter switcher
+    const bar = el("div", "map-bar");
+    const prev = button("map-turn", "◀", () => { mapChapter = Math.max(1, mapChapter - 1); showHub(); tone(523, .05, "triangle", .04); }, "บทก่อนหน้า");
+    const fwd = button("map-turn", "▶", () => { mapChapter = Math.min(last, mapChapter + 1); showHub(); tone(587, .05, "triangle", .04); }, "บทถัดไป");
+    prev.disabled = mapChapter <= 1; fwd.disabled = mapChapter >= last;
+    const title = el("div", "map-title");
+    title.append(el("b", null, chapter.name), el("span", null, `★ ${got}/${list.length * 3} · พลังทีม ${fmt(teamPower())}${next ? ` · ด่านถัดไป ${next.num}` : " · ผ่านครบทุกด่านแล้ว!"}`));
+    bar.append(prev, title, fwd);
+    // the star bonus of each five-stage group in this chapter
+    const groups = el("div", "star-groups");
+    for (const n of E.starGroups().filter(n => (n - 1) * E.STAR_GROUP + 1 >= chapter.from && n * E.STAR_GROUP <= chapter.to)) {
+      const have = E.groupStars(cards().stars, n), paid = cards().starPaid.includes(n);
+      const chip = el("span", `star-group${paid ? " is-paid" : ""}`, `${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} ★${have}/15 · ${paid ? "รับแล้ว ✓" : `💎 ${E.STAR_BONUS}`}`);
+      chip.title = `เก็บครบ 15 ดาวในด่าน ${(n - 1) * E.STAR_GROUP + 1}–${n * E.STAR_GROUP} รับ ${E.STAR_BONUS} เพชร`;
+      groups.append(chip);
     }
+    const dots = el("div", "map-dots");
+    E.CHAPTERS.forEach((ch, n) => {
+      const dot = button(`map-dot${n + 1 === mapChapter ? " is-on" : ""}${isOpen(ch.from) ? "" : " is-locked"}`, String(n + 1), () => { mapChapter = n + 1; showHub(); }, ch.name);
+      dots.append(dot);
+    });
+
+    // the map
+    const scroller = el("div", "map-scroll");
+    const map = el("div", `stage-map${chapterOpen ? "" : " is-locked"}`);
+    map.style.setProperty("--accent", ["#ff8fc0", "#5fe0d0", "#ff8a4c", "#9fdcff", "#c48bff", "#ffd76a", "#8ff0ff", "#5affd2"][mapChapter - 1] || "#ffd76a");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    svg.classList.add("map-lines");
+    const pos = (n) => MAP_PATH[n % MAP_PATH.length];
+    for (let n = 0; n < list.length - 1; n++) {
+      const [x1, y1] = pos(n), [x2, y2] = pos(n + 1);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      // a gentle curve between two points
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2 + (n % 2 ? 6 : -6);
+      line.setAttribute("d", `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`);
+      line.setAttribute("vector-effect", "non-scaling-stroke");
+      line.classList.add(isCleared(list[n].num) ? (isCleared(list[n + 1].num) ? "is-done" : "is-open") : "is-locked");
+      svg.append(line);
+    }
+    map.append(svg);
+    list.forEach((stage, n) => {
+      const [x, y] = pos(n);
+      const openStage = isOpen(stage.num), done = isCleared(stage.num), here = next && next.num === stage.num;
+      const node = button(`map-node${done ? " is-cleared" : openStage ? " is-next" : " is-locked"}${stage.boss ? " is-boss" : ""}`, null, () => stageSheet(stage));
+      node.style.left = `${x}%`; node.style.top = `${y}%`;
+      node.disabled = !openStage;
+      node.setAttribute("aria-label", `ด่าน ${stage.num} ${stage.name}${done ? ` ผ่านแล้ว ${cards().stars[stage.num]} ดาว` : openStage ? " เล่นได้" : " ล็อกอยู่"}${stage.boss ? " มีบอส" : ""}`);
+      const ring = el("span", "map-ring");
+      ring.append(el("b", null, openStage ? (stage.boss ? "👑" : String(stage.num)) : "🔒"));
+      node.append(ring, el("span", "map-name", `${stage.num} · ${stage.name}`));
+      if (done) node.append(el("span", "map-stars", stars(cards().stars[stage.num])));
+      else if (openStage) node.append(el("span", "map-prize", `💎${stage.gems}${stage.wings ? ` 🪽${stage.wings}` : ""}`));
+      if (here) {
+        // the team leader stands on the next stage
+        const lead = cards().team.find(Boolean);
+        const marker = el("span", "map-marker");
+        if (lead) marker.append(portrait(lead));
+        node.append(marker);
+      }
+      map.append(node);
+    });
+    if (!chapterOpen) map.append(el("p", "map-lock", `🔒 ผ่านด่าน ${chapter.from - 1} เพื่อเปิดบทนี้`));
+    scroller.append(map);
+    panel.append(bar, dots, groups, scroller);
+    // the living backdrop, once the map is on the page
+    requestAnimationFrame(() => {
+      if (!map.isConnected) return;
+      stopMap();
+      mapShow = window.PupaCardsFx?.create(map, { chapter: mapChapter, map: true }) || null;
+      // bring the next stage into view on narrow screens
+      const target = map.querySelector(".map-node.is-next") || map.querySelector(".map-node.is-cleared:last-of-type");
+      if (target && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = Math.max(0, target.offsetLeft - scroller.clientWidth / 2);
+    });
   }
 
   function renderTeam(panel) {
@@ -803,6 +862,8 @@
     if (!c.team.some(Boolean)) return;
     if (stage.dungeon && doneToday(stage.dungeon)) { tone(150, .12, "square", .05); announce("ด่านนี้ผ่านแล้ววันนี้ มาใหม่พรุ่งนี้"); return; }
     closeSheet(true);
+    stopMap();
+    mapChapter = 0; // back from battle, the map follows the next stage
     const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: E.cardBonus(c, id) } : null));
     const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
     battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0 };
