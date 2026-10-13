@@ -23,6 +23,7 @@
   const MAX_LEVEL = BASE_CAP + 10 * MAX_AWAKE2;
   const capFor = (awake = 0) => BASE_CAP + 10 * Math.max(0, Math.min(MAX_AWAKE2, awake));
   const TEAM_SIZE = 5;
+  const MAX_TURNS = 99;
   const FRONT_SLOTS = 2;
   // Stats grow by a tenth of the level-1 value per level.
   const growth = (lv) => 1 + .1 * (lv - 1);
@@ -569,6 +570,35 @@
       ]
     }
   });
+  // Chapter 12: the storm peaks: lightning creatures, quick and shocking,
+  // that chain bolts across the team and stun.
+  const STORMGLOW = "rgba(255,240,120,.95)";
+  const STORM = "sepia(1) saturate(2.8) hue-rotate(195deg) contrast(1.2) brightness(1.05)";
+  Object.assign(FOES, {
+    stormshroom: { name: "เห็ดอสนี", role: "balance", art: "walker", look: STORM, glow: STORMGLOW, tier: 4.8, def: 1.2, skills: [{ name: "สปอร์ประจุไฟฟ้า", cd: 3, target: "front", power: 1.3, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    thunderbat: { name: "ค้างคาวฟ้าร้อง", role: "attack", art: "bat", look: STORM, glow: STORMGLOW, tier: 4.8, spd: 134, skills: [{ name: "โฉบสายฟ้า", cd: 3, target: "random", hits: 3, power: .6 }] },
+    voltcrab: { name: "ปูโวลต์", role: "attack", art: "crab", look: STORM, glow: STORMGLOW, tier: 4.8, def: 1.7, skills: [{ name: "ก้ามช็อตไฟฟ้า", cd: 3, target: "one", power: 2.6, fx: [{ k: "stun", chance: .4, turns: 1 }] }] },
+    cloudjelly: { name: "แมงกะพรุนเมฆฝน", role: "support", art: "jelly", look: STORM, glow: STORMGLOW, tier: 4.8, skills: [{ name: "ฝนชโลมพลัง", cd: 3, target: "allies", heal: 1.2, fx: [{ k: "atkUp", v: .2, turns: 2 }, { k: "cleanse" }] }] },
+    boltroller: { name: "ลูกบอลสายฟ้า", role: "defense", art: "roller", look: STORM, glow: STORMGLOW, tier: 4.8, atk: 1.4, def: 1.3, skills: [{ name: "กลิ้งพายุฟ้า", cd: 3, target: "front", power: 1.55, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    rodurchin: { name: "เม่นสายล่อฟ้า", role: "defense", art: "urchin", look: STORM, glow: STORMGLOW, tier: 4.8, skills: [{ name: "สายล่อฟ้า", cd: 4, target: "self", shield: 2.6, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .45, turns: 2 }] }] },
+    plasmaflower: { name: "ดอกไม้พลาสมา", role: "magic", art: "spitter", look: STORM, glow: STORMGLOW, tier: 4.8, skills: [{ name: "พายุพลาสมา", cd: 3, target: "all", power: 1.05, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
+    stormbird: { name: "นกอินทรีพายุ", role: "attack", art: "swooper", look: STORM, glow: STORMGLOW, tier: 4.8, spd: 132, skills: [{ name: "ดิ่งฟ้าผ่า", cd: 3, target: "back", power: 1.6, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    stormking: {
+      name: "ราชาเห็ดอสนี", role: "balance", art: "king", look: STORM, glow: STORMGLOW, tier: 4.8, boss: true, hp: 4.4, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "อัสนีบาตถล่ม", cd: 3, target: "all", power: 1.35, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "ค้อนฟ้าคำราม", cd: 4, first: 1, target: "front", power: 1.9, fx: [{ k: "defDown", v: .3, turns: 2 }] }
+      ]
+    },
+    stormqueen: {
+      name: "ราชินีพายุ", role: "magic", art: "queen", look: STORM, glow: STORMGLOW, tier: 4.8, boss: true, hp: 4, atk: 1.4, def: 1.3, spd: 134,
+      skills: [
+        { name: "ห่าฝนสายฟ้า", cd: 3, target: "random", hits: 5, power: .75, fx: [{ k: "stun", chance: .2, turns: 1 }] },
+        { name: "จุมพิตอัสนี", cd: 4, first: 1, target: "one", power: 3.1, drain: .5, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
+
   // ---- New faces ----
   // Bosses with art of their own: each takes the place of its chapter's
   // mushroom king on the chapter's last stage, with the king's strength.
@@ -623,7 +653,8 @@
     { name: "บทที่ 8 · มหาสมุทรห้วงลึก", from: 71, to: 80 },
     { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 },
     { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 },
-    { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 }
+    { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 },
+    { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -735,7 +766,17 @@
     ["หอระฆังอีกา", 52, ["coffinroller,coffinroller/bloodjelly,roseflower,vampbat", "thornurchin,gravecrab/ravenbird,ravenbird,bloodjelly", "gravecrab,bloodshroom/roseflower,roseflower,bloodjelly"]],
     ["ห้องใต้ดินโลงศพ", 50, ["thornurchin,thornurchin/roseflower,roseflower,ravenbird", "gravecrab,coffinroller/bloodjelly,bloodjelly,vampbat", "coffinroller,gravecrab/ravenbird,roseflower,bloodjelly"]],
     ["ระเบียงจันทร์เลือด", 53, ["gravecrab,coffinroller/bloodjelly,roseflower,ravenbird", "thornurchin,bloodshroom/bloodjelly,vampbat,roseflower", "bloodking/bloodjelly,ravenbird"]],
-    ["บัลลังก์ราชินีจันทร์เลือด", 45, ["coffinroller,gravecrab/bloodjelly,roseflower,ravenbird", "thornurchin,thornurchin/bloodjelly,bloodjelly,vampbat", "bloodking,bloodqueen/bloodjelly"]]
+    ["บัลลังก์ราชินีจันทร์เลือด", 45, ["coffinroller,gravecrab/bloodjelly,roseflower,ravenbird", "thornurchin,thornurchin/bloodjelly,bloodjelly,vampbat", "bloodking,bloodqueen/bloodjelly"]],
+    ["เชิงเขาเมฆดำ", 70, ["stormshroom,stormshroom/thunderbat", "voltcrab,stormshroom/plasmaflower", "voltcrab,boltroller/thunderbat,plasmaflower"]],
+    ["ทุ่งหินลอยฟ้า", 73, ["boltroller,stormshroom/cloudjelly", "rodurchin,voltcrab/plasmaflower,thunderbat", "boltroller,voltcrab/cloudjelly,stormbird"]],
+    ["ช่องเขาฟ้าคำราม", 76, ["voltcrab,voltcrab/plasmaflower,thunderbat", "rodurchin,boltroller/cloudjelly,plasmaflower", "voltcrab,boltroller/stormbird,stormbird,cloudjelly"]],
+    ["หอคอยสายล่อฟ้า", 79, ["rodurchin,stormshroom/plasmaflower,plasmaflower", "boltroller,boltroller/cloudjelly,thunderbat", "rodurchin,voltcrab/cloudjelly,plasmaflower,stormbird"]],
+    ["ลานพายุหมุน", 82, ["stormshroom,voltcrab/thunderbat,plasmaflower", "boltroller,rodurchin/cloudjelly,cloudjelly", "stormking/plasmaflower,thunderbat"]],
+    ["สะพานสายรุ้งอสนี", 84, ["voltcrab,boltroller/stormbird,thunderbat,plasmaflower", "rodurchin,stormshroom/cloudjelly,stormbird", "voltcrab,voltcrab/cloudjelly,plasmaflower,thunderbat"]],
+    ["ถ้ำผลึกประจุ", 86, ["boltroller,boltroller/cloudjelly,plasmaflower,thunderbat", "rodurchin,voltcrab/stormbird,stormbird,cloudjelly", "voltcrab,stormshroom/plasmaflower,plasmaflower,cloudjelly"]],
+    ["ตาพายุ", 88, ["rodurchin,rodurchin/plasmaflower,plasmaflower,stormbird", "voltcrab,boltroller/cloudjelly,cloudjelly,thunderbat", "boltroller,voltcrab/stormbird,plasmaflower,cloudjelly"]],
+    ["ยอดเขาอัสนี", 88, ["voltcrab,boltroller/cloudjelly,plasmaflower,stormbird", "rodurchin,stormshroom/cloudjelly,thunderbat,plasmaflower", "stormking/cloudjelly,stormbird"]],
+    ["บัลลังก์ราชินีพายุ", 76, ["boltroller,voltcrab/cloudjelly,plasmaflower,stormbird", "rodurchin,voltcrab/cloudjelly,plasmaflower,thunderbat", "stormking,stormqueen/cloudjelly"]]
   ];
   // the chapters' last stages meet their own bosses
   for (const u of UNIQUE_BOSSES) {
@@ -1051,6 +1092,12 @@
   function heroTurn(b, queue = [], focus = b.focus) {
     const events = [];
     if (b.phase !== "hero") return events;
+    // a fight that drags past MAX_TURNS is lost (it can be tried again)
+    if (b.turn >= MAX_TURNS) {
+      b.result = "lost"; b.phase = "done";
+      events.push({ t: "end", result: "lost", timeout: true });
+      return events;
+    }
     b.turn++;
     b.focus = focus;
     events.push({ t: "turn", side: "hero", turn: b.turn });
@@ -1432,7 +1479,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

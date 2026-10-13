@@ -810,7 +810,7 @@
     // the map
     const scroller = el("div", "map-scroll");
     const map = el("div", `stage-map${chapterOpen ? "" : " is-locked"}`);
-    map.style.setProperty("--accent", ["#ff8fc0", "#5fe0d0", "#ff8a4c", "#9fdcff", "#c48bff", "#ffd76a", "#8ff0ff", "#5affd2", "#ffb86b", "#7dffb0", "#ff5a78"][mapChapter - 1] || "#ffd76a");
+    map.style.setProperty("--accent", ["#ff8fc0", "#5fe0d0", "#ff8a4c", "#9fdcff", "#c48bff", "#ffd76a", "#8ff0ff", "#5affd2", "#ffb86b", "#7dffb0", "#ff5a78", "#fff078"][mapChapter - 1] || "#ffd76a");
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 100 100");
     svg.setAttribute("preserveAspectRatio", "none");
@@ -1187,7 +1187,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.chapter : Math.min(11, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.chapter : Math.min(12, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -1566,7 +1566,7 @@
       box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}${first && stage.dust ? `✧ ผลึกดาว ${stage.dust} · ` : ""}${first && stage.wings ? `🪽 ${stage.wings} · ` : ""}● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
       if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
       if (gems) [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
-    } else box.append(el("p", null, `ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
+    } else box.append(el("p", null, `${b.turn >= E.MAX_TURNS ? `⏱ หมดเวลา ${E.MAX_TURNS} เทิร์น · ` : ""}ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
     const actions = el("div", "title-actions");
     const next = E.STAGES[stage.num];
     if (won && next && isOpen(next.num)) actions.append(button("primary-button", "ด่านต่อไป ▶", () => { battle = null; startBattle(next); }));
