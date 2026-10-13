@@ -80,10 +80,11 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter >= 13;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter >= 14;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (neon) { sky.addColorStop(0, "#0a0418"); sky.addColorStop(.5, "#2a0e48"); sky.addColorStop(1, "#0e1a30"); }
-      if (storm) { sky.addColorStop(0, "#0c0e24"); sky.addColorStop(.5, "#2c2f5e"); sky.addColorStop(1, "#14142e"); }
+      if (sand) { sky.addColorStop(0, "#ff9a4a"); sky.addColorStop(.55, "#ffd08a"); sky.addColorStop(1, "#fff0c8"); }
+      else if (neon) { sky.addColorStop(0, "#0a0418"); sky.addColorStop(.5, "#2a0e48"); sky.addColorStop(1, "#0e1a30"); }
+      else if (storm) { sky.addColorStop(0, "#0c0e24"); sky.addColorStop(.5, "#2c2f5e"); sky.addColorStop(1, "#14142e"); }
       else if (blood) { sky.addColorStop(0, "#12020a"); sky.addColorStop(.5, "#5a0a1e"); sky.addColorStop(1, "#1a0410"); }
       else if (jade) { sky.addColorStop(0, "#14403a"); sky.addColorStop(.5, "#7fbf9a"); sky.addColorStop(1, "#f2e2b0"); }
       else if (steam) { sky.addColorStop(0, "#2a1e48"); sky.addColorStop(.45, "#c8643a"); sky.addColorStop(1, "#3a2216"); }
@@ -115,14 +116,14 @@
         s.restore();
       }
       // stars
-      for (let i = 0; i < (abyss || jade || storm ? 0 : neon ? 40 : steam || blood ? 25 : 70); i++) {
+      for (let i = 0; i < (abyss || jade || storm || sand ? 0 : neon ? 40 : steam || blood ? 25 : 70); i++) {
         const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
       // moon (under the sea: the shimmer of the surface)
-      if (abyss || steam || jade || blood || storm || neon) s.globalAlpha = 0;
+      if (abyss || steam || jade || blood || storm || neon || sand) s.globalAlpha = 0;
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, cosmos ? "rgba(120,220,255,.4)" : holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
@@ -152,6 +153,31 @@
           for (let k = 0; k < 7; k++) { const a = k * TAU / 7, rr = r * (.8 + ((i + k) % 3) * .12); s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
           s.fill(); s.fillStyle = "rgba(255,255,255,.12)"; s.beginPath(); s.arc(x - r * .3, y - r * .3, r * .3, 0, TAU); s.fill();
         }
+      }
+      if (sand) {
+        // a blazing sun over pyramids, an obelisk and far dunes in the heat
+        const sx = w * .74, sy = ground * .3, sr = Math.min(w, h) * .09;
+        const sun = s.createRadialGradient(sx, sy, sr * .4, sx, sy, sr * 3.2);
+        sun.addColorStop(0, "rgba(255,250,220,.95)"); sun.addColorStop(.35, "rgba(255,220,120,.5)"); sun.addColorStop(1, "rgba(255,180,80,0)");
+        s.fillStyle = sun; s.fillRect(0, 0, w, h);
+        s.fillStyle = "#fffbe8"; s.beginPath(); s.arc(sx, sy, sr, 0, TAU); s.fill();
+        for (const [base, colour, k] of [[ground * .86, "rgba(230,150,80,.55)", 1.3], [ground * .96, "rgba(210,130,60,.75)", 1]]) {
+          s.fillStyle = colour; s.beginPath(); s.moveTo(0, base);
+          for (let x = 0; x <= w + 30; x += 30) s.lineTo(x, base - Math.abs(Math.sin(x * .006 * k + k)) * h * .07 * k);
+          s.lineTo(w, h); s.lineTo(0, h); s.fill();
+        }
+        const pyramid = (x, base, half, tone) => {
+          s.fillStyle = tone[0]; s.beginPath(); s.moveTo(x - half, base); s.lineTo(x, base - half * 1.05); s.lineTo(x + half * .25, base); s.fill();
+          s.fillStyle = tone[1]; s.beginPath(); s.moveTo(x + half * .25, base); s.lineTo(x, base - half * 1.05); s.lineTo(x + half, base); s.fill();
+        };
+        pyramid(w * .2, ground, w * .13, ["#e8a85a", "#b9743a"]);
+        pyramid(w * .38, ground, w * .08, ["#e2a050", "#b06a34"]);
+        pyramid(w * .9, ground, w * .07, ["#e8aa5c", "#b8743c"]);
+        s.fillStyle = "#a8622e"; const ox = w * .58, ow = w * .018, oh = h * .3;
+        s.beginPath(); s.moveTo(ox - ow, ground); s.lineTo(ox - ow * .7, ground - oh); s.lineTo(ox, ground - oh - ow * 1.4); s.lineTo(ox + ow * .7, ground - oh); s.lineTo(ox + ow, ground); s.fill();
+        s.fillStyle = "rgba(255,240,180,.7)"; for (let k = 1; k < 5; k++) s.fillRect(ox - 2, ground - oh * k / 5, 4, 3);
+        s.strokeStyle = "rgba(255,255,255,.18)"; s.lineWidth = 2;
+        for (let i = 0; i < 5; i++) { const y = ground * (.55 + i * .08); s.beginPath(); for (let x = 0; x <= w; x += 20) s.lineTo(x, y + Math.sin(x * .03 + i) * 3); s.stroke(); }
       }
       if (neon) {
         // a forest of giant glowing mushrooms, hanging vines and drifting spores
@@ -339,11 +365,23 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = neon ? "#1a0a34" : storm ? "#26264a" : blood ? "#1c0812" : jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = sand ? "#d8904a" : neon ? "#1a0a34" : storm ? "#26264a" : blood ? "#1c0812" : jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (neon) {
+      if (sand) {
+        // rippled golden sand with bleached bones and stones
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#e9b066"); floor.addColorStop(1, "#a0602a");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        s.strokeStyle = "rgba(255,230,170,.35)"; s.lineWidth = 2;
+        for (let i = 0; i < 14; i++) {
+          const y = ground + 12 + ((i * 37.3) % (h - ground - 16)), x0 = (i * 113.7) % w, len = 80 + (i % 4) * 30;
+          s.beginPath(); for (let x = 0; x <= len; x += 10) s.lineTo(x0 + x, y + Math.sin(x * .08) * 3); s.stroke();
+        }
+        s.fillStyle = "rgba(120,70,30,.45)";
+        for (let i = 0; i < 9; i++) { const x = (i * 157.1) % w, y = ground + 18 + ((i * 59.3) % (h - ground - 26)), k = .6 + (y - ground) / (h - ground); s.beginPath(); s.ellipse(x, y, 10 * k, 5 * k, 0, 0, TAU); s.fill(); }
+      } else if (neon) {
         // mossy forest floor speckled with glowing caps
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#2a1450"); floor.addColorStop(1, "#08041a");
@@ -495,7 +533,7 @@
       if (!map) {
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = neon ? "rgba(120,255,240,.65)" : storm ? "rgba(255,240,120,.6)" : blood ? "rgba(255,70,100,.6)" : jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = sand ? "rgba(255,240,170,.75)" : neon ? "rgba(120,255,240,.65)" : storm ? "rgba(255,240,120,.6)" : blood ? "rgba(255,70,100,.6)" : jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -503,7 +541,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, neon ? "rgba(180,100,255,.25)" : storm ? "rgba(255,240,140,.22)" : blood ? "rgba(255,40,70,.25)" : jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, sand ? "rgba(255,220,120,.3)" : neon ? "rgba(180,100,255,.25)" : storm ? "rgba(255,240,140,.22)" : blood ? "rgba(255,40,70,.25)" : jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       }
@@ -522,10 +560,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter >= 13;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter >= 14;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: neon ? (Math.random() < .5 ? "rgba(120,255,240,.9)" : "rgba(255,120,230,.9)") : storm ? "rgba(190,210,255,.7)" : blood ? (Math.random() < .6 ? "rgba(255,60,80,.85)" : "rgba(255,180,190,.6)") : jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam || blood || neon, ember: fire || ice || dark || holy || cosmos || steam || blood || neon
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: sand ? (Math.random() < .6 ? "rgba(255,225,160,.75)" : "rgba(230,160,80,.8)") : neon ? (Math.random() < .5 ? "rgba(120,255,240,.9)" : "rgba(255,120,230,.9)") : storm ? "rgba(190,210,255,.7)" : blood ? (Math.random() < .6 ? "rgba(255,60,80,.85)" : "rgba(255,180,190,.6)") : jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam || blood || neon, ember: fire || ice || dark || holy || cosmos || steam || blood || neon || sand
       };
     }
 

@@ -6327,10 +6327,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13m";
+  const NEWS_VERSION = "2026-10-13n";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 14 · ทะเลทรายสุริยะ", text: "ด่าน 131–140 กลางทะเลทรายใต้ดวงอาทิตย์แผดเผา ปิรามิดและเสาโอเบลิสก์ มอนสเตอร์ทะเลทราย 8 ชนิด แมงป่องทองทะลวงเกราะ ด้วงสุริยะ แร้งดูดเลือด บอสฟาโรห์เห็ดทราย และราชินีสฟิงซ์ แนะนำการ์ด Lv 130 ดาวทองครบ", image: "chapter14", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "🔗 ความสัมพันธ์การ์ด", text: "ลงการ์ดที่มีความสัมพันธ์กันในทีมเดียวกันอย่างน้อย 2 ใบ สมาชิกทุกใบโจมตีแรงขึ้น 10–15% และถ้าการ์ดอยู่หลายความสัมพันธ์ก็ได้โบนัสซ้อนกัน มีทั้งหมด 13 ความสัมพันธ์ เช่น แฝดซามูไร (ชาดา+อัญชัน) แฝดพยัคฆ์ (พยัคฆ์+วายุ) กำแพงเหล็ก (ศิลา วชิระ ทองคำ) และเปลวเพลิงนิรันดร์ (เพลิง วิหคเพลิงทอง มังกรน้อย) ดูความสัมพันธ์ของแต่ละการ์ดได้ที่หน้าการ์ด", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ของขวัญ", title: "แจกเพชร 10,000 ทุกคน!", text: "ของขวัญพิเศษสำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดอัตโนมัติเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ไปสุ่มการ์ด S ใหม่ได้เลยที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "S ใหม่ 5 ใบ · สายต่อสู้และป้องกัน", text: "ชาดา ซามูไรดาบโลหิตคริติคอลสูง · อัญชัน ซามูไรแฝดดาบน้ำแข็งทั้งฟันทั้งป้อง · พยัคฆ์ นักสู้หมัดเสือตีซ้ำได้ · วายุ แฝดเสือครามยืนรับแทนเพื่อน · ศิลา อัศวินโล่ศิลากางเกราะให้ทั้งทีม สุ่มได้ที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
@@ -6478,10 +6479,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13", "chapter14"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter14" ? "news-scene-sand" : kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter14" ? "<b>131–140 ☀</b>" : kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

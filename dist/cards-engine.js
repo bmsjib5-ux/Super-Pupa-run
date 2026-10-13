@@ -673,6 +673,35 @@
     }
   });
 
+  // Chapter 14: the sun-scorched desert: sand creatures that blind with
+  // glare, burn, sting through armour and hide behind dunes.
+  const SANDGLOW = "rgba(255,190,90,.95)";
+  const SAND = "sepia(1) saturate(2.4) hue-rotate(-8deg) contrast(1.15) brightness(1.18)";
+  Object.assign(FOES, {
+    sandshroom: { name: "เห็ดเนินทราย", role: "balance", art: "walker", look: SAND, glow: SANDGLOW, tier: 5.6, def: 1.25, skills: [{ name: "สปอร์ทรายร้อน", cd: 3, target: "front", power: 1.35, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    dunebat: { name: "ค้างคาวพายุทราย", role: "attack", art: "bat", look: SAND, glow: SANDGLOW, tier: 5.6, spd: 136, skills: [{ name: "โฉบพายุทราย", cd: 3, target: "back", power: 1.35, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    scorpcrab: { name: "แมงป่องทองคำ", role: "attack", art: "crab", look: SAND, glow: SANDGLOW, tier: 5.6, def: 1.7, skills: [{ name: "เหล็กในทะลวงเกราะ", cd: 3, target: "one", power: 2.6, fx: [{ k: "defDown", v: .35, turns: 2 }, { k: "burn", power: .3, turns: 2 }] }] },
+    mirajelly: { name: "แมงกะพรุนภาพลวงตา", role: "support", art: "jelly", look: SAND, glow: SANDGLOW, tier: 5.6, skills: [{ name: "โอเอซิสลวงตา", cd: 3, target: "allies", heal: 1.25, fx: [{ k: "defUp", v: .2, turns: 2 }] }] },
+    scarab: { name: "ด้วงกลิ้งสุริยะ", role: "defense", art: "roller", look: SAND, glow: SANDGLOW, tier: 5.6, atk: 1.4, def: 1.35, skills: [{ name: "กลิ้งลูกไฟทราย", cd: 3, target: "front", power: 1.55, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    cactusurchin: { name: "เม่นกระบองเพชร", role: "defense", art: "urchin", look: SAND, glow: SANDGLOW, tier: 5.6, skills: [{ name: "หนามกระบองเพชร", cd: 4, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    sunflower: { name: "ดอกตะวันแผดเผา", role: "magic", art: "spitter", look: SAND, glow: SANDGLOW, tier: 5.6, skills: [{ name: "แสงตะวันเที่ยงวัน", cd: 3, target: "all", power: 1.05, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    vulture: { name: "แร้งทะเลทราย", role: "attack", art: "swooper", look: SAND, glow: SANDGLOW, tier: 5.6, spd: 134, skills: [{ name: "จิกซากกระดูก", cd: 3, target: "back", power: 1.6, drain: .3 }] },
+    sandking: {
+      name: "ฟาโรห์เห็ดทราย", role: "balance", art: "king", look: SAND, glow: SANDGLOW, tier: 5.6, boss: true, hp: 4.4, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "พายุทรายฟาโรห์", cd: 3, target: "all", power: 1.3, fx: [{ k: "stun", chance: .2, turns: 1 }, { k: "defDown", v: .2, turns: 2 }] },
+        { name: "คำสาปสุสาน", cd: 4, first: 1, target: "front", power: 1.9, drain: .5, fx: [{ k: "burn", power: .4, turns: 2 }] }
+      ]
+    },
+    sphinxqueen: {
+      name: "ราชินีสฟิงซ์", role: "magic", art: "queen", look: SAND, glow: SANDGLOW, tier: 5.6, boss: true, hp: 4, atk: 1.4, def: 1.3, spd: 136,
+      skills: [
+        { name: "ปริศนาแห่งสุริยะ", cd: 3, target: "all", power: 1.45, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จ้องตาสฟิงซ์", cd: 4, first: 1, target: "one", power: 3.1, drain: .6, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
+
   // ---- New faces ----
   // Bosses with art of their own: each takes the place of its chapter's
   // mushroom king on the chapter's last stage, with the king's strength.
@@ -729,7 +758,8 @@
     { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 },
     { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 },
     { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 },
-    { name: "บทที่ 13 · ป่าเห็ดนีออน", from: 121, to: 130 }
+    { name: "บทที่ 13 · ป่าเห็ดนีออน", from: 121, to: 130 },
+    { name: "บทที่ 14 · ทะเลทรายสุริยะ", from: 131, to: 140 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -861,7 +891,17 @@
     ["สะพานรากไม้", 94, ["puffroller,puffroller/sporejelly,glowflower,sporebat", "capurchin,mosscrab/mothbird,mothbird,sporejelly", "mosscrab,neonshroom/glowflower,glowflower,sporejelly"]],
     ["หัวใจป่าเห็ด", 91, ["capurchin,mosscrab/glowflower,glowflower,mothbird", "mosscrab,puffroller/sporejelly,sporejelly,sporebat", "puffroller,mosscrab/mothbird,glowflower,sporejelly"]],
     ["แท่นสปอร์ราชา", 85, ["mosscrab,puffroller/sporejelly,glowflower,mothbird", "capurchin,neonshroom/sporejelly,sporebat,glowflower", "neonking/sporejelly,mothbird"]],
-    ["บัลลังก์ราชินีสปอร์", 82, ["puffroller,mosscrab/sporejelly,glowflower,mothbird", "capurchin,mosscrab/sporejelly,glowflower,sporebat", "sporequeen/sporejelly,sporebat"]]
+    ["บัลลังก์ราชินีสปอร์", 82, ["puffroller,mosscrab/sporejelly,glowflower,mothbird", "capurchin,mosscrab/sporejelly,glowflower,sporebat", "sporequeen/sporejelly,sporebat"]],
+    ["ประตูทะเลทราย", 90, ["sandshroom,sandshroom/dunebat", "scorpcrab,sandshroom/sunflower", "scorpcrab,scarab/dunebat,sunflower"]],
+    ["โอเอซิสลวงตา", 93, ["scarab,sandshroom/mirajelly", "cactusurchin,scorpcrab/sunflower,dunebat", "scarab,scorpcrab/mirajelly,vulture"]],
+    ["เนินทรายร้องเพลง", 96, ["scorpcrab,scorpcrab/sunflower,dunebat", "cactusurchin,scarab/mirajelly,sunflower", "scorpcrab,scarab/vulture,vulture,mirajelly"]],
+    ["หุบผาแมงป่อง", 98, ["cactusurchin,sandshroom/sunflower,sunflower", "scarab,scarab/mirajelly,dunebat", "cactusurchin,scorpcrab/mirajelly,sunflower,vulture"]],
+    ["เสาโอเบลิสก์", 100, ["sandshroom,scorpcrab/dunebat,sunflower", "scarab,cactusurchin/mirajelly,mirajelly", "sandking/sunflower,dunebat"]],
+    ["พายุทรายคลั่ง", 102, ["scorpcrab,scarab/vulture,dunebat,sunflower", "cactusurchin,sandshroom/mirajelly,vulture", "scorpcrab,scorpcrab/mirajelly,sunflower,dunebat"]],
+    ["สุสานใต้ผืนทราย", 103, ["scarab,scarab/mirajelly,sunflower,dunebat", "cactusurchin,scorpcrab/vulture,vulture,mirajelly", "scorpcrab,sandshroom/sunflower,sunflower,mirajelly"]],
+    ["วิหารสุริยัน", 104, ["cactusurchin,scorpcrab/sunflower,sunflower,vulture", "scorpcrab,scarab/mirajelly,mirajelly,dunebat", "scarab,scorpcrab/vulture,sunflower,mirajelly"]],
+    ["ห้องบัลลังก์ฟาโรห์", 98, ["scorpcrab,scarab/mirajelly,sunflower,vulture", "cactusurchin,sandshroom/mirajelly,dunebat,sunflower", "sandking/mirajelly,vulture"]],
+    ["ปิรามิดราชินีสฟิงซ์", 91, ["scarab,scorpcrab/mirajelly,sunflower,vulture", "cactusurchin,scorpcrab/mirajelly,sunflower,dunebat", "sphinxqueen/mirajelly,dunebat"]]
   ];
   // the chapters' last stages meet their own bosses
   for (const u of UNIQUE_BOSSES) {

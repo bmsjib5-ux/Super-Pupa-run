@@ -1148,5 +1148,6 @@ button { touch-action: manipulation; }
 .news-scene-steam { filter: sepia(.9) saturate(2.2) hue-rotate(-15deg) brightness(.85) contrast(1.15); }
 .news-scene-jade { filter: hue-rotate(95deg) saturate(1.6) brightness(.9) contrast(1.1); }
 .news-scene-blood { filter: hue-rotate(-60deg) saturate(2.2) brightness(.75) contrast(1.2); }
+.news-scene-sand { filter: sepia(.8) saturate(1.8) hue-rotate(-10deg) brightness(1.05); }
 .news-scene-neon { filter: hue-rotate(250deg) saturate(2.2) brightness(.85) contrast(1.2); }
 .news-scene-storm { filter: hue-rotate(200deg) saturate(1.6) brightness(.7) contrast(1.2); }
