@@ -599,6 +599,35 @@
     }
   });
 
+  // Chapter 13: the neon fungus forest: glowing spore creatures that poison,
+  // soften armour, feed each other and burst.
+  const NEONGLOW = "rgba(120,255,240,.95)";
+  const NEON = "sepia(1) saturate(3.4) hue-rotate(255deg) contrast(1.2) brightness(1.1)";
+  Object.assign(FOES, {
+    neonshroom: { name: "เห็ดนีออน", role: "balance", art: "walker", look: NEON, glow: NEONGLOW, tier: 5.2, def: 1.2, skills: [{ name: "สปอร์เรืองแสง", cd: 3, target: "front", power: 1.3, fx: [{ k: "burn", power: .35, turns: 2 }] }] },
+    sporebat: { name: "ค้างคาวสปอร์", role: "attack", art: "bat", look: NEON, glow: NEONGLOW, tier: 5.2, spd: 134, skills: [{ name: "โปรยสปอร์พิษ", cd: 3, target: "back", power: 1.3, fx: [{ k: "burn", power: .3, turns: 2 }, { k: "defDown", v: .15, turns: 2 }] }] },
+    mosscrab: { name: "ปูตะไคร่เรืองแสง", role: "attack", art: "crab", look: NEON, glow: NEONGLOW, tier: 5.2, def: 1.7, skills: [{ name: "ก้ามเชื้อรา", cd: 3, target: "one", power: 2.6, drain: .3, fx: [{ k: "defDown", v: .3, turns: 2 }] }] },
+    sporejelly: { name: "แมงกะพรุนสปอร์", role: "support", art: "jelly", look: NEON, glow: NEONGLOW, tier: 5.2, skills: [{ name: "ละอองชุบชีวิต", cd: 3, target: "allies", heal: 1.25, fx: [{ k: "atkUp", v: .2, turns: 2 }] }] },
+    puffroller: { name: "ลูกพัฟบอล", role: "defense", art: "roller", look: NEON, glow: NEONGLOW, tier: 5.2, atk: 1.4, def: 1.3, skills: [{ name: "พัฟบอลระเบิด", cd: 3, target: "front", power: 1.55, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    capurchin: { name: "เม่นหมวกเห็ด", role: "defense", art: "urchin", look: NEON, glow: NEONGLOW, tier: 5.2, skills: [{ name: "หมวกเห็ดกำบัง", cd: 4, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    glowflower: { name: "ดอกไม้นีออน", role: "magic", art: "spitter", look: NEON, glow: NEONGLOW, tier: 5.2, skills: [{ name: "แสงนีออนแผดเผา", cd: 3, target: "all", power: 1.05, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    mothbird: { name: "ผีเสื้อกลางคืนเรืองแสง", role: "attack", art: "swooper", look: NEON, glow: NEONGLOW, tier: 5.2, spd: 132, skills: [{ name: "ฝุ่นปีกมึนงง", cd: 3, target: "back", power: 1.55, fx: [{ k: "stun", chance: .35, turns: 1 }] }] },
+    neonking: {
+      name: "ราชาเห็ดนีออน", role: "balance", art: "king", look: NEON, glow: NEONGLOW, tier: 5.2, boss: true, hp: 4.4, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "ป่าสปอร์ปะทุ", cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .4, turns: 2 }, { k: "defDown", v: .2, turns: 2 }] },
+        { name: "รากใยราดูดกลืน", cd: 4, first: 1, target: "front", power: 1.9, drain: .5, fx: [{ k: "stun", chance: .35, turns: 1 }] }
+      ]
+    },
+    sporequeen: {
+      name: "ราชินีสปอร์", role: "magic", art: "queen", look: NEON, glow: NEONGLOW, tier: 5.2, boss: true, hp: 4, atk: 1.4, def: 1.3, spd: 134,
+      skills: [
+        { name: "พายุสปอร์นีออน", cd: 3, target: "all", power: 1.45, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จุมพิตเห็ดพิษ", cd: 4, first: 1, target: "one", power: 3.1, drain: .6, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
+
   // ---- New faces ----
   // Bosses with art of their own: each takes the place of its chapter's
   // mushroom king on the chapter's last stage, with the king's strength.
@@ -654,7 +683,8 @@
     { name: "บทที่ 9 · นครจักรกลลอยฟ้า", from: 81, to: 90 },
     { name: "บทที่ 10 · หุบเขามังกรหยก", from: 91, to: 100 },
     { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 },
-    { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 }
+    { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 },
+    { name: "บทที่ 13 · ป่าเห็ดนีออน", from: 121, to: 130 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -776,7 +806,17 @@
     ["ถ้ำผลึกประจุ", 86, ["boltroller,boltroller/cloudjelly,plasmaflower,thunderbat", "rodurchin,voltcrab/stormbird,stormbird,cloudjelly", "voltcrab,stormshroom/plasmaflower,plasmaflower,cloudjelly"]],
     ["ตาพายุ", 88, ["rodurchin,rodurchin/plasmaflower,plasmaflower,stormbird", "voltcrab,boltroller/cloudjelly,cloudjelly,thunderbat", "boltroller,voltcrab/stormbird,plasmaflower,cloudjelly"]],
     ["ยอดเขาอัสนี", 88, ["voltcrab,boltroller/cloudjelly,plasmaflower,stormbird", "rodurchin,stormshroom/cloudjelly,thunderbat,plasmaflower", "stormking/cloudjelly,stormbird"]],
-    ["บัลลังก์ราชินีพายุ", 76, ["boltroller,voltcrab/cloudjelly,plasmaflower,stormbird", "rodurchin,voltcrab/cloudjelly,plasmaflower,thunderbat", "stormking,stormqueen/cloudjelly"]]
+    ["บัลลังก์ราชินีพายุ", 76, ["boltroller,voltcrab/cloudjelly,plasmaflower,stormbird", "rodurchin,voltcrab/cloudjelly,plasmaflower,thunderbat", "stormking,stormqueen/cloudjelly"]],
+    ["ปากทางป่าเรืองแสง", 80, ["neonshroom,neonshroom/sporebat", "mosscrab,neonshroom/glowflower", "mosscrab,puffroller/sporebat,glowflower"]],
+    ["ลำธารนีออน", 83, ["puffroller,neonshroom/sporejelly", "capurchin,mosscrab/glowflower,sporebat", "puffroller,mosscrab/sporejelly,mothbird"]],
+    ["ดงเห็ดยักษ์", 86, ["mosscrab,mosscrab/glowflower,sporebat", "capurchin,puffroller/sporejelly,glowflower", "mosscrab,puffroller/mothbird,mothbird,sporejelly"]],
+    ["ถ้ำใยรา", 89, ["capurchin,neonshroom/glowflower,glowflower", "puffroller,puffroller/sporejelly,sporebat", "capurchin,mosscrab/sporejelly,glowflower,mothbird"]],
+    ["วงแหวนเห็ดภูต", 92, ["neonshroom,mosscrab/sporebat,glowflower", "puffroller,capurchin/sporejelly,sporejelly", "neonking/glowflower,sporebat"]],
+    ["บึงสปอร์", 94, ["mosscrab,puffroller/mothbird,sporebat,glowflower", "capurchin,neonshroom/sporejelly,mothbird", "mosscrab,mosscrab/sporejelly,glowflower,sporebat"]],
+    ["สะพานรากไม้", 94, ["puffroller,puffroller/sporejelly,glowflower,sporebat", "capurchin,mosscrab/mothbird,mothbird,sporejelly", "mosscrab,neonshroom/glowflower,glowflower,sporejelly"]],
+    ["หัวใจป่าเห็ด", 91, ["capurchin,mosscrab/glowflower,glowflower,mothbird", "mosscrab,puffroller/sporejelly,sporejelly,sporebat", "puffroller,mosscrab/mothbird,glowflower,sporejelly"]],
+    ["แท่นสปอร์ราชา", 85, ["mosscrab,puffroller/sporejelly,glowflower,mothbird", "capurchin,neonshroom/sporejelly,sporebat,glowflower", "neonking/sporejelly,mothbird"]],
+    ["บัลลังก์ราชินีสปอร์", 82, ["puffroller,mosscrab/sporejelly,glowflower,mothbird", "capurchin,mosscrab/sporejelly,glowflower,sporebat", "sporequeen/sporejelly,sporebat"]]
   ];
   // the chapters' last stages meet their own bosses
   for (const u of UNIQUE_BOSSES) {

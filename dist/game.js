@@ -6332,10 +6332,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13j";
+  const NEWS_VERSION = "2026-10-13k";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 13 · ป่าเห็ดนีออน", text: "ด่าน 121–130 ในป่าเห็ดยักษ์เรืองแสง สปอร์สีฟ้าและชมพูลอยทั่วป่า มอนสเตอร์ป่าเห็ด 8 ชนิด บอสราชาเห็ดนีออน และราชินีสปอร์ แนะนำการ์ด Lv 120 ปลุกพลังดาวทอง", image: "chapter13", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 12 · ยอดเขาพายุอสนี", text: "ด่าน 111–120 บนยอดเขาในพายุ เมฆดำ ฟ้าผ่า และหินลอยฟ้า มอนสเตอร์สายฟ้า 8 ชนิดที่เร็วจัด ช็อตให้มึนงง และยิงสายฟ้าหลายเป้า บอสราชาเห็ดอสนี และราชินีพายุ บทนี้ต้องปลุกพลังขั้น 2 การ์ดถึงดาวทอง", image: "chapter12", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "การ์ดโฮโลแกรม", text: "การ์ดทุกใบเป็นการ์ดโฮโลแกรม ลากนิ้วหรือเมาส์บนการ์ดแล้วการ์ดเอียงตาม มีประกายรุ้งและแสงสะท้อน การ์ดระดับสูงยิ่งเงาวาว S และ SSS ประกายวิ่งตลอด SSS มีดาวระยิบระยับ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "🗼 หอคอยบอส 100 ชั้น · บอสใหม่", text: "แท็บใหม่ หอคอย สู้บอสทุกชั้น 100 ชั้น ทุก 10 ชั้นเจอบอสใหญ่ ผ่านครั้งแรกได้เพชร ผลึกดาว และปีก มอนสเตอร์ใหม่ 6 ชนิด สไลม์ ภูตผี วิญญาณไฟ หีบมิมิค ยักษ์หินจิ๋ว แมงมุมคริสตัล และบอสใหม่ประจำบท นาคีวารี ยักษ์ลาวา มังกรน้ำแข็ง ยมทูตเงา คราเคนยักษ์ ในด่านสุดท้ายของบท", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6479,10 +6480,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {
