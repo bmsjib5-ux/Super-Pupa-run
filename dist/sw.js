@@ -1,6 +1,6 @@
 // Offline support for the installed game. Network first, so a new release is
 // picked up as soon as the device is online; the cache is only a fallback.
-const CACHE = "super-pupa-run-v27-arenateam";
+const CACHE = "super-pupa-run-v28-tower";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -66,6 +66,11 @@ const APP_SHELL = [
   "./assets/vajira-hero.webp",
   "./assets/naphalai-hero.webp",
   "./assets/qilin-pet.webp",
+  "./assets/boss-serpent.webp",
+  "./assets/boss-golem.webp",
+  "./assets/boss-icedragon.webp",
+  "./assets/boss-reaper.webp",
+  "./assets/boss-kraken.webp",
   "./assets/news-world6.webp",
   "./assets/news-world7.webp",
   "./assets/news-world8.webp",

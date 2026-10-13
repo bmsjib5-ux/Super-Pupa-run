@@ -617,3 +617,25 @@ button.unit { cursor: crosshair; }
 /* the story team's badge means nothing here */
 .arena-rows .tcard.is-picked::after, .arena-pool .tcard.is-picked::after, .arena-box .tcard.is-picked::after { display: none; }
 .arena-rows .tcard.is-picked .tcard-rare, .arena-pool .tcard.is-picked .tcard-rare, .arena-box .tcard.is-picked .tcard-rare { top: .25rem; }
+
+/* seven tabs: they scroll sideways on narrow screens */
+.cards-tabs { overflow-x: auto; scrollbar-width: none; }
+.cards-tabs::-webkit-scrollbar { display: none; }
+.cards-tabs > button { flex: 1 0 auto; min-width: 4.6rem; }
+
+/* ---- The tower ---- */
+.tower { position: relative; display: grid; gap: .35rem; margin: .4rem auto .8rem; max-width: 40rem; padding: .5rem; border: 2px solid rgba(255,215,106,.45); border-radius: 1rem .1rem 1rem .1rem; background: linear-gradient(90deg, rgba(40,20,70,.9), rgba(70,40,110,.8) 50%, rgba(40,20,70,.9)); box-shadow: inset 0 0 1.5rem rgba(0,0,0,.5); }
+.tower-floor { display: flex; align-items: center; gap: .6rem; padding: .4rem .6rem; border: 1px solid rgba(255,255,255,.12); border-radius: .6rem; background: rgba(13,8,36,.7); }
+.tower-floor.is-next { border-color: var(--gold); box-shadow: 0 0 .9rem rgba(255,215,106,.4); background: linear-gradient(90deg, rgba(120,70,20,.45), rgba(13,8,36,.7)); }
+.tower-floor.is-locked { opacity: .55; }
+.tower-floor.is-cleared { opacity: .8; }
+.tower-floor.is-great { border-color: #ff6a7a; }
+.tower-num { flex: none; width: 2.2rem; color: var(--gold); font-size: 1.1rem; font-weight: 900; text-align: center; }
+.tower-boss { flex: none; width: 3.4rem; height: 3.4rem; }
+.tower-boss > * { width: 100%; height: 100%; object-fit: contain; }
+.tower-floor.is-great .tower-boss { width: 4.2rem; height: 4.2rem; }
+.tower-info { flex: 1; min-width: 0; display: grid; gap: .1rem; }
+.tower-info b { font-size: .85rem; }
+.tower-info span { color: #e6dcf5; font-size: .72rem; }
+.tower-info small { color: #bfe6ff; font-size: .64rem; }
+.tower-go { flex: none; min-height: 2.4rem; padding: .3rem .8rem; font-size: .8rem; }

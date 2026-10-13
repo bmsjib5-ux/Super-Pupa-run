@@ -5910,7 +5910,7 @@
         return { day: x.day, counts, claimed: [...new Set([...(x.claimed || []), ...(y.claimed || [])])] };
       })(),
       starPaid: [...new Set([...(Array.isArray(a.starPaid) ? a.starPaid : []), ...(Array.isArray(b.starPaid) ? b.starPaid : [])].map(Number).filter(n => Number.isInteger(n) && n > 0))].sort((x, y) => x - y),
-      arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
+      arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), tower: Math.max(Number(a.tower) || 0, Number(b.tower) || 0), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
       dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
     };
   }
@@ -6332,10 +6332,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13g";
+  const NEWS_VERSION = "2026-10-13h";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "🗼 หอคอยบอส 100 ชั้น · บอสใหม่", text: "แท็บใหม่ หอคอย สู้บอสทุกชั้น 100 ชั้น ทุก 10 ชั้นเจอบอสใหญ่ ผ่านครั้งแรกได้เพชร ผลึกดาว และปีก มอนสเตอร์ใหม่ 6 ชนิด สไลม์ ภูตผี วิญญาณไฟ หีบมิมิค ยักษ์หินจิ๋ว แมงมุมคริสตัล และบอสใหม่ประจำบท นาคีวารี ยักษ์ลาวา มังกรน้ำแข็ง ยมทูตเงา คราเคนยักษ์ ในด่านสุดท้ายของบท", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "จัดทีมประลองเองได้", text: "แท็บประลองมีปุ่ม จัดทีมประลอง ✎ เลือกการ์ด 10 ใบเอง และเลือกว่าใครยืนแถวหน้า 4 ใบ กด จัดอัตโนมัติ เพื่อกลับไปใช้การ์ดที่แรงที่สุดเหมือนเดิม", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ปลุกพลังขั้น 2 · ดาวทอง", text: "การ์ดระดับ S และ SSS ที่อัปดาวแดงครบ 5 ดวง ปลุกพลังขั้น 2 ต่อได้อีก 5 ดาวทอง ดาวละเลเวลสูงสุด +10 (ถึง Lv 130) และพลัง +10% ใช้เศษการ์ด ปีกอัพดาว และเหรียญ", image: "gacha3", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "SSS ใหม่ · วชิระ · นภาลัย · กิเลนทอง", text: "การ์ดระดับ SSS ใหม่อีก 3 ใบ อัศวินผู้พิทักษ์เกราะเพชรที่กางเกราะให้ทั้งทีม จอมเวทแห่งดวงดาวเรียกฝนดาวตกถล่มทั้งสนาม และกิเลนทองสัตว์เลี้ยงนำโชค สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha4", open: () => { closeNews(); window.PupaCards?.openPulls(); } },

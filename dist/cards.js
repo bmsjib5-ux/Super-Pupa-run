@@ -40,7 +40,9 @@
     phloeng: "assets/phloeng-hero.webp", mekha: "assets/mekha-hero.webp", fasai: "assets/fasai-hero.webp",
     moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp",
     seraphina: "assets/seraphina-hero.webp", asani: "assets/asani-hero.webp", phoenix: "assets/phoenix-pet.webp",
-    vajira: "assets/vajira-hero.webp", naphalai: "assets/naphalai-hero.webp", qilin: "assets/qilin-pet.webp"
+    vajira: "assets/vajira-hero.webp", naphalai: "assets/naphalai-hero.webp", qilin: "assets/qilin-pet.webp",
+    // bosses with art of their own
+    serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
   // A worn costume recolours the card and adds a golden glow.
   const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300, seraphina: 200, asani: 150, phoenix: 180, vajira: 160, naphalai: 120, qilin: 200 };
@@ -59,6 +61,85 @@
     if (E.CARDS[kind] && wearing(kind)) { art.classList.add("is-costume"); art.style.setProperty("--hue", `${COSTUME_HUE[kind] || 180}deg`); }
     return art;
   }
+  // The new monsters, drawn here on a 112 px square.
+  const eyes = (g, x, y, gap, r, angry) => {
+    for (const s of [-1, 1]) {
+      g.fillStyle = "#fff"; g.beginPath(); g.ellipse(x + s * gap, y, r, r * 1.15, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#1a0d2e"; g.beginPath(); g.arc(x + s * gap - r * .15, y + r * .15, r * .58, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#fff"; g.beginPath(); g.arc(x + s * gap - r * .35, y - r * .2, r * .22, 0, Math.PI * 2); g.fill();
+      if (angry) { g.strokeStyle = "#1a0d2e"; g.lineWidth = 3; g.beginPath(); g.moveTo(x + s * (gap + r), y - r * 1.4); g.lineTo(x + s * (gap - r * .6), y - r * .9); g.stroke(); }
+    }
+  };
+  const shine = (g, x, y, rx, ry) => { g.fillStyle = "rgba(255,255,255,.35)"; g.beginPath(); g.ellipse(x, y, rx, ry, -.5, 0, Math.PI * 2); g.fill(); };
+  const MONSTER_ART = {
+    slime(g) {
+      const body = g.createRadialGradient(46, 50, 6, 56, 70, 50);
+      body.addColorStop(0, "#b8ffcf"); body.addColorStop(1, "#2fb86a");
+      g.fillStyle = body; g.beginPath(); g.moveTo(14, 96);
+      g.bezierCurveTo(8, 60, 30, 26, 56, 24); g.bezierCurveTo(84, 26, 104, 60, 98, 96); g.quadraticCurveTo(56, 104, 14, 96); g.fill();
+      g.fillStyle = "#2fb86a"; g.beginPath(); g.arc(30, 98, 6, 0, Math.PI * 2); g.arc(80, 99, 5, 0, Math.PI * 2); g.fill();
+      shine(g, 40, 44, 10, 6); eyes(g, 56, 64, 15, 8, false);
+      g.strokeStyle = "#1a5a32"; g.lineWidth = 3; g.beginPath(); g.arc(56, 76, 7, .2, Math.PI - .2); g.stroke();
+    },
+    ghost(g) {
+      g.fillStyle = "rgba(190,170,255,.35)"; g.beginPath(); g.arc(56, 56, 48, 0, Math.PI * 2); g.fill();
+      const body = g.createLinearGradient(0, 14, 0, 100);
+      body.addColorStop(0, "#ffffff"); body.addColorStop(1, "#c9bdf5");
+      g.fillStyle = body; g.beginPath(); g.moveTo(22, 96); g.lineTo(22, 52); g.bezierCurveTo(22, 20, 90, 20, 90, 52); g.lineTo(90, 96);
+      for (let k = 0; k < 4; k++) g.quadraticCurveTo(90 - k * 17 - 8, 86 + (k % 2) * 4, 90 - (k + 1) * 17, 96);
+      g.fill();
+      g.beginPath(); g.ellipse(16, 62, 9, 5, -.6, 0, Math.PI * 2); g.ellipse(96, 62, 9, 5, .6, 0, Math.PI * 2); g.fill();
+      shine(g, 40, 38, 9, 5); eyes(g, 56, 54, 13, 7, false);
+      g.fillStyle = "#6b4fb8"; g.beginPath(); g.ellipse(56, 72, 6, 8, 0, 0, Math.PI * 2); g.fill();
+    },
+    wisp(g) {
+      const glow = g.createRadialGradient(56, 66, 6, 56, 66, 54);
+      glow.addColorStop(0, "rgba(255,200,90,.6)"); glow.addColorStop(1, "rgba(255,120,40,0)");
+      g.fillStyle = glow; g.fillRect(0, 0, 112, 112);
+      const body = g.createLinearGradient(0, 8, 0, 104);
+      body.addColorStop(0, "#ff5a2a"); body.addColorStop(.55, "#ffb347"); body.addColorStop(1, "#fff1a8");
+      g.fillStyle = body; g.beginPath(); g.moveTo(56, 6);
+      g.bezierCurveTo(70, 30, 98, 46, 92, 74); g.bezierCurveTo(88, 98, 24, 98, 20, 74); g.bezierCurveTo(16, 52, 40, 44, 38, 26); g.bezierCurveTo(48, 34, 52, 22, 56, 6); g.fill();
+      eyes(g, 56, 70, 13, 7, true);
+      g.fillStyle = "#7a2410"; g.beginPath(); g.arc(56, 84, 5, 0, Math.PI); g.fill();
+    },
+    mimic(g) {
+      g.fillStyle = "#6a3a1a"; g.fillRect(16, 58, 80, 40); g.fillStyle = "#8a5226"; g.fillRect(16, 58, 80, 8);
+      g.fillStyle = "#ffd76a"; for (const x of [16, 52, 90]) g.fillRect(x, 58, 6, 40);
+      g.save(); g.translate(16, 58); g.rotate(-.42);
+      g.fillStyle = "#8a5226"; g.beginPath(); g.moveTo(0, 0); g.lineTo(80, 0); g.lineTo(80, -18); g.quadraticCurveTo(40, -36, 0, -18); g.fill();
+      g.fillStyle = "#ffd76a"; g.fillRect(0, -6, 80, 6);
+      g.fillStyle = "#fff"; for (let k = 0; k < 7; k++) { g.beginPath(); g.moveTo(4 + k * 11, 0); g.lineTo(9 + k * 11, 9); g.lineTo(14 + k * 11, 0); g.fill(); }
+      g.restore();
+      g.fillStyle = "#3a0a14"; g.beginPath(); g.moveTo(18, 58); g.lineTo(94, 58); g.lineTo(90, 40); g.lineTo(26, 30); g.fill();
+      g.fillStyle = "#ff6a8a"; g.beginPath(); g.ellipse(58, 56, 16, 6, -.2, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#fff"; for (let k = 0; k < 7; k++) { g.beginPath(); g.moveTo(20 + k * 11, 58); g.lineTo(25 + k * 11, 50); g.lineTo(30 + k * 11, 58); g.fill(); }
+      eyes(g, 50, 22, 11, 6, true);
+      g.fillStyle = "#ffd76a"; g.beginPath(); g.arc(56, 80, 6, 0, Math.PI * 2); g.fill();
+    },
+    rockling(g) {
+      g.fillStyle = "#5a5a6e";
+      const rock = (x, y, r) => { g.beginPath(); for (let k = 0; k < 7; k++) { const a = k * Math.PI * 2 / 7, rr = r * (.85 + (k % 3) * .08); g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.fill(); };
+      g.fillStyle = "#4a4a5c"; rock(22, 74, 13); rock(90, 74, 13); rock(38, 100, 10); rock(74, 100, 10);
+      g.fillStyle = "#6e6e86"; rock(56, 62, 34);
+      g.fillStyle = "#8a8aa4"; rock(48, 50, 12);
+      g.strokeStyle = "rgba(120,220,255,.85)"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(40, 78); g.lineTo(50, 70); g.lineTo(60, 80); g.lineTo(72, 70); g.stroke();
+      g.fillStyle = "#7fe8ff"; g.shadowColor = "#7fe8ff"; g.shadowBlur = 10;
+      g.beginPath(); g.ellipse(44, 58, 6, 4, 0, 0, Math.PI * 2); g.ellipse(68, 58, 6, 4, 0, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0;
+    },
+    spider(g) {
+      g.strokeStyle = "#7a4fd8"; g.lineWidth = 4; g.lineCap = "round";
+      for (const s of [-1, 1]) for (let k = 0; k < 4; k++) {
+        g.beginPath(); g.moveTo(56 + s * 14, 66 + k * 5); g.quadraticCurveTo(56 + s * (34 + k * 4), 40 + k * 10, 56 + s * (46 + k * 2), 86 + k * 5); g.stroke();
+      }
+      const body = g.createRadialGradient(50, 50, 4, 56, 64, 34);
+      body.addColorStop(0, "#f0d8ff"); body.addColorStop(1, "#8a5ad8");
+      g.fillStyle = body; g.beginPath(); g.ellipse(56, 66, 26, 22, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#c9a8ff"; g.beginPath(); g.moveTo(56, 26); g.lineTo(66, 46); g.lineTo(56, 52); g.lineTo(46, 46); g.fill();
+      shine(g, 46, 56, 8, 5); eyes(g, 56, 68, 11, 6, true);
+      g.fillStyle = "#3a1a6a"; for (const x of [44, 68]) { g.beginPath(); g.arc(x, 56, 2.5, 0, Math.PI * 2); g.fill(); }
+    }
+  };
   function plainPortrait(kind) {
     if (PICTURES[kind]) {
       const img = el("img", "card-art");
@@ -70,7 +151,8 @@
     const canvas = el("canvas", "card-art");
     canvas.width = canvas.height = 112;
     canvas.setAttribute("aria-hidden", "true");
-    game().paintPortrait(canvas, kind, 1000);
+    if (MONSTER_ART[kind]) MONSTER_ART[kind](canvas.getContext("2d"));
+    else game().paintPortrait(canvas, kind, 1000);
     return canvas;
   }
   // Which 2D effect each skill shows (see cards-fx.js), by "card:skill".
@@ -164,7 +246,7 @@
     const arenaFront = [...new Set((Array.isArray(raw.arenaFront) ? raw.arenaFront : []).filter(id => arenaPick.includes(id)))].slice(0, E.ARENA_FRONT);
     const achv = [...new Set((Array.isArray(raw.achv) ? raw.achv : []).filter(id => typeof id === "string"))];
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, quest, achv, arenaPick, arenaFront, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -280,7 +362,7 @@
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["quests", "📜 เควส"], ["team", "ทีม"]]) {
+    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["tower", "🗼 หอคอย"], ["quests", "📜 เควส"], ["team", "ทีม"]]) {
       const t = button(key === "quests" && questsReady() ? "has-dot" : "", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
@@ -288,7 +370,7 @@
     }
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
-    if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else renderTeam(panel);
+    if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else if (tab === "tower") renderTower(panel); else renderTeam(panel);
     body.replaceChildren(idleBanner(), tabs, panel);
   }
 
@@ -1074,7 +1156,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: Math.min(11, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.chapter : Math.min(11, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -1084,7 +1166,7 @@
 
   function drawTop() {
     const v = battle, b = v.state;
-    v.title.textContent = v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
+    v.title.textContent = v.stage.tower ? `🗼 ${v.stage.name}` : v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
     v.wave.textContent = `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
     v.auto.setAttribute("aria-pressed", String(cards().auto));
     v.fast.setAttribute("aria-pressed", String(cards().fast));
@@ -1290,7 +1372,7 @@
     }
     v.token.stopped = true;
     battle = null;
-    tab = v.stage.arena ? "arena" : v.stage.dungeon ? "daily" : "stages";
+    tab = v.stage.tower ? "tower" : v.stage.arena ? "arena" : v.stage.dungeon ? "daily" : "stages";
     showHub();
   }
 
@@ -1418,6 +1500,7 @@
     const b = v.state, stage = v.stage, c = cards();
     const won = b.result === "won";
     if (stage.arena) { finishArena(v); return; }
+    if (stage.tower) { finishTower(v); return; }
     if (stage.dungeon) { finishDungeon(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
@@ -1468,6 +1551,60 @@
     game().tone(won ? 784 : 220, .2, "triangle", .06);
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(won ? `ชนะด่าน ${stage.num} ได้ ${got} ดาว และ ${coins} เหรียญ${gems ? ` และ ${gems} เพชร` : ""}` : "พ่ายแพ้ ลองอีกครั้ง");
+    actions.querySelector("button")?.focus();
+  }
+
+  // ---- The tower ----
+  // A column of floors around the next one; the next floor can be fought,
+  // cleared ones replayed for EXP and coins.
+  function renderTower(panel) {
+    const c = cards(), next = Math.min(E.TOWER_FLOORS, c.tower + 1), done = c.tower >= E.TOWER_FLOORS;
+    panel.append(el("p", "cards-intro", `หอคอยบอส ${E.TOWER_FLOORS} ชั้น · ทุกชั้นมีบอส ทุก 10 ชั้นเป็นบอสใหญ่ · ใช้ทีม 5 ใบจากแท็บทีม · ผ่านแล้ว ${c.tower}/${E.TOWER_FLOORS} ชั้น`));
+    const tower = el("div", "tower");
+    const top = Math.min(E.TOWER_FLOORS, next + 4), bottom = Math.max(1, next - 3);
+    for (let n = top; n >= bottom; n--) {
+      const f = E.towerFloor(n), cleared = n <= c.tower, here = n === next && !done;
+      const boss = f.waves[0][0].id;
+      const row = el("div", `tower-floor${cleared ? " is-cleared" : here ? " is-next" : " is-locked"}${n % 10 === 0 ? " is-great" : ""}`);
+      const art = el("span", "tower-boss"); art.append(foeArt(boss));
+      const info = el("div", "tower-info");
+      info.append(el("b", null, `ชั้น ${n}${n % 10 === 0 ? " · บอสใหญ่" : ""}`), el("span", null, `${E.FOES[boss].name} · Lv ${f.lv} · ${f.waves[0].length} ตัว`), el("small", null, cleared ? "ผ่านแล้ว ✓" : `รางวัลครั้งแรก: 💎 ${f.gems} · ✧ ${f.dust}${f.wings ? ` · 🪽 ${f.wings}` : ""} · ● ${fmt(f.coins)}`));
+      row.append(el("span", "tower-num", String(n)), art, info);
+      if (here || cleared) {
+        const go = button(here ? "primary-button tower-go" : "secondary-button tower-go", here ? "ท้าทาย ⚔" : "สู้อีกครั้ง", () => startBattle(E.towerFloor(n)));
+        row.append(go);
+      }
+      tower.append(row);
+    }
+    if (done) panel.append(el("p", "sheet-reward", "🏆 พิชิตหอคอยครบ 100 ชั้นแล้ว!"));
+    panel.append(tower);
+  }
+  function finishTower(v) {
+    const b = v.state, floor = v.stage, c = cards(), won = b.result === "won";
+    const first = won && floor.num > c.tower;
+    const xp = Math.round(floor.xp * (won ? 1 : .3));
+    const ups = shareXp(c.team.filter(Boolean), xp);
+    if (won) {
+      questTick("win");
+      save().coins += first ? floor.coins : Math.round(floor.coins / 4);
+      if (first) { addGems(floor.gems); c.dust += floor.dust; c.wings += floor.wings; c.tower = floor.num; }
+    }
+    store(); showCoins();
+    v.busy = true;
+    const box = el("div", "message-card battle-card");
+    box.append(el("span", "moon-icon", won ? "🗼" : "☾"), el("h2", null, won ? `ผ่านหอคอยชั้น ${floor.num}!` : "พ่ายแพ้…"));
+    box.append(el("p", "end-reward battle-reward", won ? (first ? `ได้รับ 💎 ${floor.gems} · ✧ ${floor.dust}${floor.wings ? ` · 🪽 ${floor.wings}` : ""} · ● ${fmt(floor.coins)} · EXP ${xp} ต่อการ์ด` : `ได้รับ ● ${fmt(Math.round(floor.coins / 4))} · EXP ${xp} ต่อการ์ด (รางวัลครั้งแรกรับไปแล้ว)`) : `ได้ EXP ${xp} ต่อการ์ด · อัปการ์ดหรือเปลี่ยนทีมแล้วลองใหม่`));
+    if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
+    const actions = el("div", "title-actions");
+    if (won && floor.num < E.TOWER_FLOORS) actions.append(button("primary-button", `ชั้น ${floor.num + 1} ▶`, () => { battle = null; startBattle(E.towerFloor(floor.num + 1)); }));
+    actions.append(button(won ? "secondary-button" : "primary-button", "สู้อีกครั้ง", () => { battle = null; startBattle(E.towerFloor(floor.num)); }));
+    actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "tower"; showHub(); }));
+    box.append(actions);
+    v.result.replaceChildren(box);
+    v.result.hidden = false;
+    hint("");
+    if (won) [523, 659, 784, 1047, 1319].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
+    announce(won ? `ผ่านหอคอยชั้น ${floor.num}` : "พ่ายแพ้ในหอคอย");
     actions.querySelector("button")?.focus();
   }
 

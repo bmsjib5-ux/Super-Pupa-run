@@ -569,6 +569,44 @@
       ]
     }
   });
+  // ---- New faces ----
+  // Bosses with art of their own: each takes the place of its chapter's
+  // mushroom king on the chapter's last stage, with the king's strength.
+  const UNIQUE_BOSSES = [
+    { id: "serpentboss", from: "king", stage: 20, art: "serpent", name: "นาคีวารี", glow: "rgba(120,240,255,.95)", skills: ["คลื่นน้ำวนนาคี", "หางนาคฟาด"] },
+    { id: "golemboss", from: "lavaking", stage: 30, art: "golem", name: "ยักษ์ลาวา", glow: "rgba(255,140,40,.95)", skills: ["หมัดลาวาปะทุ", "แผ่นดินไหวเพลิง"] },
+    { id: "icedragonboss", from: "frostking", stage: 40, art: "icedragon", name: "มังกรน้ำแข็ง", glow: "rgba(170,230,255,.95)", skills: ["ลมหายใจเยือกแข็ง", "กรงเล็บธารน้ำแข็ง"] },
+    { id: "reaperboss", from: "shadowking", stage: 50, art: "reaper", name: "ยมทูตเงา", glow: "rgba(190,110,255,.95)", skills: ["เคียวเก็บวิญญาณ", "ม่านเงามรณะ"] },
+    { id: "krakenboss", from: "abyssking", stage: 80, art: "kraken", name: "คราเคนยักษ์", glow: "rgba(90,255,210,.95)", skills: ["หนวดยักษ์รัดแน่น", "หมึกมืดห้วงลึก"] }
+  ];
+  for (const u of UNIQUE_BOSSES) {
+    const base = FOES[u.from];
+    FOES[u.id] = { ...base, name: u.name, art: u.art, look: undefined, hue: undefined, glow: u.glow, skills: base.skills.map((s, n) => ({ ...s, name: u.skills[n] || s.name })) };
+  }
+  // New monsters, drawn by cards.js (slime, ghost, wisp, mimic, rockling,
+  // crystal spider). They live in the tower, a copy per ten floors.
+  const NEW_FOES = {
+    slime: { name: "สไลม์", role: "defense", art: "slime", hp: 1.3, skills: [{ name: "เมือกเหนียวหนึบ", cd: 3, target: "front", power: .9, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    ghost: { name: "ภูตผีน้อย", role: "support", art: "ghost", skills: [{ name: "เสียงหอนปลุกพวก", cd: 3, target: "allies", heal: 1, fx: [{ k: "atkUp", v: .2, turns: 2 }] }] },
+    wisp: { name: "วิญญาณไฟ", role: "attack", art: "wisp", spd: 118, skills: [{ name: "เปลวไฟพุ่ง", cd: 3, target: "back", power: 1.3, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    mimic: { name: "หีบมิมิค", role: "attack", art: "mimic", def: 1.3, skills: [{ name: "งับเหรียญทอง", cd: 3, target: "one", power: 2.2, drain: .3 }] },
+    rockling: { name: "ยักษ์หินจิ๋ว", role: "defense", art: "rockling", skills: [{ name: "เกราะหินผา", cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }] },
+    spider: { name: "แมงมุมคริสตัล", role: "magic", art: "spider", skills: [{ name: "ใยคริสตัล", cd: 3, target: "all", power: .75, fx: [{ k: "stun", chance: .15, turns: 1 }, { k: "defDown", v: .15, turns: 2 }] }] }
+  };
+
+  // ---- The tower: 100 floors, a boss on every one ----
+  // Floors come ten at a time from a chapter (its monsters, its strength);
+  // the tenth floor of each ten is a great boss.
+  const TOWER_FLOORS = 100;
+  // levels above the chapter's stages, by ten floors
+  const TOWER_LIFT = [3, 3, 3, 3, 2, 1, 1, 0, 0, -2];
+  const TOWER_KINGS = ["king", "king", "lavaking", "frostking", "shadowking", "heavenking", "cosmicking", "abyssking", "clockking", "jadeking"];
+  const TOWER_QUEENS = ["queen", "queen", "sunqueen", "icequeen", "eclipsequeen", "starqueen", "nebulaqueen", "abyssking", "brassqueen", "jadeking"];
+  const TOWER_GREAT = ["queen", "serpentboss", "golemboss", "icedragonboss", "reaperboss", "starqueen", "nebulaqueen", "krakenboss", "brassqueen", "jadequeen"];
+  for (let g = 1; g <= 10; g++) {
+    const tier = FOES[TOWER_KINGS[g - 1]].tier || 1;
+    for (const [id, def] of Object.entries(NEW_FOES)) FOES[`${id}${g}`] = { ...def, tier };
+  }
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -699,6 +737,11 @@
     ["ระเบียงจันทร์เลือด", 53, ["gravecrab,coffinroller/bloodjelly,roseflower,ravenbird", "thornurchin,bloodshroom/bloodjelly,vampbat,roseflower", "bloodking/bloodjelly,ravenbird"]],
     ["บัลลังก์ราชินีจันทร์เลือด", 45, ["coffinroller,gravecrab/bloodjelly,roseflower,ravenbird", "thornurchin,thornurchin/bloodjelly,bloodjelly,vampbat", "bloodking,bloodqueen/bloodjelly"]]
   ];
+  // the chapters' last stages meet their own bosses
+  for (const u of UNIQUE_BOSSES) {
+    const waves = STAGE_LIST[u.stage - 1][2], last = waves.length - 1;
+    waves[last] = waves[last].replace(u.from, u.id);
+  }
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
     const list = (part, row) => part.split(",").filter(Boolean).map(id => ({ id, row }));
@@ -1203,6 +1246,28 @@
       coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2, wings: n % 5 === 0 ? 2 : 0
     };
   }
+  // A tower floor: a boss (a great one every tenth floor) and its guards,
+  // from the chapter of these ten floors, a little above that chapter's level.
+  function towerFloor(n) {
+    const g = Math.min(10, Math.ceil(n / 10)), great = n % 10 === 0;
+    const chapter = CHAPTERS[g - 1];
+    const pool = [...new Set(STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).flatMap(s => s.waves.flat().map(f => f.id)).filter(id => !FOES[id].boss))];
+    const fresh = Object.keys(NEW_FOES).map(id => `${id}${g}`);
+    let seed = n * 7717 + 3;
+    const roll = (list) => list[(seed = (seed * 1103515245 + 12345) >>> 0) % list.length];
+    const boss = great ? TOWER_GREAT[g - 1] : n % 2 ? TOWER_KINGS[g - 1] : TOWER_QUEENS[g - 1];
+    const guards = great ? 4 : 2 + ((n % 10) >= 5 ? 1 : 0);
+    const wave = [{ id: boss, row: "front" }];
+    for (let k = 0; k < guards; k++) wave.push({ id: roll(k % 2 ? pool : fresh), row: k === 0 ? "front" : "back" });
+    const stage = STAGES[Math.min(STAGES.length, n) - 1];
+    return {
+      num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv: stage.lv + TOWER_LIFT[g - 1] + Math.floor((n % 10 || 10) / 3), chapter: g,
+      waves: [wave], boss: true, par: 99,
+      coins: 60 + 12 * n, repeat: 0, xp: 15 + 6 * n,
+      gems: great ? 120 : n % 5 === 0 ? 50 : 20, dust: great ? 15 : 5, wings: great ? 3 : n % 5 === 0 ? 1 : 0
+    };
+  }
+
   // The strongest cards first, tanks in front: who goes to the arena.
   // The player's own ten (cards.arenaPick, front row cards.arenaFront) when
   // set, otherwise the strongest ten with the sturdiest in front.
@@ -1343,6 +1408,7 @@
   for (const n of [50, 100, 150, 200, 250, 300]) ACHIEVEMENTS.push({ id: `stars${n}`, gems: n, text: `เก็บดาวด่านรวม ${n} ดวง`, need: n, have: (c) => Object.values(c.stars).reduce((a, b) => a + Math.min(3, b), 0) });
   for (const [n, gems] of [[5, 50], [10, 80], [15, 120], [20, 160], [25, 200]]) ACHIEVEMENTS.push({ id: `cards${n}`, gems, text: `มีการ์ด ${n} ใบ`, need: n, have: (c) => Object.keys(c.units).filter(id => CARDS[id] && c.units[id] > 0).length });
   for (const [n, gems] of [[1, 50], [3, 100], [5, 200], [6, 250], [8, 300], [10, 500]]) ACHIEVEMENTS.push({ id: `awake${n}`, gems, text: n > MAX_AWAKE ? `ปลุกพลังขั้น 2 การ์ดใบใดก็ได้ถึงดาวทอง ${n - MAX_AWAKE} ดวง` : `อัปดาวแดงการ์ดใบใดก็ได้ถึง ${n} ดวง`, need: n, have: (c) => Math.max(0, ...Object.values(c.awake || {})) });
+  for (const [n, gems] of [[10, 100], [25, 150], [50, 250], [75, 300], [100, 500]]) ACHIEVEMENTS.push({ id: `tower${n}`, gems, text: `ผ่านหอคอยชั้น ${n}`, need: n, have: (c) => c.tower || 0 });
   ACHIEVEMENTS.push({ id: "sss1", gems: 200, text: "ได้การ์ดระดับ SSS ใบแรก", need: 1, have: (c) => CARD_IDS.filter(id => CARDS[id].rarity === 6 && c.units[id]).length });
   for (const [n, gems] of [[10, 80], [20, 120], [30, 160], [50, 250]]) ACHIEVEMENTS.push({ id: `arena${n}`, gems, text: `ผ่านลานประลองชั้น ${n}`, need: n, have: (c) => Math.max(0, (c.arena || 1) - 1) });
   // How far an achievement is: [have, need, done].
@@ -1366,7 +1432,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

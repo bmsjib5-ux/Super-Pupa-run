@@ -183,3 +183,13 @@ test("cards: the arena fields the player's own ten when chosen", () => {
   assert.deepEqual(team.map(t => t.row), ["front", "back"]);
   assert.equal(E.arenaTeam({ ...cards, arenaPick: [] }).length, 4); // automatic: every card
 });
+
+test("cards: the tower has 100 floors, a boss on each and a great one every tenth", () => {
+  for (let n = 1; n <= E.TOWER_FLOORS; n++) {
+    const f = E.towerFloor(n);
+    assert.ok(E.FOES[f.waves[0][0].id].boss, `floor ${n}`);
+    assert.ok(f.waves[0].every(u => E.FOES[u.id]), `floor ${n} foes`);
+  }
+  assert.equal(E.towerFloor(30).waves[0][0].id, "golemboss");
+  assert.equal(E.STAGES[29].waves[2][0].id, "golemboss"); // chapter 3 ends at the lava golem
+});
