@@ -531,22 +531,46 @@
     const q = quest(), c = cards();
     return E.DAILY_QUESTS.some(d => E.questDone(q, d) && !q.claimed.includes(d.id)) || chestReady() || E.ACHIEVEMENTS.some(a => !c.achv.includes(a.id) && E.achvProgress(c, a)[2]);
   }
-  function claimQuest(kind, id) {
+  // Pays one quest if it is ready; returns what it gave, or null.
+  function payQuest(kind, id) {
     const c = cards(), q = quest();
     let gems = 0, wings = 0, text = "";
     if (kind === "daily") {
       const d = E.DAILY_QUESTS.find(x => x.id === id);
-      if (!d || q.claimed.includes(id) || !E.questDone(q, d)) return;
+      if (!d || q.claimed.includes(id) || !E.questDone(q, d)) return null;
       q.claimed.push(id); gems = d.gems; text = d.text;
     } else if (kind === "chest") {
-      if (!chestReady()) return;
+      if (!chestReady()) return null;
       q.claimed.push("chest"); gems = E.QUEST_CHEST.gems; wings = E.QUEST_CHEST.wings; text = "หีบเควสรายวัน";
     } else {
       const a = E.ACHIEVEMENTS.find(x => x.id === id);
-      if (!a || c.achv.includes(id) || !E.achvProgress(c, a)[2]) return;
+      if (!a || c.achv.includes(id) || !E.achvProgress(c, a)[2]) return null;
       c.achv.push(id); gems = a.gems; text = a.text;
     }
     addGems(gems); c.wings += wings;
+    return { gems, wings, text };
+  }
+  // Every quest ready now, the chest last since the others may open it.
+  function claimAllQuests() {
+    const got = [];
+    for (const d of E.DAILY_QUESTS) got.push(payQuest("daily", d.id));
+    got.push(payQuest("chest"));
+    for (const a of E.ACHIEVEMENTS) got.push(payQuest("achv", a.id));
+    const paid = got.filter(Boolean);
+    if (!paid.length) { tone(150, .12, "square", .05); return; }
+    const gems = paid.reduce((n, r) => n + r.gems, 0), wings = paid.reduce((n, r) => n + r.wings, 0);
+    store(); showCoins();
+    [659, 784, 988, 1319, 1568].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+    announce(`รับรางวัลเควส ${paid.length} รายการ ได้ ${gems} เพชร${wings ? ` และปีก ${wings}` : ""}`);
+    showHub();
+    const list = el("ul", "end-goals");
+    for (const r of paid) list.append(el("li", "is-done", `✓ ${r.text} · 💎 ${r.gems}${r.wings ? ` 🪽 ${r.wings}` : ""}`));
+    openSheet([el("h3", "sheet-title", "📜 รับรางวัลเควสทั้งหมด"), el("p", "sheet-reward", `ได้รับ 💎 ${fmt(gems)}${wings ? ` + 🪽 ${wings}` : ""} จาก ${paid.length} เควส`), list]);
+  }
+  function claimQuest(kind, id) {
+    const r = payQuest(kind, id);
+    if (!r) return;
+    const { gems, wings, text } = r;
     store(); showCoins();
     [659, 784, 988, 1319].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
     announce(`รับรางวัลเควส ${text} ได้ ${gems} เพชร${wings ? ` และปีก ${wings}` : ""}`);
@@ -565,6 +589,13 @@
   }
   function renderQuests(panel) {
     const c = cards(), q = quest();
+    // claim everything ready at once
+    const ready = E.DAILY_QUESTS.filter(d => E.questDone(q, d) && !q.claimed.includes(d.id)).length + (!q.claimed.includes("chest") && E.DAILY_QUESTS.every(d => q.claimed.includes(d.id) || E.questDone(q, d)) ? 1 : 0) + E.ACHIEVEMENTS.filter(a => !c.achv.includes(a.id) && E.achvProgress(c, a)[2]).length;
+    const all = el("div", "title-actions quest-all");
+    const allBtn = button("primary-button", ready ? `รับทั้งหมด (${ready})` : "ยังไม่มีรางวัลให้รับ", () => claimAllQuests());
+    allBtn.disabled = !ready;
+    all.append(allBtn);
+    panel.append(all);
     panel.append(el("h3", "shop-heading", "📜 เควสรายวัน"), el("p", "cards-intro", `ทำเควสรับเพชร · รีเซ็ตใน ${untilMidnight()} · ทำครบทุกข้อเปิดหีบ 💎 ${E.QUEST_CHEST.gems} + 🪽 ${E.QUEST_CHEST.wings}`));
     const daily = el("div", "quest-list");
     for (const d of E.DAILY_QUESTS) {

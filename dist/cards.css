@@ -592,3 +592,5 @@ button.unit { cursor: crosshair; }
 .quest-row.is-done .quest-bar::before { background: var(--mint); }
 .quest-claim { flex: none; min-width: 6.5rem; }
 .cards-tabs > button { min-width: 0; padding-inline: .3rem; white-space: nowrap; font-size: clamp(.68rem, 2.8vw, .95rem); }
+.quest-all { justify-content: center; margin: .5rem 0 .2rem; }
+.quest-all .primary-button { min-width: 14rem; }
