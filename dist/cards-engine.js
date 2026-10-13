@@ -1172,8 +1172,9 @@
   // ---- Card pulls ----
   // Characters and pets are only found here. Gems pay for a pull. The odds
   // are shown on the pull page; PITY pulls without an S make the next one
-  // S or SSS, and ten at once always hold a B or better.
-  const GACHA = { one: 100, ten: 900, rates: { 6: .01, 5: .04, 4: .12, 3: .23, 2: .3, 1: .3 }, pity: 50, pitySSS: .2 };
+  // S or SSS, PITY6 pulls without an SSS make the next one SSS, and ten at
+  // once always hold a B or better.
+  const GACHA = { one: 100, ten: 900, rates: { 6: .01, 5: .04, 4: .12, 3: .23, 2: .3, 1: .3 }, pity: 50, pitySSS: .2, pity6: 100 };
   // A card pulled again turns into shards of that card, for its stars; the
   // top grades also give star-up wings.
   const DUPE_SHARDS = { 1: 4, 2: 5, 3: 8, 4: 12, 5: 20, 6: 40 };
@@ -1216,16 +1217,20 @@
   // Battle bonus from stars and a worn costume.
   const cardBonus = (cards, id) => (cards.awake?.[id] || 0) * AWAKE_BONUS + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
   const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
-  // state: { pity } (pulls since the last S or SSS); rnd: () => 0..1.
+  // state: { pity, pity6 } (pulls since the last S or SSS, and since the
+  // last SSS); rnd: () => 0..1.
   function pullOne(state, rnd, atLeast = 1) {
     let rarity = 1;
-    if (state.pity + 1 >= GACHA.pity) rarity = rnd() < GACHA.pitySSS ? 6 : 5;
+    state.pity6 = state.pity6 || 0;
+    if (state.pity6 + 1 >= GACHA.pity6) rarity = 6;
+    else if (state.pity + 1 >= GACHA.pity) rarity = rnd() < GACHA.pitySSS ? 6 : 5;
     else {
       let roll = rnd();
       for (const r of [6, 5, 4, 3, 2, 1]) { if (roll < GACHA.rates[r]) { rarity = r; break; } roll -= GACHA.rates[r]; }
     }
     rarity = Math.max(rarity, atLeast);
     state.pity = rarity >= 5 ? 0 : state.pity + 1;
+    state.pity6 = rarity === 6 ? 0 : state.pity6 + 1;
     const pool = byRarity(rarity);
     return pool[Math.floor(rnd() * pool.length)];
   }

@@ -119,6 +119,12 @@ test("cards: six grades from D to SSS, SSS the rarest pull", () => {
   const p = { pity: E.GACHA.pity - 1 };
   assert.ok(E.CARDS[E.pull(p, () => .99, 1)[0]].rarity >= 5);
   assert.equal(p.pity, 0);
+  // the 100th pull without an SSS is SSS, and both counters start again
+  const p6 = { pity: 3, pity6: E.GACHA.pity6 - 1 };
+  assert.equal(E.CARDS[E.pull(p6, () => .99, 1)[0]].rarity, 6);
+  assert.deepEqual([p6.pity, p6.pity6], [0, 0]);
+  // 100 pulls of bad luck still hold an SSS
+  assert.ok(E.pull({ pity: 0, pity6: 0 }, () => .99, 100).some(id => E.CARDS[id].rarity === 6));
 });
 
 test("cards: every five stages at full stars give the star bonus once", () => {

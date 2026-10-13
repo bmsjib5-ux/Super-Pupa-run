@@ -594,3 +594,5 @@ button.unit { cursor: crosshair; }
 .cards-tabs > button { min-width: 0; padding-inline: .3rem; white-space: nowrap; font-size: clamp(.68rem, 2.8vw, .95rem); }
 .quest-all { justify-content: center; margin: .5rem 0 .2rem; }
 .quest-all .primary-button { min-width: 14rem; }
+.pull-pity { margin: .5rem auto .1rem; color: #fff; font-size: .8rem; font-weight: 800; }
+.pull-pity .grade { font-size: .7rem; vertical-align: .05em; }

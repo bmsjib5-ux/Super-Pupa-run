@@ -345,19 +345,22 @@
   // Characters and pets are found only here. Rolls happen on this device
   // with gems, which are earned in play and never sold for money.
   const pity = () => Math.max(0, Math.floor(Number(save().cardPity) || 0));
+  const pity6 = () => Math.max(0, Math.floor(Number(save().cardPity6) || 0));
   function renderPulls(panel) {
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
     for (const id of ["seraphina", "phloeng", "asani", "chantra", "phoenix"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade")); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
-    const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
+    const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · การันตี SSS ภายใน ${g.pity6} ครั้ง (อีก ${g.pity6 - pity6()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
     const one = button("primary-button", `สุ่ม 1 ครั้ง · 💎 ${g.one}`, () => doPull(1));
     const ten = button("primary-button pull-ten", `สุ่ม 10 ครั้ง · 💎 ${g.ten}`, () => doPull(10));
     one.disabled = have < g.one; ten.disabled = have < g.ten;
     actions.append(one, ten);
-    banner.append(odds, actions, el("p", "sheet-goals", `มีเพชร 💎 ${fmt(have)} · เพชรได้จากผ่านด่านครั้งแรก (ทั้งผจญภัยและศึกการ์ด) รางวัลรายวัน ลานประลอง และด่านประจำวัน`));
+    const left = el("p", "pull-pity");
+    left.append(el("span", "grade grade-s", "S"), ` อีก ${g.pity - pity()} ครั้ง · `, el("span", "grade grade-sss", "SSS"), ` อีก ${g.pity6 - pity6()} ครั้ง การันตีได้แน่นอน`);
+    banner.append(left, odds, actions, el("p", "sheet-goals", `มีเพชร 💎 ${fmt(have)} · เพชรได้จากผ่านด่านครั้งแรก (ทั้งผจญภัยและศึกการ์ด) รางวัลรายวัน ลานประลอง และด่านประจำวัน`));
     panel.append(banner);
     const list = el("div", "pull-pool");
     for (const r of [6, 5, 4, 3, 2, 1]) {
@@ -373,9 +376,10 @@
     if ((save().gems || 0) < cost) { tone(150, .12, "square", .05); return; }
     save().gems -= cost;
     questTick("pull", count);
-    const state = { pity: pity() };
+    const state = { pity: pity(), pity6: pity6() };
     const got = E.pull(state, Math.random, count);
     save().cardPity = state.pity;
+    save().cardPity6 = state.pity6;
     const c = cards();
     const results = got.map(id => {
       if (!c.units[id]) {
