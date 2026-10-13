@@ -19,6 +19,18 @@ const intMap = (value, max) => {
   return out;
 };
 
+// The day's quests: what was done (counts) and what was claimed.
+const cleanQuest = (raw) => (raw && typeof raw.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.day)
+  ? { day: raw.day, counts: intMap(raw.counts, 100_000), claimed: idList(raw.claimed) }
+  : undefined);
+const mergeQuest = (a, b) => {
+  if (!a || !b) return a || b;
+  if (a.day !== b.day) return a.day > b.day ? a : b;
+  const counts = { ...a.counts };
+  for (const [key, n] of Object.entries(b.counts)) counts[key] = Math.max(counts[key] || 0, n);
+  return { day: a.day, counts, claimed: [...new Set([...a.claimed, ...b.claimed])] };
+};
+
 // Card battles: each card's level, the best stars per stage, the team of
 // five ("" for an empty slot) and two switches.
 const cleanCards = (raw) => {
@@ -27,7 +39,7 @@ const cleanCards = (raw) => {
   const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
   return {
     units: intMap(cards.units, 99), stars: intMap(cards.stars, 3), team, auto: cards.auto === true, fast: cards.fast === true,
-    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 5), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), wingComp: cards.wingComp === true ? true : undefined, starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 5), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
   };
 };
@@ -64,6 +76,10 @@ function mergeCards(current, incoming) {
     // shards and star dust are spent on stars: this device's count, unless the account is ahead
     shards: maxMap(now.shards, next.shards), dust: Math.max(now.dust, next.dust), wings: now.wings == null && next.wings == null ? undefined : Math.max(now.wings || 0, next.wings || 0),
     // star bonuses paid on either copy stay paid
+    // the later day's quests; on the same day the most done and every claim
+    quest: mergeQuest(now.quest, next.quest),
+    // achievements paid on either copy stay paid
+    achv: [...new Set([...now.achv, ...next.achv])],
     // the wing compensation, once given on either copy, is given
     wingComp: now.wingComp || next.wingComp || undefined,
     starPaid: [...new Set([...now.starPaid, ...next.starPaid])].sort((a, b) => a - b), arena: Math.max(now.arena, next.arena),

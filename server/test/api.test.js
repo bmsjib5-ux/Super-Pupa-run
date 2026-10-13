@@ -214,3 +214,13 @@ test("merge: the wing compensation, once given, stays given", () => {
   assert.equal(b.cards.wingComp, true);
   assert.equal(b.cards.wings, 9);
 });
+
+test("merge: quests keep the later day, every claim of the same day, and achievements paid anywhere", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { quest: { day: "2026-10-13", counts: { win: 2 }, claimed: ["idle1"] }, achv: ["stage10"] } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { quest: { day: "2026-10-13", counts: { win: 1, pull: 1 }, claimed: ["pull1"] }, achv: ["cards5"] } })), 0);
+  assert.deepEqual(b.cards.quest.counts, { win: 2, pull: 1 });
+  assert.deepEqual(b.cards.quest.claimed.sort(), ["idle1", "pull1"]);
+  assert.deepEqual(b.cards.achv.sort(), ["cards5", "stage10"]);
+  const c = mergeSave(b, cleanSave(device(0, { cards: { quest: { day: "2026-10-14", counts: {}, claimed: [] } } })), 0);
+  assert.equal(c.cards.quest.day, "2026-10-14");
+});

@@ -5892,6 +5892,16 @@
       // left out until the card screen first gives the starting wings
       wings: a.wings == null && b.wings == null ? undefined : Math.max(Number(a.wings) || 0, Number(b.wings) || 0),
       wingComp: a.wingComp === true || b.wingComp === true || undefined,
+      // achievements paid on either copy; the later day's quests, on the same day every claim
+      achv: [...new Set([...(Array.isArray(a.achv) ? a.achv : []), ...(Array.isArray(b.achv) ? b.achv : [])])],
+      quest: (() => {
+        const x = a.quest, y = b.quest;
+        if (!x?.day || !y?.day) return x?.day ? x : y?.day ? y : undefined;
+        if (x.day !== y.day) return x.day > y.day ? x : y;
+        const counts = { ...(x.counts || {}) };
+        for (const [k, n] of Object.entries(y.counts || {})) counts[k] = Math.max(Number(counts[k]) || 0, Number(n) || 0);
+        return { day: x.day, counts, claimed: [...new Set([...(x.claimed || []), ...(y.claimed || [])])] };
+      })(),
       starPaid: [...new Set([...(Array.isArray(a.starPaid) ? a.starPaid : []), ...(Array.isArray(b.starPaid) ? b.starPaid : [])].map(Number).filter(n => Number.isInteger(n) && n > 0))].sort((x, y) => x - y),
       arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
       dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
@@ -6315,10 +6325,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13b";
+  const NEWS_VERSION = "2026-10-13c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "เควสรับเพชร", text: "แท็บใหม่ 📜 เควส ในศึกการ์ด เควสรายวัน 6 ข้อ ชนะการต่อสู้ รับรางวัลล่า ด่านประจำวัน ลานประลอง อัปเลเวล และสุ่มการ์ด ทำครบเปิดหีบ 💎100 + ปีก และภารกิจความสำเร็จ 29 ข้อ ผ่านด่าน เก็บดาว สะสมการ์ด อัปดาวแดง ใครทำสำเร็จไปแล้วกดรับเพชรได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 10 · หุบเขามังกรหยก", text: "ด่าน 91–100 หุบเขาหมอกสีหยก เจดีย์แดง โคมลอยฟ้า และลานหินหยก นักรบหยก 8 ชนิดที่ปลุกพลังกัน ดูดชีวิต และล้างสถานะ บอสราชาเห็ดหยก และราชินีมังกรหยก ด่านที่ 100 ศึกสุดท้าย", image: "chapter10", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 9 · นครจักรกลลอยฟ้า", text: "ด่าน 81–90 เมืองทองเหลืองลอยฟ้ายามอาทิตย์ตก หอนาฬิกา เฟืองยักษ์ และเรือเหาะ มอนสเตอร์จักรกล 8 ชนิดเกราะหนา ช็อตไฟฟ้า สว่านเจาะเกราะ และไอน้ำลวก บอสราชาเห็ดจักรกล และราชินีกลไกทองเหลือง การ์ด SSS ช่วยได้มาก", image: "chapter9", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ระดับการ์ด D–SSS · ดาวแดง · ปีกอัพดาว", text: "การ์ดมี 6 ระดับ D C B A S และ SSS ระดับสูงยิ่งแรงและหายาก ตัวละคร SSS ใหม่ 3 ตัว เซราฟิน่า นักบุญปีกศักดิ์สิทธิ์ อัสนี อัศวินมังกรสายฟ้า และวิหคเพลิงทอง อัปดาวแดง 1–5 ดวงด้วยปีกอัพดาว ได้จากด่านบอส ด่านประจำวัน ลานประลอง รางวัลวันที่ 7 และโบนัสดาวครบ แจกปีกฟรี 3 ชิ้น ใครผ่านด่านบอสหรือลานประลองไปแล้วได้ปีกชดเชยย้อนหลังด้วย", image: "gacha3", open: () => { closeNews(); window.PupaCards?.openPulls(); } },

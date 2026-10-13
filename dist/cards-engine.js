@@ -1238,6 +1238,33 @@
     return out;
   }
 
+  // ---- Quests ----
+  // Daily quests count what was done today (cards.quest.counts, reset each
+  // day); finishing them all opens a chest. Achievements are milestones read
+  // straight from the save, each paid once (cards.achv).
+  const DAILY_QUESTS = [
+    { id: "win3", key: "win", need: 3, gems: 30, text: "ชนะการต่อสู้ 3 ครั้ง" },
+    { id: "idle1", key: "idle", need: 1, gems: 20, text: "รับรางวัลล่าอัตโนมัติ" },
+    { id: "dungeon1", key: "dungeon", need: 1, gems: 30, text: "ผ่านด่านประจำวัน 1 ด่าน" },
+    { id: "arena1", key: "arena", need: 1, gems: 30, text: "สู้ในลานประลอง 1 ครั้ง" },
+    { id: "level3", key: "level", need: 3, gems: 20, text: "อัปเลเวลการ์ด 3 ครั้ง" },
+    { id: "pull1", key: "pull", need: 1, gems: 20, text: "สุ่มการ์ด 1 ครั้ง" }
+  ];
+  const QUEST_CHEST = { gems: 100, wings: 1 };
+  const freshQuest = (day) => ({ day, counts: {}, claimed: [] });
+  // A day's quest record, renewed when the day has changed.
+  const questFor = (quest, day) => (quest && quest.day === day ? quest : freshQuest(day));
+  const questDone = (quest, q) => (quest.counts[q.key] || 0) >= q.need;
+  const ACHIEVEMENTS = [];
+  for (let n = 10; n <= 100; n += 10) ACHIEVEMENTS.push({ id: `stage${n}`, gems: 50 + 2 * n, text: `ผ่านศึกการ์ดด่าน ${n}`, need: n, have: (c) => Math.max(0, ...Object.keys(c.stars).map(Number).filter(k => c.stars[k] > 0)) });
+  for (const n of [50, 100, 150, 200, 250, 300]) ACHIEVEMENTS.push({ id: `stars${n}`, gems: n, text: `เก็บดาวด่านรวม ${n} ดวง`, need: n, have: (c) => Object.values(c.stars).reduce((a, b) => a + Math.min(3, b), 0) });
+  for (const [n, gems] of [[5, 50], [10, 80], [15, 120], [20, 160], [25, 200]]) ACHIEVEMENTS.push({ id: `cards${n}`, gems, text: `มีการ์ด ${n} ใบ`, need: n, have: (c) => Object.keys(c.units).filter(id => CARDS[id] && c.units[id] > 0).length });
+  for (const [n, gems] of [[1, 50], [3, 100], [5, 200]]) ACHIEVEMENTS.push({ id: `awake${n}`, gems, text: `อัปดาวแดงการ์ดใบใดก็ได้ถึง ${n} ดวง`, need: n, have: (c) => Math.max(0, ...Object.values(c.awake || {})) });
+  ACHIEVEMENTS.push({ id: "sss1", gems: 200, text: "ได้การ์ดระดับ SSS ใบแรก", need: 1, have: (c) => CARD_IDS.filter(id => CARDS[id].rarity === 6 && c.units[id]).length });
+  for (const [n, gems] of [[10, 80], [20, 120], [30, 160], [50, 250]]) ACHIEVEMENTS.push({ id: `arena${n}`, gems, text: `ผ่านลานประลองชั้น ${n}`, need: n, have: (c) => Math.max(0, (c.arena || 1) - 1) });
+  // How far an achievement is: [have, need, done].
+  const achvProgress = (c, a) => { const have = Math.min(a.need, a.have(c)); return [have, a.need, have >= a.need]; };
+
   // ---- Star bonus ----
   // Every five stages (1-5, 6-10, ...) at full stars (15) give STAR_BONUS
   // gems, once. group n covers stages 5n-4 to 5n.
@@ -1250,6 +1277,7 @@
   const dueStarBonus = (stars, paid = []) => starGroups().filter(n => !paid.includes(n) && groupStars(stars, n) >= groupStages(n).length * 3);
 
   return {
+    DAILY_QUESTS, QUEST_CHEST, questFor, questDone, ACHIEVEMENTS, achvProgress,
     GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS, wingCompensation,
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,

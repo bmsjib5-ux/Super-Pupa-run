@@ -156,8 +156,11 @@
     // before wings existed would have given (see E.wingCompensation)
     const wingComp = raw.wingComp === true;
     if (!wingComp) { wingGift = E.wingCompensation(best, Math.max(1, Math.floor(Number(raw.arena) || 1))); wings += wingGift; }
+    const rq = raw.quest && typeof raw.quest.day === "string" ? raw.quest : null;
+    const quest = E.questFor(rq ? { day: rq.day.slice(0, 10), counts: Object.fromEntries(Object.entries(rq.counts || {}).map(([k, v]) => [k, Math.max(0, Math.floor(Number(v) || 0))])), claimed: (Array.isArray(rq.claimed) ? rq.claimed : []).filter(id => typeof id === "string") } : null, today());
+    const achv = [...new Set((Array.isArray(raw.achv) ? raw.achv : []).filter(id => typeof id === "string"))];
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, quest, achv, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -264,15 +267,15 @@
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["team", "ทีม"]]) {
-      const t = button("", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
+    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["quests", "📜 เควส"], ["team", "ทีม"]]) {
+      const t = button(key === "quests" && questsReady() ? "has-dot" : "", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
       tabs.append(t);
     }
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
-    if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else renderTeam(panel);
+    if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else renderTeam(panel);
     body.replaceChildren(idleBanner(), tabs, panel);
   }
 
@@ -298,6 +301,7 @@
     const c = cards(), got = E.idleReward(bestStage(), Date.now() - c.idleAt);
     if (got.coins < 1 && got.xp < 1) return;
     c.idleAt = Date.now();
+    questTick("idle");
     save().coins += got.coins;
     const ups = shareXp(c.team.filter(Boolean), got.xp);
     store();
@@ -368,6 +372,7 @@
     const g = E.GACHA, cost = count >= 10 ? g.ten : g.one;
     if ((save().gems || 0) < cost) { tone(150, .12, "square", .05); return; }
     save().gems -= cost;
+    questTick("pull", count);
     const state = { pity: pity() };
     const got = E.pull(state, Math.random, count);
     save().cardPity = state.pity;
@@ -447,6 +452,7 @@
     if (won) {
       if (c.dungeon.day !== today()) c.dungeon = { day: today(), exp: false, coin: false };
       c.dungeon[stage.dungeon] = true;
+      questTick("dungeon"); questTick("win");
       save().coins += stage.coins;
       addGems(stage.gems);
       cards().dust += stage.dust || 0;
@@ -513,6 +519,71 @@
     [784, 988, 1175, 1568].forEach((note, i) => tone(note, .14, "triangle", .06, i * .09));
     if (show) openSheet([el("h3", "sheet-title", "🌟 โบนัสดาวครบ!"), el("p", "sheet-reward", `ได้รับ 💎 ${fmt(gems)} + 🪽 ${due.length * E.STAR_WINGS}`), el("p", "sheet-sub", `เก็บครบ 15 ดาวใน ${ranges.join(" · ")} · ทุก 5 ด่านที่ได้ดาวครบ รับ 💎 ${E.STAR_BONUS}`)]);
     return gems;
+  }
+
+  // ---- Quests ----
+  // Daily quests (reset at midnight, a chest for finishing them all) and
+  // achievements (milestones, each paid once). Both pay gems.
+  function quest() { const c = cards(); c.quest = E.questFor(c.quest, today()); return c.quest; }
+  function questTick(key, n = 1) { const q = quest(); q.counts[key] = (q.counts[key] || 0) + n; }
+  const chestReady = () => { const q = quest(); return !q.claimed.includes("chest") && E.DAILY_QUESTS.every(d => q.claimed.includes(d.id)); };
+  function questsReady() {
+    const q = quest(), c = cards();
+    return E.DAILY_QUESTS.some(d => E.questDone(q, d) && !q.claimed.includes(d.id)) || chestReady() || E.ACHIEVEMENTS.some(a => !c.achv.includes(a.id) && E.achvProgress(c, a)[2]);
+  }
+  function claimQuest(kind, id) {
+    const c = cards(), q = quest();
+    let gems = 0, wings = 0, text = "";
+    if (kind === "daily") {
+      const d = E.DAILY_QUESTS.find(x => x.id === id);
+      if (!d || q.claimed.includes(id) || !E.questDone(q, d)) return;
+      q.claimed.push(id); gems = d.gems; text = d.text;
+    } else if (kind === "chest") {
+      if (!chestReady()) return;
+      q.claimed.push("chest"); gems = E.QUEST_CHEST.gems; wings = E.QUEST_CHEST.wings; text = "หีบเควสรายวัน";
+    } else {
+      const a = E.ACHIEVEMENTS.find(x => x.id === id);
+      if (!a || c.achv.includes(id) || !E.achvProgress(c, a)[2]) return;
+      c.achv.push(id); gems = a.gems; text = a.text;
+    }
+    addGems(gems); c.wings += wings;
+    store(); showCoins();
+    [659, 784, 988, 1319].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+    announce(`รับรางวัลเควส ${text} ได้ ${gems} เพชร${wings ? ` และปีก ${wings}` : ""}`);
+    showHub();
+  }
+  function questRow(text, have, need, reward, state, onClaim) {
+    const row = el("div", `quest-row is-${state}`);
+    const info = el("div", "quest-info");
+    const bar = el("i", "quest-bar");
+    bar.style.setProperty("--fill", `${Math.round(100 * Math.min(1, have / need))}%`);
+    info.append(el("b", null, text), bar, el("small", null, `${fmt(Math.min(have, need))} / ${fmt(need)}`));
+    const btn = button(state === "ready" ? "shop-buy quest-claim" : "shop-equip quest-claim", state === "done" ? "รับแล้ว ✓" : state === "ready" ? `รับ ${reward}` : reward, onClaim);
+    btn.disabled = state !== "ready";
+    row.append(info, btn);
+    return row;
+  }
+  function renderQuests(panel) {
+    const c = cards(), q = quest();
+    panel.append(el("h3", "shop-heading", "📜 เควสรายวัน"), el("p", "cards-intro", `ทำเควสรับเพชร · รีเซ็ตใน ${untilMidnight()} · ทำครบทุกข้อเปิดหีบ 💎 ${E.QUEST_CHEST.gems} + 🪽 ${E.QUEST_CHEST.wings}`));
+    const daily = el("div", "quest-list");
+    for (const d of E.DAILY_QUESTS) {
+      const have = q.counts[d.key] || 0, state = q.claimed.includes(d.id) ? "done" : have >= d.need ? "ready" : "todo";
+      daily.append(questRow(d.text, have, d.need, `💎 ${d.gems}`, state, () => claimQuest("daily", d.id)));
+    }
+    const doneCount = E.DAILY_QUESTS.filter(d => q.claimed.includes(d.id)).length;
+    daily.append(questRow("🎁 หีบเควสรายวัน · ทำเควสวันนี้ครบทุกข้อ", doneCount, E.DAILY_QUESTS.length, `💎 ${E.QUEST_CHEST.gems} 🪽 ${E.QUEST_CHEST.wings}`, q.claimed.includes("chest") ? "done" : chestReady() ? "ready" : "todo", () => claimQuest("chest")));
+    panel.append(daily);
+    panel.append(el("h3", "shop-heading", "🏆 ภารกิจความสำเร็จ"), el("p", "cards-intro", "รับได้ครั้งเดียว ทำสำเร็จไปแล้วก่อนหน้านี้ก็กดรับได้เลย"));
+    const order = { ready: 0, todo: 1, done: 2 };
+    const rows = E.ACHIEVEMENTS.map(a => { const [have, need, ok] = E.achvProgress(c, a); return { a, have, need, state: c.achv.includes(a.id) ? "done" : ok ? "ready" : "todo" }; });
+    // the next milestone of each kind, those ready, then those paid
+    const kind = (a) => a.id.replace(/\d+$/, "");
+    const shown = rows.filter(r => r.state !== "todo" || !rows.some(o => o.state === "todo" && kind(o.a) === kind(r.a) && o.need < r.need));
+    shown.sort((x, y) => order[x.state] - order[y.state]);
+    const list = el("div", "quest-list");
+    for (const r of shown) list.append(questRow(r.a.text, r.have, r.need, `💎 ${r.a.gems}`, r.state, () => claimQuest("achv", r.a.id)));
+    panel.append(list);
   }
 
   // ---- Stage map ----
@@ -823,6 +894,7 @@
     if (lv >= E.capFor(c.awake[id]) || save().coins < cost) { tone(150, .12, "square", .05); return; }
     save().coins -= cost;
     c.units[id] = lv + 1;
+    questTick("level");
     store();
     showCoins();
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
@@ -1258,6 +1330,7 @@
       if (c.team.includes("pupa")) coins = Math.round(coins * (1 + E.CARDS.pupa.passive.coins));
       if (first) { gems = stage.gems; addGems(gems); c.dust += stage.dust || 0; c.wings += stage.wings || 0; }
       c.stars[stage.num] = Math.max(c.stars[stage.num] || 0, got);
+      questTick("win");
       save().coins += coins;
       store();
       showCoins();
@@ -1302,6 +1375,7 @@
     const b = v.state, tier = v.stage, c = cards(), won = b.result === "won";
     const xp = Math.round(tier.xp * (won ? 1 : .3));
     const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
+    questTick("arena"); if (won) questTick("win");
     if (won) { save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.wings += tier.wings || 0; c.arena = Math.max(c.arena, tier.num + 1); }
     store(); showCoins();
     v.busy = true;

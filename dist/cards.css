@@ -576,3 +576,19 @@ button.unit { cursor: crosshair; }
 .map-node { transform: translate3d(-50%, -1.45rem, 0); will-change: transform; }
 .map-node.is-boss { transform: translate3d(-50%, -1.75rem, 0); }
 .map-lock { z-index: 5; transform: translate3d(-50%, -50%, 0); }
+
+/* ---- Quests ---- */
+.cards-tabs .has-dot { position: relative; }
+.cards-tabs .has-dot::after { content: ""; position: absolute; top: .3rem; right: .45rem; width: .55rem; height: .55rem; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 .4rem #ff4d5e; }
+.quest-list { display: grid; gap: .4rem; margin-bottom: .8rem; }
+.quest-row { display: flex; align-items: center; gap: .7rem; padding: .5rem .7rem; border: 1px solid rgba(255,255,255,.14); border-radius: .8rem; background: rgba(30,14,60,.6); }
+.quest-row.is-ready { border-color: rgba(255,215,106,.7); background: linear-gradient(90deg, rgba(120,70,20,.45), rgba(30,14,60,.6)); box-shadow: 0 0 .7rem rgba(255,215,106,.25); }
+.quest-row.is-done { opacity: .55; }
+.quest-info { flex: 1; min-width: 0; display: grid; gap: .2rem; }
+.quest-info b { font-size: .82rem; }
+.quest-info small { color: #cfc4e2; font-size: .66rem; }
+.quest-bar { display: block; height: .4rem; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+.quest-bar::before { content: ""; display: block; width: var(--fill, 0%); height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffd76a, #ff9a5a); }
+.quest-row.is-done .quest-bar::before { background: var(--mint); }
+.quest-claim { flex: none; min-width: 6.5rem; }
+.cards-tabs > button { min-width: 0; padding-inline: .3rem; white-space: nowrap; font-size: clamp(.68rem, 2.8vw, .95rem); }

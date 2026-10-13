@@ -142,3 +142,16 @@ test("cards: wings owed for boss stages and arena floors cleared before wings", 
   assert.equal(E.wingCompensation({}, 12), 4); // floors 5 and 10
   assert.equal(E.wingCompensation({}, 1), 0);
 });
+
+test("cards: daily quests renew each day, achievements read the save", () => {
+  const q = E.questFor(null, "2026-10-13");
+  q.counts.win = 3;
+  assert.ok(E.questDone(q, E.DAILY_QUESTS.find(d => d.id === "win3")));
+  assert.equal(E.questFor(q, "2026-10-13"), q);
+  assert.deepEqual(E.questFor(q, "2026-10-14").counts, {});
+  const c = { stars: { 1: 3, 10: 2 }, units: { pupa: 1 }, awake: {}, arena: 11 };
+  const get = (id) => E.achvProgress(c, E.ACHIEVEMENTS.find(a => a.id === id));
+  assert.deepEqual(get("stage10"), [10, 10, true]);
+  assert.deepEqual(get("arena10"), [10, 10, true]);
+  assert.equal(get("cards5")[2], false);
+});
