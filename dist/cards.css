@@ -695,3 +695,14 @@ button.unit { cursor: crosshair; }
 .holo:hover .holo-foil, .holo.is-tilting .holo-foil { opacity: calc(var(--foil) + .25); }
 .holo-glare { background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.45), rgba(255,255,255,.08) 25%, rgba(255,255,255,0) 50%); }
 .holo.r6 .holo-glare { opacity: .45; }
+
+/* icon-only tabs: seven fit on a phone */
+.cards-tabs { overflow-x: visible; }
+.cards-tabs > button.cards-tab-icon { flex: 1 1 0; min-width: 0; padding-inline: 0; font-size: clamp(1.15rem, 5vw, 1.45rem); line-height: 1; }
+.cards-tabs .has-dot::after { top: .2rem; right: .25rem; }
+/* the tower's next floor: the button no longer squeezes the words */
+.tower-floor { flex-wrap: wrap; }
+.tower-go { min-width: 0; width: auto; padding-inline: 1rem; }
+@media (max-width: 34rem) {
+  .tower-floor.is-next .tower-go, .tower-floor.is-cleared .tower-go { flex: 1 0 100%; }
+}

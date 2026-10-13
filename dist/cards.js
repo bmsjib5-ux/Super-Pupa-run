@@ -362,8 +362,10 @@
     showCoins();
     const tabs = el("div", "shop-tabs cards-tabs");
     tabs.setAttribute("role", "tablist");
-    for (const [key, label] of [["stages", "ด่าน"], ["pulls", "🎴 สุ่ม"], ["daily", "ประจำวัน"], ["arena", "ประลอง"], ["tower", "🗼 หอคอย"], ["quests", "📜 เควส"], ["team", "ทีม"]]) {
-      const t = button(key === "quests" && questsReady() ? "has-dot" : "", label, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); });
+    // icons only; the name is the button's label and tooltip
+    for (const [key, icon, label] of [["stages", "🗺️", "ด่าน"], ["pulls", "🎴", "สุ่มการ์ด"], ["daily", "🌞", "ด่านประจำวัน"], ["arena", "⚔️", "ลานประลอง"], ["tower", "🗼", "หอคอย"], ["quests", "📜", "เควส"], ["team", "👥", "ทีม"]]) {
+      const t = button(`cards-tab-icon${key === "quests" && questsReady() ? " has-dot" : ""}`, icon, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); }, label);
+      t.title = label;
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
       tabs.append(t);
