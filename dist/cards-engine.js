@@ -894,6 +894,34 @@
     };
   });
 
+  // Card bonds: cards that fight side by side hit harder. Every member of
+  // a bond on the same team gets the bond's extra attack; a card in two
+  // active bonds gets both.
+  const BONDS = [
+    { id: "pupa", name: "พี่น้องปูป้า", icon: "🍄", ids: ["pupa", "pupav2"], atk: .1 },
+    { id: "samurai", name: "แฝดซามูไร", icon: "⚔", ids: ["chada", "anchan"], atk: .15 },
+    { id: "tiger", name: "แฝดพยัคฆ์", icon: "🐯", ids: ["phayak", "wayu"], atk: .15 },
+    { id: "wall", name: "กำแพงเหล็ก", icon: "🛡", ids: ["sila", "vajira", "thongkham"], atk: .15 },
+    { id: "moon", name: "ราตรีจันทร์เต็มดวง", icon: "🌕", ids: ["chantra", "ratri", "moonrabbit", "silverwolf"], atk: .12 },
+    { id: "flame", name: "เปลวเพลิงนิรันดร์", icon: "🔥", ids: ["phloeng", "phoenix", "dragon"], atk: .15 },
+    { id: "storm", name: "อสนีบาต", icon: "⚡", ids: ["asani", "mekha"], atk: .12 },
+    { id: "heaven", name: "ทวยเทพสวรรค์", icon: "✨", ids: ["seraphina", "naphalai", "qilin"], atk: .15 },
+    { id: "blade", name: "ศิษย์สำนักดาบ", icon: "🗡", ids: ["ikuya", "sakura", "chada"], atk: .1 },
+    { id: "friends", name: "ผองเพื่อนผจญภัย", icon: "🎒", ids: ["jibjib", "baitoey", "pangji"], atk: .1 },
+    { id: "tiny", name: "เพื่อนตัวจิ๋ว", icon: "🐾", ids: ["firefly", "kitten", "minibat"], atk: .1 },
+    { id: "stars", name: "ดาราจักร", icon: "⭐", ids: ["starsprite", "starowl", "miu"], atk: .1 },
+    { id: "song", name: "บทเพลงสายลม", icon: "🎵", ids: ["fasai", "mekha", "baitoey"], atk: .1 }
+  ];
+  // A bond counts with at least two of its members together (all of a
+  // two-card bond); members: who of the team are in it.
+  function activeBonds(ids) {
+    const team = new Set(ids.filter(Boolean));
+    return BONDS.map(bond => ({ ...bond, members: bond.ids.filter(id => team.has(id)) })).filter(bond => bond.members.length >= 2);
+  }
+  // The extra attack a card gets from the bonds active in this team.
+  const bondAtk = (ids, id) => activeBonds(ids).filter(bond => bond.members.includes(id)).reduce((sum, bond) => sum + bond.atk, 0);
+  const bondsOf = (id) => BONDS.filter(bond => bond.ids.includes(id));
+
   // ---- Numbers ----
   function statsOf(def, lv, foe) {
     const role = ROLES[def.role];
@@ -961,6 +989,10 @@
       const entry = team[slot];
       b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv, entry.row, entry.bonus || 0) : null;
     }
+    // bonds between the cards fielded together
+    const ids = living(b.heroes).map(u => u.id);
+    b.bonds = activeBonds(ids).map(bond => ({ id: bond.id, name: bond.name, icon: bond.icon, atk: bond.atk, members: bond.members }));
+    for (const hero of living(b.heroes)) { const extra = bondAtk(ids, hero.id); if (extra) { hero.atk = Math.round(hero.atk * (1 + extra)); hero.bond = extra; } }
     for (const hero of living(b.heroes)) {
       if (hero.passive?.shield) addStatus(hero, { k: "shield", v: Math.round(hero.maxHp * hero.passive.shield), turns: 2 });
       // a guardian's passive shields the whole team
@@ -1564,7 +1596,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

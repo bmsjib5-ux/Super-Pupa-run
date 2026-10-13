@@ -770,3 +770,24 @@ button.unit { cursor: crosshair; }
   background-position: var(--mx) 0, 0 0;
 }
 @keyframes holo-sweep { 0% { background-position: 100% 0, 0 0; } 60%, 100% { background-position: 0% 0, 0 0; } }
+
+/* Card bonds */
+.bond-strip { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .2rem 0 .8rem; font-size: .76rem; }
+.bond-strip > b { color: #ffd76a; margin-right: .2rem; }
+.bond-none { color: rgba(255,255,255,.6); }
+.bond-chip { padding: .25rem .6rem; border-radius: 999px; color: #2a1606; font-weight: 700; background: linear-gradient(135deg, #ffe9a3, #ffc04d); box-shadow: 0 0 .6rem rgba(255,200,80,.45); }
+.sheet-bonds { margin: .7rem 0 0; padding: .55rem .7rem; border-radius: .7rem; background: rgba(255,215,106,.07); font-size: .76rem; }
+.sheet-bonds > b { display: block; margin-bottom: .4rem; color: #ffd76a; font-weight: 700; }
+.bond-row { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; padding: .35rem .4rem; border-radius: .55rem; }
+.bond-row + .bond-row { margin-top: .2rem; }
+.bond-row.is-on { background: rgba(255,200,80,.16); box-shadow: inset 0 0 0 1px rgba(255,210,100,.55); }
+.bond-name { font-weight: 700; }
+.bond-atk { color: #ff9a6a; font-weight: 700; }
+.bond-row em { margin-left: auto; color: #ffd76a; font-style: normal; font-weight: 700; }
+.bond-members { display: flex; gap: .25rem; }
+.bond-face { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; overflow: hidden; border-radius: 50%; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.bond-face img, .bond-face canvas { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+.bond-face.is-missing { filter: grayscale(1) brightness(.55); }
+.bond-face.is-team { box-shadow: inset 0 0 0 2px #ffd76a; }
+.battle-bonds { position: absolute; top: .5rem; left: .5rem; z-index: 3; display: flex; flex-wrap: wrap; gap: .3rem; max-width: 60%; pointer-events: none; }
+.battle-bonds span { padding: .18rem .5rem; border-radius: 999px; color: #2a1606; font-size: .68rem; font-weight: 700; background: linear-gradient(135deg, #ffe9a3, #ffc04d); box-shadow: 0 0 .5rem rgba(255,200,80,.5); }

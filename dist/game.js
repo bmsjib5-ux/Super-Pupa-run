@@ -6327,10 +6327,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13l";
+  const NEWS_VERSION = "2026-10-13m";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "🔗 ความสัมพันธ์การ์ด", text: "ลงการ์ดที่มีความสัมพันธ์กันในทีมเดียวกันอย่างน้อย 2 ใบ สมาชิกทุกใบโจมตีแรงขึ้น 10–15% และถ้าการ์ดอยู่หลายความสัมพันธ์ก็ได้โบนัสซ้อนกัน มีทั้งหมด 13 ความสัมพันธ์ เช่น แฝดซามูไร (ชาดา+อัญชัน) แฝดพยัคฆ์ (พยัคฆ์+วายุ) กำแพงเหล็ก (ศิลา วชิระ ทองคำ) และเปลวเพลิงนิรันดร์ (เพลิง วิหคเพลิงทอง มังกรน้อย) ดูความสัมพันธ์ของแต่ละการ์ดได้ที่หน้าการ์ด", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ของขวัญ", title: "แจกเพชร 10,000 ทุกคน!", text: "ของขวัญพิเศษสำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดอัตโนมัติเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ไปสุ่มการ์ด S ใหม่ได้เลยที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "S ใหม่ 5 ใบ · สายต่อสู้และป้องกัน", text: "ชาดา ซามูไรดาบโลหิตคริติคอลสูง · อัญชัน ซามูไรแฝดดาบน้ำแข็งทั้งฟันทั้งป้อง · พยัคฆ์ นักสู้หมัดเสือตีซ้ำได้ · วายุ แฝดเสือครามยืนรับแทนเพื่อน · ศิลา อัศวินโล่ศิลากางเกราะให้ทั้งทีม สุ่มได้ที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 13 · ป่าเห็ดนีออน", text: "ด่าน 121–130 ในป่าเห็ดยักษ์เรืองแสง สปอร์สีฟ้าและชมพูลอยทั่วป่า มอนสเตอร์ป่าเห็ด 8 ชนิด บอสราชาเห็ดนีออน และราชินีสปอร์ แนะนำการ์ด Lv 120 ปลุกพลังดาวทอง", image: "chapter13", open: () => { closeNews(); window.PupaCards?.open(); } },

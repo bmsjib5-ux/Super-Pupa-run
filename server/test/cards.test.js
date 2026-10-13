@@ -193,3 +193,15 @@ test("cards: the tower has 100 floors, a boss on each and a great one every tent
   assert.equal(E.towerFloor(30).waves[0][0].id, "golemboss");
   assert.equal(E.STAGES[29].waves[2][0].id, "golemboss"); // chapter 3 ends at the lava golem
 });
+
+test("cards: bonds raise the attack of members fielded together", () => {
+  const stage = E.STAGES[0];
+  const solo = E.createBattle({ team: [{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }], stage, seed: 1 });
+  const pair = E.createBattle({ team: [{ id: "chada", lv: 10 }, { id: "anchan", lv: 10 }], stage, seed: 1 });
+  assert.deepEqual(solo.bonds, []);
+  assert.deepEqual(pair.bonds.map(b => b.id), ["samurai"]);
+  assert.equal(pair.heroes[0].atk, Math.round(solo.heroes[0].atk * 1.15));
+  // a card in two active bonds gets both
+  assert.ok(Math.abs(E.bondAtk(["chada", "anchan", "ikuya"], "chada") - .25) < 1e-9);
+  for (const bond of E.BONDS) for (const id of bond.ids) assert.ok(E.CARDS[id], `${bond.id}: ${id}`);
+});

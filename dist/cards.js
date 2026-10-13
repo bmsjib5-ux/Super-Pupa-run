@@ -884,6 +884,7 @@
       formation.append(row);
     }
     const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า`);
+    const bonds = bondStrip(c.team);
     const heading = el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`);
     const grid = el("div", "cards-grid");
     // owned cards first, then each from the highest grade down, stars, level
@@ -892,7 +893,7 @@
       return hb - ha || E.CARDS[b].rarity - E.CARDS[a].rarity || (c.awake[b] || 0) - (c.awake[a] || 0) || (c.units[b] || 0) - (c.units[a] || 0) || x.n - y.n;
     }).map(o => o.id);
     for (const id of order) grid.append(cardTile(id, () => cardSheet(id)));
-    panel.append(formation, sum, heading, grid);
+    panel.append(formation, sum, bonds, heading, grid);
   }
 
   // A small card: picture, rarity, role, name and level.
@@ -959,6 +960,43 @@
     if (!quiet) showHub();
   }
 
+  // Card bonds: the ones active in the team, as chips with their bonus.
+  function bondStrip(ids) {
+    const box = el("div", "bond-strip");
+    const active = E.activeBonds(ids);
+    box.append(el("b", null, "🔗 ความสัมพันธ์"));
+    if (!active.length) box.append(el("span", "bond-none", "ลงการ์ดที่มีความสัมพันธ์กันพร้อมกัน เพื่อเพิ่มพลังโจมตี (ดูได้ที่หน้าการ์ด)"));
+    for (const bond of active) {
+      const chip = el("span", "bond-chip", `${bond.icon} ${bond.name} · โจมตี +${Math.round(bond.atk * 100)}%`);
+      chip.title = bond.members.map(m => E.CARDS[m].name).join(" · ");
+      box.append(chip);
+    }
+    return box;
+  }
+  // On a card's sheet: every bond the card is in, who else is in it, and
+  // whether it is active in the team now.
+  function bondSheet(id) {
+    const c = cards(), team = c.team.filter(Boolean);
+    const box = el("div", "sheet-bonds");
+    box.append(el("b", null, "🔗 ความสัมพันธ์ · ลงพร้อมกันอย่างน้อย 2 ใบ สมาชิกทุกใบโจมตีแรงขึ้น"));
+    for (const bond of E.bondsOf(id)) {
+      const on = team.includes(id) && E.activeBonds(team).some(b => b.id === bond.id);
+      const row = el("div", `bond-row${on ? " is-on" : ""}`);
+      row.append(el("span", "bond-name", `${bond.icon} ${bond.name}`), el("span", "bond-atk", `+${Math.round(bond.atk * 100)}%`));
+      const who = el("span", "bond-members");
+      for (const m of bond.ids) {
+        const face = el("span", `bond-face${c.units[m] ? "" : " is-missing"}${team.includes(m) ? " is-team" : ""}`);
+        face.append(portrait(m));
+        face.title = E.CARDS[m].name;
+        who.append(face);
+      }
+      row.append(who);
+      if (on) row.append(el("em", null, "ทำงานอยู่"));
+      box.append(row);
+    }
+    return box;
+  }
+
   function cardSheet(id) {
     const c = cards(), def = E.CARDS[id], lv = c.units[id];
     const role = E.ROLES[def.role];
@@ -990,6 +1028,7 @@
       parts.push(bar);
     }
     if (def.passive) parts.push(el("p", "sheet-passive", `ติดตัว · ${def.passive.text}`));
+    if (E.bondsOf(id).length) parts.push(bondSheet(id));
     if (lv) {
       // red stars: shards of this card (or star dust), star-up wings and coins
       const at = c.awake[id] || 0, cost = E.awakeCost(c, id);
@@ -1163,7 +1202,7 @@
     frame.classList.toggle("is-arena", Boolean(stage.arena));
     buildBattle();
     tone(392, .1, "triangle", .05); tone(523, .12, "triangle", .05, .1);
-    announce(stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`);
+    announce((stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`) + (state.bonds.length ? ` · ความสัมพันธ์ ${state.bonds.map(b => b.name).join(" ")}` : ""));
     runBattle(battle);
   }
 
@@ -1185,6 +1224,11 @@
     v.banner = el("div", "battle-banner");
     v.banner.setAttribute("aria-hidden", "true");
     field.append(v.banner);
+    if (v.state.bonds?.length) {
+      const strip = el("div", "battle-bonds");
+      for (const bond of v.state.bonds) strip.append(el("span", null, `${bond.icon} ${bond.name} +${Math.round(bond.atk * 100)}%`));
+      field.append(strip);
+    }
     v.hintLine = el("p", "battle-hint");
     v.hintLine.setAttribute("aria-live", "polite");
     v.bar = el("div", "battle-bar");
