@@ -175,3 +175,11 @@ test("cards: daily quests renew each day, achievements read the save", () => {
   assert.deepEqual(get("arena10"), [10, 10, true]);
   assert.equal(get("cards5")[2], false);
 });
+
+test("cards: the arena fields the player's own ten when chosen", () => {
+  const cards = { units: { pupa: 10, ikuya: 20, phloeng: 30, kitten: 5 }, awake: {}, outfit: {}, arenaPick: ["kitten", "pupa", "ghost"], arenaFront: ["kitten", "ikuya"] };
+  const team = E.arenaTeam(cards);
+  assert.deepEqual(team.map(t => t.id), ["kitten", "pupa"]);
+  assert.deepEqual(team.map(t => t.row), ["front", "back"]);
+  assert.equal(E.arenaTeam({ ...cards, arenaPick: [] }).length, 4); // automatic: every card
+});

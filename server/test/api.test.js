@@ -224,3 +224,10 @@ test("merge: quests keep the later day, every claim of the same day, and achieve
   const c = mergeSave(b, cleanSave(device(0, { cards: { quest: { day: "2026-10-14", counts: {}, claimed: [] } } })), 0);
   assert.equal(c.cards.quest.day, "2026-10-14");
 });
+
+test("merge: card levels past 99 (second awakening) and the arena team survive a sync", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { phloeng: 125 }, arenaPick: ["phloeng"], arenaFront: ["phloeng"] } })), 0);
+  assert.equal(a.cards.units.phloeng, 125);
+  assert.deepEqual(a.cards.arenaPick, ["phloeng"]);
+  assert.deepEqual(a.cards.arenaFront, ["phloeng"]);
+});

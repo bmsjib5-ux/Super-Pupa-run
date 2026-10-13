@@ -1204,7 +1204,14 @@
     };
   }
   // The strongest cards first, tanks in front: who goes to the arena.
+  // The player's own ten (cards.arenaPick, front row cards.arenaFront) when
+  // set, otherwise the strongest ten with the sturdiest in front.
   function arenaTeam(cards) {
+    const picked = (cards.arenaPick || []).filter(id => CARDS[id] && cards.units[id]).slice(0, ARENA_SIZE);
+    if (picked.length) {
+      const chosen = (cards.arenaFront || []).filter(id => picked.includes(id)).slice(0, ARENA_FRONT);
+      return picked.map(id => ({ id, lv: cards.units[id], row: chosen.includes(id) ? "front" : "back", bonus: cardBonus(cards, id) }));
+    }
     const ids = Object.keys(cards.units).filter(id => CARDS[id]).sort((a, b) => power(b, cards.units[b]) * (1 + cardBonus(cards, b)) - power(a, cards.units[a]) * (1 + cardBonus(cards, a))).slice(0, ARENA_SIZE);
     const sturdy = (id) => ({ defense: 0, balance: 1, attack: 2, magic: 3, support: 4 })[CARDS[id].role];
     const front = [...ids].sort((a, b) => sturdy(a) - sturdy(b)).slice(0, Math.min(ARENA_FRONT, Math.ceil(ids.length / 2)));
@@ -1359,7 +1366,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

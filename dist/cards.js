@@ -160,9 +160,11 @@
     if (!wingComp) { wingGift = E.wingCompensation(best, Math.max(1, Math.floor(Number(raw.arena) || 1))); wings += wingGift; }
     const rq = raw.quest && typeof raw.quest.day === "string" ? raw.quest : null;
     const quest = E.questFor(rq ? { day: rq.day.slice(0, 10), counts: Object.fromEntries(Object.entries(rq.counts || {}).map(([k, v]) => [k, Math.max(0, Math.floor(Number(v) || 0))])), claimed: (Array.isArray(rq.claimed) ? rq.claimed : []).filter(id => typeof id === "string") } : null, today());
+    const arenaPick = [...new Set((Array.isArray(raw.arenaPick) ? raw.arenaPick : []).filter(id => units[id]))].slice(0, E.ARENA_SIZE);
+    const arenaFront = [...new Set((Array.isArray(raw.arenaFront) ? raw.arenaFront : []).filter(id => arenaPick.includes(id)))].slice(0, E.ARENA_FRONT);
     const achv = [...new Set((Array.isArray(raw.achv) ? raw.achv : []).filter(id => typeof id === "string"))];
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, quest, achv, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, wings, wingComp: true, quest, achv, arenaPick, arenaFront, starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -496,17 +498,65 @@
   function renderArena(panel) {
     const c = cards(), tier = E.arenaTier(c.arena);
     const team = E.arenaTeam(c);
-    panel.append(el("p", "cards-intro", `การ์ดที่แรงที่สุด ${team.length} ใบลงสนามเอง ตัวป้องกันยืนหน้า · สู้อัตโนมัติทั้งหมด · ชนะแล้วขึ้นชั้นต่อไป`));
+    const own = c.arenaPick.length > 0;
+    panel.append(el("p", "cards-intro", `${own ? `ทีมที่จัดเอง ${team.length} ใบ` : `จัดอัตโนมัติ · การ์ดที่แรงที่สุด ${team.length} ใบ ตัวป้องกันยืนหน้า`} · สู้อัตโนมัติทั้งหมด · ชนะแล้วขึ้นชั้นต่อไป`));
     const box = el("section", "arena-box");
     box.append(el("h3", "sheet-title", `ชั้น ${tier.num}${tier.boss ? " · มีบอส" : ""}`), el("p", "sheet-sub", `มอนสเตอร์ 10 ตัว Lv ${tier.lv} · รางวัล 💎 ${tier.gems} · ● ${tier.coins} · EXP ${tier.xp} ต่อการ์ด`));
     const foes = el("div", "sheet-foes");
     for (const f of tier.waves[0]) { const fig = el("figure", `sheet-foe${E.FOES[f.id].boss ? " is-boss" : ""}`); fig.append(foeArt(f.id), el("figcaption", null, E.FOES[f.id].name)); foes.append(fig); }
     const mine = el("div", "arena-team");
-    for (const t of team) mine.append(cardTile(t.id, () => cardSheet(t.id)));
+    for (const t of team) mine.append(cardTile(t.id, () => cardSheet(t.id), t.row === "front" ? "is-front" : ""));
     const go = button("primary-button", "เริ่มประลอง ⚔", () => startBattle(tier));
+    const edit = button("secondary-button", "จัดทีมประลอง ✎", () => arenaSheet());
     box.append(foes, el("p", "sheet-sub", `ทีมของคุณ ${team.length}/10 · พลังรวม ${fmt(team.reduce((sum, t) => sum + E.power(t.id, t.lv), 0))}`), mine, el("div", "title-actions sheet-actions"));
-    box.querySelector(".sheet-actions").append(go);
+    box.querySelector(".sheet-actions").append(edit, go);
     panel.append(box);
+  }
+
+  // Choose the arena ten: tap a card below to bring it in or send it out,
+  // tap one in the team to move it between the front (up to 4) and back rows.
+  function arenaSheet() {
+    const c = cards();
+    if (!c.arenaPick.length) {
+      // start from what the automatic choice would field
+      const auto = E.arenaTeam({ ...c, arenaPick: [] });
+      c.arenaPick = auto.map(t => t.id);
+      c.arenaFront = auto.filter(t => t.row === "front").map(t => t.id);
+    }
+    const save2 = () => { store(); arenaSheet(); };
+    const rows = el("div", "arena-rows");
+    for (const [label, front] of [["แถวหน้า", true], ["แถวหลัง", false]]) {
+      const ids = c.arenaPick.filter(id => c.arenaFront.includes(id) === front);
+      const row = el("div", "cards-row");
+      row.append(el("b", "cards-row-label", front ? `${label} ${ids.length}/${E.ARENA_FRONT}` : `${label} ${ids.length}`));
+      const grid = el("div", "arena-team");
+      for (const id of ids) grid.append(cardTile(id, () => {
+        if (front) c.arenaFront = c.arenaFront.filter(x => x !== id);
+        else if (c.arenaFront.length < E.ARENA_FRONT) c.arenaFront.push(id);
+        else { tone(150, .12, "square", .05); announce(`แถวหน้าเต็มแล้ว ${E.ARENA_FRONT} ใบ`); return; }
+        tone(660, .06, "triangle", .04); save2();
+      }));
+      row.append(grid);
+      rows.append(row);
+    }
+    const pool = el("div", "card-pool arena-pool");
+    const owned = Object.keys(c.units).filter(id => E.CARDS[id]).sort((a, b) => E.power(b, c.units[b]) * (1 + E.cardBonus(c, b)) - E.power(a, c.units[a]) * (1 + E.cardBonus(c, a)));
+    for (const id of owned) {
+      const inTeam = c.arenaPick.includes(id);
+      pool.append(cardTile(id, () => {
+        if (inTeam) { c.arenaPick = c.arenaPick.filter(x => x !== id); c.arenaFront = c.arenaFront.filter(x => x !== id); }
+        else if (c.arenaPick.length < E.ARENA_SIZE) c.arenaPick.push(id);
+        else { tone(150, .12, "square", .05); announce(`ทีมประลองเต็ม ${E.ARENA_SIZE} ใบแล้ว แตะการ์ดในทีมเพื่อเอาออก`); return; }
+        tone(587, .06, "triangle", .04); save2();
+      }, inTeam ? "in-arena" : ""));
+    }
+    const actions = el("div", "title-actions sheet-actions");
+    actions.append(
+      button("secondary-button", "จัดอัตโนมัติ", () => { c.arenaPick = []; c.arenaFront = []; store(); tone(523, .06, "triangle", .04); announce("ใช้ทีมประลองอัตโนมัติ"); closeSheet(); }),
+      button("primary-button", "เสร็จ ✓", () => closeSheet())
+    );
+    const power = c.arenaPick.reduce((sum, id) => sum + E.power(id, c.units[id]), 0);
+    openSheet([el("h3", "sheet-title", "จัดทีมประลอง"), el("p", "sheet-sub", `${c.arenaPick.length}/${E.ARENA_SIZE} ใบ · พลังรวม ${fmt(power)} · แตะการ์ดในทีมเพื่อสลับแถวหน้า/หลัง · แตะการ์ดด้านล่างเพื่อเพิ่มหรือเอาออก`), rows, el("h3", "shop-heading", "การ์ดทั้งหมด (✓ = อยู่ในทีม)"), pool, actions]);
   }
 
   // Pays every five-stage group that has just reached full stars; returns

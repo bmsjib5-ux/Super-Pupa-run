@@ -603,3 +603,17 @@ button.unit { cursor: crosshair; }
 .sheet-awake.is-second { border-color: rgba(255,215,106,.7); background: linear-gradient(90deg, rgba(255,215,106,.14), rgba(255,90,110,.08)); }
 .sheet-awake.is-second > b { color: #ffe8a8; }
 .sheet-awake2 { margin: .15rem 0 0; color: #ffd76a; font-size: .74rem; font-weight: 800; }
+
+/* ---- Arena team builder ---- */
+.arena-rows { display: grid; gap: .45rem; margin: .4rem 0 .6rem; }
+.arena-rows .cards-row { align-items: flex-start; }
+.arena-rows .arena-team { flex: 1; min-height: 4.6rem; padding: .3rem; border: 1px dashed rgba(255,255,255,.2); border-radius: .7rem; }
+.arena-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr)); gap: .4rem; margin-bottom: .5rem; }
+.arena-pool .tcard-art { width: 3rem; height: 3rem; }
+.arena-pool .tcard-name { font-size: .64rem; }
+.tcard.in-arena { outline: 2px solid var(--mint); outline-offset: -2px; }
+.tcard.in-arena::before { content: "✓"; position: absolute; z-index: 2; bottom: .25rem; right: .35rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; color: #12301e; font-size: .7rem; font-weight: 900; line-height: 1.1rem; text-align: center; background: var(--mint); }
+.tcard.is-front::before { content: "หน้า"; position: absolute; z-index: 2; bottom: .25rem; right: .3rem; padding: 0 .3rem; border-radius: 999px; color: #2b1405; font-size: .55rem; font-weight: 900; background: var(--gold); }
+/* the story team's badge means nothing here */
+.arena-rows .tcard.is-picked::after, .arena-pool .tcard.is-picked::after, .arena-box .tcard.is-picked::after { display: none; }
+.arena-rows .tcard.is-picked .tcard-rare, .arena-pool .tcard.is-picked .tcard-rare, .arena-box .tcard.is-picked .tcard-rare { top: .25rem; }
