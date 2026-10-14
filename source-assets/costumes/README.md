@@ -39,3 +39,11 @@ Each card in its costume (worn from the card sheet in card mode), transparent PN
 | sila.png | ชุดอัศวินศิลาคราม |
 | nilakan.png | ชุดอัศวินรัตติกาลโลหิต |
 | arunee.png | ชุดอัศวินแสงจันทร์เงิน |
+| kalawit.png | ชุดนักฆ่าเงาครามเที่ยงคืน |
+| thamin.png | ชุดเกราะทมิฬโลหิต |
+| nisa.png | ชุดนักบวชจันทร์ม่วง |
+| asura.png | ชุดหอกอสูรมรกต |
+| prapha.png | ชุดดาบแสงกุหลาบทอง |
+| suriyan.png | ชุดโล่สุริยันเพลิง |
+| ratsami.png | ชุดนักบวชแสงฟ้า |
+| thinakorn.png | ชุดหอกตะวันเงิน |

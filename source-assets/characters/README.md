@@ -12,6 +12,14 @@ Every card in Super Pupa Run, transparent PNG, highest grade first. Redrawn with
 | SSS | qilin.png | กิเลนทอง |
 | SSS | nilakan.png | นิลกาฬ |
 | SSS | arunee.png | อรุณี |
+| S | kalawit.png | กาฬวิษ |
+| S | thamin.png | ทมิฬ |
+| S | nisa.png | นิศา |
+| S | asura.png | อสุรา |
+| S | prapha.png | ประภา |
+| S | suriyan.png | สุริยัน |
+| S | ratsami.png | รัศมี |
+| S | thinakorn.png | ทินกร |
 | S | pupav2.png | Pupa V2 |
 | S | dragon.png | มังกรน้อยเปลวแสง |
 | S | chantra.png | จันทรา |

@@ -42,6 +42,7 @@
     seraphina: "assets/seraphina-hero.webp", asani: "assets/asani-hero.webp", phoenix: "assets/phoenix-pet.webp",
     vajira: "assets/vajira-hero.webp", naphalai: "assets/naphalai-hero.webp", qilin: "assets/qilin-pet.webp",
     nilakan: "assets/nilakan-hero.webp", arunee: "assets/arunee-hero.webp",
+    kalawit: "assets/kalawit-hero.webp", thamin: "assets/thamin-hero.webp", nisa: "assets/nisa-hero.webp", asura: "assets/asura-hero.webp", prapha: "assets/prapha-hero.webp", suriyan: "assets/suriyan-hero.webp", ratsami: "assets/ratsami-hero.webp", thinakorn: "assets/thinakorn-hero.webp",
     chada: "assets/chada-hero.webp", anchan: "assets/anchan-hero.webp", phayak: "assets/phayak-hero.webp", wayu: "assets/wayu-hero.webp", sila: "assets/sila-hero.webp",
     // the four pets first drawn in code, now painted like the rest
     minibat: "assets/minibat-pet.webp", starsprite: "assets/starsprite-pet.webp", firefly: "assets/firefly-pet.webp", kitten: "assets/kitten-pet.webp",
@@ -53,7 +54,7 @@
   // A worn costume shows the card in its costume picture (assets/<id>-costume.webp)
   // with a golden glow.
   const costumeArt = (id) => `assets/${id}-costume.webp`;
-  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", nilakan: "ชุดอัศวินรัตติกาลโลหิต", arunee: "ชุดอัศวินแสงจันทร์เงิน", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", nilakan: "ชุดอัศวินรัตติกาลโลหิต", arunee: "ชุดอัศวินแสงจันทร์เงิน", kalawit: "ชุดนักฆ่าเงาครามเที่ยงคืน", thamin: "ชุดเกราะทมิฬโลหิต", nisa: "ชุดนักบวชจันทร์ม่วง", asura: "ชุดหอกอสูรมรกต", prapha: "ชุดดาบแสงกุหลาบทอง", suriyan: "ชุดโล่สุริยันเพลิง", ratsami: "ชุดนักบวชแสงฟ้า", thinakorn: "ชุดหอกตะวันเงิน", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
   // Every card has a 3D model (made with Hunyuan3D-2), shown on its sheet.
   const MODELS_3D = Object.fromEntries(E.CARD_IDS.map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
@@ -184,6 +185,8 @@
     "seraphina:0": "heal", "seraphina:1": "buff", "asani:0": "bolt", "asani:1": "bolt", "phoenix:0": "fire", "phoenix:1": "fire",
     "vajira:0": "shield", "vajira:1": "shield", "naphalai:0": "star", "naphalai:1": "star", "qilin:0": "bite", "qilin:1": "heal",
     "nilakan:0": "orb", "nilakan:1": "orb", "arunee:0": "star", "arunee:1": "fire",
+    "kalawit:0": "slash", "kalawit:1": "slash", "thamin:0": "shield", "thamin:1": "shield", "nisa:0": "heal", "nisa:1": "orb", "asura:0": "slash", "asura:1": "sonic",
+    "prapha:0": "slash", "prapha:1": "star", "suriyan:0": "shield", "suriyan:1": "shield", "ratsami:0": "heal", "ratsami:1": "buff", "thinakorn:0": "slash", "thinakorn:1": "fire",
     "chada:0": "slash", "chada:1": "slash", "anchan:0": "slash", "anchan:1": "shield", "phayak:0": "bite", "phayak:1": "stomp", "wayu:0": "shield", "wayu:1": "stomp", "sila:0": "shield", "sila:1": "shield",
     "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
     "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",

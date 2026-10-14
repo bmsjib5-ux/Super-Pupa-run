@@ -220,3 +220,9 @@ test("cards: the light and dark knights bond", () => {
   assert.deepEqual(E.activeBonds(["nilakan", "arunee"]).map(b => b.id), ["lightdark"]);
   assert.ok(Math.abs(E.bondAtk(["nilakan", "arunee"], "arunee") - .18) < 1e-9);
 });
+
+test("cards: the night and light orders bond with their leaders", () => {
+  assert.deepEqual(E.activeBonds(["nilakan", "kalawit", "thamin"]).map(b => b.id), ["nightorder"]);
+  assert.deepEqual(E.activeBonds(["arunee", "nilakan", "prapha"]).map(b => b.id).sort(), ["lightdark", "lightorder"]);
+  for (const id of ["kalawit", "thamin", "nisa", "asura", "prapha", "suriyan", "ratsami", "thinakorn"]) assert.equal(E.CARDS[id].rarity, 5);
+});

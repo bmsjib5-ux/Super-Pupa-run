@@ -303,6 +303,76 @@
         { name: "อรุณรุ่งพิพากษา", icon: "☀", cd: 5, first: 2, target: "all", power: 2.1, fx: [{ k: "defDown", v: .3, turns: 2 }, { k: "atkUp", v: .3, turns: 2, on: "allies" }] }
       ]
     },
+    // The night order: four knights who ride with Nilakan.
+    kalawit: {
+      name: "กาฬวิษ", role: "attack", rarity: 5, art: "kalawit", from: "hero", crit: .3,
+      text: "นักฆ่าแห่งอัศวินรัตติกาล มีดคู่เงาที่ไม่มีใครเห็นทัน",
+      passive: { text: "เงาสังหาร: โอกาสคริติคอล 30%" },
+      skills: [
+        { name: "กรีดเงา", icon: "🗡", cd: 3, target: "back", power: 2.2, drain: .25 },
+        { name: "พันเงาสังหาร", icon: "🌘", cd: 5, first: 2, target: "random", hits: 5, power: .85, fx: [{ k: "defDown", v: .2, turns: 2 }] }
+      ]
+    },
+    thamin: {
+      name: "ทมิฬ", role: "defense", rarity: 5, art: "thamin", from: "hero",
+      text: "โล่หอคอยแห่งอัศวินรัตติกาล ม่านเงาของเขาคลุมทั้งทีมไว้",
+      passive: { teamShield: .1, text: "เกราะทมิฬ: เริ่มการต่อสู้ ทั้งทีมได้เกราะ 10% ของพลังชีวิต" },
+      skills: [
+        { name: "กำแพงรัตติกาล", icon: "🛡", cd: 4, target: "self", shield: 2.6, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .6, turns: 2 }] },
+        { name: "ม่านเงาคุ้มภัย", icon: "🌑", cd: 5, first: 1, target: "allies", shield: 1.3, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .25, turns: 2 }, { k: "cleanse" }] }
+      ]
+    },
+    nisa: {
+      name: "นิศา", role: "support", rarity: 5, art: "nisa", from: "hero",
+      text: "นักบวชแห่งอัศวินรัตติกาล แสงจันทร์มืดของเธอทั้งรักษาและสาปแช่ง",
+      skills: [
+        { name: "พรแห่งรัตติกาล", icon: "🌙", cd: 3, target: "allies", heal: 1.5, fx: [{ k: "cleanse" }] },
+        { name: "คำสาปเงามืด", icon: "🔮", cd: 5, first: 1, target: "all", power: 1.1, fx: [{ k: "defDown", v: .3, turns: 2 }, { k: "burn", power: .3, turns: 2 }] }
+      ]
+    },
+    asura: {
+      name: "อสุรา", role: "balance", rarity: 5, art: "asura", from: "hero", crit: .2,
+      text: "หอกอสูรแห่งอัศวินรัตติกาล ทะลวงแถวหน้าแล้วกลืนกินพลังชีวิต",
+      skills: [
+        { name: "หอกทมิฬทะลวง", icon: "🔱", cd: 3, target: "front", power: 1.9, fx: [{ k: "defDown", v: .25, turns: 2 }] },
+        { name: "ราตรีกลืนกิน", icon: "🌌", cd: 5, first: 2, target: "all", power: 1.35, drain: .3 }
+      ]
+    },
+    // The light order: four knights who ride with Arunee.
+    prapha: {
+      name: "ประภา", role: "attack", rarity: 5, art: "prapha", from: "hero", crit: .25,
+      text: "ดาบประกายแห่งอัศวินแห่งแสง ฟันทีเดียวสว่างไปทั้งสนาม",
+      passive: { double: .2, text: "ดาบคู่แสง: โจมตีปกติมีโอกาส 20% ตีซ้ำอีกครั้ง" },
+      skills: [
+        { name: "ดาบประกายแสง", icon: "⚔", cd: 3, target: "one", power: 2.7, fx: [{ k: "stun", chance: .25, turns: 1 }] },
+        { name: "พายุดาบแสง", icon: "✨", cd: 5, first: 2, target: "all", power: 1.8, fx: [{ k: "burn", power: .3, turns: 2 }] }
+      ]
+    },
+    suriyan: {
+      name: "สุริยัน", role: "defense", rarity: 5, art: "suriyan", from: "hero",
+      text: "โล่สุริยันแห่งอัศวินแห่งแสง แสงตะวันของเขาคุ้มครองทั้งทีม",
+      passive: { shield: .2, text: "เกราะสุริยัน: เริ่มการต่อสู้พร้อมเกราะ 20% ของพลังชีวิต" },
+      skills: [
+        { name: "ป้อมแสงตะวัน", icon: "🛡", cd: 4, target: "self", shield: 2.2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }, { k: "defUp", v: .5, turns: 2 }] },
+        { name: "โล่สุริยันคุ้มภัย", icon: "☀", cd: 5, first: 1, target: "allies", shield: 1.2, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .25, turns: 2 }] }
+      ]
+    },
+    ratsami: {
+      name: "รัศมี", role: "support", rarity: 5, art: "ratsami", from: "hero",
+      text: "นักบวชแห่งอัศวินแห่งแสง แสงอุ่นของเธอปลุกเพื่อนให้ลุกขึ้นสู้",
+      skills: [
+        { name: "แสงเยียวยา", icon: "🌟", cd: 3, target: "allies", heal: 1.9, fx: [{ k: "cleanse" }] },
+        { name: "พรรัศมี", icon: "🙏", cd: 5, first: 1, target: "allies", shield: 1, fx: [{ k: "shield", turns: 2 }, { k: "atkUp", v: .35, turns: 2 }, { k: "defUp", v: .25, turns: 2 }] }
+      ]
+    },
+    thinakorn: {
+      name: "ทินกร", role: "balance", rarity: 5, art: "thinakorn", from: "hero", crit: .2,
+      text: "หอกตะวันแห่งอัศวินแห่งแสง พุ่งทะลวงพร้อมเปลวแสงอาทิตย์",
+      skills: [
+        { name: "หอกตะวันพุ่ง", icon: "🔆", cd: 3, target: "front", power: 1.8, fx: [{ k: "burn", power: .3, turns: 2 }] },
+        { name: "อาทิตย์อุทัย", icon: "🌅", cd: 5, first: 2, target: "all", power: 1.4, fx: [{ k: "atkUp", v: .25, turns: 2, on: "allies" }] }
+      ]
+    },
     seraphina: {
       name: "เซราฟิน่า", role: "support", rarity: 6, art: "seraphina", from: "hero",
       text: "นักบุญแห่งปีกศักดิ์สิทธิ์ แสงของเธอปกป้องทั้งกองทัพ",
@@ -1009,7 +1079,9 @@
     { id: "tiny", name: "เพื่อนตัวจิ๋ว", icon: "🐾", ids: ["firefly", "kitten", "minibat"], atk: .1 },
     { id: "stars", name: "ดาราจักร", icon: "⭐", ids: ["starsprite", "starowl", "miu"], atk: .1 },
     { id: "song", name: "บทเพลงสายลม", icon: "🎵", ids: ["fasai", "mekha", "baitoey"], atk: .1 },
-    { id: "lightdark", name: "แสงและเงา", icon: "☯", ids: ["nilakan", "arunee"], atk: .18 }
+    { id: "lightdark", name: "แสงและเงา", icon: "☯", ids: ["nilakan", "arunee"], atk: .18 },
+    { id: "nightorder", name: "อัศวินรัตติกาล", icon: "🌑", ids: ["nilakan", "kalawit", "thamin", "nisa", "asura"], atk: .15 },
+    { id: "lightorder", name: "อัศวินแห่งแสง", icon: "🌞", ids: ["arunee", "prapha", "suriyan", "ratsami", "thinakorn"], atk: .15 }
   ];
   // A bond counts with at least two of its members together (all of a
   // two-card bond); members: who of the team are in it.
