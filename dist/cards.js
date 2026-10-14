@@ -1108,6 +1108,7 @@
     return box;
   }
 
+  let sheetTab = "skills"; // the card sheet's open tab, kept between cards
   function cardSheet(id) {
     const c = cards(), def = E.CARDS[id], lv = c.units[id];
     const role = E.ROLES[def.role];
@@ -1130,7 +1131,10 @@
     const now = boost(E.cardStats(id, lv || 1)), then = lv && lv < cap ? boost(E.cardStats(id, lv + 1)) : null;
     const table = el("dl", "sheet-stats");
     for (const [key, label] of [["hp", "พลังชีวิต"], ["atk", "โจมตี"], ["def", "ป้องกัน"], ["spd", "ความเร็ว"]]) {
-      table.append(el("dt", null, label), el("dd", null, then ? `${fmt(now[key])} → ${fmt(then[key])}` : fmt(now[key])));
+      // the value now, and in green what the next level adds
+      const dd = el("dd", null, fmt(now[key]));
+      if (then && then[key] > now[key]) dd.append(el("small", "stat-up", `+${fmt(then[key] - now[key])}`));
+      table.append(el("dt", null, label), dd);
     }
     info.append(table);
     top.append(art, info);
@@ -1143,7 +1147,13 @@
       parts.push(bar);
     }
     if (def.passive) parts.push(el("p", "sheet-passive", `ติดตัว · ${def.passive.text}`));
-    if (E.bondsOf(id).length) parts.push(bondSheet(id));
+    // the rest sits behind tabs, one at a time, so the sheet fits the screen
+    const panes = [];
+    panes.push(["skills", "สกิล", def.skills.map((skill, n) => {
+      const row = el("div", "sheet-skill");
+      row.append(el("span", "sheet-skill-icon", skill.icon), el("b", null, `สกิล ${n + 1} · ${skill.name}`), el("p", null, E.describe(skill)));
+      return row;
+    })]);
     if (lv) {
       // red stars: shards of this card (or star dust), star-up wings and coins
       const at = c.awake[id] || 0, cost = E.awakeCost(c, id);
@@ -1168,8 +1178,9 @@
           box.append(buyWing);
         }
       } else box.append(el("span", "sheet-max", E.maxAwake(id) > E.MAX_AWAKE ? "ปลุกพลังขั้น 2 เต็มแล้ว" : "ดาวแดงเต็มแล้ว · ปลุกพลังขั้น 2 ได้เฉพาะการ์ด S และ SSS"));
-      parts.push(box);
+      panes.push(["awake", second ? "ปลุกพลัง 2" : "อัปดาว", [box]]);
     }
+    if (E.bondsOf(id).length) panes.push(["bonds", "ความสัมพันธ์", [bondSheet(id)]]);
     if (lv) {
       const own = c.outfit[id];
       const row = el("div", "sheet-costume");
@@ -1188,13 +1199,24 @@
         buyIt.disabled = save().coins < E.COSTUME_PRICE;
         row.append(buyIt);
       } else row.append(button("shop-equip", own === 2 ? "ถอดชุด" : "สวมชุด", () => { c.outfit[id] = own === 2 ? 1 : 2; store(); tone(660, .08, "triangle", .05); cardSheet(id); }));
-      parts.push(row);
+      panes.push(["costume", "คอสตูม", [row]]);
     }
-    def.skills.forEach((skill, n) => {
-      const row = el("div", "sheet-skill");
-      row.append(el("span", "sheet-skill-icon", skill.icon), el("b", null, `สกิล ${n + 1} · ${skill.name}`), el("p", null, E.describe(skill)));
-      parts.push(row);
-    });
+    if (!panes.some(([key]) => key === sheetTab)) sheetTab = "skills";
+    const tabs = el("div", "sheet-tabs"), pane = el("div", "sheet-pane");
+    tabs.setAttribute("role", "tablist");
+    const pick = (key) => {
+      sheetTab = key;
+      for (const t of tabs.children) { const on = t.dataset.key === key; t.classList.toggle("is-on", on); t.setAttribute("aria-selected", String(on)); }
+      pane.replaceChildren(...panes.find(([k]) => k === key)[2]);
+    };
+    for (const [key, label] of panes) {
+      const t = button("sheet-tab", label, () => { pick(key); tone(587, .04, "triangle", .03); });
+      t.dataset.key = key; t.setAttribute("role", "tab");
+      tabs.append(t);
+    }
+    const remembered = sheetTab;
+    pick(sheetTab);
+    parts.push(tabs, pane);
     const actions = el("div", "title-actions sheet-actions");
     if (lv) {
       const slot = c.team.indexOf(id);
@@ -1214,6 +1236,12 @@
     }
     parts.push(actions);
     openSheet(parts);
+    sheet.querySelector(".cards-sheet-box").classList.add("is-card");
+    // as tall as its tallest tab, so switching tabs does not move the sheet
+    let tallest = 0;
+    for (const [key] of panes) { pick(key); tallest = Math.max(tallest, pane.scrollHeight); }
+    pick(remembered);
+    pane.style.minHeight = `${tallest}px`;
   }
 
   function setTeam(id, add) {

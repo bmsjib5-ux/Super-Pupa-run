@@ -806,3 +806,38 @@ button.unit { cursor: crosshair; }
 .cards-slots [data-slot].is-drop { outline: 3px solid #ffd76a; outline-offset: 2px; box-shadow: 0 0 1.2rem rgba(255,215,106,.7); }
 .cards-grid.is-drop-out { outline: 2px dashed rgba(255,120,140,.8); outline-offset: 6px; border-radius: .8rem; }
 .cards-grid .tcard[data-card], .cards-slots .tcard[data-card] { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+
+/* The card sheet fits the screen: picture and numbers on top, one tab of
+   details below, buttons at the bottom. Only a tab too long for a very
+   small screen scrolls, inside itself. */
+.cards-sheet-box.is-card { display: flex; flex-direction: column; overflow: hidden; max-height: calc(100dvh - 1.4rem); }
+.cards-sheet-box.is-card > * { flex: none; }
+.cards-sheet-box.is-card .sheet-xp { margin-top: .45rem; }
+.cards-sheet-box.is-card .sheet-passive { margin-top: .45rem; padding: .35rem .6rem; font-size: .7rem; }
+.cards-sheet-box.is-card .sheet-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet-tabs { display: flex; gap: .3rem; margin-top: .55rem; overflow-x: auto; scrollbar-width: none; }
+.sheet-tab { flex: 1 0 auto; padding: .38rem .6rem; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; color: #cfc4e2; font: inherit; font-size: .74rem; font-weight: 700; background: rgba(255,255,255,.05); cursor: pointer; }
+.sheet-tab.is-on { color: #2a1606; border-color: transparent; background: linear-gradient(135deg, #ffe9a3, #ffc04d); }
+.cards-sheet-box.is-card .sheet-pane { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.sheet-pane > :first-child { margin-top: .45rem; }
+.cards-sheet-box.is-card .sheet-actions { margin-top: .6rem; }
+@media (max-width: 560px) {
+  .cards-sheet { padding: .45rem; }
+  .cards-sheet-box.is-card { padding: .75rem .8rem .8rem; max-height: calc(100dvh - .9rem); }
+  .cards-sheet-box.is-card .sheet-card { gap: .7rem; }
+  .cards-sheet-box.is-card .sheet-info h3 { font-size: 1.05rem; }
+  .cards-sheet-box.is-card .sheet-stats { grid-template-columns: auto 1fr auto 1fr; gap: .1rem .45rem; font-size: .7rem; }
+  .cards-sheet-box.is-card .sheet-actions { flex-wrap: nowrap; gap: .4rem; }
+  .cards-sheet-box.is-card .sheet-actions button { flex: 1 1 0; min-width: 0; padding-left: .4rem; padding-right: .4rem; font-size: .8rem; white-space: nowrap; }
+  .cards-sheet-box.is-card .sheet-actions .primary-button { min-width: 0; }
+  .cards-sheet-box.is-card .sheet-actions .sheet-max { font-size: .72rem; }
+}
+@media (max-height: 640px) {
+  .cards-sheet-box.is-card .sheet-art { width: 4.6rem; height: 5.5rem; }
+  .cards-sheet-box.is-card .sheet-text { -webkit-line-clamp: 1; }
+  .cards-sheet-box.is-card .sheet-skill { margin-top: .35rem; padding: .4rem .5rem; }
+  .cards-sheet-box.is-card .sheet-skill p { font-size: .68rem; line-height: 1.3; }
+  .cards-sheet-box.is-card .sheet-awake small { font-size: .6rem; }
+}
+.sheet-stats dd { white-space: nowrap; }
+.sheet-stats .stat-up { margin-left: .3rem; color: var(--mint); font-size: .85em; font-weight: 700; }
