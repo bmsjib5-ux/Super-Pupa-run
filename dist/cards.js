@@ -626,25 +626,33 @@
       const row = el("div", "cards-row");
       row.append(el("b", "cards-row-label", front ? `${label} ${ids.length}/${E.ARENA_FRONT}` : `${label} ${ids.length}`));
       const grid = el("div", "arena-team");
-      for (const id of ids) grid.append(cardTile(id, () => {
-        if (front) c.arenaFront = c.arenaFront.filter(x => x !== id);
-        else if (c.arenaFront.length < E.ARENA_FRONT) c.arenaFront.push(id);
-        else { tone(150, .12, "square", .05); announce(`แถวหน้าเต็มแล้ว ${E.ARENA_FRONT} ใบ`); return; }
-        tone(660, .06, "triangle", .04); save2();
-      }));
+      grid.dataset.drop = front ? "front" : "back";
+      for (const id of ids) {
+        const tile = cardTile(id, () => {
+          if (front) c.arenaFront = c.arenaFront.filter(x => x !== id);
+          else if (c.arenaFront.length < E.ARENA_FRONT) c.arenaFront.push(id);
+          else { tone(150, .12, "square", .05); announce(`แถวหน้าเต็มแล้ว ${E.ARENA_FRONT} ใบ`); return; }
+          tone(660, .06, "triangle", .04); save2();
+        });
+        tile.dataset.card = id; tile.dataset.drop = "card";
+        grid.append(tile);
+      }
       row.append(grid);
       rows.append(row);
     }
     const pool = el("div", "card-pool arena-pool");
+    pool.dataset.drop = "out";
     const owned = Object.keys(c.units).filter(id => E.CARDS[id]).sort((a, b) => E.power(b, c.units[b]) * (1 + E.cardBonus(c, b)) - E.power(a, c.units[a]) * (1 + E.cardBonus(c, a)));
     for (const id of owned) {
       const inTeam = c.arenaPick.includes(id);
-      pool.append(cardTile(id, () => {
+      const tile = cardTile(id, () => {
         if (inTeam) { c.arenaPick = c.arenaPick.filter(x => x !== id); c.arenaFront = c.arenaFront.filter(x => x !== id); }
         else if (c.arenaPick.length < E.ARENA_SIZE) c.arenaPick.push(id);
         else { tone(150, .12, "square", .05); announce(`ทีมประลองเต็ม ${E.ARENA_SIZE} ใบแล้ว แตะการ์ดในทีมเพื่อเอาออก`); return; }
         tone(587, .06, "triangle", .04); save2();
-      }, inTeam ? "in-arena" : ""));
+      }, inTeam ? "in-arena" : "");
+      tile.dataset.card = id;
+      pool.append(tile);
     }
     const actions = el("div", "title-actions sheet-actions");
     actions.append(
@@ -652,7 +660,45 @@
       button("primary-button", "เสร็จ ✓", () => closeSheet())
     );
     const power = E.teamPowerOf(c.arenaPick.map(id => ({ id, lv: c.units[id] })));
-    openSheet([el("h3", "sheet-title", "จัดทีมประลอง"), el("p", "sheet-sub", `${c.arenaPick.length}/${E.ARENA_SIZE} ใบ · พลังรวม ${fmt(power)} · แตะการ์ดในทีมเพื่อสลับแถวหน้า/หลัง · แตะการ์ดด้านล่างเพื่อเพิ่มหรือเอาออก`), rows, el("h3", "shop-heading", "การ์ดทั้งหมด (✓ = อยู่ในทีม)"), pool, actions]);
+    openSheet([el("h3", "sheet-title", "จัดทีมประลอง"), el("p", "sheet-sub", `${c.arenaPick.length}/${E.ARENA_SIZE} ใบ · พลังรวม ${fmt(power)} · ลากการ์ดไปวางในแถวหรือทับการ์ดในทีมเพื่อใส่ แทนที่ หรือสลับ · ลากกลับลงด้านล่างเพื่อเอาออก (แตะก็ได้เหมือนเดิม)`), rows, el("h3", "shop-heading", "การ์ดทั้งหมด (✓ = อยู่ในทีม)"), pool, actions]);
+    dragCards(sheet.querySelector(".cards-sheet-box"), (id, node, target) => arenaDrop(id, target));
+  }
+  // A card dropped in the arena team: on a team card it takes that card's
+  // place (or the two trade places, rows too, when both are in the team);
+  // on a row it joins that row; on the card list it leaves the team.
+  function arenaDrop(id, target) {
+    const c = cards(), pick = c.arenaPick, front = c.arenaFront, def = E.CARDS[id];
+    const inTeam = pick.includes(id), isFront = front.includes(id), kind = target.dataset.drop;
+    const no = (text) => { tone(150, .12, "square", .05); announce(text); };
+    let said = "";
+    if (kind === "card") {
+      const other = target.dataset.card, otherFront = front.includes(other);
+      if (other === id) return;
+      if (inTeam) {
+        const a = pick.indexOf(id), b = pick.indexOf(other);
+        [pick[a], pick[b]] = [pick[b], pick[a]];
+        if (isFront !== otherFront) c.arenaFront = front.map(x => x === id ? other : x === other ? id : x);
+        said = `สลับ${def.name}กับ${E.CARDS[other].name}`;
+      } else {
+        pick[pick.indexOf(other)] = id;
+        if (otherFront) c.arenaFront = front.map(x => x === other ? id : x);
+        said = `ใส่${def.name}แทน${E.CARDS[other].name}`;
+      }
+    } else if (kind === "front" || kind === "back") {
+      const toFront = kind === "front";
+      if (inTeam && isFront === toFront) return;
+      if (!inTeam && pick.length >= E.ARENA_SIZE) return no(`ทีมประลองเต็ม ${E.ARENA_SIZE} ใบแล้ว วางทับการ์ดในทีมเพื่อแทนที่`);
+      if (toFront && front.length >= E.ARENA_FRONT) return no(`แถวหน้าเต็มแล้ว ${E.ARENA_FRONT} ใบ วางทับการ์ดแถวหน้าเพื่อสลับ`);
+      if (!inTeam) pick.push(id);
+      if (toFront) front.push(id); else c.arenaFront = front.filter(x => x !== id);
+      said = `${def.name} ${toFront ? "ไปแถวหน้า" : "ไปแถวหลัง"}`;
+    } else if (kind === "out") {
+      if (!inTeam) return;
+      c.arenaPick = pick.filter(x => x !== id); c.arenaFront = front.filter(x => x !== id);
+      said = `เอา${def.name}ออกจากทีมประลอง`;
+    } else return;
+    store(); tone(660, .08, "triangle", .05); announce(said);
+    arenaSheet();
   }
 
   // Pays every five-stage group that has just reached full stars; returns
@@ -888,6 +934,7 @@
         if (id) { node = cardTile(id, () => cardSheet(id), "in-team"); node.dataset.card = id; }
         else node = button("cards-empty", "+", () => { tab = "team"; announce("ลากการ์ดด้านล่างมาวางที่ช่องนี้ หรือแตะการ์ดแล้วกดใส่ทีม"); tone(587, .05, "triangle", .04); }, `ช่องว่าง${label}`);
         node.dataset.slot = slot;
+        node.dataset.drop = "slot";
         slots.append(node);
       }
       row.append(slots);
@@ -897,6 +944,7 @@
     const bonds = bondStrip(c.team);
     const heading = el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`);
     const grid = el("div", "cards-grid");
+    grid.dataset.drop = "out";
     // owned cards first, then each from the highest grade down, stars, level
     const order = E.CARD_IDS.map((id, n) => ({ id, n })).sort((x, y) => {
       const a = x.id, b = y.id, ha = c.units[a] ? 1 : 0, hb = c.units[b] ? 1 : 0;
@@ -908,54 +956,51 @@
       grid.append(tile);
     }
     panel.append(formation, sum, bonds, heading, grid);
-    teamDrag(panel, grid);
+    teamDrag(panel);
   }
 
-  // Drag a card onto a team slot to put it there: it takes the place of
-  // the card in that slot, or the two trade places when both are in the
-  // team. A team card dropped back on the card list leaves the team. A
-  // mouse drags as soon as it moves; a finger holds still for a moment
-  // first, so swiping still scrolls.
-  let teamDragging = null, teamDragWait = 0, teamDropped = false;
-  function teamDrag(panel, grid) {
+  // Dragging cards about: a [data-card] in `panel` can be picked up and
+  // dropped on any [data-drop] element; onDrop(id, node, target) decides
+  // what that means. A mouse drags as soon as it moves; a finger holds
+  // still for a moment first, so swiping still scrolls.
+  let carry = null, carryWait = 0, carryDropped = false;
+  function dragCards(panel, onDrop) {
     panel.addEventListener("pointerdown", (event) => {
-      if (event.button > 0 || teamDragging) return;
+      if (event.button > 0 || carry) return;
       const node = event.target.closest("[data-card]");
       if (!node || !panel.contains(node)) return;
-      const from = node.dataset.slot != null ? Number(node.dataset.slot) : null;
-      teamDragging = { id: node.dataset.card, node, from, panel, grid, x: event.clientX, y: event.clientY, touch: event.pointerType !== "mouse" };
-      if (teamDragging.touch) teamDragWait = setTimeout(() => { if (teamDragging && !teamDragging.ghost) dragBegin(teamDragging); }, 260);
+      carry = { id: node.dataset.card, node, panel, onDrop, x: event.clientX, y: event.clientY, touch: event.pointerType !== "mouse" };
+      if (carry.touch) carryWait = setTimeout(() => { if (carry && !carry.ghost) carryBegin(carry); }, 260);
     });
     // a drop is not also a tap that opens the card
-    panel.addEventListener("click", (event) => { if (teamDropped) { event.stopPropagation(); event.preventDefault(); } }, true);
-    panel.addEventListener("contextmenu", (event) => { if (teamDragging) event.preventDefault(); });
-    if (teamDrag.ready) return;
-    teamDrag.ready = true;
+    panel.addEventListener("click", (event) => { if (carryDropped) { event.stopPropagation(); event.preventDefault(); } }, true);
+    panel.addEventListener("contextmenu", (event) => { if (carry) event.preventDefault(); });
+    if (dragCards.ready) return;
+    dragCards.ready = true;
     window.addEventListener("pointermove", (event) => {
-      const drag = teamDragging;
-      if (!drag) return;
-      if (!drag.ghost) {
-        if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) <= 8) return;
+      if (!carry) return;
+      if (!carry.ghost) {
+        if (Math.hypot(event.clientX - carry.x, event.clientY - carry.y) <= 8) return;
         // a finger that moves before the hold scrolls instead
-        if (drag.touch) { clearTimeout(teamDragWait); teamDragging = null; return; }
-        drag.x = event.clientX; drag.y = event.clientY; dragBegin(drag);
+        if (carry.touch) { clearTimeout(carryWait); carry = null; return; }
+        carry.x = event.clientX; carry.y = event.clientY; carryBegin(carry);
       }
-      dragMove(event.clientX, event.clientY);
+      carryMove(event.clientX, event.clientY);
     });
-    window.addEventListener("pointerup", (event) => dragFinish(event.clientX, event.clientY));
-    window.addEventListener("pointercancel", () => { clearTimeout(teamDragWait); dragDrop(); teamDragging = null; });
+    window.addEventListener("pointerup", (event) => carryFinish(event.clientX, event.clientY));
+    window.addEventListener("pointercancel", () => { clearTimeout(carryWait); carryDrop(); carry = null; });
     // while a card is held, the finger moves it instead of scrolling the page
-    window.addEventListener("touchmove", (event) => { if (teamDragging?.ghost) event.preventDefault(); }, { passive: false });
+    window.addEventListener("touchmove", (event) => { if (carry?.ghost) event.preventDefault(); }, { passive: false });
   }
-  const dragSlotAt = (x, y) => document.elementFromPoint(x, y)?.closest("[data-slot]") || null;
-  const dragOverGrid = (x, y) => Boolean(document.elementFromPoint(x, y)?.closest(".cards-grid"));
-  function dragMark(drag, target) {
-    drag.panel.querySelectorAll(".is-drop").forEach(n => n.classList.remove("is-drop"));
-    drag.grid.classList.remove("is-drop-out");
-    if (target === "out") drag.grid.classList.add("is-drop-out");
-    else target?.classList.add("is-drop");
+  const dropAt = (x, y) => {
+    const target = document.elementFromPoint(x, y)?.closest("[data-drop]");
+    return target && carry?.panel.contains(target) && target !== carry.node ? target : null;
+  };
+  function carryMark(target) {
+    carry.panel.querySelectorAll(".is-drop, .is-drop-out").forEach(n => n.classList.remove("is-drop", "is-drop-out"));
+    target?.classList.add(target.dataset.drop === "out" ? "is-drop-out" : "is-drop");
   }
-  function dragBegin(drag) {
+  function carryBegin(drag) {
     const box = drag.node.getBoundingClientRect();
     const ghost = drag.node.cloneNode(true);
     ghost.classList.add("drag-ghost");
@@ -964,47 +1009,72 @@
     drag.ghost = ghost; drag.dx = drag.x - box.left; drag.dy = drag.y - box.top;
     drag.node.classList.add("is-dragging");
     tone(523, .05, "triangle", .04);
-    dragMove(drag.x, drag.y);
+    carryMove(drag.x, drag.y);
   }
-  function dragMove(x, y) {
-    const drag = teamDragging;
-    if (!drag?.ghost) return;
-    drag.ghost.style.transform = `translate(${x - drag.dx}px, ${y - drag.dy}px) rotate(-3deg) scale(1.06)`;
-    dragMark(drag, dragSlotAt(x, y) || (drag.from != null && dragOverGrid(x, y) ? "out" : null));
+  function carryMove(x, y) {
+    if (!carry?.ghost) return;
+    carry.px = x; carry.py = y;
+    carry.ghost.style.transform = `translate(${x - carry.dx}px, ${y - carry.dy}px) rotate(-3deg) scale(1.06)`;
+    carryMark(dropAt(x, y));
+    // held near the top or bottom edge, the list scrolls toward it
+    const box = carryScroller(carry.panel)?.getBoundingClientRect();
+    // (faster the closer to the edge)
+    carry.scroll = !box ? 0 : y < box.top + 64 ? -(1 + (box.top + 64 - y) / 32) : y > box.bottom - 64 ? 1 + (y - box.bottom + 64) / 32 : 0;
+    if (carry.scroll && !carry.scrolling) { carry.scrolling = true; carry.lastFrame = performance.now(); requestAnimationFrame(carryScroll); }
+  }
+  const carryScroller = (node) => {
+    for (let n = node; n; n = n.parentElement) if (n.scrollHeight > n.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(n).overflowY)) return n;
+    return null;
+  };
+  function carryScroll(now) {
+    const drag = carry;
+    if (!drag?.ghost || !drag.scroll) { if (drag) drag.scrolling = false; return; }
+    const dt = Math.min(.1, (now - drag.lastFrame) / 1000); drag.lastFrame = now;
+    const box = carryScroller(drag.panel);
+    if (box) box.scrollTop += drag.scroll * 300 * dt;
+    carryMark(dropAt(drag.px, drag.py));
+    requestAnimationFrame(carryScroll);
   }
   // Take the ghost away (true if there was one, i.e. a drag happened).
-  function dragDrop() {
-    const drag = teamDragging;
-    if (!drag?.ghost) return false;
-    drag.ghost.remove(); drag.node.classList.remove("is-dragging"); dragMark(drag, null);
+  function carryDrop() {
+    if (!carry?.ghost) return false;
+    carry.ghost.remove(); carry.node.classList.remove("is-dragging"); carryMark(null);
     return true;
   }
-  function dragFinish(x, y) {
-    clearTimeout(teamDragWait);
-    const drag = teamDragging;
-    if (!drag) return;
-    const dragged = dragDrop();
-    teamDragging = null;
+  function carryFinish(x, y) {
+    clearTimeout(carryWait);
+    if (!carry) return;
+    const target = dropAt(x, y), drag = carry, dragged = carryDrop();
+    carry = null;
     if (!dragged) return;
-    teamDropped = true; setTimeout(() => { teamDropped = false; }, 0);
-    const team = cards().team, def = E.CARDS[drag.id];
-    const slot = dragSlotAt(x, y);
-    if (slot) {
-      const to = Number(slot.dataset.slot), from = team.indexOf(drag.id);
-      if (from === to) return;
-      const other = team[to];
-      if (from >= 0) [team[from], team[to]] = [team[to], team[from]];
-      else team[to] = drag.id;
-      store(); tone(660, .08, "triangle", .05);
-      announce(other ? (from >= 0 ? `สลับ${def.name}กับ${E.CARDS[other].name}` : `ใส่${def.name}แทน${E.CARDS[other].name}`) : `ใส่${def.name}ในทีมแล้ว`);
-      showHub();
-    } else if (drag.from != null && dragOverGrid(x, y)) {
-      if (team.filter(Boolean).length <= 1) { tone(150, .12, "square", .05); announce("ทีมต้องมีการ์ดอย่างน้อย 1 ใบ"); return; }
-      team[drag.from] = "";
-      store(); tone(440, .08, "triangle", .05); announce(`ถอด${def.name}ออกจากทีม`);
-      showHub();
-    }
+    carryDropped = true; setTimeout(() => { carryDropped = false; }, 0);
+    if (target) drag.onDrop(drag.id, drag.node, target);
   }
+
+  // The team tab: drop on a slot to put the card there (taking the place of
+  // the card in it, or trading places when both are in the team); drop a
+  // team card back on the card list to take it out.
+  function teamDrag(panel) {
+    dragCards(panel, (id, node, target) => {
+      const team = cards().team, def = E.CARDS[id];
+      if (target.dataset.drop === "slot") {
+        const to = Number(target.dataset.slot), from = team.indexOf(id);
+        if (from === to) return;
+        const other = team[to];
+        if (from >= 0) [team[from], team[to]] = [team[to], team[from]];
+        else team[to] = id;
+        store(); tone(660, .08, "triangle", .05);
+        announce(other ? (from >= 0 ? `สลับ${def.name}กับ${E.CARDS[other].name}` : `ใส่${def.name}แทน${E.CARDS[other].name}`) : `ใส่${def.name}ในทีมแล้ว`);
+        showHub();
+      } else if (target.dataset.drop === "out" && node.dataset.slot != null) {
+        if (team.filter(Boolean).length <= 1) { tone(150, .12, "square", .05); announce("ทีมต้องมีการ์ดอย่างน้อย 1 ใบ"); return; }
+        team[Number(node.dataset.slot)] = "";
+        store(); tone(440, .08, "triangle", .05); announce(`ถอด${def.name}ออกจากทีม`);
+        showHub();
+      }
+    });
+  }
+
 
 
   // A small card: picture, rarity, role, name and level.

@@ -841,3 +841,7 @@ button.unit { cursor: crosshair; }
 }
 .sheet-stats dd { white-space: nowrap; }
 .sheet-stats .stat-up { margin-left: .3rem; color: var(--mint); font-size: .85em; font-weight: 700; }
+.arena-team[data-drop].is-drop { outline: 2px dashed #ffd76a; outline-offset: 4px; border-radius: .8rem; }
+.arena-team .tcard.is-drop { outline: 3px solid #ffd76a; outline-offset: 2px; box-shadow: 0 0 1.2rem rgba(255,215,106,.7); }
+.arena-pool.is-drop-out { outline: 2px dashed rgba(255,120,140,.8); outline-offset: 6px; border-radius: .8rem; }
+.arena-team { min-height: 4rem; }
