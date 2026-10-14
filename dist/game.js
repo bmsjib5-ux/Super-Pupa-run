@@ -1892,7 +1892,7 @@
       { id: "mekha", name: "เมฆา", desc: "จอมเวทน้อยขี่เมฆ", price: 400, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ขี่เมฆร่อน", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
       { id: "fasai", name: "ฟ้าใส", desc: "นักดนตรีสาวพิณจันทร์", price: 300, flat: true, model3d: true, like: "pupa", headTop: .2, spriteHead: .03, ability: ["เพลงเรียกเหรียญ", "ดูดเหรียญที่อยู่ใกล้ตัวเข้ามาเอง"] },
       { id: "ratri", name: "ราตรี", desc: "นักธนูเงาราตรี", price: 600, flat: true, model3d: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ฝีเท้าเงาราตรี", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] },
-      { id: "seraphina", name: "เซราฟิน่า", desc: "นักบุญแห่งปีกศักดิ์สิทธิ์ (SSS)", price: 900, flat: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ปีกศักดิ์สิทธิ์", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
+      { id: "seraphina", name: "เซราฟิน่า", desc: "นักบุญแห่งปีกศักดิ์สิทธิ์ (SSS)", price: 900, flat: true, model3d: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ปีกศักดิ์สิทธิ์", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
       { id: "asani", name: "อัสนี", desc: "อัศวินมังกรสายฟ้าในตำนาน (SSS)", price: 900, flat: true, model3d: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาบอัสนีบาต", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
       { id: "vajira", name: "วชิระ", desc: "อัศวินผู้พิทักษ์เกราะเพชร (SSS)", price: 900, flat: true, model3d: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะเพชร", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
       { id: "naphalai", name: "นภาลัย", desc: "จอมเวทแห่งดวงดาว (SSS)", price: 900, flat: true, model3d: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ม่านดารา", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
@@ -6331,11 +6331,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14b";
+  const NEWS_VERSION = "2026-10-14c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
-    { tag: "3D", title: "ตัวละคร 3D วิ่งสลับขาได้แล้ว!", text: "ฟ้าใส จันทรา เพลิง ราตรี อัสนี วชิระ และนภาลัย เป็นโมเดล 3D ในโหมดผจญภัย วิ่งสลับขาได้เหมือนปูป้า และการ์ด 18 ใบเป็น 3D ในหน้าการ์ด ลากนิ้วหมุนดูรอบตัวได้ (สร้างด้วย Hunyuan3D-2)", image: "fasai3d", open: () => { closeNews(); window.PupaCards?.open(); } },
+    { tag: "3D", title: "ตัวละคร 3D วิ่งสลับขาได้แล้ว!", text: "ฟ้าใส เซราฟิน่า จันทรา เพลิง ราตรี อัสนี วชิระ และนภาลัย เป็นโมเดล 3D ในโหมดผจญภัย วิ่งสลับขาได้เหมือนปูป้า และการ์ด 19 ใบเป็น 3D ในหน้าการ์ด ลากนิ้วหมุนดูรอบตัวได้ (สร้างด้วย Hunyuan3D-2)", image: "fasai3d", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 14 · ทะเลทรายสุริยะ", text: "ด่าน 131–140 กลางทะเลทรายใต้ดวงอาทิตย์แผดเผา ปิรามิดและเสาโอเบลิสก์ มอนสเตอร์ทะเลทราย 8 ชนิด แมงป่องทองทะลวงเกราะ ด้วงสุริยะ แร้งดูดเลือด บอสฟาโรห์เห็ดทราย และราชินีสฟิงซ์ แนะนำการ์ด Lv 130 ดาวทองครบ", image: "chapter14", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "🔗 ความสัมพันธ์การ์ด", text: "ลงการ์ดที่มีความสัมพันธ์กันในทีมเดียวกันอย่างน้อย 2 ใบ สมาชิกทุกใบโจมตีแรงขึ้น 10–15% และถ้าการ์ดอยู่หลายความสัมพันธ์ก็ได้โบนัสซ้อนกัน มีทั้งหมด 13 ความสัมพันธ์ เช่น แฝดซามูไร (ชาดา+อัญชัน) แฝดพยัคฆ์ (พยัคฆ์+วายุ) กำแพงเหล็ก (ศิลา วชิระ ทองคำ) และเปลวเพลิงนิรันดร์ (เพลิง วิหคเพลิงทอง มังกรน้อย) ดูความสัมพันธ์ของแต่ละการ์ดได้ที่หน้าการ์ด", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ของขวัญ", title: "แจกเพชร 10,000 ทุกคน!", text: "ของขวัญพิเศษสำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดอัตโนมัติเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ไปสุ่มการ์ด S ใหม่ได้เลยที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
