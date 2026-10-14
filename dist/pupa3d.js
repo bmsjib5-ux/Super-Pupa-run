@@ -61,7 +61,18 @@ const CHARACTERS = {
     // Only her right fist shows, out front at chest height; the other arm
     // is hidden behind the leaf cape, so only that side swings (armSide).
     armX: .3, armCenter: .1, armZ: .35, armLow: -.47, armHigh: -.12, arms: 1, armSide: 1
-  }
+  },
+  // Card heroes made with Hunyuan3D-2 from their card pictures (the texture
+  // is the picture, fitted to the mesh). Only the legs swing: their arms
+  // hold harps, spears, bows and shields. The long robes of Chantra and
+  // Naphalai part only near the hem.
+  fasai: { model: "assets/fasai.glb", texture: "assets/fasai-texture.webp", tintable: false, yaw: .4, legTop: -.42, legCenter: .12, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  chantra: { model: "assets/chantra.glb", texture: "assets/chantra-texture.webp", tintable: false, yaw: .4, legTop: -.78, legCenter: -.05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  phloeng: { model: "assets/phloeng.glb", texture: "assets/phloeng-texture.webp", tintable: false, yaw: .4, legTop: -.42, legCenter: .05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  ratri: { model: "assets/ratri.glb", texture: "assets/ratri-texture.webp", tintable: false, yaw: .4, legTop: -.35, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  asani: { model: "assets/asani.glb", texture: "assets/asani-texture.webp", tintable: false, yaw: .4, legTop: -.52, legCenter: -.02, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  vajira: { model: "assets/vajira.glb", texture: "assets/vajira-texture.webp", tintable: false, yaw: .4, legTop: -.55, legCenter: .09, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  naphalai: { model: "assets/naphalai.glb", texture: "assets/naphalai-texture.webp", tintable: false, yaw: .4, legTop: -.78, legCenter: -.08, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 }
 };
 
 const api = { ready: false, webgl: false, failed: {}, canvas, viewHalf: VIEW, render, setSkin, setCharacter, character: "pupa" };
