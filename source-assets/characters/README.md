@@ -1,6 +1,6 @@
 # Character pictures
 
-Every card in Super Pupa Run, transparent PNG, highest grade first. The game uses the WebP copies in dist/assets (heroes as <id>-hero.webp, pets as <id>-pet.webp); minibat, starsprite, firefly and kitten are drawn in code by dist/cards.js and were saved from the game.
+Every card in Super Pupa Run, transparent PNG, highest grade first. The game uses the WebP copies in dist/assets (heroes as <id>-hero.webp, pets as <id>-pet.webp); minibat, starsprite, firefly and kitten are drawn in code by dist/cards.js and were drawn by the game at 1024 px scale (dist/game.js paintPortrait), with their glow.
 
 | Grade | File | Name | Size |
 |---|---|---|---|
@@ -28,12 +28,12 @@ Every card in Super Pupa Run, transparent PNG, highest grade first. The game use
 | A | mekha.png | เมฆา | 286x360 |
 | B | baitoey.png | ใบเตย | 227x360 |
 | B | pangji.png | ปังจิ | 205x360 |
-| B | minibat.png | ค้างคาวจิ๋ว | 112x112 |
-| B | starsprite.png | ภูตดาว | 112x112 |
+| B | minibat.png | ค้างคาวจิ๋ว | 1372x721 |
+| B | starsprite.png | ภูตดาว | 1508x1508 |
 | B | starowl.png | นกฮูกดาว | 241x240 |
 | C | pupa.png | Pupa | 1371x1148 |
 | C | jibjib.png | จิ๊บจิ๊บแมน | 259x360 |
 | C | moonrabbit.png | กระต่ายจันทร์ | 242x240 |
 | C | fasai.png | ฟ้าใส | 243x360 |
-| D | firefly.png | หิ่งห้อยน้อย | 112x112 |
-| D | kitten.png | ลูกแมวเชอร์รี่ | 112x112 |
+| D | firefly.png | หิ่งห้อยน้อย | 1434x1434 |
+| D | kitten.png | ลูกแมวเชอร์รี่ | 1141x998 |
