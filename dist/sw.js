@@ -1,6 +1,6 @@
 // Offline support for the installed game. Network first, so a new release is
 // picked up as soon as the device is online; the cache is only a fallback.
-const CACHE = "super-pupa-run-v39-chapter14";
+const CACHE = "super-pupa-run-v40-fasai3d";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,9 @@ const APP_SHELL = [
   "./game.js?v=20261012e",
   "./cards-engine.js?v=20261012e",
   "./cards-fx.js?v=20261012e",
+  "./cards-3d.js",
+  "./assets/fasai-3d.bin",
+  "./assets/fasai-3d.webp",
   "./cards.js?v=20261012e",
   "./cards.css?v=20261012e",
   "./pupa3d.js?v=20261011a",

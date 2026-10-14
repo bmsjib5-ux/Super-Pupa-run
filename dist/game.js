@@ -6327,10 +6327,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-13n";
+  const NEWS_VERSION = "2026-10-14a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "3D", title: "ฟ้าใส 3D", text: "การ์ดฟ้าใสเป็นโมเดล 3D แล้ว! เปิดหน้าการ์ดฟ้าใส ตัวละครจะหมุนไปมา ลากนิ้วเพื่อหมุนดูรอบตัวได้ (สร้างด้วย Hunyuan3D-2)", image: "fasai3d", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 14 · ทะเลทรายสุริยะ", text: "ด่าน 131–140 กลางทะเลทรายใต้ดวงอาทิตย์แผดเผา ปิรามิดและเสาโอเบลิสก์ มอนสเตอร์ทะเลทราย 8 ชนิด แมงป่องทองทะลวงเกราะ ด้วงสุริยะ แร้งดูดเลือด บอสฟาโรห์เห็ดทราย และราชินีสฟิงซ์ แนะนำการ์ด Lv 130 ดาวทองครบ", image: "chapter14", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "🔗 ความสัมพันธ์การ์ด", text: "ลงการ์ดที่มีความสัมพันธ์กันในทีมเดียวกันอย่างน้อย 2 ใบ สมาชิกทุกใบโจมตีแรงขึ้น 10–15% และถ้าการ์ดอยู่หลายความสัมพันธ์ก็ได้โบนัสซ้อนกัน มีทั้งหมด 13 ความสัมพันธ์ เช่น แฝดซามูไร (ชาดา+อัญชัน) แฝดพยัคฆ์ (พยัคฆ์+วายุ) กำแพงเหล็ก (ศิลา วชิระ ทองคำ) และเปลวเพลิงนิรันดร์ (เพลิง วิหคเพลิงทอง มังกรน้อย) ดูความสัมพันธ์ของแต่ละการ์ดได้ที่หน้าการ์ด", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ของขวัญ", title: "แจกเพชร 10,000 ทุกคน!", text: "ของขวัญพิเศษสำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดอัตโนมัติเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ไปสุ่มการ์ด S ใหม่ได้เลยที่ 🎴 สุ่ม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
@@ -6459,6 +6460,15 @@
         img.alt = "";
         row.append(img);
       }
+      return row;
+    }
+    if (kind === "fasai3d") {
+      const row = document.createElement("div");
+      row.className = "news-trio";
+      const img = document.createElement("img");
+      img.src = "assets/fasai-hero.webp";
+      img.alt = "";
+      row.append(img);
       return row;
     }
     if (kind === "trio") {
