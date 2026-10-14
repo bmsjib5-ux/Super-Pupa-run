@@ -819,29 +819,28 @@
     }
   });
 
-  // Chapter 16: the sky castle above the clouds: wind and storm creatures
-  // that blow the back row about, guard each other with cloud shells and
-  // strike from above.
-  const SKYGLOW = "rgba(150,220,255,.95)";
-  const SKY = "sepia(1) saturate(2.4) hue-rotate(178deg) contrast(1.1) brightness(1.3)";
+  // Chapter 16: the sky castle above the clouds, guarded by angels who
+  // strike with wind and lightning, shield each other and heal. They have
+  // pictures of their own (not recoloured).
+  const SKYGLOW = "rgba(255,236,170,.95)";
   Object.assign(FOES, {
-    cloudshroom: { name: "เห็ดเมฆ", role: "balance", art: "walker", look: SKY, glow: SKYGLOW, tier: 6.4, def: 1.3, skills: [{ name: "สปอร์ลมหมุน", cd: 3, target: "front", power: 1.4, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
-    galebat: { name: "ค้างคาวลมกรด", role: "attack", art: "bat", look: SKY, glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ใบมีดลม", cd: 3, target: "back", power: 1.45, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
-    skycrab: { name: "ปูก้ามฟ้าผ่า", role: "attack", art: "crab", look: SKY, glow: SKYGLOW, tier: 6.4, def: 1.8, skills: [{ name: "ก้ามสายฟ้า", cd: 3, target: "one", power: 2.75, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
-    mistjelly: { name: "แมงกะพรุนหมอก", role: "support", art: "jelly", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "หมอกเยียวยา", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "cleanse" }] }] },
-    windroller: { name: "ลูกลมหมุน", role: "defense", art: "roller", look: SKY, glow: SKYGLOW, tier: 6.4, atk: 1.45, def: 1.4, skills: [{ name: "พายุหมุนบดขยี้", cd: 3, target: "front", power: 1.65, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
-    cloudurchin: { name: "เม่นเมฆฟู", role: "defense", art: "urchin", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "เกราะเมฆนุ่ม", cd: 4, target: "allies", shield: 1.4, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
-    stormflower: { name: "ดอกไม้พายุ", role: "magic", art: "spitter", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "สายฟ้าฟาดฟ้า", cd: 3, target: "all", power: 1.15, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
-    thunderbird: { name: "นกอัสนี", role: "attack", art: "swooper", look: SKY, glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ดิ่งสายฟ้า", cd: 3, target: "back", power: 1.7, drain: .3 }] },
+    cloudshroom: { name: "ทูตสวรรค์ผู้เฝ้าประตู", role: "balance", art: "angelguard", glow: SKYGLOW, tier: 6.4, def: 1.3, skills: [{ name: "สปอร์ลมหมุน", cd: 3, target: "front", power: 1.4, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    galebat: { name: "คิวปิดนักธนู", role: "attack", art: "cherub", glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ใบมีดลม", cd: 3, target: "back", power: 1.45, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    skycrab: { name: "อัศวินทูตสวรรค์", role: "attack", art: "angelknight", glow: SKYGLOW, tier: 6.4, def: 1.8, skills: [{ name: "ก้ามสายฟ้า", cd: 3, target: "one", power: 2.75, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    mistjelly: { name: "ทูตสวรรค์พิณทอง", role: "support", art: "angelharp", glow: SKYGLOW, tier: 6.4, skills: [{ name: "หมอกเยียวยา", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "cleanse" }] }] },
+    windroller: { name: "ทูตสวรรค์โล่ทอง", role: "defense", art: "angelshield", glow: SKYGLOW, tier: 6.4, atk: 1.45, def: 1.4, skills: [{ name: "พายุหมุนบดขยี้", cd: 3, target: "front", power: 1.65, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    cloudurchin: { name: "เซราฟหกปีก", role: "defense", art: "seraph", glow: SKYGLOW, tier: 6.4, skills: [{ name: "เกราะเมฆนุ่ม", cd: 4, target: "allies", shield: 1.4, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    stormflower: { name: "ทูตสวรรค์เวทอัสนี", role: "magic", art: "angelmage", glow: SKYGLOW, tier: 6.4, skills: [{ name: "สายฟ้าฟาดฟ้า", cd: 3, target: "all", power: 1.15, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
+    thunderbird: { name: "ทูตสวรรค์พายุ", role: "attack", art: "stormangel", glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ดิ่งสายฟ้า", cd: 3, target: "back", power: 1.7, drain: .3 }] },
     skyking: {
-      name: "ราชาเห็ดฟ้า", role: "balance", art: "king", look: SKY, glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.6, atk: 1.45, def: 1.55,
+      name: "อัครทูตสวรรค์ราชา", role: "balance", art: "archking", glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.6, atk: 1.45, def: 1.55,
       skills: [
         { name: "พายุทะลุฟ้า", cd: 3, target: "all", power: 1.3, fx: [{ k: "stun", chance: .2, turns: 1 }, { k: "defDown", v: .25, turns: 2 }] },
         { name: "ทอร์นาโดราชา", cd: 4, first: 1, target: "front", power: 1.95, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
       ]
     },
     skyqueen: {
-      name: "ราชินีพายุฟ้า", role: "magic", art: "queen", look: SKY, glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.2, atk: 1.44, def: 1.35, spd: 140,
+      name: "อัครทูตสวรรค์ราชินีพายุ", role: "magic", art: "archqueen", glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.2, atk: 1.44, def: 1.35, spd: 140,
       skills: [
         { name: "อัสนีบาตพันสาย", cd: 3, target: "all", power: 1.5, fx: [{ k: "burn", power: .4, turns: 2 }] },
         { name: "จุมพิตพายุ", cd: 4, first: 1, target: "one", power: 3.2, drain: .6, fx: [{ k: "stun", chance: .5, turns: 1 }] }

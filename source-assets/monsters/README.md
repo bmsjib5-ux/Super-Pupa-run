@@ -17,3 +17,7 @@ The base monsters of card mode, transparent PNG, painted with Higgsfield (GPT Im
 - swooper.png
 - urchin.png
 - wisp.png
+
+## Chapter 16 angels
+
+Painted as their own monsters (no recolour): angelguard, cherub, angelknight, angelharp, angelshield, seraph, angelmage, stormangel, and the bosses archking and archqueen.
