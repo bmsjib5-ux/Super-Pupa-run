@@ -77,6 +77,8 @@ const CHARACTERS = {
   sakura: { model: "assets/sakura.glb", texture: "assets/sakura-texture.webp", tintable: false, yaw: .4, legTop: -.37, legCenter: -.02, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   thongkham: { model: "assets/thongkham.glb", texture: "assets/thongkham-texture.webp", tintable: false, yaw: .4, legTop: -.51, legCenter: .09, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   miu: { model: "assets/miu.glb", texture: "assets/miu-texture.webp", tintable: false, yaw: .4, legTop: -.32, legCenter: .05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  nilakan: { model: "assets/nilakan.glb", texture: "assets/nilakan-texture.webp", tintable: false, yaw: .4, legTop: -.42, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  arunee: { model: "assets/arunee.glb", texture: "assets/arunee-texture.webp", tintable: false, yaw: .4, legTop: -.78, legCenter: -.08, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   // Mekha rides his cloud: nothing swings (legTop below the model), he just bobs along.
   mekha: { model: "assets/mekha.glb", texture: "assets/mekha-texture.webp", tintable: false, yaw: .4, legTop: -1.5, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 }
 };

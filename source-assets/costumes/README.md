@@ -37,3 +37,5 @@ Each card in its costume (worn from the card sheet in card mode), transparent PN
 | phayak.png | ชุดเสือดาวหิมะ |
 | wayu.png | ชุดเสือมรกต |
 | sila.png | ชุดอัศวินศิลาคราม |
+| nilakan.png | ชุดอัศวินรัตติกาลโลหิต |
+| arunee.png | ชุดอัศวินแสงจันทร์เงิน |

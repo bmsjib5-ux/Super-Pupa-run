@@ -285,6 +285,24 @@
         { name: "ป้อมหินคุ้มกัน", icon: "🪨", cd: 5, first: 1, target: "allies", shield: 1.2, fx: [{ k: "shield", turns: 2 }, { k: "defUp", v: .25, turns: 2 }] }
       ]
     },
+    nilakan: {
+      name: "นิลกาฬ", role: "attack", rarity: 6, art: "nilakan", from: "hero", crit: .35,
+      text: "อัศวินรัตติกาลผู้ใช้หน้าไม้เงา ยิงทะลวงถึงแถวหลังของศัตรู",
+      passive: { text: "เนตรรัตติกาล: โอกาสคริติคอล 35%" },
+      skills: [
+        { name: "ศรเงามรณะ", icon: "🏹", cd: 3, target: "back", power: 2.7, fx: [{ k: "defDown", v: .3, turns: 2 }] },
+        { name: "ฝนศรรัตติกาล", icon: "🌑", cd: 5, first: 2, target: "random", hits: 6, power: .95, fx: [{ k: "stun", chance: .2, turns: 1 }] }
+      ]
+    },
+    arunee: {
+      name: "อรุณี", role: "magic", rarity: 6, art: "arunee", from: "hero",
+      text: "อัศวินแห่งแสงอรุณ ร่ายเวทศักดิ์สิทธิ์เผาผลาญความมืดทั้งสนาม",
+      passive: { shield: .2, text: "เกราะอรุณ: เริ่มการต่อสู้พร้อมเกราะ 20% ของพลังชีวิต" },
+      skills: [
+        { name: "ดาบแสงศักดิ์สิทธิ์", icon: "✨", cd: 3, target: "all", power: 1.45, fx: [{ k: "burn", power: .35, turns: 2 }] },
+        { name: "อรุณรุ่งพิพากษา", icon: "☀", cd: 5, first: 2, target: "all", power: 2.1, fx: [{ k: "defDown", v: .3, turns: 2 }, { k: "atkUp", v: .3, turns: 2, on: "allies" }] }
+      ]
+    },
     seraphina: {
       name: "เซราฟิน่า", role: "support", rarity: 6, art: "seraphina", from: "hero",
       text: "นักบุญแห่งปีกศักดิ์สิทธิ์ แสงของเธอปกป้องทั้งกองทัพ",
@@ -990,7 +1008,8 @@
     { id: "friends", name: "ผองเพื่อนผจญภัย", icon: "🎒", ids: ["jibjib", "baitoey", "pangji"], atk: .1 },
     { id: "tiny", name: "เพื่อนตัวจิ๋ว", icon: "🐾", ids: ["firefly", "kitten", "minibat"], atk: .1 },
     { id: "stars", name: "ดาราจักร", icon: "⭐", ids: ["starsprite", "starowl", "miu"], atk: .1 },
-    { id: "song", name: "บทเพลงสายลม", icon: "🎵", ids: ["fasai", "mekha", "baitoey"], atk: .1 }
+    { id: "song", name: "บทเพลงสายลม", icon: "🎵", ids: ["fasai", "mekha", "baitoey"], atk: .1 },
+    { id: "lightdark", name: "แสงและเงา", icon: "☯", ids: ["nilakan", "arunee"], atk: .18 }
   ];
   // A bond counts with at least two of its members together (all of a
   // two-card bond); members: who of the team are in it.

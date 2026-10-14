@@ -123,7 +123,7 @@ test("cards: S and SSS cards awaken a second time, five gold stars to Lv 130", (
 test("cards: six grades from D to SSS, SSS the rarest pull", () => {
   assert.deepEqual(Object.values(E.GRADES), ["D", "C", "B", "A", "S", "SSS"]);
   assert.ok(E.CARD_IDS.every(id => E.GRADES[E.CARDS[id].rarity]));
-  assert.deepEqual(E.CARD_IDS.filter(id => E.CARDS[id].rarity === 6).sort(), ["asani", "naphalai", "phoenix", "qilin", "seraphina", "vajira"]);
+  assert.deepEqual(E.CARD_IDS.filter(id => E.CARDS[id].rarity === 6).sort(), ["arunee", "asani", "naphalai", "nilakan", "phoenix", "qilin", "seraphina", "vajira"]);
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const state = { pity: 0 }, count = {};
@@ -214,4 +214,9 @@ test("cards: team power counts bond bonuses", () => {
   const plain = E.power("chada", 10) + E.power("anchan", 10);
   assert.ok(E.teamPowerOf(pair) > plain);
   assert.equal(E.teamPowerOf([{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }]), E.power("chada", 10) + E.power("pupa", 10));
+});
+
+test("cards: the light and dark knights bond", () => {
+  assert.deepEqual(E.activeBonds(["nilakan", "arunee"]).map(b => b.id), ["lightdark"]);
+  assert.ok(Math.abs(E.bondAtk(["nilakan", "arunee"], "arunee") - .18) < 1e-9);
 });

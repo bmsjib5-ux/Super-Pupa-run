@@ -41,6 +41,7 @@
     moonrabbit: "assets/moonrabbit-pet.webp", starowl: "assets/starowl-pet.webp", silverwolf: "assets/silverwolf-pet.webp",
     seraphina: "assets/seraphina-hero.webp", asani: "assets/asani-hero.webp", phoenix: "assets/phoenix-pet.webp",
     vajira: "assets/vajira-hero.webp", naphalai: "assets/naphalai-hero.webp", qilin: "assets/qilin-pet.webp",
+    nilakan: "assets/nilakan-hero.webp", arunee: "assets/arunee-hero.webp",
     chada: "assets/chada-hero.webp", anchan: "assets/anchan-hero.webp", phayak: "assets/phayak-hero.webp", wayu: "assets/wayu-hero.webp", sila: "assets/sila-hero.webp",
     // the four pets first drawn in code, now painted like the rest
     minibat: "assets/minibat-pet.webp", starsprite: "assets/starsprite-pet.webp", firefly: "assets/firefly-pet.webp", kitten: "assets/kitten-pet.webp",
@@ -52,7 +53,7 @@
   // A worn costume shows the card in its costume picture (assets/<id>-costume.webp)
   // with a golden glow.
   const costumeArt = (id) => `assets/${id}-costume.webp`;
-  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
+  const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", nilakan: "ชุดอัศวินรัตติกาลโลหิต", arunee: "ชุดอัศวินแสงจันทร์เงิน", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
   // Every card has a 3D model (made with Hunyuan3D-2), shown on its sheet.
   const MODELS_3D = Object.fromEntries(E.CARD_IDS.map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
@@ -182,6 +183,7 @@
     "phloeng:0": "fire", "phloeng:1": "fire", "mekha:0": "bolt", "mekha:1": "bolt", "fasai:0": "heal", "fasai:1": "buff",
     "seraphina:0": "heal", "seraphina:1": "buff", "asani:0": "bolt", "asani:1": "bolt", "phoenix:0": "fire", "phoenix:1": "fire",
     "vajira:0": "shield", "vajira:1": "shield", "naphalai:0": "star", "naphalai:1": "star", "qilin:0": "bite", "qilin:1": "heal",
+    "nilakan:0": "orb", "nilakan:1": "orb", "arunee:0": "star", "arunee:1": "fire",
     "chada:0": "slash", "chada:1": "slash", "anchan:0": "slash", "anchan:1": "shield", "phayak:0": "bite", "phayak:1": "stomp", "wayu:0": "shield", "wayu:1": "stomp", "sila:0": "shield", "sila:1": "shield",
     "walker:0": "spore", "bat:0": "bite", "hopper:0": "stomp", "urchin:0": "shield", "spitter:0": "seed",
     "jelly:0": "heal", "crab:0": "foeSlash", "roller:0": "stomp", "swooper:0": "foeSlash",
@@ -461,7 +463,7 @@
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
-    for (const id of ["vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade")); row.append(f); }
+    for (const id of ["nilakan", "arunee", "vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade")); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
     const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · การันตี SSS ภายใน ${g.pity6} ครั้ง (อีก ${g.pity6 - pity6()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
     const actions = el("div", "title-actions sheet-actions pull-actions");

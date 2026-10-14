@@ -68,6 +68,8 @@
     phoenix: image("assets/phoenix-pet.webp"),
     vajira: image("assets/vajira-hero.webp"),
     naphalai: image("assets/naphalai-hero.webp"),
+    nilakan: image("assets/nilakan-hero.webp"),
+    arunee: image("assets/arunee-hero.webp"),
     qilin: image("assets/qilin-pet.webp"),
     runFrames: Array.from({ length: 3 }, (_, index) => image(`assets/pupa-run-${index + 1}.webp`)),
     enemy: image("assets/thorn-shroom.webp")
@@ -1895,6 +1897,8 @@
       { id: "seraphina", name: "เซราฟิน่า", desc: "นักบุญแห่งปีกศักดิ์สิทธิ์ (SSS)", price: 900, flat: true, model3d: true, like: "baitoey", headTop: .2, spriteHead: .03, ability: ["ปีกศักดิ์สิทธิ์", "ตกช้าลง ร่อนข้ามเหวได้ไกลกว่าเดิม"] },
       { id: "asani", name: "อัสนี", desc: "อัศวินมังกรสายฟ้าในตำนาน (SSS)", price: 900, flat: true, model3d: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ดาบอัสนีบาต", "กดโจมตีปล่อยคลื่นพลังได้เสมอ แม้ไม่มีไอเทม"] },
       { id: "vajira", name: "วชิระ", desc: "อัศวินผู้พิทักษ์เกราะเพชร (SSS)", price: 900, flat: true, model3d: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะเพชร", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
+      { id: "nilakan", name: "นิลกาฬ", desc: "อัศวินรัตติกาลหน้าไม้เงา (SSS)", price: 900, flat: true, model3d: true, like: "ikuya", headTop: .2, spriteHead: .03, ability: ["ศรเงามรณะ", "กดโจมตียิงศรเงาได้เสมอ แม้ไม่มีไอเทม"] },
+      { id: "arunee", name: "อรุณี", desc: "อัศวินแห่งแสงอรุณ (SSS)", price: 900, flat: true, model3d: true, like: "pangji", headTop: .2, spriteHead: .03, ability: ["เกราะอรุณ", "เริ่มทุกด่านพร้อมเกราะฟองสบู่"] },
       { id: "naphalai", name: "นภาลัย", desc: "จอมเวทแห่งดวงดาว (SSS)", price: 900, flat: true, model3d: true, like: "pupav2", headTop: .2, spriteHead: .03, ability: ["ม่านดารา", "วิ่งเร็วขึ้น 20% และกระโดดสูงขึ้น"] }
     ],
     skins: [
@@ -6331,10 +6335,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14i";
+  const NEWS_VERSION = "2026-10-14j";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ตัวละครใหม่", title: "SSS ใหม่ · นิลกาฬ · อรุณี", text: "อัศวินแห่งเงาและแสง นิลกาฬ อัศวินรัตติกาลหน้าไม้เงา ยิงทะลวงถึงแถวหลังและยิงศรถล่มทั้งสนาม คริติคอล 35% · อรุณี อัศวินแห่งแสงอรุณ ร่ายเวทศักดิ์สิทธิ์โจมตีศัตรูทุกตัว เผาไหม้ และปลุกพลังทั้งทีม ลงพร้อมกันได้ความสัมพันธ์ ☯ แสงและเงา โจมตี +18% สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ภาพใหม่", title: "มอนสเตอร์โฉมใหม่ทุกบท", text: "มอนสเตอร์ในศึกการ์ดวาดใหม่ทั้งหมด ค้างคาว ปู ผี วุ้น แมงกะพรุน หีบมิมิค ราชินีค้างคาว โกเลมหิน ตัวกลิ้งหนาม สไลม์ แมงมุม ดอกพ่นเมล็ด นกโคม เม่นหนาม และวิญญาณไฟ ได้ภาพวาดแบบเดียวกับการ์ดตัวละคร และแต่ละบทยังมีสีของตัวเอง (สร้างด้วย Higgsfield)", image: "chapter15", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 15 · ถ้ำคริสตัลสายรุ้ง", text: "ด่าน 141–150 ในถ้ำลึกที่เต็มไปด้วยผลึกเรืองแสงสายรุ้ง มอนสเตอร์ผลึก 8 ชนิด ปูอัญมณีทลายเกราะ แมงกะพรุนเศษแก้วที่ทั้งรักษาและกางเกราะ ผีเสื้อแก้วดูดเลือด บอสราชาเห็ดผลึก และราชินีปริซึม บทนี้ต้องใช้ทีม Lv 130 ดาวทองครบ และจัดความสัมพันธ์การ์ดให้ดี", image: "chapter15", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ลากการ์ดจัดทีมได้แล้ว", text: "หน้าจัดทีมการ์ดและหน้าจัดทีมประลอง ลากการ์ดไปวางได้เลย วางทับตัวที่อยู่เพื่อแทนที่ ลากตัวในทีมไปที่อื่นเพื่อสลับหรือย้ายแถว หรือลากกลับไปที่รายการการ์ดเพื่อเอาออก บนมือถือให้แตะค้างไว้ครู่หนึ่งแล้วลาก ลากไปชิดขอบบนหรือล่างแล้วหน้าจะเลื่อนตาม", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6459,10 +6464,10 @@
       });
       return icon;
     }
-    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3" || kind === "gacha4" || kind === "gacha5") {
+    if (kind === "cards" || kind === "gacha" || kind === "gacha2" || kind === "gacha3" || kind === "gacha4" || kind === "gacha5" || kind === "gacha6") {
       const row = document.createElement("div");
       row.className = `news-trio news-cards${kind === "gacha5" ? " news-five" : ""}`;
-      for (const id of kind === "gacha5" ? ["chada", "anchan", "phayak", "wayu", "sila"] : kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
+      for (const id of kind === "gacha6" ? ["nilakan", "arunee"] : kind === "gacha5" ? ["chada", "anchan", "phayak", "wayu", "sila"] : kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = id === "phoenix" || id === "qilin" ? `assets/${id}-pet.webp` : `assets/${id}-hero.webp`;
         img.alt = "";
