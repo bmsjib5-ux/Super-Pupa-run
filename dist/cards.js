@@ -32,7 +32,7 @@
 
   // Hero cards use the hero pictures; pets and monsters are drawn by game.js.
   const PICTURES = {
-    pupa: "assets/pupa-hero-3d.webp", jibjib: "assets/jibjib-hero.webp", baitoey: "assets/baitoey-hero.webp",
+    pupa: "assets/pupa-card.webp", jibjib: "assets/jibjib-hero.webp", baitoey: "assets/baitoey-hero.webp",
     ikuya: "assets/ikuya-hero.webp", pangji: "assets/pangji-hero.webp", pupav2: "assets/pupav2-hero.webp",
     dragon: "assets/dragon-pet.webp",
     sakura: "assets/sakura-hero.webp", chantra: "assets/chantra-hero.webp", thongkham: "assets/thongkham-hero.webp",
@@ -42,11 +42,14 @@
     seraphina: "assets/seraphina-hero.webp", asani: "assets/asani-hero.webp", phoenix: "assets/phoenix-pet.webp",
     vajira: "assets/vajira-hero.webp", naphalai: "assets/naphalai-hero.webp", qilin: "assets/qilin-pet.webp",
     chada: "assets/chada-hero.webp", anchan: "assets/anchan-hero.webp", phayak: "assets/phayak-hero.webp", wayu: "assets/wayu-hero.webp", sila: "assets/sila-hero.webp",
+    // the four pets first drawn in code, now painted like the rest
+    minibat: "assets/minibat-pet.webp", starsprite: "assets/starsprite-pet.webp", firefly: "assets/firefly-pet.webp", kitten: "assets/kitten-pet.webp",
     // bosses with art of their own
     serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
-  // A worn costume recolours the card and adds a golden glow.
-  const COSTUME_HUE = { pupa: 200, jibjib: 150, baitoey: 260, ikuya: 300, pangji: 40, pupav2: 120, firefly: 180, kitten: 220, minibat: 90, starsprite: 320, dragon: 140, sakura: 160, chantra: 40, thongkham: 200, miu: 120, ratri: 300, moonrabbit: 280, starowl: 60, silverwolf: 330, phloeng: 190, mekha: 250, fasai: 300, seraphina: 200, asani: 150, phoenix: 180, vajira: 160, naphalai: 120, qilin: 200, chada: 40, anchan: 300, phayak: 180, wayu: 60, sila: 200 };
+  // A worn costume shows the card in its costume picture (assets/<id>-costume.webp)
+  // with a golden glow.
+  const costumeArt = (id) => `assets/${id}-costume.webp`;
   const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
   // Cards with a 3D model (made with Hunyuan3D-2), shown on their sheet.
   const MODELS_3D = Object.fromEntries(["fasai", "seraphina", "asani", "vajira", "naphalai", "phoenix", "qilin", "chada", "anchan", "phayak", "wayu", "sila", "pupav2", "chantra", "ratri", "phloeng", "dragon", "silverwolf", "pupa"].map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
@@ -60,9 +63,14 @@
     return art;
   }
   function portrait(kind) {
-    const art = plainPortrait(kind);
-    if (E.CARDS[kind] && wearing(kind)) { art.classList.add("is-costume"); art.style.setProperty("--hue", `${COSTUME_HUE[kind] || 180}deg`); }
-    return art;
+    if (E.CARDS[kind] && wearing(kind)) {
+      const img = el("img", "card-art is-costume");
+      img.src = costumeArt(kind);
+      img.alt = "";
+      img.draggable = false;
+      return img;
+    }
+    return plainPortrait(kind);
   }
   // The new monsters, drawn here on a 112 px square.
   const eyes = (g, x, y, gap, r, angry) => {
@@ -1064,7 +1072,10 @@
     if (lv) {
       const own = c.outfit[id];
       const row = el("div", "sheet-costume");
-      row.append(el("b", null, `คอสตูม · ${COSTUME_NAME[id]}`), el("span", null, `เปลี่ยนสีชุดและเพิ่มพลังชีวิต โจมตี ป้องกัน +${Math.round(E.COSTUME_BONUS * 100)}% เมื่อสวม`));
+      const look = el("img", "costume-look");
+      look.src = costumeArt(id);
+      look.alt = COSTUME_NAME[id];
+      row.append(look, el("b", null, `คอสตูม · ${COSTUME_NAME[id]}`), el("span", null, `ชุดใหม่ทั้งชุด และเพิ่มพลังชีวิต โจมตี ป้องกัน +${Math.round(E.COSTUME_BONUS * 100)}% เมื่อสวม`));
       if (!own) {
         const buyIt = button("shop-buy", `ซื้อ ● ${E.COSTUME_PRICE}`, () => {
           if (save().coins < E.COSTUME_PRICE) return;

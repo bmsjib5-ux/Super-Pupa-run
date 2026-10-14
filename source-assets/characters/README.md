@@ -1,39 +1,39 @@
 # Character pictures
 
-Every card in Super Pupa Run, transparent PNG, highest grade first. The game uses the WebP copies in dist/assets (heroes as <id>-hero.webp, pets as <id>-pet.webp); minibat, starsprite, firefly and kitten are drawn in code by dist/cards.js and were drawn by the game at 1024 px scale (dist/game.js paintPortrait), with their glow.
+Every card in Super Pupa Run, transparent PNG, highest grade first. Redrawn with Higgsfield (GPT Image 2.5) from the earlier card pictures: same characters, poses and outfits, cleaner and sharper; minibat, starsprite, firefly and kitten were simple shapes drawn in code and are now painted like the rest. The game uses trimmed WebP copies in dist/assets (heroes as <id>-hero.webp, pets as <id>-pet.webp, Pupa's card as pupa-card.webp). Costume pictures are in ../costumes.
 
-| Grade | File | Name | Size |
-|---|---|---|---|
-| SSS | seraphina.png | เซราฟิน่า | 276x360 |
-| SSS | asani.png | อัสนี | 286x360 |
-| SSS | phoenix.png | วิหคเพลิงทอง | 208x260 |
-| SSS | vajira.png | วชิระ | 281x360 |
-| SSS | naphalai.png | นภาลัย | 285x360 |
-| SSS | qilin.png | กิเลนทอง | 212x260 |
-| S | pupav2.png | Pupa V2 | 346x360 |
-| S | dragon.png | มังกรน้อยเปลวแสง | 240x218 |
-| S | chantra.png | จันทรา | 285x360 |
-| S | ratri.png | ราตรี | 289x360 |
-| S | phloeng.png | เพลิง | 290x360 |
-| S | silverwolf.png | หมาป่าเงิน | 239x240 |
-| S | chada.png | ชาดา | 270x360 |
-| S | anchan.png | อัญชัน | 270x360 |
-| S | phayak.png | พยัคฆ์ | 239x360 |
-| S | wayu.png | วายุ | 239x360 |
-| S | sila.png | ศิลา | 273x360 |
-| A | ikuya.png | อิคุยะ | 209x360 |
-| A | sakura.png | ซากุระ | 275x360 |
-| A | thongkham.png | ทองคำ | 285x360 |
-| A | miu.png | มิว | 277x360 |
-| A | mekha.png | เมฆา | 286x360 |
-| B | baitoey.png | ใบเตย | 227x360 |
-| B | pangji.png | ปังจิ | 205x360 |
-| B | minibat.png | ค้างคาวจิ๋ว | 1372x721 |
-| B | starsprite.png | ภูตดาว | 1508x1508 |
-| B | starowl.png | นกฮูกดาว | 241x240 |
-| C | pupa.png | Pupa | 1371x1148 |
-| C | jibjib.png | จิ๊บจิ๊บแมน | 259x360 |
-| C | moonrabbit.png | กระต่ายจันทร์ | 242x240 |
-| C | fasai.png | ฟ้าใส | 243x360 |
-| D | firefly.png | หิ่งห้อยน้อย | 1434x1434 |
-| D | kitten.png | ลูกแมวเชอร์รี่ | 1141x998 |
+| Grade | File | Name |
+|---|---|---|
+| SSS | seraphina.png | เซราฟิน่า |
+| SSS | asani.png | อัสนี |
+| SSS | phoenix.png | วิหคเพลิงทอง |
+| SSS | vajira.png | วชิระ |
+| SSS | naphalai.png | นภาลัย |
+| SSS | qilin.png | กิเลนทอง |
+| S | pupav2.png | Pupa V2 |
+| S | dragon.png | มังกรน้อยเปลวแสง |
+| S | chantra.png | จันทรา |
+| S | ratri.png | ราตรี |
+| S | phloeng.png | เพลิง |
+| S | silverwolf.png | หมาป่าเงิน |
+| S | chada.png | ชาดา |
+| S | anchan.png | อัญชัน |
+| S | phayak.png | พยัคฆ์ |
+| S | wayu.png | วายุ |
+| S | sila.png | ศิลา |
+| A | ikuya.png | อิคุยะ |
+| A | sakura.png | ซากุระ |
+| A | thongkham.png | ทองคำ |
+| A | miu.png | มิว |
+| A | mekha.png | เมฆา |
+| B | baitoey.png | ใบเตย |
+| B | pangji.png | ปังจิ |
+| B | minibat.png | ค้างคาวจิ๋ว |
+| B | starsprite.png | ภูตดาว |
+| B | starowl.png | นกฮูกดาว |
+| C | pupa.png | Pupa |
+| C | jibjib.png | จิ๊บจิ๊บแมน |
+| C | moonrabbit.png | กระต่ายจันทร์ |
+| C | fasai.png | ฟ้าใส |
+| D | firefly.png | หิ่งห้อยน้อย |
+| D | kitten.png | ลูกแมวเชอร์รี่ |
