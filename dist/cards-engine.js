@@ -702,6 +702,35 @@
     }
   });
 
+  // Chapter 15: the prism crystal caverns: crystal creatures that reflect
+  // light into blinding rainbow beams, grow crystal shells and shatter armour.
+  const PRISMGLOW = "rgba(190,150,255,.95)";
+  const PRISM = "sepia(1) saturate(3.4) hue-rotate(228deg) contrast(1.2) brightness(1.2)";
+  Object.assign(FOES, {
+    crystalshroom: { name: "เห็ดผลึก", role: "balance", art: "walker", look: PRISM, glow: PRISMGLOW, tier: 6, def: 1.3, skills: [{ name: "สปอร์ผลึกแหลม", cd: 3, target: "front", power: 1.4, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    prismbat: { name: "ค้างคาวปริซึม", role: "attack", art: "bat", look: PRISM, glow: PRISMGLOW, tier: 6, spd: 138, skills: [{ name: "แสงสะท้อนรุ้ง", cd: 3, target: "back", power: 1.4, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    gemcrab: { name: "ปูอัญมณี", role: "attack", art: "crab", look: PRISM, glow: PRISMGLOW, tier: 6, def: 1.8, skills: [{ name: "ก้ามเพชรทลายเกราะ", cd: 3, target: "one", power: 2.7, fx: [{ k: "defDown", v: .4, turns: 2 }] }] },
+    shardjelly: { name: "แมงกะพรุนเศษแก้ว", role: "support", art: "jelly", look: PRISM, glow: PRISMGLOW, tier: 6, skills: [{ name: "แสงผลึกบำบัด", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "shield", turns: 2 }], shield: .6 }] },
+    geoderoller: { name: "หินจีโอดกลิ้ง", role: "defense", art: "roller", look: PRISM, glow: PRISMGLOW, tier: 6, atk: 1.4, def: 1.4, skills: [{ name: "กลิ้งผลึกแตก", cd: 3, target: "front", power: 1.6, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    quartzurchin: { name: "เม่นควอตซ์", role: "defense", art: "urchin", look: PRISM, glow: PRISMGLOW, tier: 6, skills: [{ name: "เปลือกควอตซ์", cd: 4, target: "allies", shield: 1.35, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    lumenflower: { name: "ดอกไม้แสงรุ้ง", role: "magic", art: "spitter", look: PRISM, glow: PRISMGLOW, tier: 6, skills: [{ name: "ลำแสงปริซึม", cd: 3, target: "all", power: 1.1, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    glassmoth: { name: "ผีเสื้อแก้ว", role: "attack", art: "swooper", look: PRISM, glow: PRISMGLOW, tier: 6, spd: 136, skills: [{ name: "ปีกแก้วบาด", cd: 3, target: "back", power: 1.65, drain: .3 }] },
+    crystalking: {
+      name: "ราชาเห็ดผลึก", role: "balance", art: "king", look: PRISM, glow: PRISMGLOW, tier: 6, boss: true, hp: 4.5, atk: 1.45, def: 1.55,
+      skills: [
+        { name: "ผลึกแตกกระจาย", cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+        { name: "คุกผลึก", cd: 4, first: 1, target: "front", power: 1.9, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
+      ]
+    },
+    prismqueen: {
+      name: "ราชินีปริซึม", role: "magic", art: "queen", look: PRISM, glow: PRISMGLOW, tier: 6, boss: true, hp: 4.1, atk: 1.42, def: 1.35, spd: 138,
+      skills: [
+        { name: "สายรุ้งพิฆาต", cd: 3, target: "all", power: 1.5, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "จุมพิตผลึกรุ้ง", cd: 4, first: 1, target: "one", power: 3.2, drain: .6, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
+
   // ---- New faces ----
   // Bosses with art of their own: each takes the place of its chapter's
   // mushroom king on the chapter's last stage, with the king's strength.
@@ -759,7 +788,8 @@
     { name: "บทที่ 11 · ปราสาทจันทร์สีเลือด", from: 101, to: 110 },
     { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 },
     { name: "บทที่ 13 · ป่าเห็ดนีออน", from: 121, to: 130 },
-    { name: "บทที่ 14 · ทะเลทรายสุริยะ", from: 131, to: 140 }
+    { name: "บทที่ 14 · ทะเลทรายสุริยะ", from: 131, to: 140 },
+    { name: "บทที่ 15 · ถ้ำคริสตัลสายรุ้ง", from: 141, to: 150 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -901,7 +931,17 @@
     ["สุสานใต้ผืนทราย", 103, ["scarab,scarab/mirajelly,sunflower,dunebat", "cactusurchin,scorpcrab/vulture,vulture,mirajelly", "scorpcrab,sandshroom/sunflower,sunflower,mirajelly"]],
     ["วิหารสุริยัน", 104, ["cactusurchin,scorpcrab/sunflower,sunflower,vulture", "scorpcrab,scarab/mirajelly,mirajelly,dunebat", "scarab,scorpcrab/vulture,sunflower,mirajelly"]],
     ["ห้องบัลลังก์ฟาโรห์", 98, ["scorpcrab,scarab/mirajelly,sunflower,vulture", "cactusurchin,sandshroom/mirajelly,dunebat,sunflower", "sandking/mirajelly,vulture"]],
-    ["ปิรามิดราชินีสฟิงซ์", 91, ["scarab,scorpcrab/mirajelly,sunflower,vulture", "cactusurchin,scorpcrab/mirajelly,sunflower,dunebat", "sphinxqueen/mirajelly,dunebat"]]
+    ["ปิรามิดราชินีสฟิงซ์", 91, ["scarab,scorpcrab/mirajelly,sunflower,vulture", "cactusurchin,scorpcrab/mirajelly,sunflower,dunebat", "sphinxqueen/mirajelly,dunebat"]],
+    ["ปากถ้ำผลึก", 90, ["crystalshroom,crystalshroom/prismbat", "gemcrab,crystalshroom/lumenflower", "gemcrab,geoderoller/prismbat,lumenflower"]],
+    ["ทางเดินควอตซ์", 92, ["geoderoller,crystalshroom/shardjelly", "quartzurchin,gemcrab/lumenflower,prismbat", "geoderoller,gemcrab/shardjelly,glassmoth"]],
+    ["ทะเลสาบแสงรุ้ง", 94, ["gemcrab,gemcrab/lumenflower,prismbat", "quartzurchin,geoderoller/shardjelly,lumenflower", "gemcrab,geoderoller/glassmoth,glassmoth,shardjelly"]],
+    ["เหมืองอัญมณีร้าง", 95, ["quartzurchin,crystalshroom/lumenflower,lumenflower", "geoderoller,geoderoller/shardjelly,prismbat", "quartzurchin,gemcrab/shardjelly,lumenflower,glassmoth"]],
+    ["ห้องโถงปริซึม", 94, ["crystalshroom,gemcrab/prismbat,lumenflower", "geoderoller,quartzurchin/shardjelly,shardjelly", "crystalking/lumenflower,prismbat"]],
+    ["น้ำตกคริสตัล", 96, ["gemcrab,geoderoller/glassmoth,prismbat,lumenflower", "quartzurchin,crystalshroom/shardjelly,glassmoth", "gemcrab,gemcrab/shardjelly,lumenflower,prismbat"]],
+    ["สะพานแก้วลอยฟ้า", 95, ["geoderoller,geoderoller/shardjelly,lumenflower,prismbat", "quartzurchin,gemcrab/glassmoth,glassmoth,shardjelly", "gemcrab,crystalshroom/lumenflower,lumenflower,shardjelly"]],
+    ["หัวใจผลึกโบราณ", 92, ["quartzurchin,gemcrab/lumenflower,lumenflower,glassmoth", "gemcrab,geoderoller/shardjelly,shardjelly,prismbat", "geoderoller,gemcrab/glassmoth,lumenflower,shardjelly"]],
+    ["บัลลังก์ราชาผลึก", 92, ["gemcrab,geoderoller/shardjelly,lumenflower,glassmoth", "quartzurchin,crystalshroom/shardjelly,prismbat,lumenflower", "crystalking/shardjelly,glassmoth"]],
+    ["วิหารราชินีปริซึม", 85, ["geoderoller,gemcrab/shardjelly,lumenflower,glassmoth", "quartzurchin,gemcrab/shardjelly,lumenflower,prismbat", "prismqueen/shardjelly,prismbat"]]
   ];
   // the chapters' last stages meet their own bosses
   for (const u of UNIQUE_BOSSES) {

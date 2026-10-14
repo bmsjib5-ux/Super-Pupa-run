@@ -6331,10 +6331,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14f";
+  const NEWS_VERSION = "2026-10-14g";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 15 · ถ้ำคริสตัลสายรุ้ง", text: "ด่าน 141–150 ในถ้ำลึกที่เต็มไปด้วยผลึกเรืองแสงสายรุ้ง มอนสเตอร์ผลึก 8 ชนิด ปูอัญมณีทลายเกราะ แมงกะพรุนเศษแก้วที่ทั้งรักษาและกางเกราะ ผีเสื้อแก้วดูดเลือด บอสราชาเห็ดผลึก และราชินีปริซึม บทนี้ต้องใช้ทีม Lv 130 ดาวทองครบ และจัดความสัมพันธ์การ์ดให้ดี", image: "chapter15", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "ลากการ์ดจัดทีมได้แล้ว", text: "หน้าจัดทีมการ์ด ลากการ์ดไปวางในช่องทีมได้เลย วางทับตัวที่อยู่เพื่อแทนที่ ลากตัวในทีมไปช่องอื่นเพื่อสลับ หรือลากกลับไปที่รายการการ์ดเพื่อถอดออก บนมือถือให้แตะค้างไว้ครู่หนึ่งแล้วลาก", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ภาพใหม่", title: "ภาพตัวละครใหม่ และคอสตูมใหม่ทุกตัว", text: "การ์ดตัวละครและสัตว์เลี้ยงทั้ง 33 ใบวาดใหม่ให้คมชัดและสวยขึ้น ค้างคาวจิ๋ว ภูตดาว หิ่งห้อยน้อย และลูกแมวเชอร์รี่ได้ภาพวาดใหม่ทั้งตัว และคอสตูมไม่ใช่แค่เปลี่ยนสีแล้ว แต่เป็นชุดใหม่ทั้งชุด ดูตัวอย่างชุดได้ที่หน้าการ์ด (สร้างด้วย Higgsfield)", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "3D", title: "ตัวละครทุกตัวเป็น 3D แล้ว!", text: "ตัวละครทุกตัวในโหมดผจญภัยเป็นโมเดล 3D แล้ว ฟ้าใส เซราฟิน่า จันทรา เพลิง ราตรี อัสนี วชิระ นภาลัย ซากุระ ทองคำ และมิว วิ่งสลับขาได้เหมือนปูป้า เมฆาลอยตามบนก้อนเมฆ และการ์ดครบทั้ง 33 ใบเป็น 3D ในหน้าการ์ด ลากนิ้วหมุนดูรอบตัวได้ (สร้างด้วย Hunyuan3D-2)", image: "fasai3d", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6495,10 +6496,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13", "chapter14"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13", "chapter14", "chapter15"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter14" ? "news-scene-sand" : kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter14" ? "<b>131–140 ☀</b>" : kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter15" ? "news-scene-dark news-scene-prism" : kind === "chapter14" ? "news-scene-sand" : kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter15" ? "<b>141–150 💎</b>" : kind === "chapter14" ? "<b>131–140 ☀</b>" : kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {

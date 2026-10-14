@@ -80,9 +80,10 @@
       c.width = back.width; c.height = back.height;
       const s = c.getContext("2d");
       s.scale(dpr, dpr);
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter >= 14;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter === 14, prism = chapter >= 15;
       const sky = s.createLinearGradient(0, 0, 0, h);
-      if (sand) { sky.addColorStop(0, "#ff9a4a"); sky.addColorStop(.55, "#ffd08a"); sky.addColorStop(1, "#fff0c8"); }
+      if (prism) { sky.addColorStop(0, "#07051a"); sky.addColorStop(.5, "#1c1040"); sky.addColorStop(1, "#0a1a30"); }
+      else if (sand) { sky.addColorStop(0, "#ff9a4a"); sky.addColorStop(.55, "#ffd08a"); sky.addColorStop(1, "#fff0c8"); }
       else if (neon) { sky.addColorStop(0, "#0a0418"); sky.addColorStop(.5, "#2a0e48"); sky.addColorStop(1, "#0e1a30"); }
       else if (storm) { sky.addColorStop(0, "#0c0e24"); sky.addColorStop(.5, "#2c2f5e"); sky.addColorStop(1, "#14142e"); }
       else if (blood) { sky.addColorStop(0, "#12020a"); sky.addColorStop(.5, "#5a0a1e"); sky.addColorStop(1, "#1a0410"); }
@@ -116,14 +117,14 @@
         s.restore();
       }
       // stars
-      for (let i = 0; i < (abyss || jade || storm || sand ? 0 : neon ? 40 : steam || blood ? 25 : 70); i++) {
+      for (let i = 0; i < (abyss || jade || storm || sand ? 0 : neon || prism ? 40 : steam || blood ? 25 : 70); i++) {
         const x = (i * 97.3) % w, y = (i * 53.7) % (h * .3);
         s.globalAlpha = .25 + (i % 5) * .12;
         s.fillStyle = "#fff"; s.fillRect(x, y, 1.6, 1.6);
       }
       s.globalAlpha = 1;
       // moon (under the sea: the shimmer of the surface)
-      if (abyss || steam || jade || blood || storm || neon || sand) s.globalAlpha = 0;
+      if (abyss || steam || jade || blood || storm || neon || sand || prism) s.globalAlpha = 0;
       const mx = w * .8, my = h * .13, mr = Math.min(w, h) * .07;
       const halo = s.createRadialGradient(mx, my, mr * .5, mx, my, mr * 3.2);
       halo.addColorStop(0, cosmos ? "rgba(120,220,255,.4)" : holy ? "rgba(255,240,180,.8)" : dark ? "rgba(200,120,255,.6)" : ice ? "rgba(200,240,255,.45)" : fire ? "rgba(255,150,60,.45)" : lake ? "rgba(160,220,255,.35)" : "rgba(255,210,240,.35)"); halo.addColorStop(1, "rgba(0,0,0,0)");
@@ -152,6 +153,30 @@
           s.fillStyle = "#3a3458"; s.beginPath();
           for (let k = 0; k < 7; k++) { const a = k * TAU / 7, rr = r * (.8 + ((i + k) % 3) * .12); s.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
           s.fill(); s.fillStyle = "rgba(255,255,255,.12)"; s.beginPath(); s.arc(x - r * .3, y - r * .3, r * .3, 0, TAU); s.fill();
+        }
+      }
+      if (prism) {
+        // a cave of glowing rainbow crystals: stalactites above, clusters below
+        const hues = ["#7fe8ff", "#ff7ad9", "#b48cff", "#8affc2", "#ffd36a"];
+        s.fillStyle = "#120a26";
+        s.beginPath(); s.moveTo(0, 0);
+        for (let x = 0; x <= w + 24; x += 24) s.lineTo(x, ground * (.08 + ((x * 7.3) % 13) / 100) + Math.abs(Math.sin(x * .07)) * ground * .12);
+        s.lineTo(w, 0); s.fill();
+        const crystal = (x, base, wd, ht, tilt, hue) => {
+          const g = s.createLinearGradient(x, base - ht, x, base);
+          g.addColorStop(0, hue); g.addColorStop(.55, hue); g.addColorStop(1, "rgba(40,16,80,.95)");
+          s.save(); s.translate(x, base); s.rotate(tilt); s.shadowColor = hue; s.shadowBlur = 18; s.fillStyle = g;
+          s.beginPath(); s.moveTo(-wd / 2, 0); s.lineTo(-wd / 2, -ht * .78); s.lineTo(0, -ht); s.lineTo(wd / 2, -ht * .78); s.lineTo(wd / 2, 0); s.fill();
+          s.shadowBlur = 0; s.fillStyle = "rgba(255,255,255,.35)"; s.beginPath(); s.moveTo(-wd * .1, -ht * .1); s.lineTo(-wd * .1, -ht * .8); s.lineTo(0, -ht * .95); s.lineTo(wd * .12, -ht * .8); s.fill();
+          s.restore();
+        };
+        for (const [cx, k, hue] of [[.1, 1.2, 0], [.33, .7, 1], [.56, 1, 2], [.8, 1.3, 3], [.95, .8, 4]]) {
+          [[-.03, .7, -.35], [0, 1, 0], [.03, .6, .3], [.015, .45, .55]].forEach(([dx, sc, tl], n) => crystal(w * (cx + dx), ground + 4, 26 * k * sc, h * .24 * k * sc, tl, hues[(hue + n) % 5]));
+        }
+        for (let i = 0; i < 14; i++) {
+          const x = (i * 97.7) % w, len = ground * (.06 + (i % 4) * .04);
+          s.save(); s.shadowColor = hues[i % 5]; s.shadowBlur = 10; s.fillStyle = hues[i % 5]; s.globalAlpha = .85;
+          s.beginPath(); s.moveTo(x - 7, ground * .1); s.lineTo(x, ground * .1 + len); s.lineTo(x + 7, ground * .1); s.fill(); s.restore();
         }
       }
       if (sand) {
@@ -365,11 +390,28 @@
           s.beginPath(); s.moveTo(x, top); s.quadraticCurveTo(x - half * .2, top + (ground - top) * .5, x - half * .35, ground); s.stroke();
         }
       }
-      s.fillStyle = sand ? "#d8904a" : neon ? "#1a0a34" : storm ? "#26264a" : blood ? "#1c0812" : jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
+      s.fillStyle = prism ? "#1a1238" : sand ? "#d8904a" : neon ? "#1a0a34" : storm ? "#26264a" : blood ? "#1c0812" : jade ? "#2a6a52" : steam ? "#4a2a18" : abyss ? "#0a2e3c" : cosmos ? "#1a1640" : holy ? "#f3e6c8" : dark ? "#140a20" : ice ? "#9db8d8" : fire ? "#2a0e10" : lake ? "#123a5c" : "#2c1450";
       s.beginPath(); s.moveTo(0, ground);
       for (let x = 0; x <= w + 20; x += 20) s.lineTo(x, ground - 24 - Math.sin(x * .012) * 18 - Math.sin(x * .031) * 8);
       s.lineTo(w, h); s.lineTo(0, h); s.fill();
-      if (sand) {
+      if (prism) {
+        // dark cave floor with glowing shards and mirror pools
+        const floor = s.createLinearGradient(0, ground, 0, h);
+        floor.addColorStop(0, "#241650"); floor.addColorStop(1, "#06040f");
+        s.fillStyle = floor; s.fillRect(0, ground, w, h - ground);
+        const hues = ["#7fe8ff", "#ff7ad9", "#b48cff", "#8affc2", "#ffd36a"];
+        for (let i = 0; i < 8; i++) {
+          const x = (i * 163.1) % w, y = ground + 20 + ((i * 51.7) % (h - ground - 26)), k = .6 + (y - ground) / (h - ground);
+          const pool = s.createRadialGradient(x, y, 0, x, y, 40 * k);
+          pool.addColorStop(0, "rgba(160,200,255,.28)"); pool.addColorStop(1, "rgba(160,200,255,0)");
+          s.fillStyle = pool; s.beginPath(); s.ellipse(x, y, 40 * k, 10 * k, 0, 0, TAU); s.fill();
+        }
+        for (let i = 0; i < 22; i++) {
+          const x = (i * 89.3) % w, y = ground + 12 + ((i * 37.9) % (h - ground - 16)), k = .5 + (y - ground) / (h - ground);
+          s.save(); s.shadowColor = hues[i % 5]; s.shadowBlur = 8; s.fillStyle = hues[i % 5];
+          s.beginPath(); s.moveTo(x - 4 * k, y); s.lineTo(x, y - 12 * k); s.lineTo(x + 4 * k, y); s.fill(); s.restore();
+        }
+      } else if (sand) {
         // rippled golden sand with bleached bones and stones
         const floor = s.createLinearGradient(0, ground, 0, h);
         floor.addColorStop(0, "#e9b066"); floor.addColorStop(1, "#a0602a");
@@ -533,7 +575,7 @@
       if (!map) {
       const cx = w / 2, cy = ground + (h - ground) * .58, rx = Math.min(w * .3, (h - ground) * 1.1), ry = rx * .32;
       s.save();
-      s.strokeStyle = sand ? "rgba(255,240,170,.75)" : neon ? "rgba(120,255,240,.65)" : storm ? "rgba(255,240,120,.6)" : blood ? "rgba(255,70,100,.6)" : jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
+      s.strokeStyle = prism ? "rgba(200,170,255,.75)" : sand ? "rgba(255,240,170,.75)" : neon ? "rgba(120,255,240,.65)" : storm ? "rgba(255,240,120,.6)" : blood ? "rgba(255,70,100,.6)" : jade ? "rgba(255,215,106,.7)" : steam ? "rgba(255,190,90,.6)" : abyss ? "rgba(90,255,210,.55)" : cosmos ? "rgba(255,120,220,.6)" : holy ? "rgba(230,170,40,.7)" : dark ? "rgba(200,130,255,.55)" : ice ? "rgba(120,190,255,.55)" : fire ? "rgba(255,170,90,.4)" : lake ? "rgba(150,230,255,.35)" : "rgba(255,190,230,.35)";
       s.lineWidth = 2;
       for (const k of [1, .8, .45]) { s.beginPath(); s.ellipse(cx, cy, rx * k, ry * k, 0, 0, TAU); s.stroke(); }
       s.lineWidth = 1.2;
@@ -541,7 +583,7 @@
       for (let i = 0; i < 6; i++) { const a = i * TAU / 6 - Math.PI / 2, b = a + TAU / 3; s.moveTo(cx + Math.cos(a) * rx * .8, cy + Math.sin(a) * ry * .8); s.lineTo(cx + Math.cos(b) * rx * .8, cy + Math.sin(b) * ry * .8); }
       s.stroke();
       const core = s.createRadialGradient(cx, cy, 0, cx, cy, rx);
-      core.addColorStop(0, sand ? "rgba(255,220,120,.3)" : neon ? "rgba(180,100,255,.25)" : storm ? "rgba(255,240,140,.22)" : blood ? "rgba(255,40,70,.25)" : jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
+      core.addColorStop(0, prism ? "rgba(170,140,255,.3)" : sand ? "rgba(255,220,120,.3)" : neon ? "rgba(180,100,255,.25)" : storm ? "rgba(255,240,140,.22)" : blood ? "rgba(255,40,70,.25)" : jade ? "rgba(140,255,190,.25)" : steam ? "rgba(255,180,80,.22)" : abyss ? "rgba(90,255,210,.2)" : cosmos ? "rgba(120,220,255,.25)" : holy ? "rgba(255,220,120,.35)" : dark ? "rgba(170,90,255,.25)" : ice ? "rgba(160,220,255,.22)" : fire ? "rgba(255,140,60,.2)" : lake ? "rgba(120,220,255,.16)" : "rgba(255,150,210,.16)"); core.addColorStop(1, "rgba(0,0,0,0)");
       s.fillStyle = core; s.beginPath(); s.ellipse(cx, cy, rx, ry, 0, 0, TAU); s.fill();
       s.restore();
       }
@@ -560,10 +602,10 @@
       s.globalAlpha = 1;
     }
     function newPetal(anywhere) {
-      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter >= 14;
+      const lake = chapter === 2, fire = chapter === 3, ice = chapter === 4, dark = chapter === 5, holy = chapter === 6, cosmos = chapter === 7, abyss = chapter === 8, steam = chapter === 9, jade = chapter === 10, blood = chapter === 11, storm = chapter === 12, neon = chapter === 13, sand = chapter === 14, prism = chapter >= 15;
       return {
         x: anywhere ? rand(0, w) : rand(-20, w), y: anywhere ? rand(0, h) : -10, vx: rand(8, 26), vy: rand(10, 28),
-        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: sand ? (Math.random() < .6 ? "rgba(255,225,160,.75)" : "rgba(230,160,80,.8)") : neon ? (Math.random() < .5 ? "rgba(120,255,240,.9)" : "rgba(255,120,230,.9)") : storm ? "rgba(190,210,255,.7)" : blood ? (Math.random() < .6 ? "rgba(255,60,80,.85)" : "rgba(255,180,190,.6)") : jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam || blood || neon, ember: fire || ice || dark || holy || cosmos || steam || blood || neon || sand
+        spin: rand(0, TAU), vs: rand(-2, 2), r: fire ? rand(1.5, 3.2) : rand(2.5, 5), snow: ice, colour: prism ? ["rgba(127,232,255,.9)", "rgba(255,122,217,.9)", "rgba(180,140,255,.9)", "rgba(138,255,194,.9)", "rgba(255,211,106,.9)"][Math.floor(Math.random() * 5)] : sand ? (Math.random() < .6 ? "rgba(255,225,160,.75)" : "rgba(230,160,80,.8)") : neon ? (Math.random() < .5 ? "rgba(120,255,240,.9)" : "rgba(255,120,230,.9)") : storm ? "rgba(190,210,255,.7)" : blood ? (Math.random() < .6 ? "rgba(255,60,80,.85)" : "rgba(255,180,190,.6)") : jade ? (Math.random() < .5 ? "#ffc4dc" : "#ffe08a") : steam ? (Math.random() < .6 ? "rgba(255,240,220,.5)" : "rgba(255,190,90,.9)") : abyss ? "rgba(180,255,245,.6)" : cosmos ? (Math.random() < .5 ? "rgba(120,230,255,.9)" : "rgba(255,150,230,.9)") : holy ? (Math.random() < .5 ? "rgba(255,230,140,.9)" : "rgba(255,255,255,.9)") : dark ? (Math.random() < .5 ? "rgba(200,140,255,.8)" : "rgba(120,60,200,.8)") : ice ? "rgba(255,255,255,.85)" : fire ? (Math.random() < .5 ? "#ffb347" : "#ff6a2a") : lake ? "rgba(190,240,255,.55)" : (Math.random() < .5 ? "#ffb3d1" : "#ff8fbf"), bubble: lake || fire || dark || holy || cosmos || abyss || steam || blood || neon || prism, ember: fire || ice || dark || holy || cosmos || steam || blood || neon || sand || prism
       };
     }
 
