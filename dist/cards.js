@@ -44,6 +44,8 @@
     chada: "assets/chada-hero.webp", anchan: "assets/anchan-hero.webp", phayak: "assets/phayak-hero.webp", wayu: "assets/wayu-hero.webp", sila: "assets/sila-hero.webp",
     // the four pets first drawn in code, now painted like the rest
     minibat: "assets/minibat-pet.webp", starsprite: "assets/starsprite-pet.webp", firefly: "assets/firefly-pet.webp", kitten: "assets/kitten-pet.webp",
+    // the base monsters, painted (each chapter recolours them)
+    ...Object.fromEntries(["bat", "crab", "ghost", "hopper", "jelly", "mimic", "queen", "rockling", "roller", "slime", "spider", "spitter", "swooper", "urchin", "wisp"].map(id => [id, `assets/foe-${id}.webp`])),
     // bosses with art of their own
     serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
