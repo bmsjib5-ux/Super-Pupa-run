@@ -887,37 +887,34 @@
     const tier = FOES[TOWER_KINGS[g - 1]].tier || 1;
     for (const [id, def] of Object.entries(NEW_FOES)) FOES[`${id}${g}`] = { ...def, tier };
   }
-  // The upper tower (floors 101-150): rune armour, living spellbooks and
-  // tower guardians under the tower's wizard lord and shadow witch, painted
-  // as their own monsters. A copy per ten floors, as strong as chapters 11-15.
+  // The upper tower (floors 101-150): five zones of ten floors, each with
+  // monsters of its own (painted, not recoloured), a lord on odd floors, a
+  // queen on even ones and a great boss on the tenth, as strong as chapters
+  // 11-15. scene: the chapter backdrop the zone is fought on.
   const TOWERGLOW = "rgba(205,150,255,.95)";
-  const TOWER_GUARDS = {
-    runeknight: { name: "เกราะรูนผีสิง", role: "balance", art: "runeknight", def: 1.4, skills: [{ name: "ดาบรูนสะท้าน", cd: 3, target: "front", power: 1.45, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
-    gargoyle: { name: "การ์กอยล์", role: "attack", art: "gargoyle", def: 1.5, spd: 138, skills: [{ name: "โฉบกรงเล็บหิน", cd: 3, target: "back", power: 1.3, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
-    spellbook: { name: "ตำราเวทมีชีวิต", role: "magic", art: "spellbook", skills: [{ name: "หน้ากระดาษคำสาป", cd: 3, target: "all", power: 1.15, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
-    candlewisp: { name: "วิญญาณเทียนไข", role: "support", art: "candlewisp", skills: [{ name: "แสงเทียนอุ่นใจ", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "atkUp", v: .2, turns: 2 }] }] },
-    towergolem: { name: "โกเลมผู้เฝ้าหอ", role: "defense", art: "towergolem", hp: 1.2, skills: [{ name: "กำแพงผลึกหอคอย", cd: 4, target: "allies", shield: 1.1, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
-    shadowcat: { name: "แมวเงาจอมเวท", role: "attack", art: "shadowcat", spd: 140, skills: [{ name: "กรงเล็บเงา", cd: 3, target: "back", power: 1.7, drain: .3 }] },
-    mirrorwraith: { name: "ภูตกระจก", role: "magic", art: "mirrorwraith", skills: [{ name: "เงาสะท้อนต้องสาป", cd: 3, target: "one", power: 2.3, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
-    sentinelorb: { name: "ลูกตาพิทักษ์", role: "defense", art: "sentinelorb", def: 1.6, skills: [{ name: "ม่านตาเวทมนตร์", cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }] }
-  };
-  // the floor bosses, the wizard lord on odd floors and the witch on even ones
-  const TOWER_BOSSES = {
-    towerlord: {
-      name: "จอมเวทเจ้าหอคอย", role: "balance", art: "towerlord", boss: true, hp: 4.6, atk: 1.45, def: 1.55,
-      skills: [
-        { name: "พายุรูนโบราณ", cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
-        { name: "คุกเวทผนึก", cd: 4, first: 1, target: "front", power: 1.95, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
-      ]
-    },
-    towerwitch: {
-      name: "แม่มดเงาหอคอย", role: "magic", art: "towerwitch", boss: true, hp: 4, atk: 1.3, def: 1.3, spd: 134,
-      skills: [
-        { name: "ลูกแก้วเงาระเบิด", cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .35, turns: 2 }] },
-        { name: "จุมพิตแม่มดเงา", cd: 4, first: 1, target: "one", power: 2.9, drain: .5, fx: [{ k: "stun", chance: .35, turns: 1 }] }
-      ]
-    }
-  };
+  // the guards' kits by part (the same tuned strengths in every zone)
+  const front = (name, skill, fx = [{ k: "defDown", v: .25, turns: 2 }]) => ({ name, role: "balance", def: 1.4, skills: [{ name: skill, cd: 3, target: "front", power: 1.45, fx }] });
+  const striker = (name, skill) => ({ name, role: "attack", def: 1.5, spd: 138, skills: [{ name: skill, cd: 3, target: "back", power: 1.3, fx: [{ k: "stun", chance: .15, turns: 1 }] }] });
+  const hunter = (name, skill) => ({ name, role: "attack", spd: 140, skills: [{ name: skill, cd: 3, target: "back", power: 1.7, drain: .3 }] });
+  const caster = (name, skill, fx = [{ k: "burn", power: .25, turns: 2 }]) => ({ name, role: "magic", skills: [{ name: skill, cd: 3, target: "all", power: 1.05, fx }] });
+  const hexer = (name, skill) => ({ name, role: "magic", skills: [{ name: skill, cd: 3, target: "one", power: 2.3, fx: [{ k: "stun", chance: .3, turns: 1 }] }] });
+  const healer = (name, skill, fx = [{ k: "atkUp", v: .2, turns: 2 }]) => ({ name, role: "support", skills: [{ name: skill, cd: 3, target: "allies", heal: 1.3, fx }] });
+  const warden = (name, skill) => ({ name, role: "defense", hp: 1.1, skills: [{ name: skill, cd: 4, target: "allies", shield: .85, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] });
+  const bulwark = (name, skill) => ({ name, role: "defense", def: 1.6, skills: [{ name: skill, cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }] });
+  const lord = (name, [all, hold]) => ({
+    name, role: "balance", boss: true, hp: 4.6, atk: 1.45, def: 1.55,
+    skills: [
+      { name: all, cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+      { name: hold, cd: 4, first: 1, target: "front", power: 1.95, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
+    ]
+  });
+  const queen = (name, [all, kiss]) => ({
+    name, role: "magic", boss: true, hp: 4, atk: 1.3, def: 1.3, spd: 134,
+    skills: [
+      { name: all, cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .35, turns: 2 }] },
+      { name: kiss, cd: 4, first: 1, target: "one", power: 2.9, drain: .5, fx: [{ k: "stun", chance: .35, turns: 1 }] }
+    ]
+  });
   // a great boss on each tenth floor, 110 to 150
   const TOWER_GREAT_UPPER = {
     runedragon: {
@@ -956,16 +953,80 @@
       ]
     }
   };
-  // strength of the upper tower's ten-floor groups (chapters 11-15)
-  const TOWER_UPPER_TIER = [4.4, 4.8, 5.2, 5.6, 6];
-  // and their level on the first floor of each ten
-  const TOWER_UPPER_LV = [50, 76, 84, 93, 95];
-  TOWER_UPPER_TIER.forEach((tier, k) => {
-    const g = 11 + k;
-    for (const [id, def] of Object.entries({ ...TOWER_GUARDS, ...TOWER_BOSSES })) FOES[`${id}${g}`] = { ...def, glow: TOWERGLOW, tier };
-    const great = Object.keys(TOWER_GREAT_UPPER)[k];
-    FOES[great] = { ...TOWER_GREAT_UPPER[great], glow: TOWERGLOW, tier };
-  });
+  const TOWER_ZONES = [
+    {
+      name: "ห้องสมุดเวท", tier: 4.4, lv: 47, scene: 11, great: "runedragon",
+      lord: ["towerlord", lord("จอมเวทเจ้าหอคอย", ["พายุรูนโบราณ", "คุกเวทผนึก"])],
+      queen: ["towerwitch", queen("แม่มดเงาหอคอย", ["ลูกแก้วเงาระเบิด", "จุมพิตแม่มดเงา"])],
+      guards: {
+        runeknight: front("เกราะรูนผีสิง", "ดาบรูนสะท้าน"),
+        spellbook: caster("ตำราเวทมีชีวิต", "หน้ากระดาษคำสาป"),
+        candlewisp: healer("วิญญาณเทียนไข", "แสงเทียนอุ่นใจ"),
+        towergolem: warden("โกเลมผู้เฝ้าหอ", "กำแพงผลึกหอคอย"),
+        shadowcat: hunter("แมวเงาจอมเวท", "กรงเล็บเงา"),
+        mirrorwraith: hexer("ภูตกระจก", "เงาสะท้อนต้องสาป")
+      }
+    },
+    {
+      name: "หอวิญญาณ", tier: 4.8, lv: 76, scene: 5, great: "phantomknight",
+      lord: ["lichking", lord("ราชาลิชวิญญาณ", ["พายุวิญญาณคร่ำครวญ", "โซ่ตรวนยมโลก"])],
+      queen: ["phantomqueen", queen("ราชินีภูตพราย", ["หมอกวิญญาณเยือกเย็น", "จุมพิตภูตพราย"])],
+      guards: {
+        tombguard: bulwark("ผู้พิทักษ์หลุมศพ", "โล่ศิลาจารึก"),
+        skullarcher: striker("โครงกระดูกนักธนู", "ศรไฟผี"),
+        wraithhound: hunter("หมาป่าวิญญาณ", "เขี้ยวดูดวิญญาณ"),
+        banshee: caster("บันชีกรีดร้อง", "เสียงกรีดร้องสะท้านใจ", [{ k: "stun", chance: .15, turns: 1 }]),
+        hauntdoll: hexer("ตุ๊กตาผีสิง", "เข็มสาปตุ๊กตา"),
+        ghostlantern: healer("โคมวิญญาณ", "แสงโคมนำทาง", [{ k: "cleanse" }])
+      }
+    },
+    {
+      name: "สวนอสูร", tier: 5.2, lv: 84, scene: 12, great: "chimera",
+      lord: ["wyvernlord", lord("ราชาไวเวิร์น", ["พายุปีกเพลิง", "กรงเล็บไวเวิร์น"])],
+      queen: ["medusa", queen("ราชินีเมดูซ่า", ["ฝูงงูพิษ", "จ้องตาศิลา"])],
+      guards: {
+        manticore: front("แมนติคอร์", "หางแมงป่องพิษ", [{ k: "burn", power: .3, turns: 2 }]),
+        gargoyle: striker("การ์กอยล์", "โฉบกรงเล็บหิน"),
+        griffin: hunter("กริฟฟิน", "ดิ่งกรงเล็บอินทรี"),
+        basilisk: hexer("บาซิลิสก์", "ดวงตาศิลา"),
+        nightunicorn: healer("ยูนิคอร์นรัตติกาล", "เขาเงินเยียวยา"),
+        shelltortoise: warden("เต่ากระดองผลึก", "กระดองผลึกคุ้มภัย")
+      }
+    },
+    {
+      name: "โรงจักรกล", tier: 5.6, lv: 93, scene: 9, great: "clocktitan",
+      lord: ["automatonking", lord("ราชาหุ่นกลไก", ["คลื่นไอน้ำร้อน", "คีมเหล็กหนีบ"])],
+      queen: ["hourglassqueen", queen("ราชินีนาฬิกาทราย", ["พายุทรายกาลเวลา", "เข็มนาฬิกาหยุดเวลา"])],
+      guards: {
+        windupsoldier: front("ทหารไขลาน", "ดาบปลายปืนไขลาน"),
+        cuckoobird: striker("นกกาเหว่าจอมตอก", "ค้อนเที่ยงคืน"),
+        gearspider: hunter("แมงมุมเฟือง", "เขี้ยวเฟืองหมุน"),
+        steamowl: caster("นกฮูกไอน้ำ", "ไอน้ำลวกร้อน"),
+        repairbot: healer("หุ่นช่างซ่อม", "ซ่อมด่วนทันใจ"),
+        sentinelorb: bulwark("ลูกตาพิทักษ์", "ม่านตาเวทมนตร์")
+      }
+    },
+    {
+      name: "ท้องพระโรงดารา", tier: 6, lv: 95, scene: 7, great: "towersovereign",
+      lord: ["astralregent", lord("ผู้สำเร็จราชการดารา", ["ฝนดาวตก", "กรงแรงโน้มถ่วง"])],
+      queen: ["voidempress", queen("จักรพรรดินีห้วงมืด", ["สุริยคราสมืด", "จุมพิตจันทร์ดับ"])],
+      guards: {
+        starknight: front("อัศวินดารา", "ดาบแสงดาว"),
+        cometimp: striker("ภูตดาวหาง", "พุ่งชนดาวหาง"),
+        voidassassin: hunter("นักฆ่าห้วงมืด", "มีดจันทร์เสี้ยว"),
+        astromage: caster("นักเวทดวงดาว", "กลุ่มดาวพิฆาต"),
+        moonpriestess: healer("นักบวชจันทรา", "แสงจันทร์เยียวยา"),
+        crystalwarden: warden("ผู้คุมผลึกม่วง", "โล่ผลึกอเมทิสต์")
+      }
+    }
+  ];
+  for (const zone of TOWER_ZONES) {
+    const set = { ...zone.guards, [zone.lord[0]]: zone.lord[1], [zone.queen[0]]: zone.queen[1], [zone.great]: TOWER_GREAT_UPPER[zone.great] };
+    for (const [id, def] of Object.entries(set)) {
+      if (FOES[id]) throw new Error(`monster ${id} twice`);
+      FOES[id] = { art: id, ...def, glow: TOWERGLOW, tier: zone.tier };
+    }
+  }
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -1710,9 +1771,10 @@
   function towerFloor(n) {
     const g = Math.min(15, Math.ceil(n / 10)), great = n % 10 === 0, upper = g > 10;
     let pool, fresh, boss;
+    const zone = upper ? TOWER_ZONES[g - 11] : null;
     if (upper) {
-      pool = fresh = Object.keys(TOWER_GUARDS).map(id => `${id}${g}`);
-      boss = great ? Object.keys(TOWER_GREAT_UPPER)[g - 11] : `${n % 2 ? "towerlord" : "towerwitch"}${g}`;
+      pool = fresh = Object.keys(zone.guards);
+      boss = great ? zone.great : n % 2 ? zone.lord[0] : zone.queen[0];
     } else {
       const chapter = CHAPTERS[g - 1];
       pool = [...new Set(STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).flatMap(s => s.waves.flat().map(f => f.id)).filter(id => !FOES[id].boss))];
@@ -1728,9 +1790,9 @@
     for (let k = 0; k < guards; k++) wave.push({ id: roll((k % 2 ? pool : fresh).filter(id => !upper || !wave.some(u => u.id === id))), row: k === 0 ? "front" : "back" });
     const stage = STAGES[Math.min(STAGES.length, n) - 1];
     // the upper tower climbs a level a floor; its great bosses come lower
-    const lv = upper ? TOWER_UPPER_LV[g - 11] + (great ? -6 : n % 10) : stage.lv + TOWER_LIFT[g - 1] + Math.floor((n % 10 || 10) / 3);
+    const lv = upper ? zone.lv + (great ? -6 : n % 10) : stage.lv + TOWER_LIFT[g - 1] + Math.floor((n % 10 || 10) / 3);
     return {
-      num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv, chapter: g,
+      num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv, chapter: g, ...(zone && { zone: zone.name, scene: zone.scene }),
       waves: [wave], boss: true, par: 99,
       coins: 60 + 12 * n, repeat: 0, xp: 15 + 6 * n,
       gems: great ? 120 : n % 5 === 0 ? 50 : 20, dust: great ? 15 : 5, wings: great ? 3 : n % 5 === 0 ? 1 : 0
@@ -1902,7 +1964,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

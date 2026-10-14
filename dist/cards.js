@@ -50,8 +50,8 @@
     ...Object.fromEntries(["bat", "crab", "ghost", "hopper", "jelly", "mimic", "queen", "rockling", "roller", "slime", "spider", "spitter", "swooper", "urchin", "wisp"].map(id => [id, `assets/foe-${id}.webp`])),
     // the angels of chapter 16
     ...Object.fromEntries(["angelguard", "cherub", "angelknight", "angelharp", "angelshield", "seraph", "angelmage", "stormangel", "archking", "archqueen"].map(id => [id, `assets/foe-${id}.webp`])),
-    // the upper tower (floors 101-150)
-    ...Object.fromEntries(["runeknight", "gargoyle", "spellbook", "candlewisp", "towergolem", "shadowcat", "mirrorwraith", "sentinelorb", "towerlord", "towerwitch", "runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"].map(id => [id, `assets/foe-${id}.webp`])),
+    // the upper tower's five zones (floors 101-150)
+    ...Object.fromEntries(E.TOWER_ZONES.flatMap(z => [...Object.keys(z.guards), z.lord[0], z.queen[0], z.great]).map(id => [id, `assets/foe-${id}.webp`])),
     // bosses with art of their own
     serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
@@ -1466,7 +1466,7 @@
     body.replaceChildren(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.chapter : Math.min(16, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.scene || v.stage.chapter : Math.min(16, Math.ceil(v.stage.num / 10)) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -1878,7 +1878,7 @@
       const row = el("div", `tower-floor${cleared ? " is-cleared" : here ? " is-next" : " is-locked"}${n % 10 === 0 ? " is-great" : ""}`);
       const art = el("span", "tower-boss"); art.append(foeArt(boss));
       const info = el("div", "tower-info");
-      info.append(el("b", null, `ชั้น ${n}${n % 10 === 0 ? " · บอสใหญ่" : ""}`), el("span", null, `${E.FOES[boss].name} · Lv ${f.lv} · ${f.waves[0].length} ตัว`), el("small", null, cleared ? "ผ่านแล้ว ✓" : `รางวัลครั้งแรก: 💎 ${f.gems} · ✧ ${f.dust}${f.wings ? ` · 🪽 ${f.wings}` : ""} · ● ${fmt(f.coins)}`));
+      info.append(el("b", null, `ชั้น ${n}${f.zone ? ` · ${f.zone}` : ""}${n % 10 === 0 ? " · บอสใหญ่" : ""}`), el("span", null, `${E.FOES[boss].name} · Lv ${f.lv} · ${f.waves[0].length} ตัว`), el("small", null, cleared ? "ผ่านแล้ว ✓" : `รางวัลครั้งแรก: 💎 ${f.gems} · ✧ ${f.dust}${f.wings ? ` · 🪽 ${f.wings}` : ""} · ● ${fmt(f.coins)}`));
       row.append(el("span", "tower-num", String(n)), art, info);
       if (here || cleared) {
         const go = button(here ? "primary-button tower-go" : "secondary-button tower-go", here ? "ท้าทาย ⚔" : "สู้อีกครั้ง", () => startBattle(E.towerFloor(n)));

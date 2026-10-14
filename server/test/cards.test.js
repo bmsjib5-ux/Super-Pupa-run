@@ -193,13 +193,23 @@ test("cards: the tower has 150 floors, a boss on each and a great one every tent
     const f = E.towerFloor(n);
     assert.ok(E.FOES[f.waves[0][0].id].boss, `floor ${n}`);
     assert.ok(f.waves[0].every(u => E.FOES[u.id]), `floor ${n} foes`);
-    // the upper tower has monsters of its own, painted, not recoloured
-    if (n > 100) assert.ok(f.waves[0].every(u => !E.FOES[u.id].look && /^(runeknight|gargoyle|spellbook|candlewisp|towergolem|shadowcat|mirrorwraith|sentinelorb|towerlord|towerwitch)1[1-5]$|^(runedragon|phantomknight|chimera|clocktitan|towersovereign)$/.test(u.id)), `floor ${n} upper foes`);
+    // the upper tower: each ten floors a zone with monsters of its own,
+    // painted, not recoloured, and no two of the same guard on a floor
+    if (n > 100) {
+      const zone = E.TOWER_ZONES[Math.ceil(n / 10) - 11];
+      const own = [...Object.keys(zone.guards), zone.lord[0], zone.queen[0], zone.great];
+      assert.equal(f.zone, zone.name);
+      assert.ok(f.waves[0].every(u => own.includes(u.id) && !E.FOES[u.id].look), `floor ${n} zone foes`);
+      assert.equal(new Set(f.waves[0].map(u => u.id)).size, f.waves[0].length, `floor ${n} repeats`);
+    }
   }
   assert.equal(E.towerFloor(30).waves[0][0].id, "golemboss");
   assert.equal(E.STAGES[29].waves[2][0].id, "golemboss"); // chapter 3 ends at the lava golem
   assert.deepEqual([110, 120, 130, 140, 150].map(n => E.towerFloor(n).waves[0][0].id), ["runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"]);
   assert.ok(E.towerFloor(150).lv > E.towerFloor(101).lv);
+  // no zone shares a monster with another
+  const all = E.TOWER_ZONES.flatMap(z => [...Object.keys(z.guards), z.lord[0], z.queen[0], z.great]);
+  assert.equal(new Set(all).size, all.length);
 });
 
 test("cards: the upper tower can be climbed by a team of its chapters' strength", () => {
