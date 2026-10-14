@@ -6331,10 +6331,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14d";
+  const NEWS_VERSION = "2026-10-14e";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "ลากการ์ดจัดทีมได้แล้ว", text: "หน้าจัดทีมการ์ด ลากการ์ดไปวางในช่องทีมได้เลย วางทับตัวที่อยู่เพื่อแทนที่ ลากตัวในทีมไปช่องอื่นเพื่อสลับ หรือลากกลับไปที่รายการการ์ดเพื่อถอดออก บนมือถือให้แตะค้างไว้ครู่หนึ่งแล้วลาก", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ภาพใหม่", title: "ภาพตัวละครใหม่ และคอสตูมใหม่ทุกตัว", text: "การ์ดตัวละครและสัตว์เลี้ยงทั้ง 33 ใบวาดใหม่ให้คมชัดและสวยขึ้น ค้างคาวจิ๋ว ภูตดาว หิ่งห้อยน้อย และลูกแมวเชอร์รี่ได้ภาพวาดใหม่ทั้งตัว และคอสตูมไม่ใช่แค่เปลี่ยนสีแล้ว แต่เป็นชุดใหม่ทั้งชุด ดูตัวอย่างชุดได้ที่หน้าการ์ด (สร้างด้วย Higgsfield)", image: "gacha5", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "3D", title: "ตัวละคร 3D วิ่งสลับขาได้แล้ว!", text: "ฟ้าใส เซราฟิน่า จันทรา เพลิง ราตรี อัสนี วชิระ และนภาลัย เป็นโมเดล 3D ในโหมดผจญภัย วิ่งสลับขาได้เหมือนปูป้า และการ์ด 19 ใบเป็น 3D ในหน้าการ์ด ลากนิ้วหมุนดูรอบตัวได้ (สร้างด้วย Hunyuan3D-2)", image: "fasai3d", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 14 · ทะเลทรายสุริยะ", text: "ด่าน 131–140 กลางทะเลทรายใต้ดวงอาทิตย์แผดเผา ปิรามิดและเสาโอเบลิสก์ มอนสเตอร์ทะเลทราย 8 ชนิด แมงป่องทองทะลวงเกราะ ด้วงสุริยะ แร้งดูดเลือด บอสฟาโรห์เห็ดทราย และราชินีสฟิงซ์ แนะนำการ์ด Lv 130 ดาวทองครบ", image: "chapter14", open: () => { closeNews(); window.PupaCards?.open(); } },

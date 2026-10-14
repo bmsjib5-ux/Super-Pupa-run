@@ -884,16 +884,16 @@
       const slots = el("div", "cards-slots");
       for (let slot = from; slot < to; slot++) {
         const id = c.team[slot];
-        if (id) slots.append(cardTile(id, () => cardSheet(id), "in-team"));
-        else {
-          const empty = button("cards-empty", "+", () => { tab = "team"; announce("แตะการ์ดด้านล่างเพื่อใส่ทีม"); tone(587, .05, "triangle", .04); }, `ช่องว่าง${label}`);
-          slots.append(empty);
-        }
+        let node;
+        if (id) { node = cardTile(id, () => cardSheet(id), "in-team"); node.dataset.card = id; }
+        else node = button("cards-empty", "+", () => { tab = "team"; announce("ลากการ์ดด้านล่างมาวางที่ช่องนี้ หรือแตะการ์ดแล้วกดใส่ทีม"); tone(587, .05, "triangle", .04); }, `ช่องว่าง${label}`);
+        node.dataset.slot = slot;
+        slots.append(node);
       }
       row.append(slots);
       formation.append(row);
     }
-    const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า`);
+    const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า · ลากการ์ดไปวางในช่องทีมเพื่อใส่หรือสลับตัว`);
     const bonds = bondStrip(c.team);
     const heading = el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`);
     const grid = el("div", "cards-grid");
@@ -902,9 +902,110 @@
       const a = x.id, b = y.id, ha = c.units[a] ? 1 : 0, hb = c.units[b] ? 1 : 0;
       return hb - ha || E.CARDS[b].rarity - E.CARDS[a].rarity || (c.awake[b] || 0) - (c.awake[a] || 0) || (c.units[b] || 0) - (c.units[a] || 0) || x.n - y.n;
     }).map(o => o.id);
-    for (const id of order) grid.append(cardTile(id, () => cardSheet(id)));
+    for (const id of order) {
+      const tile = cardTile(id, () => cardSheet(id));
+      if (c.units[id]) tile.dataset.card = id;
+      grid.append(tile);
+    }
     panel.append(formation, sum, bonds, heading, grid);
+    teamDrag(panel, grid);
   }
+
+  // Drag a card onto a team slot to put it there: it takes the place of
+  // the card in that slot, or the two trade places when both are in the
+  // team. A team card dropped back on the card list leaves the team. A
+  // mouse drags as soon as it moves; a finger holds still for a moment
+  // first, so swiping still scrolls.
+  let teamDragging = null, teamDragWait = 0, teamDropped = false;
+  function teamDrag(panel, grid) {
+    panel.addEventListener("pointerdown", (event) => {
+      if (event.button > 0 || teamDragging) return;
+      const node = event.target.closest("[data-card]");
+      if (!node || !panel.contains(node)) return;
+      const from = node.dataset.slot != null ? Number(node.dataset.slot) : null;
+      teamDragging = { id: node.dataset.card, node, from, panel, grid, x: event.clientX, y: event.clientY, touch: event.pointerType !== "mouse" };
+      if (teamDragging.touch) teamDragWait = setTimeout(() => { if (teamDragging && !teamDragging.ghost) dragBegin(teamDragging); }, 260);
+    });
+    // a drop is not also a tap that opens the card
+    panel.addEventListener("click", (event) => { if (teamDropped) { event.stopPropagation(); event.preventDefault(); } }, true);
+    panel.addEventListener("contextmenu", (event) => { if (teamDragging) event.preventDefault(); });
+    if (teamDrag.ready) return;
+    teamDrag.ready = true;
+    window.addEventListener("pointermove", (event) => {
+      const drag = teamDragging;
+      if (!drag) return;
+      if (!drag.ghost) {
+        if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) <= 8) return;
+        // a finger that moves before the hold scrolls instead
+        if (drag.touch) { clearTimeout(teamDragWait); teamDragging = null; return; }
+        drag.x = event.clientX; drag.y = event.clientY; dragBegin(drag);
+      }
+      dragMove(event.clientX, event.clientY);
+    });
+    window.addEventListener("pointerup", (event) => dragFinish(event.clientX, event.clientY));
+    window.addEventListener("pointercancel", () => { clearTimeout(teamDragWait); dragDrop(); teamDragging = null; });
+    // while a card is held, the finger moves it instead of scrolling the page
+    window.addEventListener("touchmove", (event) => { if (teamDragging?.ghost) event.preventDefault(); }, { passive: false });
+  }
+  const dragSlotAt = (x, y) => document.elementFromPoint(x, y)?.closest("[data-slot]") || null;
+  const dragOverGrid = (x, y) => Boolean(document.elementFromPoint(x, y)?.closest(".cards-grid"));
+  function dragMark(drag, target) {
+    drag.panel.querySelectorAll(".is-drop").forEach(n => n.classList.remove("is-drop"));
+    drag.grid.classList.remove("is-drop-out");
+    if (target === "out") drag.grid.classList.add("is-drop-out");
+    else target?.classList.add("is-drop");
+  }
+  function dragBegin(drag) {
+    const box = drag.node.getBoundingClientRect();
+    const ghost = drag.node.cloneNode(true);
+    ghost.classList.add("drag-ghost");
+    Object.assign(ghost.style, { width: `${box.width}px`, height: `${box.height}px` });
+    document.body.append(ghost);
+    drag.ghost = ghost; drag.dx = drag.x - box.left; drag.dy = drag.y - box.top;
+    drag.node.classList.add("is-dragging");
+    tone(523, .05, "triangle", .04);
+    dragMove(drag.x, drag.y);
+  }
+  function dragMove(x, y) {
+    const drag = teamDragging;
+    if (!drag?.ghost) return;
+    drag.ghost.style.transform = `translate(${x - drag.dx}px, ${y - drag.dy}px) rotate(-3deg) scale(1.06)`;
+    dragMark(drag, dragSlotAt(x, y) || (drag.from != null && dragOverGrid(x, y) ? "out" : null));
+  }
+  // Take the ghost away (true if there was one, i.e. a drag happened).
+  function dragDrop() {
+    const drag = teamDragging;
+    if (!drag?.ghost) return false;
+    drag.ghost.remove(); drag.node.classList.remove("is-dragging"); dragMark(drag, null);
+    return true;
+  }
+  function dragFinish(x, y) {
+    clearTimeout(teamDragWait);
+    const drag = teamDragging;
+    if (!drag) return;
+    const dragged = dragDrop();
+    teamDragging = null;
+    if (!dragged) return;
+    teamDropped = true; setTimeout(() => { teamDropped = false; }, 0);
+    const team = cards().team, def = E.CARDS[drag.id];
+    const slot = dragSlotAt(x, y);
+    if (slot) {
+      const to = Number(slot.dataset.slot), from = team.indexOf(drag.id);
+      if (from === to) return;
+      const other = team[to];
+      if (from >= 0) [team[from], team[to]] = [team[to], team[from]];
+      else team[to] = drag.id;
+      store(); tone(660, .08, "triangle", .05);
+      announce(other ? (from >= 0 ? `สลับ${def.name}กับ${E.CARDS[other].name}` : `ใส่${def.name}แทน${E.CARDS[other].name}`) : `ใส่${def.name}ในทีมแล้ว`);
+      showHub();
+    } else if (drag.from != null && dragOverGrid(x, y)) {
+      if (team.filter(Boolean).length <= 1) { tone(150, .12, "square", .05); announce("ทีมต้องมีการ์ดอย่างน้อย 1 ใบ"); return; }
+      team[drag.from] = "";
+      store(); tone(440, .08, "triangle", .05); announce(`ถอด${def.name}ออกจากทีม`);
+      showHub();
+    }
+  }
+
 
   // A small card: picture, rarity, role, name and level.
   // A holographic card: a rainbow foil and a glare that follow the finger
