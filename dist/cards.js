@@ -50,6 +50,8 @@
     ...Object.fromEntries(["bat", "crab", "ghost", "hopper", "jelly", "mimic", "queen", "rockling", "roller", "slime", "spider", "spitter", "swooper", "urchin", "wisp"].map(id => [id, `assets/foe-${id}.webp`])),
     // the angels of chapter 16
     ...Object.fromEntries(["angelguard", "cherub", "angelknight", "angelharp", "angelshield", "seraph", "angelmage", "stormangel", "archking", "archqueen"].map(id => [id, `assets/foe-${id}.webp`])),
+    // the upper tower (floors 101-150)
+    ...Object.fromEntries(["runeknight", "gargoyle", "spellbook", "candlewisp", "towergolem", "shadowcat", "mirrorwraith", "sentinelorb", "towerlord", "towerwitch", "runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"].map(id => [id, `assets/foe-${id}.webp`])),
     // bosses with art of their own
     serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
@@ -1884,7 +1886,7 @@
       }
       tower.append(row);
     }
-    if (done) panel.append(el("p", "sheet-reward", "🏆 พิชิตหอคอยครบ 100 ชั้นแล้ว!"));
+    if (done) panel.append(el("p", "sheet-reward", `🏆 พิชิตหอคอยครบ ${E.TOWER_FLOORS} ชั้นแล้ว!`));
     panel.append(tower);
   }
   function finishTower(v) {

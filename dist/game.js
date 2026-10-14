@@ -6335,10 +6335,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14m";
+  const NEWS_VERSION = "2026-10-14n";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "🗼 หอคอยบอส 150 ชั้น · มอนสเตอร์ใหม่", text: "หอคอยสูงขึ้นอีก 50 ชั้น (101–150) ชั้นบนเป็นของเหล่ามอนสเตอร์ประจำหอคอย 8 แบบ เกราะรูนผีสิง การ์กอยล์ ตำราเวทมีชีวิต วิญญาณเทียนไข โกเลมผู้เฝ้าหอ แมวเงาจอมเวท ภูตกระจก ลูกตาพิทักษ์ บอสประจำชั้น จอมเวทเจ้าหอคอย และแม่มดเงาหอคอย ทุก 10 ชั้นเจอบอสใหญ่ มังกรรูนโบราณ อัศวินวิญญาณ ไคเมร่า ไททันนาฬิกา และราชันย์แห่งหอคอยบนชั้น 150 ผ่านชั้น 125 และ 150 รับรางวัลความสำเร็จเพิ่ม", image: "tower150", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 16 · ปราสาทลอยฟ้า", text: "ด่าน 151–160 เหนือทะเลเมฆยามอาทิตย์อัสดง เกาะลอยฟ้ามีน้ำตก และปราสาทสีขาวบนยอดเกาะ กองทัพทูตสวรรค์ผู้พิทักษ์ปราสาท 8 แบบ คิวปิดนักธนู อัศวินทูตสวรรค์ดาบอัสนี เซราฟหกปีกกางเกราะให้พวก ทูตสวรรค์พิณทองรักษา บอสอัครทูตสวรรค์ราชา และอัครทูตสวรรค์ราชินีพายุ ต้องใช้ทีม Lv 130 ดาวทองครบ", image: "chapter16", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "อัศวินรัตติกาล และอัศวินแห่งแสง · S ใหม่ 8 ใบ", text: "🌑 อัศวินรัตติกาล: กาฬวิษ นักฆ่ามีดคู่เงา · ทมิฬ โล่หอคอยที่คลุมเกราะทั้งทีม · นิศา นักบวชจันทร์มืดที่รักษาและสาปแช่ง · อสุรา หอกอสูรดูดพลังชีวิต — 🌞 อัศวินแห่งแสง: ประภา ดาบประกายตีซ้ำได้ · สุริยัน โล่สุริยัน · รัศมี นักบวชแสงรักษาและปลุกพลัง · ทินกร หอกตะวัน ลงกลุ่มเดียวกันพร้อมนิลกาฬหรืออรุณี ได้ความสัมพันธ์ โจมตี +15% สุ่มได้ที่ 🎴 สุ่ม", image: "gacha7", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "SSS ใหม่ · นิลกาฬ · อรุณี", text: "อัศวินแห่งเงาและแสง นิลกาฬ อัศวินรัตติกาลหน้าไม้เงา ยิงทะลวงถึงแถวหลังและยิงศรถล่มทั้งสนาม คริติคอล 35% · อรุณี อัศวินแห่งแสงอรุณ ร่ายเวทศักดิ์สิทธิ์โจมตีศัตรูทุกตัว เผาไหม้ และปลุกพลังทั้งทีม ลงพร้อมกันได้ความสัมพันธ์ ☯ แสงและเงา โจมตี +18% สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
@@ -6472,6 +6473,17 @@
       for (const id of kind === "gacha7" ? ["kalawit", "thamin", "nisa", "asura", "prapha", "suriyan", "ratsami", "thinakorn"] : kind === "gacha6" ? ["nilakan", "arunee"] : kind === "gacha5" ? ["chada", "anchan", "phayak", "wayu", "sila"] : kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = id === "phoenix" || id === "qilin" ? `assets/${id}-pet.webp` : `assets/${id}-hero.webp`;
+        img.alt = "";
+        row.append(img);
+      }
+      return row;
+    }
+    if (kind === "tower150") {
+      const row = document.createElement("div");
+      row.className = "news-trio news-tower";
+      for (const id of ["runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"]) {
+        const img = document.createElement("img");
+        img.src = `assets/foe-${id}.webp`;
         img.alt = "";
         row.append(img);
       }

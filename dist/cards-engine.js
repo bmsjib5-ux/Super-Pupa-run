@@ -873,10 +873,11 @@
     spider: { name: "แมงมุมคริสตัล", role: "magic", art: "spider", skills: [{ name: "ใยคริสตัล", cd: 3, target: "all", power: .75, fx: [{ k: "stun", chance: .15, turns: 1 }, { k: "defDown", v: .15, turns: 2 }] }] }
   };
 
-  // ---- The tower: 100 floors, a boss on every one ----
-  // Floors come ten at a time from a chapter (its monsters, its strength);
-  // the tenth floor of each ten is a great boss.
-  const TOWER_FLOORS = 100;
+  // ---- The tower: 150 floors, a boss on every one ----
+  // Floors 1-100 come ten at a time from a chapter (its monsters, its
+  // strength); floors 101-150 are the upper tower with monsters of its own.
+  // The tenth floor of each ten is a great boss.
+  const TOWER_FLOORS = 150;
   // levels above the chapter's stages, by ten floors
   const TOWER_LIFT = [3, 3, 3, 3, 2, 1, 1, 0, 0, -2];
   const TOWER_KINGS = ["king", "king", "lavaking", "frostking", "shadowking", "heavenking", "cosmicking", "abyssking", "clockking", "jadeking"];
@@ -886,6 +887,85 @@
     const tier = FOES[TOWER_KINGS[g - 1]].tier || 1;
     for (const [id, def] of Object.entries(NEW_FOES)) FOES[`${id}${g}`] = { ...def, tier };
   }
+  // The upper tower (floors 101-150): rune armour, living spellbooks and
+  // tower guardians under the tower's wizard lord and shadow witch, painted
+  // as their own monsters. A copy per ten floors, as strong as chapters 11-15.
+  const TOWERGLOW = "rgba(205,150,255,.95)";
+  const TOWER_GUARDS = {
+    runeknight: { name: "เกราะรูนผีสิง", role: "balance", art: "runeknight", def: 1.4, skills: [{ name: "ดาบรูนสะท้าน", cd: 3, target: "front", power: 1.45, fx: [{ k: "defDown", v: .25, turns: 2 }] }] },
+    gargoyle: { name: "การ์กอยล์", role: "attack", art: "gargoyle", def: 1.5, spd: 138, skills: [{ name: "โฉบกรงเล็บหิน", cd: 3, target: "back", power: 1.3, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
+    spellbook: { name: "ตำราเวทมีชีวิต", role: "magic", art: "spellbook", skills: [{ name: "หน้ากระดาษคำสาป", cd: 3, target: "all", power: 1.15, fx: [{ k: "burn", power: .3, turns: 2 }] }] },
+    candlewisp: { name: "วิญญาณเทียนไข", role: "support", art: "candlewisp", skills: [{ name: "แสงเทียนอุ่นใจ", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "atkUp", v: .2, turns: 2 }] }] },
+    towergolem: { name: "โกเลมผู้เฝ้าหอ", role: "defense", art: "towergolem", hp: 1.2, skills: [{ name: "กำแพงผลึกหอคอย", cd: 4, target: "allies", shield: 1.1, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    shadowcat: { name: "แมวเงาจอมเวท", role: "attack", art: "shadowcat", spd: 140, skills: [{ name: "กรงเล็บเงา", cd: 3, target: "back", power: 1.7, drain: .3 }] },
+    mirrorwraith: { name: "ภูตกระจก", role: "magic", art: "mirrorwraith", skills: [{ name: "เงาสะท้อนต้องสาป", cd: 3, target: "one", power: 2.3, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    sentinelorb: { name: "ลูกตาพิทักษ์", role: "defense", art: "sentinelorb", def: 1.6, skills: [{ name: "ม่านตาเวทมนตร์", cd: 4, target: "self", shield: 2, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2 }] }] }
+  };
+  // the floor bosses, the wizard lord on odd floors and the witch on even ones
+  const TOWER_BOSSES = {
+    towerlord: {
+      name: "จอมเวทเจ้าหอคอย", role: "balance", art: "towerlord", boss: true, hp: 4.6, atk: 1.45, def: 1.55,
+      skills: [
+        { name: "พายุรูนโบราณ", cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+        { name: "คุกเวทผนึก", cd: 4, first: 1, target: "front", power: 1.95, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
+      ]
+    },
+    towerwitch: {
+      name: "แม่มดเงาหอคอย", role: "magic", art: "towerwitch", boss: true, hp: 4, atk: 1.3, def: 1.3, spd: 134,
+      skills: [
+        { name: "ลูกแก้วเงาระเบิด", cd: 3, target: "all", power: 1.3, fx: [{ k: "burn", power: .35, turns: 2 }] },
+        { name: "จุมพิตแม่มดเงา", cd: 4, first: 1, target: "one", power: 2.9, drain: .5, fx: [{ k: "stun", chance: .35, turns: 1 }] }
+      ]
+    }
+  };
+  // a great boss on each tenth floor, 110 to 150
+  const TOWER_GREAT_UPPER = {
+    runedragon: {
+      name: "มังกรรูนโบราณ", role: "magic", art: "runedragon", boss: true, hp: 4.8, atk: 1.45, def: 1.45, spd: 136,
+      skills: [
+        { name: "ลมหายใจรูนเพลิง", cd: 3, target: "all", power: 1.45, fx: [{ k: "burn", power: .45, turns: 2 }] },
+        { name: "กรงเล็บอักขระ", cd: 4, first: 1, target: "front", power: 2, drain: .5, fx: [{ k: "defDown", v: .3, turns: 2 }] }
+      ]
+    },
+    phantomknight: {
+      name: "อัศวินวิญญาณ", role: "attack", art: "phantomknight", boss: true, hp: 4.6, atk: 1.5, def: 1.5, spd: 140,
+      skills: [
+        { name: "ทวนวิญญาณทะลวง", cd: 3, target: "back", power: 2.1, drain: .4 },
+        { name: "ควบม้าผีพิฆาต", cd: 4, first: 1, target: "all", power: 1.35, fx: [{ k: "stun", chance: .3, turns: 1 }] }
+      ]
+    },
+    chimera: {
+      name: "ไคเมร่า", role: "balance", art: "chimera", boss: true, hp: 5, atk: 1.45, def: 1.5,
+      skills: [
+        { name: "สามหัวคำราม", cd: 3, target: "all", power: 1.3, fx: [{ k: "defDown", v: .25, turns: 2 }, { k: "stun", chance: .2, turns: 1 }] },
+        { name: "พิษงูหางเพลิง", cd: 4, first: 1, target: "one", power: 3, drain: .5, fx: [{ k: "burn", power: .5, turns: 2 }] }
+      ]
+    },
+    clocktitan: {
+      name: "ไททันนาฬิกา", role: "defense", art: "clocktitan", boss: true, hp: 5.2, atk: 1.4, def: 1.8,
+      skills: [
+        { name: "หยุดเข็มเวลา", cd: 3, target: "all", power: 1.2, fx: [{ k: "stun", chance: .3, turns: 1 }] },
+        { name: "หมัดเฟืองยักษ์", cd: 4, first: 1, target: "front", power: 2.1, fx: [{ k: "defDown", v: .35, turns: 2 }] }
+      ]
+    },
+    towersovereign: {
+      name: "ราชันย์แห่งหอคอย", role: "magic", art: "towersovereign", boss: true, hp: 5, atk: 1.45, def: 1.5, spd: 136,
+      skills: [
+        { name: "ดาบดาราจักรพรรดิ", cd: 3, target: "all", power: 1.4, fx: [{ k: "burn", power: .4, turns: 2 }, { k: "defDown", v: .2, turns: 2 }] },
+        { name: "บัญชาแห่งราชันย์", cd: 4, first: 1, target: "one", power: 3, drain: .5, fx: [{ k: "stun", chance: .35, turns: 1 }] }
+      ]
+    }
+  };
+  // strength of the upper tower's ten-floor groups (chapters 11-15)
+  const TOWER_UPPER_TIER = [4.4, 4.8, 5.2, 5.6, 6];
+  // and their level on the first floor of each ten
+  const TOWER_UPPER_LV = [50, 76, 84, 93, 95];
+  TOWER_UPPER_TIER.forEach((tier, k) => {
+    const g = 11 + k;
+    for (const [id, def] of Object.entries({ ...TOWER_GUARDS, ...TOWER_BOSSES })) FOES[`${id}${g}`] = { ...def, glow: TOWERGLOW, tier };
+    const great = Object.keys(TOWER_GREAT_UPPER)[k];
+    FOES[great] = { ...TOWER_GREAT_UPPER[great], glow: TOWERGLOW, tier };
+  });
   // Monsters are a little softer than cards of the same level.
   const FOE_SCALE = { hp: .85, atk: .9, def: 1 };
 
@@ -1625,21 +1705,32 @@
     };
   }
   // A tower floor: a boss (a great one every tenth floor) and its guards,
-  // from the chapter of these ten floors, a little above that chapter's level.
+  // from the chapter of these ten floors (above 100, the upper tower's own),
+  // a little above that chapter's level.
   function towerFloor(n) {
-    const g = Math.min(10, Math.ceil(n / 10)), great = n % 10 === 0;
-    const chapter = CHAPTERS[g - 1];
-    const pool = [...new Set(STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).flatMap(s => s.waves.flat().map(f => f.id)).filter(id => !FOES[id].boss))];
-    const fresh = Object.keys(NEW_FOES).map(id => `${id}${g}`);
+    const g = Math.min(15, Math.ceil(n / 10)), great = n % 10 === 0, upper = g > 10;
+    let pool, fresh, boss;
+    if (upper) {
+      pool = fresh = Object.keys(TOWER_GUARDS).map(id => `${id}${g}`);
+      boss = great ? Object.keys(TOWER_GREAT_UPPER)[g - 11] : `${n % 2 ? "towerlord" : "towerwitch"}${g}`;
+    } else {
+      const chapter = CHAPTERS[g - 1];
+      pool = [...new Set(STAGES.filter(s => s.num >= chapter.from && s.num <= chapter.to).flatMap(s => s.waves.flat().map(f => f.id)).filter(id => !FOES[id].boss))];
+      fresh = Object.keys(NEW_FOES).map(id => `${id}${g}`);
+      boss = great ? TOWER_GREAT[g - 1] : n % 2 ? TOWER_KINGS[g - 1] : TOWER_QUEENS[g - 1];
+    }
     let seed = n * 7717 + 3;
-    const roll = (list) => list[(seed = (seed * 1103515245 + 12345) >>> 0) % list.length];
-    const boss = great ? TOWER_GREAT[g - 1] : n % 2 ? TOWER_KINGS[g - 1] : TOWER_QUEENS[g - 1];
+    // (the upper tower takes the seed's high bits, which vary more)
+    const roll = (list) => list[((seed = (seed * 1103515245 + 12345) >>> 0) >>> (upper ? 16 : 0)) % list.length];
     const guards = great ? 4 : 2 + ((n % 10) >= 5 ? 1 : 0);
     const wave = [{ id: boss, row: "front" }];
-    for (let k = 0; k < guards; k++) wave.push({ id: roll(k % 2 ? pool : fresh), row: k === 0 ? "front" : "back" });
+    // (no two of the same guard on an upper floor)
+    for (let k = 0; k < guards; k++) wave.push({ id: roll((k % 2 ? pool : fresh).filter(id => !upper || !wave.some(u => u.id === id))), row: k === 0 ? "front" : "back" });
     const stage = STAGES[Math.min(STAGES.length, n) - 1];
+    // the upper tower climbs a level a floor; its great bosses come lower
+    const lv = upper ? TOWER_UPPER_LV[g - 11] + (great ? -6 : n % 10) : stage.lv + TOWER_LIFT[g - 1] + Math.floor((n % 10 || 10) / 3);
     return {
-      num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv: stage.lv + TOWER_LIFT[g - 1] + Math.floor((n % 10 || 10) / 3), chapter: g,
+      num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv, chapter: g,
       waves: [wave], boss: true, par: 99,
       coins: 60 + 12 * n, repeat: 0, xp: 15 + 6 * n,
       gems: great ? 120 : n % 5 === 0 ? 50 : 20, dust: great ? 15 : 5, wings: great ? 3 : n % 5 === 0 ? 1 : 0
@@ -1787,7 +1878,7 @@
   for (const n of [50, 100, 150, 200, 250, 300]) ACHIEVEMENTS.push({ id: `stars${n}`, gems: n, text: `เก็บดาวด่านรวม ${n} ดวง`, need: n, have: (c) => Object.values(c.stars).reduce((a, b) => a + Math.min(3, b), 0) });
   for (const [n, gems] of [[5, 50], [10, 80], [15, 120], [20, 160], [25, 200]]) ACHIEVEMENTS.push({ id: `cards${n}`, gems, text: `มีการ์ด ${n} ใบ`, need: n, have: (c) => Object.keys(c.units).filter(id => CARDS[id] && c.units[id] > 0).length });
   for (const [n, gems] of [[1, 50], [3, 100], [5, 200], [6, 250], [8, 300], [10, 500]]) ACHIEVEMENTS.push({ id: `awake${n}`, gems, text: n > MAX_AWAKE ? `ปลุกพลังขั้น 2 การ์ดใบใดก็ได้ถึงดาวทอง ${n - MAX_AWAKE} ดวง` : `อัปดาวแดงการ์ดใบใดก็ได้ถึง ${n} ดวง`, need: n, have: (c) => Math.max(0, ...Object.values(c.awake || {})) });
-  for (const [n, gems] of [[10, 100], [25, 150], [50, 250], [75, 300], [100, 500]]) ACHIEVEMENTS.push({ id: `tower${n}`, gems, text: `ผ่านหอคอยชั้น ${n}`, need: n, have: (c) => c.tower || 0 });
+  for (const [n, gems] of [[10, 100], [25, 150], [50, 250], [75, 300], [100, 500], [125, 600], [150, 800]]) ACHIEVEMENTS.push({ id: `tower${n}`, gems, text: `ผ่านหอคอยชั้น ${n}`, need: n, have: (c) => c.tower || 0 });
   ACHIEVEMENTS.push({ id: "sss1", gems: 200, text: "ได้การ์ดระดับ SSS ใบแรก", need: 1, have: (c) => CARD_IDS.filter(id => CARDS[id].rarity === 6 && c.units[id]).length });
   for (const [n, gems] of [[10, 80], [20, 120], [30, 160], [50, 250]]) ACHIEVEMENTS.push({ id: `arena${n}`, gems, text: `ผ่านลานประลองชั้น ${n}`, need: n, have: (c) => Math.max(0, (c.arena || 1) - 1) });
   // How far an achievement is: [have, need, done].

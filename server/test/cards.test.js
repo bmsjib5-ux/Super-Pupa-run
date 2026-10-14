@@ -187,14 +187,28 @@ test("cards: the arena fields the player's own ten when chosen", () => {
   assert.equal(E.arenaTeam({ ...cards, arenaPick: [] }).length, 4); // automatic: every card
 });
 
-test("cards: the tower has 100 floors, a boss on each and a great one every tenth", () => {
+test("cards: the tower has 150 floors, a boss on each and a great one every tenth", () => {
+  assert.equal(E.TOWER_FLOORS, 150);
   for (let n = 1; n <= E.TOWER_FLOORS; n++) {
     const f = E.towerFloor(n);
     assert.ok(E.FOES[f.waves[0][0].id].boss, `floor ${n}`);
     assert.ok(f.waves[0].every(u => E.FOES[u.id]), `floor ${n} foes`);
+    // the upper tower has monsters of its own, painted, not recoloured
+    if (n > 100) assert.ok(f.waves[0].every(u => !E.FOES[u.id].look && /^(runeknight|gargoyle|spellbook|candlewisp|towergolem|shadowcat|mirrorwraith|sentinelorb|towerlord|towerwitch)1[1-5]$|^(runedragon|phantomknight|chimera|clocktitan|towersovereign)$/.test(u.id)), `floor ${n} upper foes`);
   }
   assert.equal(E.towerFloor(30).waves[0][0].id, "golemboss");
   assert.equal(E.STAGES[29].waves[2][0].id, "golemboss"); // chapter 3 ends at the lava golem
+  assert.deepEqual([110, 120, 130, 140, 150].map(n => E.towerFloor(n).waves[0][0].id), ["runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"]);
+  assert.ok(E.towerFloor(150).lv > E.towerFloor(101).lv);
+});
+
+test("cards: the upper tower can be climbed by a team of its chapters' strength", () => {
+  const ids = ["thongkham", "phloeng", "chantra", "asani", "pupav2"];
+  for (let n = 101; n <= E.TOWER_FLOORS; n++) {
+    const [lv, aw] = n > 130 ? [130, 10] : n > 120 ? [120, 9] : n > 110 ? [110, 8] : [80, 5];
+    const tries = [1, 2, 3, 4, 5].map(k => play(E.towerFloor(n), lv, n * 31 + k, ids, E.awakeBonus(aw)));
+    assert.ok(tries.some(t => t.result === "won"), `floor ${n}`);
+  }
 });
 
 test("cards: bonds raise the attack of members fielded together", () => {

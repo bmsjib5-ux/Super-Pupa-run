@@ -21,3 +21,7 @@ The base monsters of card mode, transparent PNG, painted with Higgsfield (GPT Im
 ## Chapter 16 angels
 
 Painted as their own monsters (no recolour): angelguard, cherub, angelknight, angelharp, angelshield, seraph, angelmage, stormangel, and the bosses archking and archqueen.
+
+## Tower floors 101-150
+
+Painted for the upper tower (no recolour): runeknight, gargoyle, spellbook, candlewisp, towergolem, shadowcat, mirrorwraith, sentinelorb, the floor bosses towerlord and towerwitch, and the great bosses runedragon (110), phantomknight (120), chimera (130), clocktitan (140) and towersovereign (150).
