@@ -66,7 +66,7 @@ const CHARACTERS = {
   // is the picture, fitted to the mesh). Only the legs swing: their arms
   // hold harps, spears, bows and shields. The long robes of Chantra and
   // Naphalai part only near the hem.
-  fasai: { model: "assets/fasai.glb", texture: "assets/fasai-texture.webp", tintable: false, yaw: .4, legTop: -.42, legCenter: .12, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  fasai: { model: "assets/fasai.glb", texture: "assets/fasai-texture.webp", tintable: false, yaw: .4, legTop: -.36, legCenter: .01, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   chantra: { model: "assets/chantra.glb", texture: "assets/chantra-texture.webp", tintable: false, yaw: .4, legTop: -.78, legCenter: -.05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   phloeng: { model: "assets/phloeng.glb", texture: "assets/phloeng-texture.webp", tintable: false, yaw: .4, legTop: -.42, legCenter: .05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   ratri: { model: "assets/ratri.glb", texture: "assets/ratri-texture.webp", tintable: false, yaw: .4, legTop: -.35, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
