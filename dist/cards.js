@@ -51,8 +51,8 @@
   // with a golden glow.
   const costumeArt = (id) => `assets/${id}-costume.webp`;
   const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
-  // Cards with a 3D model (made with Hunyuan3D-2), shown on their sheet.
-  const MODELS_3D = Object.fromEntries(["fasai", "seraphina", "asani", "vajira", "naphalai", "phoenix", "qilin", "chada", "anchan", "phayak", "wayu", "sila", "pupav2", "chantra", "ratri", "phloeng", "dragon", "silverwolf", "pupa"].map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
+  // Every card has a 3D model (made with Hunyuan3D-2), shown on its sheet.
+  const MODELS_3D = Object.fromEntries(E.CARD_IDS.map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   // A monster's picture; the burning ones of chapter 3 are recoloured.
   function foeArt(id) {

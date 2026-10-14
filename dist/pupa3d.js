@@ -73,7 +73,12 @@ const CHARACTERS = {
   asani: { model: "assets/asani.glb", texture: "assets/asani-texture.webp", tintable: false, yaw: .4, legTop: -.46, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   vajira: { model: "assets/vajira.glb", texture: "assets/vajira-texture.webp", tintable: false, yaw: .4, legTop: -.46, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
   seraphina: { model: "assets/seraphina.glb", texture: "assets/seraphina-texture.webp", tintable: false, yaw: .4, legTop: -.8, legCenter: -.12, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
-  naphalai: { model: "assets/naphalai.glb", texture: "assets/naphalai-texture.webp", tintable: false, yaw: .4, legTop: -.8, legCenter: -.05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 }
+  naphalai: { model: "assets/naphalai.glb", texture: "assets/naphalai-texture.webp", tintable: false, yaw: .4, legTop: -.8, legCenter: -.05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  sakura: { model: "assets/sakura.glb", texture: "assets/sakura-texture.webp", tintable: false, yaw: .4, legTop: -.37, legCenter: -.02, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  thongkham: { model: "assets/thongkham.glb", texture: "assets/thongkham-texture.webp", tintable: false, yaw: .4, legTop: -.51, legCenter: .09, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  miu: { model: "assets/miu.glb", texture: "assets/miu-texture.webp", tintable: false, yaw: .4, legTop: -.32, legCenter: .05, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 },
+  // Mekha rides his cloud: nothing swings (legTop below the model), he just bobs along.
+  mekha: { model: "assets/mekha.glb", texture: "assets/mekha-texture.webp", tintable: false, yaw: .4, legTop: -1.5, legCenter: 0, legZ: .05, armX: .3, armLow: -.4, armHigh: -.1, arms: 0 }
 };
 
 const api = { ready: false, webgl: false, failed: {}, canvas, viewHalf: VIEW, render, setSkin, setCharacter, character: "pupa" };
