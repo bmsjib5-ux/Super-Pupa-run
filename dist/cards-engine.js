@@ -819,6 +819,36 @@
     }
   });
 
+  // Chapter 16: the sky castle above the clouds: wind and storm creatures
+  // that blow the back row about, guard each other with cloud shells and
+  // strike from above.
+  const SKYGLOW = "rgba(150,220,255,.95)";
+  const SKY = "sepia(1) saturate(2.4) hue-rotate(178deg) contrast(1.1) brightness(1.3)";
+  Object.assign(FOES, {
+    cloudshroom: { name: "เห็ดเมฆ", role: "balance", art: "walker", look: SKY, glow: SKYGLOW, tier: 6.4, def: 1.3, skills: [{ name: "สปอร์ลมหมุน", cd: 3, target: "front", power: 1.4, fx: [{ k: "stun", chance: .2, turns: 1 }] }] },
+    galebat: { name: "ค้างคาวลมกรด", role: "attack", art: "bat", look: SKY, glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ใบมีดลม", cd: 3, target: "back", power: 1.45, fx: [{ k: "defDown", v: .2, turns: 2 }] }] },
+    skycrab: { name: "ปูก้ามฟ้าผ่า", role: "attack", art: "crab", look: SKY, glow: SKYGLOW, tier: 6.4, def: 1.8, skills: [{ name: "ก้ามสายฟ้า", cd: 3, target: "one", power: 2.75, fx: [{ k: "stun", chance: .3, turns: 1 }] }] },
+    mistjelly: { name: "แมงกะพรุนหมอก", role: "support", art: "jelly", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "หมอกเยียวยา", cd: 3, target: "allies", heal: 1.3, fx: [{ k: "cleanse" }] }] },
+    windroller: { name: "ลูกลมหมุน", role: "defense", art: "roller", look: SKY, glow: SKYGLOW, tier: 6.4, atk: 1.45, def: 1.4, skills: [{ name: "พายุหมุนบดขยี้", cd: 3, target: "front", power: 1.65, fx: [{ k: "stun", chance: .25, turns: 1 }] }] },
+    cloudurchin: { name: "เม่นเมฆฟู", role: "defense", art: "urchin", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "เกราะเมฆนุ่ม", cd: 4, target: "allies", shield: 1.4, fx: [{ k: "shield", turns: 2 }, { k: "taunt", turns: 2, on: "self" }] }] },
+    stormflower: { name: "ดอกไม้พายุ", role: "magic", art: "spitter", look: SKY, glow: SKYGLOW, tier: 6.4, skills: [{ name: "สายฟ้าฟาดฟ้า", cd: 3, target: "all", power: 1.15, fx: [{ k: "stun", chance: .15, turns: 1 }] }] },
+    thunderbird: { name: "นกอัสนี", role: "attack", art: "swooper", look: SKY, glow: SKYGLOW, tier: 6.4, spd: 140, skills: [{ name: "ดิ่งสายฟ้า", cd: 3, target: "back", power: 1.7, drain: .3 }] },
+    skyking: {
+      name: "ราชาเห็ดฟ้า", role: "balance", art: "king", look: SKY, glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.6, atk: 1.45, def: 1.55,
+      skills: [
+        { name: "พายุทะลุฟ้า", cd: 3, target: "all", power: 1.3, fx: [{ k: "stun", chance: .2, turns: 1 }, { k: "defDown", v: .25, turns: 2 }] },
+        { name: "ทอร์นาโดราชา", cd: 4, first: 1, target: "front", power: 1.95, drain: .5, fx: [{ k: "stun", chance: .4, turns: 1 }] }
+      ]
+    },
+    skyqueen: {
+      name: "ราชินีพายุฟ้า", role: "magic", art: "queen", look: SKY, glow: SKYGLOW, tier: 6.4, boss: true, hp: 4.2, atk: 1.44, def: 1.35, spd: 140,
+      skills: [
+        { name: "อัสนีบาตพันสาย", cd: 3, target: "all", power: 1.5, fx: [{ k: "burn", power: .4, turns: 2 }] },
+        { name: "จุมพิตพายุ", cd: 4, first: 1, target: "one", power: 3.2, drain: .6, fx: [{ k: "stun", chance: .5, turns: 1 }] }
+      ]
+    }
+  });
+
   // ---- New faces ----
   // Bosses with art of their own: each takes the place of its chapter's
   // mushroom king on the chapter's last stage, with the king's strength.
@@ -877,7 +907,8 @@
     { name: "บทที่ 12 · ยอดเขาพายุอสนี", from: 111, to: 120 },
     { name: "บทที่ 13 · ป่าเห็ดนีออน", from: 121, to: 130 },
     { name: "บทที่ 14 · ทะเลทรายสุริยะ", from: 131, to: 140 },
-    { name: "บทที่ 15 · ถ้ำคริสตัลสายรุ้ง", from: 141, to: 150 }
+    { name: "บทที่ 15 · ถ้ำคริสตัลสายรุ้ง", from: 141, to: 150 },
+    { name: "บทที่ 16 · ปราสาทลอยฟ้า", from: 151, to: 160 }
   ];
   const STAGE_LIST = [
     ["ทางเข้าป่าเชอร์รี่", 1, ["walker", "walker,walker"]],
@@ -1029,7 +1060,17 @@
     ["สะพานแก้วลอยฟ้า", 95, ["geoderoller,geoderoller/shardjelly,lumenflower,prismbat", "quartzurchin,gemcrab/glassmoth,glassmoth,shardjelly", "gemcrab,crystalshroom/lumenflower,lumenflower,shardjelly"]],
     ["หัวใจผลึกโบราณ", 92, ["quartzurchin,gemcrab/lumenflower,lumenflower,glassmoth", "gemcrab,geoderoller/shardjelly,shardjelly,prismbat", "geoderoller,gemcrab/glassmoth,lumenflower,shardjelly"]],
     ["บัลลังก์ราชาผลึก", 92, ["gemcrab,geoderoller/shardjelly,lumenflower,glassmoth", "quartzurchin,crystalshroom/shardjelly,prismbat,lumenflower", "crystalking/shardjelly,glassmoth"]],
-    ["วิหารราชินีปริซึม", 85, ["geoderoller,gemcrab/shardjelly,lumenflower,glassmoth", "quartzurchin,gemcrab/shardjelly,lumenflower,prismbat", "prismqueen/shardjelly,prismbat"]]
+    ["วิหารราชินีปริซึม", 85, ["geoderoller,gemcrab/shardjelly,lumenflower,glassmoth", "quartzurchin,gemcrab/shardjelly,lumenflower,prismbat", "prismqueen/shardjelly,prismbat"]],
+    ["ท่าเรือเมฆ", 92, ["cloudshroom,cloudshroom/galebat", "skycrab,cloudshroom/stormflower", "skycrab,windroller/galebat,stormflower"]],
+    ["สะพานรุ้งลอยฟ้า", 94, ["windroller,cloudshroom/mistjelly", "cloudurchin,skycrab/stormflower,galebat", "windroller,skycrab/mistjelly,thunderbird"]],
+    ["เกาะลมหวน", 96, ["skycrab,skycrab/stormflower,galebat", "cloudurchin,windroller/mistjelly,stormflower", "skycrab,windroller/thunderbird,thunderbird,mistjelly"]],
+    ["น้ำตกกลางหาว", 98, ["cloudurchin,cloudshroom/stormflower,stormflower", "windroller,windroller/mistjelly,galebat", "cloudurchin,skycrab/mistjelly,stormflower,thunderbird"]],
+    ["ลานกังหันฟ้า", 97, ["cloudshroom,skycrab/galebat,stormflower", "windroller,cloudurchin/mistjelly,mistjelly", "skyking/stormflower,galebat"]],
+    ["กำแพงปราสาทเมฆ", 102, ["skycrab,windroller/thunderbird,galebat,stormflower", "cloudurchin,cloudshroom/mistjelly,thunderbird", "skycrab,skycrab/mistjelly,stormflower,galebat"]],
+    ["หอคอยสายฟ้า", 104, ["windroller,windroller/mistjelly,stormflower,galebat", "cloudurchin,skycrab/thunderbird,thunderbird,mistjelly", "skycrab,cloudshroom/stormflower,stormflower,mistjelly"]],
+    ["สวนดอกไม้กลางเมฆ", 98, ["cloudurchin,skycrab/stormflower,stormflower,thunderbird", "skycrab,windroller/mistjelly,mistjelly,galebat", "windroller,skycrab/thunderbird,stormflower,mistjelly"]],
+    ["ท้องพระโรงราชาฟ้า", 99, ["skycrab,windroller/mistjelly,stormflower,thunderbird", "cloudurchin,cloudshroom/mistjelly,galebat,stormflower", "skyking/mistjelly,thunderbird"]],
+    ["ยอดหอราชินีพายุ", 90, ["windroller,skycrab/mistjelly,stormflower,thunderbird", "cloudurchin,skycrab/mistjelly,stormflower,galebat", "skyqueen/mistjelly,galebat"]]
   ];
   // the chapters' last stages meet their own bosses
   for (const u of UNIQUE_BOSSES) {

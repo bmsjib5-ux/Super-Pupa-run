@@ -22,7 +22,7 @@ test("cards: every stage finishes, and a strong team wins it", () => {
     // stage may need a few tries, as in play
     const strong = ["thongkham", "phloeng", "chantra", "mekha", "pupav2"];
     // chapter 5 needs raised stars: level 50 with two stars
-    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 140 ? play(stage, 130, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(10)) : stage.num > 130 ? play(stage, 130, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(10)) : stage.num > 120 ? play(stage, 120, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(9)) : stage.num > 110 ? play(stage, 110, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(8)) : stage.num > 80 ? play(stage, 80, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], 5 * E.AWAKE_BONUS) : stage.num > 60 ? play(stage, 80, stage.num * 31 + n, strong, 5 * E.AWAKE_BONUS) : stage.num > 50 ? play(stage, 75, stage.num * 31 + n, strong, 4 * E.AWAKE_BONUS) : stage.num > 40 ? play(stage, 50, stage.num * 31 + n, strong, 2 * E.AWAKE_BONUS) : stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
+    const tries = [1, 2, 3, 4, 5].map(n => (stage.num > 150 ? play(stage, 130, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(10)) : stage.num > 140 ? play(stage, 130, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(10)) : stage.num > 130 ? play(stage, 130, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(10)) : stage.num > 120 ? play(stage, 120, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(9)) : stage.num > 110 ? play(stage, 110, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], E.awakeBonus(8)) : stage.num > 80 ? play(stage, 80, stage.num * 31 + n, ["thongkham", "phloeng", "chantra", "asani", "pupav2"], 5 * E.AWAKE_BONUS) : stage.num > 60 ? play(stage, 80, stage.num * 31 + n, strong, 5 * E.AWAKE_BONUS) : stage.num > 50 ? play(stage, 75, stage.num * 31 + n, strong, 4 * E.AWAKE_BONUS) : stage.num > 40 ? play(stage, 50, stage.num * 31 + n, strong, 2 * E.AWAKE_BONUS) : stage.num > 20 ? play(stage, 30, stage.num * 31 + n, strong) : play(stage, 20, stage.num + n)));
     const b = tries.find(t => t.result === "won");
     assert.ok(b, `stage ${stage.num}`);
     assert.ok(tries.every(t => t.phase === "done"));
@@ -225,4 +225,13 @@ test("cards: the night and light orders bond with their leaders", () => {
   assert.deepEqual(E.activeBonds(["nilakan", "kalawit", "thamin"]).map(b => b.id), ["nightorder"]);
   assert.deepEqual(E.activeBonds(["arunee", "nilakan", "prapha"]).map(b => b.id).sort(), ["lightdark", "lightorder"]);
   for (const id of ["kalawit", "thamin", "nisa", "asura", "prapha", "suriyan", "ratsami", "thinakorn"]) assert.equal(E.CARDS[id].rarity, 5);
+});
+
+test("cards: every monster id is defined once", () => {
+  const src = createRequire(import.meta.url)("node:fs").readFileSync(new URL("../../dist/cards-engine.js", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("const FOES = {"), src.indexOf("// ---- New faces ----"));
+  const ids = [...body.matchAll(/^    ([a-z0-9]+): \{/gm)].map(m => m[1]);
+  const seen = new Set(), dupes = ids.filter(id => seen.has(id) || !seen.add(id));
+  assert.deepEqual(dupes, []);
+  assert.ok(ids.length > 100);
 });

@@ -6335,10 +6335,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-14k";
+  const NEWS_VERSION = "2026-10-14l";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 16 · ปราสาทลอยฟ้า", text: "ด่าน 151–160 เหนือทะเลเมฆยามอาทิตย์อัสดง เกาะลอยฟ้ามีน้ำตก และปราสาทสีขาวบนยอดเกาะ มอนสเตอร์ลมและสายฟ้า 8 ชนิด ปูก้ามฟ้าผ่า นกอัสนีดูดเลือด เม่นเมฆฟูกางเกราะให้พวก บอสราชาเห็ดฟ้า และราชินีพายุฟ้า ต้องใช้ทีม Lv 130 ดาวทองครบ", image: "chapter16", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ตัวละครใหม่", title: "อัศวินรัตติกาล และอัศวินแห่งแสง · S ใหม่ 8 ใบ", text: "🌑 อัศวินรัตติกาล: กาฬวิษ นักฆ่ามีดคู่เงา · ทมิฬ โล่หอคอยที่คลุมเกราะทั้งทีม · นิศา นักบวชจันทร์มืดที่รักษาและสาปแช่ง · อสุรา หอกอสูรดูดพลังชีวิต — 🌞 อัศวินแห่งแสง: ประภา ดาบประกายตีซ้ำได้ · สุริยัน โล่สุริยัน · รัศมี นักบวชแสงรักษาและปลุกพลัง · ทินกร หอกตะวัน ลงกลุ่มเดียวกันพร้อมนิลกาฬหรืออรุณี ได้ความสัมพันธ์ โจมตี +15% สุ่มได้ที่ 🎴 สุ่ม", image: "gacha7", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ตัวละครใหม่", title: "SSS ใหม่ · นิลกาฬ · อรุณี", text: "อัศวินแห่งเงาและแสง นิลกาฬ อัศวินรัตติกาลหน้าไม้เงา ยิงทะลวงถึงแถวหลังและยิงศรถล่มทั้งสนาม คริติคอล 35% · อรุณี อัศวินแห่งแสงอรุณ ร่ายเวทศักดิ์สิทธิ์โจมตีศัตรูทุกตัว เผาไหม้ และปลุกพลังทั้งทีม ลงพร้อมกันได้ความสัมพันธ์ ☯ แสงและเงา โจมตี +18% สุ่มได้ที่ 🎴 สุ่ม การันตี SSS ภายใน 100 ครั้ง", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ภาพใหม่", title: "มอนสเตอร์โฉมใหม่ทุกบท", text: "มอนสเตอร์ในศึกการ์ดวาดใหม่ทั้งหมด ค้างคาว ปู ผี วุ้น แมงกะพรุน หีบมิมิค ราชินีค้างคาว โกเลมหิน ตัวกลิ้งหนาม สไลม์ แมงมุม ดอกพ่นเมล็ด นกโคม เม่นหนาม และวิญญาณไฟ ได้ภาพวาดแบบเดียวกับการ์ดตัวละคร และแต่ละบทยังมีสีของตัวเอง (สร้างด้วย Higgsfield)", image: "chapter15", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6503,10 +6504,10 @@
       img.alt = "";
       return img;
     }
-    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13", "chapter14", "chapter15"].includes(kind)) {
+    if (["chapter3", "chapter4", "chapter5", "chapter6", "chapter7", "chapter8", "chapter9", "chapter10", "chapter11", "chapter12", "chapter13", "chapter14", "chapter15", "chapter16"].includes(kind)) {
       const scene = document.createElement("div");
-      scene.className = `news-scene ${kind === "chapter15" ? "news-scene-dark news-scene-prism" : kind === "chapter14" ? "news-scene-sand" : kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
-      scene.innerHTML = kind === "chapter15" ? "<b>141–150 💎</b>" : kind === "chapter14" ? "<b>131–140 ☀</b>" : kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
+      scene.className = `news-scene ${kind === "chapter16" ? "news-scene-sky" : kind === "chapter15" ? "news-scene-dark news-scene-prism" : kind === "chapter14" ? "news-scene-sand" : kind === "chapter13" ? "news-scene-dark news-scene-neon" : kind === "chapter12" ? "news-scene-dark news-scene-storm" : kind === "chapter11" ? "news-scene-dark news-scene-blood" : kind === "chapter10" ? "news-scene-jade" : kind === "chapter9" ? "news-scene-steam" : kind === "chapter8" ? "news-scene-dark news-scene-abyss" : kind === "chapter7" ? "news-scene-dark news-scene-cosmos" : kind === "chapter6" ? "news-scene-6" : kind === "chapter5" ? "news-scene-dark" : kind === "chapter4" ? "news-scene-ice" : "news-scene-7"}`;
+      scene.innerHTML = kind === "chapter16" ? "<b>151–160 ☁</b>" : kind === "chapter15" ? "<b>141–150 💎</b>" : kind === "chapter14" ? "<b>131–140 ☀</b>" : kind === "chapter13" ? "<b>121–130 🍄</b>" : kind === "chapter12" ? "<b>111–120 ⚡</b>" : kind === "chapter11" ? "<b>101–110 🌕</b>" : kind === "chapter10" ? "<b>91–100 🐉</b>" : kind === "chapter9" ? "<b>81–90 ⚙</b>" : kind === "chapter8" ? "<b>71–80 ✦</b>" : kind === "chapter7" ? "<b>61–70 ✦</b>" : kind === "chapter6" ? "<b>51–60 ✦</b>" : kind === "chapter5" ? "<b>41–50 ✦</b>" : kind === "chapter4" ? "<b>31–40</b>" : "<b>21–30</b>";
       return scene;
     }
     if (kind === "world" || kind === "world5" || kind === "world6" || kind === "world7" || kind === "world8" || kind === "world9" || kind === "world10") {
