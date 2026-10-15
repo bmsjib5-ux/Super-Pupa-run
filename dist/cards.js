@@ -60,6 +60,13 @@
   const costumeArt = (id) => `assets/${id}-costume.webp`;
   const COSTUME_NAME = { pupa: "ชุดไหมราตรีฟ้า", jibjib: "ชุดนักบินมรกต", baitoey: "ชุดภูตม่วงแสงจันทร์", ikuya: "ชุดนักสู้กุหลาบ", pangji: "ชุดซาลาเปาทองคำ", pupav2: "ชุดนักผจญภัยใบไม้", firefly: "ชุดแสงฟ้าคราม", kitten: "ชุดแมวน้ำทะเล", minibat: "ชุดค้างคาวมรกต", starsprite: "ชุดดาวชมพู", dragon: "ชุดมังกรหยก", sakura: "ชุดนินจาใบไผ่", chantra: "ชุดนักบวชสุริยะ", thongkham: "ชุดอัศวินมรกต", miu: "ชุดแม่มดน้ำแข็ง", ratri: "ชุดนักธนูโลหิต", moonrabbit: "ชุดกระต่ายซากุระ", starowl: "ชุดนกฮูกอำพัน", silverwolf: "ชุดหมาป่าอัคคี", phloeng: "ชุดอัศวินน้ำแข็ง", mekha: "ชุดเมฆอาทิตย์อัสดง", fasai: "ชุดนักดนตรีกุหลาบ", seraphina: "ชุดนักบุญราตรีฟ้า", asani: "ชุดอัศวินมังกรมรกต", phoenix: "ชุดวิหคเพลิงคราม", vajira: "ชุดอัศวินเพชรทับทิม", naphalai: "ชุดจอมเวทสุริยะ", qilin: "ชุดกิเลนหยกขาว", nilakan: "ชุดอัศวินรัตติกาลโลหิต", arunee: "ชุดอัศวินแสงจันทร์เงิน", kalawit: "ชุดนักฆ่าเงาครามเที่ยงคืน", thamin: "ชุดเกราะทมิฬโลหิต", nisa: "ชุดนักบวชจันทร์ม่วง", asura: "ชุดหอกอสูรมรกต", prapha: "ชุดดาบแสงกุหลาบทอง", suriyan: "ชุดโล่สุริยันเพลิง", ratsami: "ชุดนักบวชแสงฟ้า", thinakorn: "ชุดหอกตะวันเงิน", chada: "ชุดซามูไรทองคำ", anchan: "ชุดซามูไรซากุระ", phayak: "ชุดเสือดาวหิมะ", wayu: "ชุดเสือมรกต", sila: "ชุดอัศวินศิลาคราม" };
   // Every card has a 3D model (made with Hunyuan3D-2), shown on its sheet.
+  // cards with a painted scene of their own behind the picture
+  // (assets/cardbg-<id>.webp); the rest show their grade's scene
+  const BACKDROPS = new Set("pupa jibjib baitoey ikuya pangji pupav2 firefly kitten minibat starsprite dragon sakura chantra thongkham miu ratri moonrabbit starowl phloeng mekha fasai silverwolf chada anchan phayak wayu sila nilakan arunee kalawit thamin nisa asura prapha suriyan ratsami thinakorn seraphina asani phoenix vajira naphalai qilin".split(" "));
+  const backdrop = (node, id) => {
+    if (BACKDROPS.has(id)) node.style.setProperty("--bg", `url("assets/cardbg-${id}.webp")`);
+    return node;
+  };
   const MODELS_3D = Object.fromEntries(E.CARD_IDS.map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
   const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
   // A monster's picture; the burning ones of chapter 3 are recoloured.
@@ -470,7 +477,7 @@
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
-    for (const id of ["nilakan", "arunee", "vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade"), cardDeco()); row.append(f); }
+    for (const id of ["nilakan", "arunee", "vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = backdrop(el("span", `pull-face r${E.CARDS[id].rarity}`), id); f.append(portrait(id), gradeBadge(id, "pull-grade"), cardDeco()); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
     const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · การันตี SSS ภายใน ${g.pity6} ครั้ง (อีก ${g.pity6 - pity6()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
@@ -1136,7 +1143,7 @@
     if (awake) tile.classList.add(`awake-${awake}`);
     if (awake > E.MAX_AWAKE) tile.classList.add("is-awake2");
     tile.append(cardDeco());
-    return holo(tile);
+    return holo(backdrop(tile, id));
   }
 
   // ---- Detail panels ----
@@ -1202,7 +1209,7 @@
     const c = cards(), def = E.CARDS[id], lv = c.units[id];
     const role = E.ROLES[def.role];
     const top = el("div", "sheet-card");
-    const art = el("div", `sheet-art r${def.rarity}`);
+    const art = backdrop(el("div", `sheet-art r${def.rarity}`), id);
     art.append(portrait(id), cardDeco());
     if (MODELS_3D[id] && !wearing(id) && window.PupaCards3D) {
       art.classList.add("is-3d");
