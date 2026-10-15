@@ -933,3 +933,90 @@ button.unit { cursor: crosshair; }
 /* the arena's front-row tag sits on the picture, clear of the level */
 .tcard.is-front::before { z-index: 4; top: 1.6rem; bottom: auto; left: .3rem; right: auto; box-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .tcard.in-arena::before { z-index: 4; box-shadow: 0 1px 2px rgba(0,0,0,.6); }
+
+/* ---- Game cards ----
+   A painted background by grade in the picture window, filigree corners on
+   the frame, the grade as a crest on the top edge, the name on a ribbon,
+   sparkles on S and SSS. */
+:root {
+  --corner-tl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%280%2020%2020%29%22%3E%3Cpath%20d%3D%22M3%2027V10Q3%203%2010%203H27%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M27%203c4.5%200%206%204.5%202.6%205.8-2.2.8-3.6-1-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2027c0%204.5%204.5%206%205.8%202.6.8-2.2-1-3.6-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M9%2016c0-4.5%202.5-7%207-7%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M8%202.5%2013.5%208%208%2013.5%202.5%208Z%22%2F%3E%3Cpath%20d%3D%22M14%2014%2021%2017%2017%2021Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  --corner-tr: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%2890%2020%2020%29%22%3E%3Cpath%20d%3D%22M3%2027V10Q3%203%2010%203H27%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M27%203c4.5%200%206%204.5%202.6%205.8-2.2.8-3.6-1-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2027c0%204.5%204.5%206%205.8%202.6.8-2.2-1-3.6-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M9%2016c0-4.5%202.5-7%207-7%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M8%202.5%2013.5%208%208%2013.5%202.5%208Z%22%2F%3E%3Cpath%20d%3D%22M14%2014%2021%2017%2017%2021Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  --corner-br: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28180%2020%2020%29%22%3E%3Cpath%20d%3D%22M3%2027V10Q3%203%2010%203H27%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M27%203c4.5%200%206%204.5%202.6%205.8-2.2.8-3.6-1-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2027c0%204.5%204.5%206%205.8%202.6.8-2.2-1-3.6-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M9%2016c0-4.5%202.5-7%207-7%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M8%202.5%2013.5%208%208%2013.5%202.5%208Z%22%2F%3E%3Cpath%20d%3D%22M14%2014%2021%2017%2017%2021Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  --corner-bl: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28270%2020%2020%29%22%3E%3Cpath%20d%3D%22M3%2027V10Q3%203%2010%203H27%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M27%203c4.5%200%206%204.5%202.6%205.8-2.2.8-3.6-1-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2027c0%204.5%204.5%206%205.8%202.6.8-2.2-1-3.6-2.4-2.4%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M9%2016c0-4.5%202.5-7%207-7%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M8%202.5%2013.5%208%208%2013.5%202.5%208Z%22%2F%3E%3Cpath%20d%3D%22M14%2014%2021%2017%2017%2021Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+.r1 { --bg: url("assets/cardbg-r1.webp"); --ribbon: linear-gradient(180deg, #6a6482, #2e2a3d); --veil: rgba(10,6,24,.2); }
+.r2 { --bg: url("assets/cardbg-r2.webp"); --ribbon: linear-gradient(180deg, #24905a, #0f3d27); --veil: rgba(4,20,12,.2); }
+.r3 { --bg: url("assets/cardbg-r3.webp"); --ribbon: linear-gradient(180deg, #3460c4, #152a5e); --veil: rgba(6,12,40,.22); }
+.r4 { --bg: url("assets/cardbg-r4.webp"); --ribbon: linear-gradient(180deg, #7c3acb, #36175c); --veil: rgba(20,6,40,.22); }
+.r5 { --bg: url("assets/cardbg-r5.webp"); --ribbon: linear-gradient(180deg, #c0841c, #5a3608); --veil: rgba(40,20,0,.32); }
+.r6 { --bg: url("assets/cardbg-r6.webp"); --ribbon: linear-gradient(180deg, #c8283f, #5a0d22); --veil: rgba(40,0,16,.34); }
+.tcard { --orn: 1.25rem; margin-top: .45rem; }
+.cards-empty { margin-top: .45rem; }
+/* the picture window: the grade's painted scene behind the character */
+.tcard > .tcard-art {
+  background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(8,4,20,.6) 100%), linear-gradient(var(--veil), var(--veil)), var(--bg) center / cover;
+}
+.sheet-art::after { background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgba(8,4,20,.55) 100%), linear-gradient(var(--veil), var(--veil)), var(--bg) center / cover; }
+.pull-face.pull-face.pull-face { background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgba(8,4,20,.55) 100%) padding-box, linear-gradient(var(--veil), var(--veil)) padding-box, var(--bg) center / cover padding-box, var(--metal) border-box; }
+/* filigree corners in the frame's metal */
+.card-deco { position: absolute; inset: -3px; z-index: 4; border-radius: inherit; pointer-events: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.85)); }
+.card-deco > i {
+  position: absolute;
+  inset: 0;
+  background: var(--metal);
+  -webkit-mask: var(--corner-tl) left top / var(--orn) var(--orn) no-repeat, var(--corner-tr) right top / var(--orn) var(--orn) no-repeat, var(--corner-br) right bottom / var(--orn) var(--orn) no-repeat, var(--corner-bl) left bottom / var(--orn) var(--orn) no-repeat;
+  mask: var(--corner-tl) left top / var(--orn) var(--orn) no-repeat, var(--corner-tr) right top / var(--orn) var(--orn) no-repeat, var(--corner-br) right bottom / var(--orn) var(--orn) no-repeat, var(--corner-bl) left bottom / var(--orn) var(--orn) no-repeat;
+}
+.sheet-art { --orn: 1.9rem; }
+.sheet-art > .card-deco { inset: 0; z-index: 4; }
+.pull-face { --orn: 1.1rem; }
+/* the grade as a crest on the top edge */
+.tcard > .tcard-rare {
+  top: -.55rem;
+  left: 50%;
+  right: auto;
+  z-index: 5;
+  min-width: 2rem;
+  padding: .04rem .5rem .1rem;
+  border: 1.5px solid transparent;
+  border-radius: .45rem .45rem .75rem .75rem;
+  font-size: .66rem;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255,255,255,.85), var(--grade, #ccc) 45%, color-mix(in srgb, var(--grade, #ccc) 65%, #000)) padding-box, var(--metal) border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 2px 3px rgba(0,0,0,.6);
+}
+.tcard > .tcard-rare.grade-sss {
+  background: linear-gradient(120deg, #ff5a6e, #ffb347, #ffe08a, #ff5a6e) padding-box, var(--metal) border-box;
+  background-size: 200% 100%, 100% 100%;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 3px rgba(0,0,0,.6), 0 0 .5rem rgba(255,120,120,.7);
+}
+.tcard.is-picked:not(.in-team) .tcard-rare { top: -.55rem; }
+.tcard.is-picked:not(.in-team)::after { z-index: 5; top: .45rem; right: .45rem; box-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.tcard > .tcard-role { z-index: 5; top: .42rem; left: .42rem; }
+/* the name on a ribbon that wraps over the frame */
+.tcard > .tcard-name {
+  max-width: none;
+  margin: .25rem -.6rem 0;
+  padding: .1rem .75rem;
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, calc(100% - .42rem) 50%, 100% 100%, 0 100%, .42rem 50%);
+  background: linear-gradient(var(--frame), var(--frame)) top / 100% 1.5px no-repeat, linear-gradient(var(--frame), var(--frame)) bottom / 100% 1.5px no-repeat, linear-gradient(180deg, rgba(255,255,255,.28), transparent 45%), var(--ribbon, #2e2a3d);
+  box-shadow: none;
+}
+.tcard > .tcard-lv { margin-top: .14rem; padding: 0 .45rem; border-radius: 999px; background: rgba(0,0,0,.42); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+/* S and SSS sparkle */
+.tcard.r5 > .tcard-art::after, .tcard.r6 > .tcard-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(1.6px 1.6px at 16% 24%, #fff, transparent), radial-gradient(1.1px 1.1px at 80% 16%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 86% 68%, #fff, transparent), radial-gradient(1.1px 1.1px at 26% 82%, #fff, transparent),
+    radial-gradient(2px 2px at 62% 36%, rgba(255,255,255,.9), transparent), radial-gradient(1.2px 1.2px at 44% 12%, #fff, transparent);
+  animation: card-twinkle 2.2s ease-in-out infinite alternate;
+}
+.tcard.r6 > .tcard-art::after { animation-duration: 1.4s; }
+@keyframes card-twinkle { from { opacity: .2; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tcard.r5 > .tcard-art::after, .tcard.r6 > .tcard-art::after { animation: none; } }

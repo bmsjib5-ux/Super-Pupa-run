@@ -470,7 +470,7 @@
     const g = E.GACHA, have = save().gems || 0;
     const banner = el("section", "pull-banner");
     const row = el("div", "pull-faces");
-    for (const id of ["nilakan", "arunee", "vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade")); row.append(f); }
+    for (const id of ["nilakan", "arunee", "vajira", "seraphina", "naphalai", "asani", "qilin"]) { const f = el("span", `pull-face r${E.CARDS[id].rarity}`); f.append(portrait(id), gradeBadge(id, "pull-grade"), cardDeco()); row.append(f); }
     banner.append(el("p", "news-eyebrow", "✦ สุ่มการ์ดแสงจันทร์"), el("h3", null, "ตัวละครและสัตว์เลี้ยงได้จากที่นี่เท่านั้น"), row);
     const odds = el("p", "pull-odds", `อัตรา: ${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${Math.round(g.rates[r] * 1000) / 10}%`).join(" · ")} · การันตี S ขึ้นไปภายใน ${g.pity} ครั้ง (อีก ${g.pity - pity()} ครั้ง) · การันตี SSS ภายใน ${g.pity6} ครั้ง (อีก ${g.pity6 - pity6()} ครั้ง) · สุ่ม 10 ครั้งได้ B ขึ้นไปอย่างน้อย 1 ใบ · ได้ซ้ำเปลี่ยนเป็นเศษการ์ดใบนั้นไว้อัปดาว (${[6, 5, 4, 3, 2, 1].map(r => `${E.GRADES[r]} ${E.DUPE_SHARDS[r]}`).join(" · ")}) และ S ได้ปีกอัพดาว 🪽1 SSS ได้ 🪽3`);
     const actions = el("div", "title-actions sheet-actions pull-actions");
@@ -1117,6 +1117,13 @@
     node.addEventListener("pointercancel", leave);
     return node;
   }
+  // the frame's corner ornaments (drawn by cards.css)
+  function cardDeco() {
+    const deco = el("span", "card-deco");
+    deco.setAttribute("aria-hidden", "true");
+    deco.append(el("i"));
+    return deco;
+  }
   function cardTile(id, onPick, extra = "") {
     const def = E.CARDS[id], lv = cards().units[id];
     const tile = button(`tcard r${def.rarity}${lv ? "" : " is-locked"}${cards().team.includes(id) ? " is-picked" : ""} ${extra}`, null, onPick);
@@ -1128,6 +1135,7 @@
     if (awake) { const st = redStars(awake); st.classList.add("tcard-stars"); tile.append(st); }
     if (awake) tile.classList.add(`awake-${awake}`);
     if (awake > E.MAX_AWAKE) tile.classList.add("is-awake2");
+    tile.append(cardDeco());
     return holo(tile);
   }
 
@@ -1195,7 +1203,7 @@
     const role = E.ROLES[def.role];
     const top = el("div", "sheet-card");
     const art = el("div", `sheet-art r${def.rarity}`);
-    art.append(portrait(id));
+    art.append(portrait(id), cardDeco());
     if (MODELS_3D[id] && !wearing(id) && window.PupaCards3D) {
       art.classList.add("is-3d");
       window.PupaCards3D.mount(art, MODELS_3D[id]);
