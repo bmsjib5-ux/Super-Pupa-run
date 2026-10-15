@@ -845,3 +845,91 @@ button.unit { cursor: crosshair; }
 .arena-team .tcard.is-drop { outline: 3px solid #ffd76a; outline-offset: 2px; box-shadow: 0 0 1.2rem rgba(255,215,106,.7); }
 .arena-pool.is-drop-out { outline: 2px dashed rgba(255,120,140,.8); outline-offset: 6px; border-radius: .8rem; }
 .arena-team { min-height: 4rem; }
+
+/* ---- Framed cards ----
+   A bevelled metal frame by grade (pewter, jade, sapphire, amethyst, gold,
+   ruby-gold), an engraved inner line, a sunken window the picture stands
+   out of, a name plate and a gem badge. The shadow is in three parts:
+   --drop (the lift), --bevel (inner light and shade) and --aura (the glow
+   of rare, awakened or new cards). */
+.r1 { --metal: linear-gradient(145deg, #f4f1fa, #b3adc3 20%, #5e5872 46%, #dcd7e6 60%, #4b4661 84%, #bdb7cc); --fill: linear-gradient(170deg, #3b3550, #1d192b); --glow: rgba(205,200,225,.3); }
+.r2 { --metal: linear-gradient(145deg, #eafff2, #7fe0a8 20%, #1d7a4a 46%, #bdf7d6 60%, #135637 84%, #79d9a2); --fill: linear-gradient(170deg, #1f4a3a, #0e2219); --glow: rgba(111,211,154,.42); }
+.r3 { --metal: linear-gradient(145deg, #f0f6ff, #9cc0ff 20%, #2b4ea6 46%, #d4e3ff 60%, #1c3375 84%, #93b8ff); --fill: linear-gradient(170deg, #26386e, #101935); --glow: rgba(143,182,255,.48); }
+.r4 { --metal: linear-gradient(145deg, #f8efff, #cf9dff 20%, #6a2fb0 46%, #ead4ff 60%, #481b84 84%, #c690ff); --fill: linear-gradient(170deg, #432470, #1d0f38); --glow: rgba(195,139,255,.52); }
+.r5 { --metal: linear-gradient(145deg, #fffbe2, #ffd76a 18%, #a86d14 42%, #fff0b8 58%, #7a4a0c 82%, #ffd76a); --fill: radial-gradient(circle at 50% 30%, #c8962e, #7a4e12 55%, #3a2408 100%); --glow: rgba(255,215,106,.58); }
+.r6 { --metal: linear-gradient(145deg, #fff3c8, #ffb347 16%, #ff5a6e 36%, #ffe9a0 52%, #a51d3c 74%, #ffd76a 92%); --fill: radial-gradient(circle at 50% 18%, #8a2a4a, #4a1230 55%, #22071a); --glow: rgba(255,110,120,.6); }
+.tcard, .sheet-art, .pull-face {
+  --drop: 0 .4rem .7rem -.25rem rgba(0,0,0,.72);
+  --bevel: inset 0 0 0 1px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.17), inset 0 .7rem .9rem -.7rem rgba(255,255,255,.28), inset 0 -.9rem 1rem -.8rem rgba(0,0,0,.65);
+  --aura: 0 0 .7rem -.15rem var(--glow, transparent);
+}
+.tcard.tcard.tcard, .sheet-art.sheet-art.sheet-art, .pull-face.pull-face.pull-face {
+  border: 3px solid transparent;
+  background: var(--fill) padding-box, var(--metal) border-box;
+  box-shadow: var(--drop), var(--bevel), var(--aura);
+}
+.tcard:hover { --drop: 0 .75rem 1rem -.3rem rgba(0,0,0,.78); }
+.sheet-art.sheet-art.sheet-art { border-width: 4px; }
+/* the window the picture stands in */
+.tcard > .tcard-art {
+  align-self: stretch;
+  width: auto;
+  border-radius: .55rem;
+  background: radial-gradient(ellipse at 50% 60%, var(--glow), transparent 72%), linear-gradient(180deg, rgba(12,7,28,.62), rgba(12,7,28,.32));
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.75), inset 0 0 0 1px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.22);
+}
+.tcard > .tcard-art > *, .sheet-art > .card-art, .pull-face > .card-art { filter: drop-shadow(0 .2rem .22rem rgba(0,0,0,.6)); }
+.sheet-art.sheet-art.sheet-art { padding: .35rem; }
+.sheet-art::after { content: ""; position: absolute; inset: .3rem; z-index: 1; border-radius: .65rem; pointer-events: none; background: radial-gradient(ellipse at 50% 60%, var(--glow), transparent 68%); box-shadow: inset 0 2px 6px rgba(0,0,0,.65), inset 0 0 0 1px rgba(0,0,0,.35); }
+.sheet-art { position: relative; }
+.sheet-art > .card-art { position: relative; z-index: 2; }
+.sheet-art > .card-3d { z-index: 2; }
+/* the name plate */
+.tcard > .tcard-name {
+  align-self: stretch;
+  margin-top: .22rem;
+  padding: .06rem .25rem;
+  border-radius: .35rem;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85);
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.32) 55%, rgba(0,0,0,.5));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), inset 0 -1px 0 rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.45);
+}
+.tcard > .tcard-lv { text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+/* the role in a round emblem, the grade a gem */
+.tcard > .tcard-role {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  top: .3rem;
+  left: .3rem;
+  border-radius: 50%;
+  font-size: .6rem;
+  line-height: 1;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.42), rgba(0,0,0,.55) 72%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 1px 2px rgba(0,0,0,.65);
+}
+.grade:not(.grade-sss), .pull-grade:not(.grade-sss) {
+  background: linear-gradient(180deg, rgba(255,255,255,.8), var(--grade, #ccc) 45%, color-mix(in srgb, var(--grade, #ccc) 68%, #000));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 1px 2px rgba(0,0,0,.65), 0 0 0 1px rgba(0,0,0,.35);
+}
+.grade-sss { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 1px 2px rgba(0,0,0,.65), 0 0 .45rem rgba(255,120,120,.65); }
+.pull-grade { min-width: 1.3rem; padding: 0 .3rem; border-radius: .35rem; color: #1b0f2c; font-size: .62rem; font-weight: 900; line-height: 1.35; text-align: center; }
+.pull-grade.grade-sss { color: #fff; }
+/* the glows, now kept apart from the frame's own shadow */
+.tcard[class*="awake-"]:not(.r6) { --aura: 0 0 .7rem rgba(255,59,78,.5); }
+.tcard[class*="awake-"].awake-5 { --aura: 0 0 1.1rem rgba(255,215,106,.85); }
+.tcard[class*="awake-"].is-awake2 { --aura: 0 0 1rem rgba(255,215,106,.9), 0 0 .35rem rgba(255,255,255,.55); }
+.tcard.tcard.is-drop { --aura: 0 0 1.2rem rgba(255,215,106,.75); }
+.pull-card.r4 .tcard { --aura: 0 0 .8rem rgba(195,139,255,.8); }
+.pull-card.r5 .tcard { --aura: 0 0 1.2rem rgba(255,215,106,.9); }
+.pull-card.r6 .tcard { --aura: 0 0 1.6rem rgba(255,90,110,.95), 0 0 .6rem rgba(255,224,138,.9); }
+@keyframes pull-glow { to { box-shadow: var(--drop), var(--bevel), 0 0 2rem rgba(255,215,106,1); } }
+.sheet-art.r5 { --aura: 0 0 1.4rem rgba(255,215,106,.5); }
+.sheet-art.r6 { --aura: 0 0 1.4rem rgba(255,90,110,.6), 0 0 .5rem rgba(255,215,106,.5); }
+.pull-face.r5 { --aura: 0 0 1rem rgba(255,215,106,.55); }
+.pull-face.r6 { --aura: 0 0 1.2rem rgba(255,90,110,.7); }
+/* the arena's front-row tag sits on the picture, clear of the level */
+.tcard.is-front::before { z-index: 4; top: 1.6rem; bottom: auto; left: .3rem; right: auto; box-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.tcard.in-arena::before { z-index: 4; box-shadow: 0 1px 2px rgba(0,0,0,.6); }
