@@ -545,7 +545,7 @@
     const left = el("p", "pull-pity");
     left.append(el("span", "grade grade-s", "S"), ` อีก ${g.pity - pity()} ครั้ง · `, el("span", "grade grade-sss", "SSS"), ` อีก ${g.pity6 - pity6()} ครั้ง การันตีได้แน่นอน`);
     banner.append(left, odds, actions, el("p", "sheet-goals", `มีเพชร 💎 ${fmt(have)} · เพชรได้จากผ่านด่านครั้งแรก (ทั้งผจญภัยและศึกการ์ด) รางวัลรายวัน ลานประลอง และด่านประจำวัน`));
-    panel.append(banner);
+    panel.append(banner, itemBanner());
     const list = el("div", "pull-pool");
     for (const r of [6, 5, 4, 3, 2, 1]) {
       const line = el("p", "pull-tier");
@@ -553,6 +553,78 @@
       list.append(line);
     }
     panel.append(el("h3", "shop-heading", "การ์ดที่สุ่มได้ (✓ = มีแล้ว)"), list);
+  }
+
+  // ---- Item pulls ----
+  const itemPity = () => Math.max(0, Math.floor(Number(save().itemPity) || 0));
+  function itemBanner() {
+    const g = E.ITEM_GACHA, have = save().gems || 0, c = cards();
+    const box = el("section", "pull-banner item-banner");
+    const icons = el("div", "item-banner-icons");
+    // all eight pieces, in the rarer frames
+    for (const [n, r] of [[0, 5], [6, 4], [4, 5], [5, 3], [1, 4], [2, 5], [7, 3], [3, 4]]) {
+      const icon = el("span", `gear-icon t${r}`), img = el("img");
+      img.src = gearArt(n); img.alt = "";
+      icon.append(img);
+      icons.append(icon);
+    }
+    box.append(el("p", "news-eyebrow", "🎁 สุ่มไอเทม"), el("h3", null, "อุปกรณ์ค่าสุ่ม 8 ชนิด 5 ระดับ ใส่ให้การ์ดใบไหนก็ได้"), icons);
+    const left = el("p", "pull-pity");
+    left.append(el("b", "item-legend", "ตำนาน"), ` อีก ${g.pity - itemPity()} ครั้ง การันตีได้แน่นอน`);
+    const odds = el("p", "pull-odds", `อัตรา: ${E.ITEM_RARITY.map((t, n) => `${t.name} ${Math.round(g.rates[n] * 1000) / 10}%`).reverse().join(" · ")} · สุ่ม 10 ครั้งได้หายากขึ้นไปอย่างน้อย 1 ชิ้น · ค่าหลักและค่ารองสุ่มทุกชิ้น ยิ่งหายากยิ่งได้ค่ารองมาก (ตำนาน 4 ค่า)`);
+    const actions = el("div", "title-actions sheet-actions pull-actions");
+    const one = button("primary-button", `สุ่ม 1 ครั้ง · 💎 ${g.one}`, () => doItemPull(1));
+    const ten = button("primary-button pull-ten", `สุ่ม 10 ครั้ง · 💎 ${g.ten}`, () => doItemPull(10));
+    one.disabled = have < g.one; ten.disabled = have < g.ten;
+    actions.append(one, ten);
+    const room = E.BAG_SIZE - (c.items || []).length;
+    box.append(left, odds, actions, el("p", "sheet-goals", `กระเป๋า ${(c.items || []).length}/${E.BAG_SIZE}${room < 10 ? ` · เหลือที่ ${room} ชิ้น ของที่เกินจะย่อยเป็นแร่` : ""} · ใส่ไอเทมได้ที่หน้าการ์ด แตะช่องอุปกรณ์`));
+    return box;
+  }
+  function doItemPull(count) {
+    const g = E.ITEM_GACHA, cost = count >= 10 ? g.ten : g.one, c = cards();
+    if ((save().gems || 0) < cost) { tone(150, .12, "square", .05); return; }
+    save().gems -= cost;
+    const state = { pity: itemPity() };
+    const got = E.pullItems(state, Math.random, count);
+    save().itemPity = state.pity;
+    c.items = c.items || [];
+    let ore = 0;
+    const kept = got.map(item => {
+      const full = c.items.length >= E.BAG_SIZE;
+      const one = { i: newItemId(), ...item, o: "" };
+      if (full) ore += E.SALVAGE_ORE[item.r - 1]; else c.items.push(one);
+      return { item: one, full };
+    });
+    c.ore += ore;
+    store(); showCoins();
+    revealItems(kept, count, ore);
+  }
+  // items turn over one after another, the rare ones with more light
+  function revealItems(results, count, ore) {
+    const grid = el("div", `pull-reveal${results.length > 1 ? " is-ten" : ""}`);
+    results.forEach(({ item, full }, n) => {
+      const slot = el("div", `pull-card item-pull t${item.r}`);
+      slot.style.animationDelay = `${n * 160}ms`;
+      const icon = el("span", `gear-icon t${item.r}`), img = el("img");
+      img.src = gearArt(item.s); img.alt = "";
+      icon.append(img);
+      const parts = E.itemParts(item);
+      slot.append(icon, el("b", null, itemName(item)), el("small", "item-pull-main", parts.main.map(([stat, v]) => statText(stat, v)).join(" · ")));
+      if (parts.extras.length) slot.append(el("small", "item-pull-extra", parts.extras.map(([stat, v]) => statText(stat, v)).join(" · ")));
+      if (full) slot.append(el("small", "pull-dupe", `กระเป๋าเต็ม → ⛏ ${E.SALVAGE_ORE[item.r - 1]}`));
+      grid.append(slot);
+      const notes = item.r === 5 ? [784, 988, 1175, 1568, 1976] : item.r === 4 ? [784, 988, 1175, 1568] : item.r >= 3 ? [659, 880] : [523];
+      setTimeout(() => notes.forEach((note, i) => tone(note, .1, "triangle", .05, i * .06)), n * 160 + 380);
+    });
+    const g = E.ITEM_GACHA;
+    const again = el("div", "title-actions sheet-actions");
+    const more = button("primary-button", count > 1 ? `สุ่มอีก 10 · 💎 ${g.ten}` : `สุ่มอีก · 💎 ${g.one}`, () => doItemPull(count));
+    more.disabled = (save().gems || 0) < (count > 1 ? g.ten : g.one);
+    again.append(more, button("secondary-button", "ไปใส่ไอเทม", () => { tab = "team"; closeSheet(); }));
+    const best = results.reduce((top, r) => Math.max(top, r.item.r), 1);
+    openSheet([el("h3", "sheet-title", "ผลการสุ่มไอเทม"), grid, el("p", "sheet-sub", `${best >= 4 ? `ได้ของ${E.ITEM_RARITY[best - 1].name}! · ` : ""}ตำนานอีก ${g.pity - itemPity()} ครั้งการันตี${ore ? ` · กระเป๋าเต็ม ย่อยเป็น ⛏ ${ore}` : ""}`), again]);
+    announce(`ผลการสุ่มไอเทม: ${results.map(r => itemName(r.item)).join(", ")}`);
   }
 
   function doPull(count) {

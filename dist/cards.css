@@ -1263,3 +1263,20 @@ button.unit { cursor: crosshair; }
 .loot-full { flex-basis: 100%; color: #ffd76a; font-size: .66rem; text-align: center; }
 @keyframes loot-pop { from { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .loot-item .gear-icon { animation: none; } }
+/* ---- Item pulls ---- */
+.item-banner { margin-top: .9rem; border-color: rgba(120,200,255,.45); background: radial-gradient(circle at 50% 0%, rgba(140,210,255,.25), transparent 60%), linear-gradient(160deg, rgba(40,70,140,.65), rgba(16,12,45,.88)); }
+.item-banner-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin: .2rem 0 .3rem; }
+.item-banner-icons .gear-icon { width: clamp(2.4rem, 9vw, 3.4rem); height: clamp(2.4rem, 9vw, 3.4rem); animation: pull-float 2.4s ease-in-out infinite; }
+.item-banner-icons .gear-icon:nth-child(2n) { animation-delay: -1.2s; }
+.item-legend { color: #ffd76a; text-shadow: 0 0 .5rem rgba(255,200,80,.7); }
+.item-pull { display: grid; justify-items: center; gap: .15rem; padding: .5rem .35rem .45rem; border: 2px solid var(--tier, #b9b2c4); border-radius: .9rem; text-align: center; background: radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--tier, #b9b2c4) 30%, transparent), rgba(13,8,36,.85) 70%); box-shadow: 0 .3rem .6rem rgba(0,0,0,.45); }
+.item-pull.t1 { --tier: #b9b2c4; } .item-pull.t2 { --tier: #6fd39a; } .item-pull.t3 { --tier: #8fb6ff; } .item-pull.t4 { --tier: #c38bff; } .item-pull.t5 { --tier: #ffd76a; }
+.item-pull.t4, .item-pull.t5 { box-shadow: 0 0 1.1rem color-mix(in srgb, var(--tier) 70%, transparent), 0 .3rem .6rem rgba(0,0,0,.45); }
+.item-pull.t5 { animation: pull-flip .55s ease-out both, pull-glow 1.4s ease-in-out infinite alternate; }
+.item-pull .gear-icon { width: 3rem; height: 3rem; }
+.item-pull b { color: var(--tier); font-size: .76rem; }
+.item-pull-main { color: #fff3d0; font-size: .64rem; font-weight: 800; }
+.item-pull-extra { color: #cfc4e2; font-size: .58rem; line-height: 1.35; }
+.item-pull { --drop: 0 .3rem .6rem rgba(0,0,0,.45); --bevel: 0 0 0 transparent; }
+.item-banner-icons { gap: .3rem; }
+.item-banner-icons .gear-icon { width: clamp(2.2rem, 8.2vw, 3.4rem); height: clamp(2.2rem, 8.2vw, 3.4rem); }

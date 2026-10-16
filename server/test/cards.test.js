@@ -275,6 +275,24 @@ test("cards: items drop with random stats, are worn one a slot and broken down i
   assert.equal(c.ore, E.SALVAGE_ORE[4] + E.SALVAGE_ORE[1]);
 });
 
+test("cards: item pulls follow their odds, with a legendary within the pity and a rare in ten", () => {
+  let seed = 21;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const state = { pity: 0 };
+  let gap = 0, longest = 0;
+  for (let k = 0; k < 3000; k++) {
+    const [item] = E.pullItems(state, rnd, 1);
+    assert.equal(item.x.length, item.r - 1);
+    gap = item.r === 5 ? 0 : gap + 1;
+    longest = Math.max(longest, gap);
+  }
+  assert.ok(longest < E.ITEM_GACHA.pity);
+  for (let k = 0; k < 200; k++) assert.ok(E.pullItems({ pity: 0 }, rnd, 10).some(item => item.r >= 3));
+  const near = { pity: E.ITEM_GACHA.pity - 1 };
+  assert.equal(E.pullItems(near, rnd, 1)[0].r, 5);
+  assert.equal(near.pity, 0);
+});
+
 test("cards: bonds raise the attack of members fielded together", () => {
   const stage = E.STAGES[0];
   const solo = E.createBattle({ team: [{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }], stage, seed: 1 });

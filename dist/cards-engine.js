@@ -1976,11 +1976,15 @@
   }
   // a single number to rank items by (speed counts as about a hundredth)
   const itemScore = (item) => Object.entries(itemStats(item)).reduce((sum, [stat, v]) => sum + v * (stat === "spd" ? .01 : stat === "crit" ? 2 : 1), 0);
-  // rnd: () => 0..1; luck (0 to about 2) moves the odds toward rarer items
-  function rollItem(rnd, luck = 0, minRarity = 1) {
-    const weights = ITEM_RARITY.map((t, n) => (n + 1 < minRarity ? 0 : t.weight * (1 + luck * n * .6)));
-    let roll = rnd() * weights.reduce((a, b) => a + b, 0), r = 1;
-    for (let n = 0; n < weights.length; n++) { if (roll < weights[n]) { r = n + 1; break; } roll -= weights[n]; r = n + 1; }
+  // rnd: () => 0..1; luck (0 to about 2) moves the odds toward rarer items;
+  // rarity: this rarity, whatever the odds (an item pull decides its own)
+  function rollItem(rnd, luck = 0, minRarity = 1, rarity = 0) {
+    let r = rarity;
+    if (!r) {
+      const weights = ITEM_RARITY.map((t, n) => (n + 1 < minRarity ? 0 : t.weight * (1 + luck * n * .6)));
+      let roll = rnd() * weights.reduce((a, b) => a + b, 0);
+      for (let n = 0; n < weights.length; n++) { r = n + 1; if (roll < weights[n]) break; roll -= weights[n]; }
+    }
     const s = Math.floor(rnd() * GEAR_SLOTS.length), m = Math.floor(rnd() * 101);
     const pool = [...ITEM_EXTRAS.keys()], x = [];
     for (let k = 0; k < r - 1; k++) x.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0] * 1000 + Math.floor(rnd() * 101));
@@ -2007,6 +2011,27 @@
     });
     cards.ore = (cards.ore || 0) + ore;
     return ore;
+  }
+  // Item pulls, for gems: rates by rarity (common first); a legendary
+  // within PITY pulls, and ten at once hold a rare or better.
+  const ITEM_GACHA = { one: 60, ten: 540, rates: [.4, .32, .18, .08, .02], pity: 50 };
+  // state: { pity } (pulls since the last legendary); returns the items
+  // (without ids)
+  function pullItems(state, rnd, count) {
+    const out = [];
+    state.pity = state.pity || 0;
+    for (let k = 0; k < count; k++) {
+      let r = 1;
+      if (state.pity + 1 >= ITEM_GACHA.pity) r = 5;
+      else {
+        let roll = rnd();
+        for (let n = ITEM_GACHA.rates.length - 1; n >= 0; n--) { if (roll < ITEM_GACHA.rates[n]) { r = n + 1; break; } roll -= ITEM_GACHA.rates[n]; }
+      }
+      state.pity = r === 5 ? 0 : state.pity + 1;
+      out.push(rollItem(rnd, 0, 1, r));
+    }
+    if (count >= 10 && !out.some(item => item.r >= 3)) out[out.length - 1] = rollItem(rnd, 0, 1, 3);
+    return out;
   }
   // What battles drop: count items, with luck, a rarer floor for bosses.
   const stageLoot = (stage, first) => ({ count: first ? 1 + (stage.num % 10 === 0 ? 1 : 0) : 0, chance: first ? 0 : .3, luck: Math.min(2, stage.num / 80) + (stage.num % 10 === 0 ? .5 : 0) });
@@ -2110,7 +2135,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

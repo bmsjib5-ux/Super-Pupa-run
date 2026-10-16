@@ -95,7 +95,7 @@ export function cleanSave(raw) {
   if (!raw || typeof raw !== "object" || JSON.stringify(raw).length > MAX_SAVE_BYTES) return null;
   const shop = raw.shop && typeof raw.shop === "object" ? raw.shop : {};
   const out = {
-    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), gems: int(raw.gems), cardPity: int(raw.cardPity, 1000), cardPity6: int(raw.cardPity6, 1000), gift: typeof raw.gift === "string" ? raw.gift.slice(0, 40) : "", plays: int(raw.plays), wins: int(raw.wins),
+    best: int(raw.best), points: int(raw.points), coins: int(raw.coins), gems: int(raw.gems), cardPity: int(raw.cardPity, 1000), cardPity6: int(raw.cardPity6, 1000), itemPity: int(raw.itemPity, 1000), gift: typeof raw.gift === "string" ? raw.gift.slice(0, 40) : "", plays: int(raw.plays), wins: int(raw.wins),
     cleared: numberList(raw.cleared),
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
