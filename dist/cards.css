@@ -1028,8 +1028,10 @@ button.unit { cursor: crosshair; }
 .cards-sheet-box.is-codex {
   display: flex;
   width: min(62rem, 100%);
-  height: min(50rem, calc(100dvh - 1.4rem));
-  max-height: calc(100dvh - 1.4rem);
+  /* as tall as the sheet's own area (the game frame), not the screen:
+     on a phone the frame can be shorter than the screen */
+  height: min(50rem, 100%);
+  max-height: 100%;
   overflow: hidden;
   padding: .7rem;
   border: 3px solid #c9a05a;
@@ -1154,7 +1156,7 @@ button.unit { cursor: crosshair; }
   .cards-sheet-box.is-codex { width: min(36rem, 100%); }
 }
 @media (max-width: 34rem) {
-  .cards-sheet-box.is-codex { height: calc(100dvh - 1rem); max-height: calc(100dvh - 1rem); padding: .45rem; border-radius: 1rem; }
+  .cards-sheet-box.is-codex { height: 100%; max-height: 100%; padding: .45rem; border-radius: 1rem; }
   .codex-detail { padding: .45rem .55rem .55rem; }
   .codex-stars { min-height: 1.3rem; }
   .codex-stars .red-stars { font-size: 1.25rem; }
@@ -1193,3 +1195,43 @@ button.unit { cursor: crosshair; }
 .codex-pane.is-nudge > * { animation: codex-nudge .4s ease; }
 @keyframes codex-nudge { 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
 @media (prefers-reduced-motion: reduce) { .codex-pane.is-nudge > * { animation: none; } }
+/* eight pieces of gear: four a side, a little smaller so they fit the picture */
+.gear-col { gap: .4rem; }
+.codex-stage .gear-icon { width: 3.05rem; height: 3.05rem; }
+.codex-stage > .sheet-art { height: 13.4rem; }
+@media (max-width: 34rem) {
+  .gear-col { gap: .3rem; }
+  .codex-stage .gear-icon { width: 2.55rem; height: 2.55rem; border-radius: .55rem; }
+  .codex-stage .gear-lv { font-size: .68rem; }
+  .codex-stage > .sheet-art { width: min(100%, 9.8rem); height: 11.1rem; }
+}
+/* the three gold buttons stay in sight: if the card book is taller than
+   the screen, the rest scrolls behind them */
+.codex-actions { position: sticky; bottom: -.65rem; z-index: 3; margin-bottom: -.65rem; padding: .45rem .35rem .65rem; background: linear-gradient(180deg, rgba(242,226,192,0), rgba(242,226,192,.97) 30%); }
+@media (max-width: 34rem) {
+  .codex-actions { bottom: -.55rem; margin-bottom: -.55rem; padding-bottom: .55rem; }
+}
+/* a short phone screen: a smaller picture and gear */
+@media (max-width: 34rem) and (max-height: 760px) {
+  .codex-stars { min-height: 1rem; }
+  .codex-stars .red-stars { font-size: 1.05rem; }
+  .codex-stars small { font-size: .6rem; }
+  .codex-stage .gear-icon { width: 2.15rem; height: 2.15rem; border-radius: .45rem; }
+  .codex-stage .gear-lv { font-size: .6rem; }
+  .gear-col { gap: .25rem; }
+  .codex-stage > .sheet-art { width: min(100%, 8rem); height: 9.4rem; }
+  .codex-title { margin-top: .2rem; font-size: 1.15rem; }
+  .codex-grade { font-size: 1.4rem; }
+  .codex-team { margin: .1rem 0 .3rem; }
+  .codex-chip { padding: .2rem .6rem; font-size: .68rem; }
+  .codex-row { margin: .06rem 0; font-size: .74rem; }
+  .codex-num { font-size: .95rem; }
+  .codex-up { width: 1.6rem; height: 1.6rem; font-size: .85rem; }
+  .codex-bar.is-big { height: .75rem; }
+  .codex-stats dt { font-size: .58rem; }
+  .codex-stats dd { font-size: .68rem; }
+  .codex-passive { font-size: .64rem; }
+  .is-codex .codex-chips { margin-top: .35rem; }
+  .is-codex .sheet-tab { padding: .28rem .5rem; font-size: .68rem; }
+  .codex-btn { padding: .4rem .3rem; }
+}

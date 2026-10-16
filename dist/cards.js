@@ -1221,7 +1221,10 @@
   let artCache = null;     // the sheet's picture, kept while its card is redrawn
   const gearArt = (n) => `assets/gear-${E.GEAR_SLOTS[n].key}.webp`;
   const pct = (v) => `${(v * 100).toFixed(1).replace(/\.0$/, "")}%`;
-  const gearText = (n, v) => (E.GEAR_SLOTS[n].stat === "spd" ? `+${v.toFixed(1)}` : `+${pct(v)}`);
+  // what a piece gives, in words: "โจมตี +3% · คริติคอล +1.1%"
+  const gearText = (n, tier, lv) => Object.entries(E.gearGives(n, tier, lv)).map(([stat, v]) => `${E.GEAR_STAT_NAMES[stat]} ${stat === "spd" ? `+${v.toFixed(1)}` : `+${pct(v)}`}`).join(" · ");
+  // the gear around the picture: attack on the left, defence on the right
+  const GEAR_SIDES = [[0, 6, 4, 5], [1, 2, 7, 3]];
   const gearCanUp = (c, id, n) => {
     const g = E.gearOf(c, id, n), cost = E.enhanceCost(g.lv, g.tier);
     return Boolean(c.units[id]) && g.lv < g.cap && (c.ore || 0) >= cost.ore && save().coins >= cost.coins;
@@ -1267,13 +1270,13 @@
     const n = gearSlot, slot = E.GEAR_SLOTS[n], g = E.gearOf(c, id, n), tier = E.GEAR_TIERS[g.tier - 1];
     const box = el("div", "gear-pane");
     const head = el("div", "gear-head"), name = el("div", "gear-name");
-    name.append(el("b", null, `${slot.name} · ขั้น${tier.name}`), el("span", null, `Lv ${g.lv}/${g.cap} · ${slot.label} ${gearText(n, E.gearValue(n, g.tier, g.lv))}`));
+    name.append(el("b", null, `${slot.name} · ขั้น${tier.name}`), el("span", null, `Lv ${g.lv}/${g.cap} · ${gearText(n, g.tier, g.lv)}`));
     head.append(gearIcon(n, g.tier, g.lv), name);
     box.append(head);
     if (!c.units[id]) { box.append(el("p", "gear-note", "ได้การ์ดนี้ก่อน จึงเสริมแกร่งอุปกรณ์ได้")); return box; }
     if (g.lv < g.cap) {
       const cost = E.enhanceCost(g.lv, g.tier);
-      name.append(el("p", "gear-next", `Lv ${g.lv + 1}: ${slot.label} ${gearText(n, E.gearValue(n, g.tier, g.lv + 1))}`));
+      name.append(el("p", "gear-next", `Lv ${g.lv + 1}: ${gearText(n, g.tier, g.lv + 1)}`));
       const row = el("div", "gear-buy");
       const one = button("codex-btn", `เสริมแกร่ง · ⛏ ${cost.ore} ● ${fmt(cost.coins)}`, () => enhance(id, n, 1));
       one.disabled = !gearCanUp(c, id, n);
@@ -1399,7 +1402,8 @@
     if ((c.awake[id] || 0) > E.MAX_AWAKE) stars.append(el("small", null, `ปลุกพลังขั้น 2 · ดาวทอง ${c.awake[id] - E.MAX_AWAKE}/${E.MAX_AWAKE2 - E.MAX_AWAKE}`));
     const stage = el("div", "codex-stage");
     const left = el("div", "gear-col"), right = el("div", "gear-col");
-    E.GEAR_SLOTS.forEach((_, n) => (n < 3 ? left : right).append(gearSlotButton(c, id, n)));
+    GEAR_SIDES[0].forEach(n => left.append(gearSlotButton(c, id, n)));
+    GEAR_SIDES[1].forEach(n => right.append(gearSlotButton(c, id, n)));
     stage.append(left, art, right);
     const title = el("h3", "codex-title");
     title.append(el("span", `codex-grade grade-${gradeOf(id).toLowerCase()}`, gradeOf(id)), el("span", "codex-name", def.name));

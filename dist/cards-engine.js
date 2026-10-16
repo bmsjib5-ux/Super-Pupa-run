@@ -1906,18 +1906,22 @@
   const cardBonus = (cards, id) => awakeBonus(cards.awake?.[id] || 0) + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
 
   // ---- Gear ----
-  // Six pieces on every card, enhanced a level at a time with ore and coins
-  // up to the cap of their tier, then reforged into the next tier (ore, star
-  // dust and coins), which raises the cap and what each level gives.
+  // Eight pieces on every card, enhanced a level at a time with ore and
+  // coins up to the cap of their tier, then reforged into the next tier (ore,
+  // star dust and coins), which raises the cap and what each level gives.
   // cards.gear[gearKey(id, slot)] = tier * 100 + level (none: tier 1, level 0).
+  // gives: per level, a share of hp, atk, def or crit, or speed points.
   const GEAR_SLOTS = [
-    { key: "weapon", name: "อาวุธ", stat: "atk", per: .004, label: "โจมตี" },
-    { key: "helm", name: "หมวก", stat: "hp", per: .004, label: "พลังชีวิต" },
-    { key: "armor", name: "เกราะ", stat: "def", per: .004, label: "ป้องกัน" },
-    { key: "boots", name: "รองเท้า", stat: "spd", per: .2, label: "ความเร็ว" },
-    { key: "ring", name: "แหวน", stat: "crit", per: .0013, label: "คริติคอล" },
-    { key: "amulet", name: "สร้อย", stat: "all", per: .002, label: "พลังชีวิต โจมตี ป้องกัน" }
+    { key: "weapon", name: "อาวุธ", gives: { atk: .004 } },
+    { key: "helm", name: "หมวก", gives: { hp: .004 } },
+    { key: "armor", name: "เกราะ", gives: { def: .004 } },
+    { key: "boots", name: "รองเท้า", gives: { spd: .2 } },
+    { key: "ring", name: "แหวน", gives: { crit: .0013 } },
+    { key: "amulet", name: "สร้อย", gives: { hp: .002, atk: .002, def: .002 } },
+    { key: "gloves", name: "ถุงมือ", gives: { atk: .0014, crit: .0006 } },
+    { key: "cloak", name: "ผ้าคลุม", gives: { hp: .0014, def: .0014 } }
   ];
+  const GEAR_STAT_NAMES = { hp: "พลังชีวิต", atk: "โจมตี", def: "ป้องกัน", spd: "ความเร็ว", crit: "คริติคอล" };
   const GEAR_TIERS = [
     { name: "ธรรมดา", mult: 1 }, { name: "ดี", mult: 1.1 }, { name: "หายาก", mult: 1.2 }, { name: "มหากาพย์", mult: 1.35 }, { name: "ตำนาน", mult: 1.5 }
   ];
@@ -1929,13 +1933,13 @@
     const tier = Math.max(1, Math.min(GEAR_TIERS.length, Math.floor(v / 100) || 1));
     return { tier, lv: Math.max(0, Math.min(tier * GEAR_STEP, v % 100)), cap: tier * GEAR_STEP };
   }
-  // what one piece gives, as a share (hp, atk, def, crit) or speed points
-  const gearValue = (n, tier, lv) => lv * GEAR_SLOTS[n].per * GEAR_TIERS[tier - 1].mult;
+  // what one piece gives at a tier and level, stat by stat
+  const gearGives = (n, tier, lv) => Object.fromEntries(Object.entries(GEAR_SLOTS[n].gives).map(([stat, per]) => [stat, lv * per * GEAR_TIERS[tier - 1].mult]));
   function gearBonus(cards, id) {
     const out = { hp: 0, atk: 0, def: 0, spd: 0, crit: 0 };
-    GEAR_SLOTS.forEach((slot, n) => {
-      const g = gearOf(cards, id, n), v = gearValue(n, g.tier, g.lv);
-      if (slot.stat === "all") { out.hp += v; out.atk += v; out.def += v; } else out[slot.stat] += v;
+    GEAR_SLOTS.forEach((_, n) => {
+      const g = gearOf(cards, id, n);
+      for (const [stat, v] of Object.entries(gearGives(n, g.tier, g.lv))) out[stat] += v;
     });
     return out;
   }
@@ -2039,7 +2043,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, boosted, GEAR_SLOTS, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearValue, gearBonus, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

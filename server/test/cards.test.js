@@ -233,6 +233,12 @@ test("cards: gear is enhanced to its tier's cap, reforged, and adds to the card 
   assert.equal(E.enhanceGear({ ...c, ore: 0 }, "chantra", 0, coins), null); // no ore
   const gear = E.gearBonus(c, "chantra");
   assert.ok(gear.atk > 0 && gear.hp === 0);
+  // eight pieces; some give two stats (gloves: attack and critical)
+  assert.equal(E.GEAR_SLOTS.length, 8);
+  const gloves = E.GEAR_SLOTS.findIndex(slot => slot.key === "gloves");
+  c.gear[E.gearKey("chantra", gloves)] = 110;
+  const both = E.gearBonus(c, "chantra");
+  assert.ok(both.atk > gear.atk && both.crit > gear.crit);
   const stage = E.STAGES[0];
   const plain = E.createBattle({ team: [{ id: "chantra", lv: 40 }], stage, seed: 1 });
   const geared = E.createBattle({ team: [{ id: "chantra", lv: 40, gear }], stage, seed: 1 });
