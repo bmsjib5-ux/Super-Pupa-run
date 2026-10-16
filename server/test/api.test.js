@@ -172,6 +172,10 @@ test("merge: the one-time gift mark survives a device that has not had it", () =
   const d = mergeSave(c, cleanSave(device(0, { gift: "gift-2026-10-16", gems: 600 })), 0, 600);
   assert.equal(d.gift, "gift-2026-10-16");
   assert.equal(mergeSave(d, cleanSave(device(0, { gift: "gift-2026-10-13", gems: 600 })), 0, 600).gift, "gift-2026-10-16");
+  // the second gift of the day sorts after the first
+  const e = mergeSave(d, cleanSave(device(0, { gift: "gift-2026-10-16b", gems: 600 })), 0, 600);
+  assert.equal(e.gift, "gift-2026-10-16b");
+  assert.equal(mergeSave(e, cleanSave(device(0, { gift: "gift-2026-10-16", gems: 600 })), 0, 600).gift, "gift-2026-10-16b");
 });
 
 test("save: the server gives the gem gift once per account, however many devices", async () => {

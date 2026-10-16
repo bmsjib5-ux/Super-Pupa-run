@@ -2008,7 +2008,7 @@
   normalizeShop();
   // Once per save: a gift of 10000 gems for every player. Shown on the
   // mode picker.
-  const GIFT_ID = "gift-2026-10-16";
+  const GIFT_ID = "gift-2026-10-16b";
   let giftGems = 0;
   // A device that syncs with an account leaves it to the server (one gift
   // per account, see server/src/merge.js grantGift); others get it here.
@@ -6335,10 +6335,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-16g";
+  const NEWS_VERSION = "2026-10-16h";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ของขวัญ", title: "🎁 แจกเพชร 💎 10,000 อีกรอบ!", text: "ของขวัญพิเศษรอบใหม่สำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดทันทีเมื่อเปิดเกม (บัญชีละ 1 ครั้ง ถึงจะเคยรับรอบก่อนแล้วก็รับได้อีก) ใช้สุ่มการ์ดตัวละคร สัตว์เลี้ยง หรือตู้สุ่มไอเทมได้เลย", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ปรับปรุง", title: "★★★ ด่านบอส ชนะภายใน 10 เทิร์น", text: "ดาวดวงที่ 3 ของด่านบอสในศึกการ์ด (ด่าน 5, 10, 15 … ทุกด่านที่มีบอส) จากเดิมต้องชนะภายใน 8 เทิร์น ตอนนี้ได้ถึง 10 เทิร์นแล้ว ด่านธรรมดายังเหมือนเดิม กลับไปเล่นด่านบอสที่ยังไม่ครบ 3 ดาวเพื่อเก็บดาว และรับโบนัสดาวครบทุก 5 ด่านได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "⚔ พลังต่อสู้บนการ์ด · เรียงการ์ดได้", text: "การ์ดทุกใบที่มีแล้วบอกพลังต่อสู้ ⚔ ใต้เลเวล (รวมดาว คอสตูม อุปกรณ์ และไอเทมที่ใส่) ทั้งในแท็บทีม หน้าด่าน และลานประลอง แท็บ 👥 ทีม มีปุ่มเรียงการ์ด 💎 ระดับ · ⬆ เลเวล · ⚔ พลังต่อสู้ แตะปุ่มเดิมอีกครั้งเพื่อสลับมากไปน้อย ▼ / น้อยไปมาก ▲ การ์ดที่ยังไม่มีอยู่ท้ายเสมอ เกมจำการเรียงไว้ และรายการการ์ดในหน้าการ์ดก็เรียงตามด้วย", image: "gacha6", open: () => { closeNews(); (window.PupaCards?.openTeam || window.PupaCards?.open)?.(); } },
     { tag: "ของขวัญ", title: "🎁 แจกเพชร 💎 10,000", text: "ของขวัญพิเศษอีกครั้งสำหรับทุกคน รับเพชร 10,000 เม็ดทันทีเมื่อเปิดเกม (บัญชีละ 1 ครั้ง) ใช้สุ่มการ์ดตัวละคร สัตว์เลี้ยง หรือลองตู้สุ่มไอเทมใหม่ได้เลย", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
