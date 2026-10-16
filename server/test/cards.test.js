@@ -30,6 +30,17 @@ test("cards: every stage finishes, and a strong team wins it", () => {
   }
 });
 
+test("cards: a boss stage's third star allows ten turns", () => {
+  const bosses = E.STAGES.filter(stage => stage.boss);
+  assert.ok(bosses.length > 0);
+  for (const stage of bosses) assert.ok(stage.par >= E.BOSS_PAR && E.BOSS_PAR === 10, `stage ${stage.num}`);
+  for (const stage of E.STAGES.filter(stage => !stage.boss)) assert.equal(stage.par, stage.waves.length * 2 + 2);
+  // nine turns on a boss stage still earns the star
+  const stage = bosses[0];
+  assert.equal(E.starsFor({ result: "won", turn: 9, heroes: [{ alive: true }] }, stage), 3);
+  assert.equal(E.starsFor({ result: "won", turn: 11, heroes: [{ alive: true }] }, stage), 2);
+});
+
 test("cards: the same seed gives the same battle", () => {
   const a = play(E.STAGES[9], 6, 42), b = play(E.STAGES[9], 6, 42);
   assert.equal(a.result, b.result);

@@ -1217,6 +1217,7 @@
     const waves = STAGE_LIST[u.stage - 1][2], last = waves.length - 1;
     waves[last] = waves[last].replace(u.from, u.id);
   }
+  const BOSS_PAR = 10;
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
     const list = (part, row) => part.split(",").filter(Boolean).map(id => ({ id, row }));
@@ -1229,8 +1230,9 @@
       num, name, lv, card: card || null,
       waves: parsed,
       boss: parsed.some(wave => wave.some(foe => FOES[foe.id].boss)),
-      // the third star: win within this many hero turns
-      par: parsed.length * 2 + 2,
+      // the third star: win within this many hero turns (a boss stage
+      // gets at least BOSS_PAR)
+      par: parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? Math.max(BOSS_PAR, parsed.length * 2 + 2) : parsed.length * 2 + 2,
       coins: 20 + 5 * num,       // first clear
       repeat: 5 + num,           // every clear after that
       // characters come only from card pulls now: the first clear gives
@@ -2135,7 +2137,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    BOSS_PAR, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });
