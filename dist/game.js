@@ -6335,10 +6335,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-15c";
+  const NEWS_VERSION = "2026-10-16a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "⚔️ ระบบอุปกรณ์ · หน้าการ์ดโฉมใหม่", text: "การ์ดทุกใบมีอุปกรณ์ 6 ชิ้น อาวุธ (โจมตี) หมวก (พลังชีวิต) เกราะ (ป้องกัน) รองเท้า (ความเร็ว) แหวน (คริติคอล) และสร้อย (ทุกค่าสถานะ) กด เสริมแกร่ง ด้วย ⛏ แร่และเหรียญ ทีละเลเวล ถึงขีดจำกัดแล้ว หลอมล้าง เพื่อขึ้นขั้น ธรรมดา → ดี → หายาก → มหากาพย์ → ตำนาน แร่ได้จากการชนะด่าน หอคอย ลานประลอง ด่านประจำวัน และล่าอัตโนมัติ แจกแร่เริ่มต้น 300 ก้อน หน้าการ์ดใหม่ทั้งหน้า เลเวล พลังต่อสู้ ค่าสถานะรวมอุปกรณ์ และรายการการ์ดด้านข้างบนจอใหญ่", image: "gear", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ภาพใหม่", title: "🃏 การ์ดโฉมใหม่ ฉากหลังของตัวเองทุกใบ", text: "การ์ดทั้ง 43 ใบมีฉากหลังวาดเฉพาะตามเรื่องราวของตัวละคร Pupa ในสวนซากุระยามค่ำ · จันทราริมทะเลสาบใต้จันทร์เต็มดวง · เพลิงกลางท้องฟ้าเปลวไฟ · อัสนีบนยอดเขาสายฟ้า · กิเลนทองในวังทองท่ามกลางเมฆมงคล และอีกมากมาย พร้อมกรอบโลหะนูนลวดลายมุม ตราระดับบนขอบการ์ด ป้ายชื่อแบบริบบิ้น และการ์ด S กับ SSS มีประกายระยิบระยับ", image: "gacha6", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "🗼 หอคอยบอส 150 ชั้น · 5 โซน มอนสเตอร์ไม่ซ้ำกัน", text: "หอคอยสูงขึ้นอีก 50 ชั้น (101–150) แบ่งเป็น 5 โซน ทุกโซนมีมอนสเตอร์ของตัวเอง 📚 101–110 ห้องสมุดเวท: ตำราเวทมีชีวิต ภูตกระจก บอสจอมเวทเจ้าหอคอย · 👻 111–120 หอวิญญาณ: บันชี โครงกระดูกนักธนู ตุ๊กตาผีสิง บอสราชาลิช · 🦁 121–130 สวนอสูร: กริฟฟิน บาซิลิสก์ ยูนิคอร์นรัตติกาล บอสราชินีเมดูซ่า · ⚙️ 131–140 โรงจักรกล: ทหารไขลาน แมงมุมเฟือง นกฮูกไอน้ำ บอสราชาหุ่นกลไก · ✨ 141–150 ท้องพระโรงดารา: อัศวินดารา นักฆ่าห้วงมืด นักเวทดวงดาว บอสจักรพรรดินีห้วงมืด ทุก 10 ชั้นเจอบอสใหญ่ มังกรรูนโบราณ อัศวินวิญญาณ ไคเมร่า ไททันนาฬิกา และราชันย์แห่งหอคอยบนชั้น 150 ผ่านชั้น 125 และ 150 รับรางวัลความสำเร็จเพิ่ม", image: "tower150", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ด่านใหม่", title: "ศึกการ์ด บทที่ 16 · ปราสาทลอยฟ้า", text: "ด่าน 151–160 เหนือทะเลเมฆยามอาทิตย์อัสดง เกาะลอยฟ้ามีน้ำตก และปราสาทสีขาวบนยอดเกาะ กองทัพทูตสวรรค์ผู้พิทักษ์ปราสาท 8 แบบ คิวปิดนักธนู อัศวินทูตสวรรค์ดาบอัสนี เซราฟหกปีกกางเกราะให้พวก ทูตสวรรค์พิณทองรักษา บอสอัครทูตสวรรค์ราชา และอัครทูตสวรรค์ราชินีพายุ ต้องใช้ทีม Lv 130 ดาวทองครบ", image: "chapter16", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6474,6 +6475,17 @@
       for (const id of kind === "gacha7" ? ["kalawit", "thamin", "nisa", "asura", "prapha", "suriyan", "ratsami", "thinakorn"] : kind === "gacha6" ? ["nilakan", "arunee"] : kind === "gacha5" ? ["chada", "anchan", "phayak", "wayu", "sila"] : kind === "gacha4" ? ["vajira", "naphalai", "qilin"] : kind === "gacha3" ? ["seraphina", "asani", "phoenix"] : kind === "gacha2" ? ["mekha", "phloeng", "fasai"] : kind === "gacha" ? ["sakura", "chantra", "ratri"] : ["ikuya", "pupav2", "pangji"]) {
         const img = document.createElement("img");
         img.src = id === "phoenix" || id === "qilin" ? `assets/${id}-pet.webp` : `assets/${id}-hero.webp`;
+        img.alt = "";
+        row.append(img);
+      }
+      return row;
+    }
+    if (kind === "gear") {
+      const row = document.createElement("div");
+      row.className = "news-trio news-tower";
+      for (const id of ["weapon", "helm", "armor", "boots", "ring", "amulet"]) {
+        const img = document.createElement("img");
+        img.src = `assets/gear-${id}.webp`;
         img.alt = "";
         row.append(img);
       }

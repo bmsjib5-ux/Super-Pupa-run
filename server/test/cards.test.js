@@ -221,6 +221,25 @@ test("cards: the upper tower can be climbed by a team of its chapters' strength"
   }
 });
 
+test("cards: gear is enhanced to its tier's cap, reforged, and adds to the card in battle", () => {
+  const c = { units: { chantra: 40 }, ore: 1000, dust: 50, gear: {} };
+  let coins = 100000;
+  for (let k = 0; k < E.GEAR_STEP; k++) coins = E.enhanceGear(c, "chantra", 0, coins);
+  assert.deepEqual(E.gearOf(c, "chantra", 0), { tier: 1, lv: E.GEAR_STEP, cap: E.GEAR_STEP });
+  assert.equal(E.enhanceGear(c, "chantra", 0, coins), null); // at the cap: reforge first
+  coins = E.reforgeGear(c, "chantra", 0, coins);
+  assert.deepEqual(E.gearOf(c, "chantra", 0), { tier: 2, lv: E.GEAR_STEP, cap: 2 * E.GEAR_STEP });
+  assert.equal(E.enhanceGear(c, "pangji", 0, coins), null); // a card not owned
+  assert.equal(E.enhanceGear({ ...c, ore: 0 }, "chantra", 0, coins), null); // no ore
+  const gear = E.gearBonus(c, "chantra");
+  assert.ok(gear.atk > 0 && gear.hp === 0);
+  const stage = E.STAGES[0];
+  const plain = E.createBattle({ team: [{ id: "chantra", lv: 40 }], stage, seed: 1 });
+  const geared = E.createBattle({ team: [{ id: "chantra", lv: 40, gear }], stage, seed: 1 });
+  assert.equal(geared.heroes[0].atk, Math.round(plain.heroes[0].atk * (1 + gear.atk) / 1));
+  assert.ok(E.cardPower(c, "chantra") > E.power("chantra", 40));
+});
+
 test("cards: bonds raise the attack of members fielded together", () => {
   const stage = E.STAGES[0];
   const solo = E.createBattle({ team: [{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }], stage, seed: 1 });

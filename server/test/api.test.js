@@ -211,6 +211,16 @@ test("merge: star-up wings keep the higher count, and stay unset until given", (
   assert.equal(b.cards.wings, 7);
 });
 
+test("merge: gear keeps each piece's higher tier and level, ore the higher count", () => {
+  const none = mergeSave(null, cleanSave(device(0, { cards: { dust: 1 } })), 0);
+  assert.equal(none.cards.ore, undefined);
+  assert.deepEqual(none.cards.gear, {});
+  const a = mergeSave(none, cleanSave(device(0, { cards: { ore: 40, gear: { pupag0: 112, pupag1: 205, "bad key": 300 } } })), 0);
+  const b = mergeSave(a, cleanSave(device(0, { cards: { ore: 12, gear: { pupag0: 108, pupag2: 103 } } })), 0);
+  assert.equal(b.cards.ore, 40);
+  assert.deepEqual(b.cards.gear, { pupag0: 112, pupag1: 205, pupag2: 103 });
+});
+
 test("merge: the wing compensation, once given, stays given", () => {
   const a = mergeSave(null, cleanSave(device(0, { cards: { wingComp: true, wings: 9 } })), 0);
   const b = mergeSave(a, cleanSave(device(0, { cards: { wings: 3 } })), 0);

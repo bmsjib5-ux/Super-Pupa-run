@@ -1290,11 +1290,23 @@
     };
   }
   const cardStats = (id, lv) => statsOf(CARDS[id], lv, false);
+  // Stats with stars, a costume (bonus) and gear (see gearBonus) added.
+  function boosted(stats, bonus = 0, gear = null) {
+    const out = { ...stats };
+    for (const key of ["hp", "atk", "def"]) out[key] = Math.round(stats[key] * (1 + bonus + (gear?.[key] || 0)));
+    out.spd = Math.round(stats.spd + (gear?.spd || 0));
+    out.crit = stats.crit + (gear?.crit || 0);
+    return out;
+  }
   // A rough strength number for the team screen.
-  // atkBonus: extra attack share, as from bonds (see bondAtk).
-  const power = (id, lv, atkBonus = 0) => { const s = cardStats(id, lv); return Math.round(s.hp / 10 + s.atk * (1 + atkBonus) * 2 + s.def * 1.5 + s.spd / 2); };
-  // A team's strength with its bonds counted.
-  const teamPowerOf = (team) => { const ids = team.map(t => t.id); return team.reduce((sum, t) => sum + power(t.id, t.lv, bondAtk(ids, t.id)), 0); };
+  // atkBonus: extra attack share, as from bonds (see bondAtk); bonus and
+  // gear as for boosted. Gear's critical chance counts as some attack.
+  const power = (id, lv, atkBonus = 0, bonus = 0, gear = null) => {
+    const s = boosted(cardStats(id, lv), bonus, gear);
+    return Math.round(s.hp / 10 + s.atk * (1 + atkBonus + (gear?.crit || 0)) * 2 + s.def * 1.5 + s.spd / 2);
+  };
+  // A team's strength with its bonds counted; t: { id, lv, bonus?, gear? }.
+  const teamPowerOf = (team) => { const ids = team.map(t => t.id); return team.reduce((sum, t) => sum + power(t.id, t.lv, bondAtk(ids, t.id), t.bonus || 0, t.gear), 0); };
 
   // Same seed, same battle (mulberry32).
   function random(b) {
@@ -1304,12 +1316,12 @@
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  // bonus: a costume's extra share of hp, attack and defence.
-  function makeUnit(side, slot, id, lv, row, bonus = 0) {
+  // bonus: the extra share of hp, attack and defence from stars and a
+  // costume; gear: what the card's gear adds (see gearBonus).
+  function makeUnit(side, slot, id, lv, row, bonus = 0, gear = null) {
     const foe = side === "foe";
     const def = foe ? FOES[id] : CARDS[id];
-    const stats = statsOf(def, lv, foe);
-    for (const key of ["hp", "atk", "def"]) stats[key] = Math.round(stats[key] * (1 + bonus));
+    const stats = boosted(statsOf(def, lv, foe), bonus, gear);
     return {
       side, slot, id, lv, name: def.name, role: def.role, boss: Boolean(def.boss),
       row: row || (slot < FRONT_SLOTS ? "front" : "back"),
@@ -1342,7 +1354,7 @@
     };
     for (let slot = 0; slot < team.length; slot++) {
       const entry = team[slot];
-      b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv, entry.row, entry.bonus || 0) : null;
+      b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv, entry.row, entry.bonus || 0, entry.gear) : null;
     }
     // bonds between the cards fielded together
     const ids = living(b.heroes).map(u => u.id);
@@ -1728,7 +1740,7 @@
   const IDLE_HOURS = 8;
   function idleReward(best, ms) {
     const hours = Math.max(0, Math.min(IDLE_HOURS, ms / 3600000));
-    return { hours, coins: Math.floor(hours * (30 + 12 * best)), xp: Math.floor(hours * (40 + 15 * best)) };
+    return { hours, coins: Math.floor(hours * (30 + 12 * best)), xp: Math.floor(hours * (40 + 15 * best)), ore: Math.floor(hours * (1 + best / 40)) };
   }
 
   // Login rewards, one a day in a cycle of seven.
@@ -1762,7 +1774,7 @@
     return {
       num: n, arena: true, name: `ลานประลอง ชั้น ${n}`, lv: 1 + n,
       waves: [wave], boss: Boolean(boss), par: 99,
-      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2, wings: n % 5 === 0 ? 2 : 0
+      coins: 40 + 15 * n, repeat: 40 + 15 * n, xp: 20 + 8 * n, gems: n % 5 === 0 ? 50 : 15, dust: n % 5 === 0 ? 10 : 2, wings: n % 5 === 0 ? 2 : 0, ore: 4 + Math.floor(n / 4)
     };
   }
   // A tower floor: a boss (a great one every tenth floor) and its guards,
@@ -1795,7 +1807,8 @@
       num: n, tower: true, name: `หอคอย ชั้น ${n}`, lv, chapter: g, ...(zone && { zone: zone.name, scene: zone.scene }),
       waves: [wave], boss: true, par: 99,
       coins: 60 + 12 * n, repeat: 0, xp: 15 + 6 * n,
-      gems: great ? 120 : n % 5 === 0 ? 50 : 20, dust: great ? 15 : 5, wings: great ? 3 : n % 5 === 0 ? 1 : 0
+      gems: great ? 120 : n % 5 === 0 ? 50 : 20, dust: great ? 15 : 5, wings: great ? 3 : n % 5 === 0 ? 1 : 0,
+      ore: (great ? 2 : 1) * (6 + Math.floor(n / 5))
     };
   }
 
@@ -1806,12 +1819,12 @@
     const picked = (cards.arenaPick || []).filter(id => CARDS[id] && cards.units[id]).slice(0, ARENA_SIZE);
     if (picked.length) {
       const chosen = (cards.arenaFront || []).filter(id => picked.includes(id)).slice(0, ARENA_FRONT);
-      return picked.map(id => ({ id, lv: cards.units[id], row: chosen.includes(id) ? "front" : "back", bonus: cardBonus(cards, id) }));
+      return picked.map(id => ({ id, lv: cards.units[id], row: chosen.includes(id) ? "front" : "back", bonus: cardBonus(cards, id), gear: gearBonus(cards, id) }));
     }
     const ids = Object.keys(cards.units).filter(id => CARDS[id]).sort((a, b) => power(b, cards.units[b]) * (1 + cardBonus(cards, b)) - power(a, cards.units[a]) * (1 + cardBonus(cards, a))).slice(0, ARENA_SIZE);
     const sturdy = (id) => ({ defense: 0, balance: 1, attack: 2, magic: 3, support: 4 })[CARDS[id].role];
     const front = [...ids].sort((a, b) => sturdy(a) - sturdy(b)).slice(0, Math.min(ARENA_FRONT, Math.ceil(ids.length / 2)));
-    return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cardBonus(cards, id) }));
+    return ids.map(id => ({ id, lv: cards.units[id], row: front.includes(id) ? "front" : "back", bonus: cardBonus(cards, id), gear: gearBonus(cards, id) }));
   }
 
   // ---- Daily dungeons: one clear a day each ----
@@ -1835,7 +1848,7 @@
       num: 0, dungeon: kind, name: d.name, lv, waves: d.waves.map(parseWave), par: 99, boss: kind === "coin",
       coins: kind === "coin" ? 120 + 30 * best : 20 + 5 * best,
       xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best,
-      gems: 20, dust: 5, wings: 1
+      gems: 20, dust: 5, wings: 1, ore: 15 + Math.floor(best / 8)
     };
   }
 
@@ -1891,6 +1904,68 @@
   // Battle bonus from stars and a worn costume.
   const awakeBonus = (n = 0) => Math.min(n, MAX_AWAKE) * AWAKE_BONUS + Math.max(0, n - MAX_AWAKE) * AWAKE2_BONUS;
   const cardBonus = (cards, id) => awakeBonus(cards.awake?.[id] || 0) + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
+
+  // ---- Gear ----
+  // Six pieces on every card, enhanced a level at a time with ore and coins
+  // up to the cap of their tier, then reforged into the next tier (ore, star
+  // dust and coins), which raises the cap and what each level gives.
+  // cards.gear[gearKey(id, slot)] = tier * 100 + level (none: tier 1, level 0).
+  const GEAR_SLOTS = [
+    { key: "weapon", name: "อาวุธ", stat: "atk", per: .004, label: "โจมตี" },
+    { key: "helm", name: "หมวก", stat: "hp", per: .004, label: "พลังชีวิต" },
+    { key: "armor", name: "เกราะ", stat: "def", per: .004, label: "ป้องกัน" },
+    { key: "boots", name: "รองเท้า", stat: "spd", per: .2, label: "ความเร็ว" },
+    { key: "ring", name: "แหวน", stat: "crit", per: .0013, label: "คริติคอล" },
+    { key: "amulet", name: "สร้อย", stat: "all", per: .002, label: "พลังชีวิต โจมตี ป้องกัน" }
+  ];
+  const GEAR_TIERS = [
+    { name: "ธรรมดา", mult: 1 }, { name: "ดี", mult: 1.1 }, { name: "หายาก", mult: 1.2 }, { name: "มหากาพย์", mult: 1.35 }, { name: "ตำนาน", mult: 1.5 }
+  ];
+  const GEAR_STEP = 10; // levels a tier opens
+  const ORE_GIFT = 300; // ore for a save from before gear
+  const gearKey = (id, n) => `${id}g${n}`;
+  function gearOf(cards, id, n) {
+    const v = Math.floor(Number(cards.gear?.[gearKey(id, n)]) || 0);
+    const tier = Math.max(1, Math.min(GEAR_TIERS.length, Math.floor(v / 100) || 1));
+    return { tier, lv: Math.max(0, Math.min(tier * GEAR_STEP, v % 100)), cap: tier * GEAR_STEP };
+  }
+  // what one piece gives, as a share (hp, atk, def, crit) or speed points
+  const gearValue = (n, tier, lv) => lv * GEAR_SLOTS[n].per * GEAR_TIERS[tier - 1].mult;
+  function gearBonus(cards, id) {
+    const out = { hp: 0, atk: 0, def: 0, spd: 0, crit: 0 };
+    GEAR_SLOTS.forEach((slot, n) => {
+      const g = gearOf(cards, id, n), v = gearValue(n, g.tier, g.lv);
+      if (slot.stat === "all") { out.hp += v; out.atk += v; out.def += v; } else out[slot.stat] += v;
+    });
+    return out;
+  }
+  // a card's own strength with stars, costume and gear
+  const cardPower = (cards, id) => power(id, cards.units[id] || 1, 0, cardBonus(cards, id), gearBonus(cards, id));
+  const enhanceCost = (lv, tier) => ({ coins: 50 + 4 * lv * tier, ore: 1 + Math.floor(lv / 10) });
+  const reforgeCost = (tier) => ({ coins: 800 * tier, ore: 10 * tier, dust: 2 * tier });
+  // Returns the coins left, or null when it cannot (not owned, at the cap,
+  // short of ore or coins).
+  function enhanceGear(cards, id, n, coins) {
+    if (!cards.units?.[id] || !GEAR_SLOTS[n]) return null;
+    const g = gearOf(cards, id, n), cost = enhanceCost(g.lv, g.tier);
+    if (g.lv >= g.cap || (cards.ore || 0) < cost.ore || coins < cost.coins) return null;
+    cards.ore -= cost.ore;
+    cards.gear = cards.gear || {};
+    cards.gear[gearKey(id, n)] = g.tier * 100 + g.lv + 1;
+    return coins - cost.coins;
+  }
+  // reforging needs the piece at its tier's cap and keeps its level
+  function reforgeGear(cards, id, n, coins) {
+    if (!cards.units?.[id] || !GEAR_SLOTS[n]) return null;
+    const g = gearOf(cards, id, n), cost = reforgeCost(g.tier);
+    if (g.tier >= GEAR_TIERS.length || g.lv < g.cap || (cards.ore || 0) < cost.ore || (cards.dust || 0) < cost.dust || coins < cost.coins) return null;
+    cards.ore -= cost.ore; cards.dust -= cost.dust;
+    cards.gear = cards.gear || {};
+    cards.gear[gearKey(id, n)] = (g.tier + 1) * 100 + g.lv;
+    return coins - cost.coins;
+  }
+  // ore for a stage won: more the first time, more the further the stage
+  const stageOre = (stage, first) => (first ? 4 + Math.ceil(stage.num / 8) : 1 + Math.floor(stage.num / 40));
   const byRarity = (n) => CARD_IDS.filter(id => CARDS[id].rarity === n);
   // state: { pity, pity6 } (pulls since the last S or SSS, and since the
   // last SSS); rnd: () => 0..1.
@@ -1964,7 +2039,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, boosted, GEAR_SLOTS, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearValue, gearBonus, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });
