@@ -169,9 +169,10 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
 
 // The one-time gem gift, given by the server so an account gets it once
 // however many devices it plays on: 10000 gems for every player. The id
-// sorts after the earlier gift's ("gacha-2026-10"), so merges keep it.
+// sorts after the earlier gifts' ("gacha-2026-10", "gift-2026-10-13"), so
+// merges keep it.
 // Changes `save` and returns the gems given (0 if already given).
-export const GIFT_ID = "gift-2026-10-13";
+export const GIFT_ID = "gift-2026-10-16";
 export const GIFT_GEMS = 10000;
 export function grantGift(save) {
   if (!save || save.gift === GIFT_ID) return 0;
