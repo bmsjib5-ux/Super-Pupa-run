@@ -272,6 +272,20 @@
       const key = E.gearKey(id, n), v = Math.floor(Number(raw.gear?.[key]) || 0);
       if (v > 100) gear[key] = Math.min(E.GEAR_TIERS.length * 100 + E.GEAR_TIERS.length * E.GEAR_STEP, v);
     });
+    // items from battles (see E.itemParts), worn only by an owned card, one
+    // a slot; gone: items broken down, so a merge does not bring them back
+    const items = [], worn = new Set();
+    for (const it of Array.isArray(raw.items) ? raw.items : []) {
+      if (!it || typeof it.i !== "string" || !/^[a-z0-9]{1,12}$/.test(it.i) || items.length >= E.BAG_SIZE + 30 || items.some(other => other.i === it.i)) continue;
+      const sl = Math.floor(Number(it.s)), r = Math.floor(Number(it.r)), m = Math.floor(Number(it.m));
+      if (!(sl >= 0 && sl < E.GEAR_SLOTS.length && r >= 1 && r <= E.ITEM_RARITY.length && m >= 0 && m <= 100)) continue;
+      const x = (Array.isArray(it.x) ? it.x : []).map(Number).filter(v => Number.isInteger(v) && v >= 0 && Math.floor(v / 1000) < E.ITEM_EXTRAS.length && v % 1000 <= 100).slice(0, r - 1);
+      let o = typeof it.o === "string" && units[it.o] ? it.o : "";
+      if (o && worn.has(`${o}:${sl}`)) o = "";
+      if (o) worn.add(`${o}:${sl}`);
+      items.push({ i: it.i, s: sl, r, m, x, o });
+    }
+    const gone = (Array.isArray(raw.gone) ? raw.gone : []).filter(v => typeof v === "string" && /^[a-z0-9]{1,12}$/.test(v)).slice(-300);
     // star-up wings; saves from before wings start with a gift of 3
     let wings = raw.wings == null ? 3 : Math.max(0, Math.floor(Number(raw.wings) || 0));
     // once per account: the wings boss stages and arena floors cleared
@@ -284,7 +298,7 @@
     const arenaFront = [...new Set((Array.isArray(raw.arenaFront) ? raw.arenaFront : []).filter(id => arenaPick.includes(id)))].slice(0, E.ARENA_FRONT);
     const achv = [...new Set((Array.isArray(raw.achv) ? raw.achv : []).filter(id => typeof id === "string"))];
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -302,6 +316,37 @@
     if (empty > 0) row.append(el("i", null, "★".repeat(empty)));
     return row;
   };
+  // ---- Items from battles ----
+  const newItemId = () => `${Date.now().toString(36).slice(-5)}${Math.random().toString(36).slice(2, 6)}`.replace(/[^a-z0-9]/g, "0");
+  const itemName = (item) => `${E.GEAR_SLOTS[item.s].name}${E.ITEM_RARITY[item.r - 1].name}`;
+  // count items with luck (see E.rollItem); with the bag full, an item
+  // turns straight into ore
+  function grantLoot(count, luck = 0, minRarity = 1) {
+    const c = cards(), loot = { items: [], ore: 0 };
+    c.items = c.items || [];
+    for (let k = 0; k < count; k++) {
+      const item = { i: newItemId(), ...E.rollItem(Math.random, luck, minRarity), o: "" };
+      if (c.items.length >= E.BAG_SIZE) loot.ore += E.SALVAGE_ORE[item.r - 1];
+      else { c.items.push(item); loot.items.push(item); }
+    }
+    c.ore += loot.ore;
+    return loot;
+  }
+  // the items won, for a result card
+  function lootRow(loot) {
+    const row = el("div", "loot-row");
+    for (const item of loot.items) {
+      const one = el("span", `loot-item r${item.r}`);
+      const icon = el("span", `gear-icon t${item.r}`), img = el("img");
+      img.src = `assets/gear-${E.GEAR_SLOTS[item.s].key}.webp`; img.alt = "";
+      icon.append(img);
+      one.append(icon, el("small", null, itemName(item)));
+      row.append(one);
+    }
+    if (loot.ore) row.append(el("small", "loot-full", `กระเป๋าเต็ม · ย่อยเป็น ⛏ ${loot.ore}`));
+    return row;
+  }
+  const hasLoot = (loot) => Boolean(loot && (loot.items.length || loot.ore));
   const isCleared = (num) => (cards().stars[num] || 0) > 0;
   const isOpen = (num) => num === 1 || isCleared(num - 1);
   const store = () => game().writeSave();
@@ -428,7 +473,7 @@
     const foe = el("span", "idle-foe"); foe.append(portrait(["walker", "bat", "hopper", "crab", "jelly"][Math.floor(Date.now() / 60000) % 5])); scene.append(foe);
     const text = el("div", "idle-text");
     const h = Math.floor(got.hours), m = Math.floor((got.hours - h) * 60);
-    text.append(el("b", null, "⚔ ล่าอัตโนมัติ"), el("span", null, `สะสม ${h} ชม. ${m} นาที${got.hours >= E.IDLE_HOURS ? " (เต็มแล้ว)" : ` / ${E.IDLE_HOURS} ชม.`}`), el("span", "idle-loot", `● ${fmt(got.coins)} · EXP ${fmt(got.xp)} · ⛏ ${got.ore}`));
+    text.append(el("b", null, "⚔ ล่าอัตโนมัติ"), el("span", null, `สะสม ${h} ชม. ${m} นาที${got.hours >= E.IDLE_HOURS ? " (เต็มแล้ว)" : ` / ${E.IDLE_HOURS} ชม.`}`), el("span", "idle-loot", `● ${fmt(got.coins)} · EXP ${fmt(got.xp)} · ⛏ ${got.ore}${got.hours >= 2 ? ` · 🎁 ${Math.floor(got.hours / 2)}` : ""}`));
     const claim = button("shop-buy idle-claim", "รับรางวัล", () => claimIdle());
     claim.disabled = got.coins < 1 && got.xp < 1;
     box.append(scene, text, claim);
@@ -441,12 +486,13 @@
     questTick("idle");
     save().coins += got.coins;
     c.ore += got.ore;
+    const loot = grantLoot(Math.floor(got.hours / 2), Math.min(2, bestStage() / 80));
     const ups = shareXp(c.team.filter(Boolean), got.xp);
     store();
     [523, 659, 784, 1047].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
     announce(`รับ ${got.coins} เหรียญ และ EXP ${got.xp}${ups.length ? ` เลเวลอัป: ${ups.join(", ")}` : ""}`);
     showHub();
-    openSheet([el("h3", "sheet-title", "รางวัลล่าอัตโนมัติ"), el("p", "sheet-reward", `● ${fmt(got.coins)} · ⛏ แร่ ${got.ore} · EXP ${fmt(got.xp)} ให้การ์ดทุกใบในทีม`), ...(ups.length ? [el("p", "sheet-passive", `เลเวลอัป! ${ups.join(" · ")}`)] : []), el("p", "sheet-goals", "ทีมจะล่าต่อเองแม้ปิดเกม ผ่านด่านไกลขึ้น ได้รางวัลมากขึ้น")]);
+    openSheet([el("h3", "sheet-title", "รางวัลล่าอัตโนมัติ"), el("p", "sheet-reward", `● ${fmt(got.coins)} · ⛏ แร่ ${got.ore} · EXP ${fmt(got.xp)} ให้การ์ดทุกใบในทีม`), ...(hasLoot(loot) ? [lootRow(loot)] : []), ...(ups.length ? [el("p", "sheet-passive", `เลเวลอัป! ${ups.join(" · ")}`)] : []), el("p", "sheet-goals", "ทีมจะล่าต่อเองแม้ปิดเกม ผ่านด่านไกลขึ้น ได้รางวัลมากขึ้น")]);
   }
 
   // ---- Login rewards ----
@@ -589,6 +635,7 @@
   }
   function finishDungeon(v) {
     const b = v.state, stage = v.stage, c = cards(), won = b.result === "won";
+    let loot = null;
     const xp = won ? stage.xp : E.stageXp({ num: 1 }, false);
     const ups = shareXp(c.team.filter(Boolean), xp);
     if (won) {
@@ -600,12 +647,14 @@
       cards().dust += stage.dust || 0;
       cards().wings += stage.wings || 0;
       cards().ore += stage.ore || 0;
+      loot = grantLoot(2, Math.min(2, bestStage() / 80));
     }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? E.DUNGEONS[stage.dungeon].icon : "☾"), el("h2", null, won ? "ผ่านด่านประจำวัน!" : "พ่ายแพ้…"));
     box.append(el("p", "end-reward battle-reward", won ? `ได้รับ 💎 ${stage.gems} · ✧ ผลึกดาว ${stage.dust} · 🪽 ${stage.wings} · ⛏ แร่ ${stage.ore} · ● ${fmt(stage.coins)} · EXP ${fmt(xp)} ต่อการ์ด` : `ได้ EXP ${xp} ต่อการ์ด · ลองใหม่ได้วันนี้`));
+    if (hasLoot(loot)) box.append(lootRow(loot));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     if (won) box.append(el("p", null, `ด่านนี้รับรางวัลได้อีกครั้งพรุ่งนี้ (อีก ${untilMidnight()})`));
     const actions = el("div", "title-actions");
@@ -1257,13 +1306,77 @@
     const g = E.gearOf(c, id, n), slot = E.GEAR_SLOTS[n];
     const pick = button(`gear-slot${n === gearSlot ? " is-on" : ""}`, null, () => {
       gearSlot = n;
-      if (sheetTab !== "reforge") sheetTab = "enhance";
+      if (sheetTab !== "enhance" && sheetTab !== "reforge") sheetTab = "item";
       tone(587, .04, "triangle", .03);
       cardSheet(id);
     }, `${slot.name} ขั้น${E.GEAR_TIERS[g.tier - 1].name} เลเวล ${g.lv}/${g.cap}`);
     pick.append(gearIcon(n, g.tier, g.lv));
+    const worn = wornItem(c, id, n);
+    if (worn) pick.append(el("i", `gear-gem t${worn.r}`));
     if (gearCanReforge(c, id, n)) pick.append(el("i", "codex-dot"));
     return pick;
+  }
+  // ---- Items in the card book ----
+  const wornItem = (c, id, n) => (c.items || []).find(it => it.o === id && it.s === n) || null;
+  const statText = (stat, v) => `${E.GEAR_STAT_NAMES[stat]} ${stat === "spd" ? `+${v.toFixed(1)}` : `+${pct(v)}`}`;
+  // the card's power were it to wear this item
+  const powerWith = (c, id, item) => E.cardPower({ ...c, items: c.items.map(it => (it === item ? { ...it, o: id } : it.o === id && it.s === item.s ? { ...it, o: "" } : it)) }, id);
+  function itemTile(item, actions = [], note = null) {
+    const row = el("div", `item-row t${item.r}`);
+    const icon = el("span", `gear-icon t${item.r}`), img = el("img");
+    img.src = gearArt(item.s); img.alt = ""; img.draggable = false;
+    icon.append(img);
+    const info = el("div", "item-info"), parts = E.itemParts(item);
+    info.append(el("b", null, itemName(item)), el("span", "item-main", parts.main.map(([stat, v]) => statText(stat, v)).join(" · ")));
+    if (parts.extras.length) info.append(el("span", "item-extra", parts.extras.map(([stat, v]) => statText(stat, v)).join(" · ")));
+    if (note) info.append(note);
+    const act = el("div", "item-acts");
+    act.append(...actions);
+    row.append(icon, info, act);
+    return row;
+  }
+  function salvage(ids, id) {
+    const c = cards(), ore = E.salvageItems(c, ids);
+    if (!ore) return;
+    c.gone = [...(c.gone || []), ...ids].slice(-300);
+    store();
+    [392, 330].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
+    announce(`ย่อยไอเทม ได้แร่ ${ore}`);
+    cardSheet(id);
+  }
+  // the picked slot: the item worn there, and the bag's items for it
+  function itemPane(c, id) {
+    const n = gearSlot, slot = E.GEAR_SLOTS[n], g = E.gearOf(c, id, n);
+    const box = el("div", "gear-pane item-pane");
+    const worn = wornItem(c, id, n);
+    box.append(el("p", "item-title", `ช่อง${slot.name} · เสริมแกร่ง Lv ${g.lv}/${g.cap} (${gearText(n, g.tier, g.lv)})`));
+    if (worn) box.append(itemTile(worn, [button("codex-chip", "ถอด", () => { E.unequipItem(c, worn.i); store(); tone(440, .08, "triangle", .05); cardSheet(id); }, `ถอด${itemName(worn)}`)], el("small", "item-on", "ใส่อยู่")));
+    else box.append(el("p", "gear-note", c.units[id] ? `ยังไม่ได้ใส่${slot.name} · ไอเทมดรอปจากการชนะด่าน หอคอย ลานประลอง ด่านประจำวัน และล่าอัตโนมัติ` : "ได้การ์ดนี้ก่อน จึงใส่ไอเทมได้"));
+    const items = c.items || [];
+    const bag = items.filter(it => it.s === n && it !== worn).sort((a, b) => E.itemScore(b) - E.itemScore(a));
+    box.append(el("p", "item-title", `ในกระเป๋า: ${slot.name} ${bag.length} ชิ้น · กระเป๋า ${items.length}/${E.BAG_SIZE}`));
+    const now = c.units[id] ? E.cardPower(c, id) : 0;
+    const list = el("div", "item-list");
+    for (const item of bag.slice(0, 40)) {
+      const wear = button("codex-chip is-gold", "ใส่", () => {
+        if (!E.equipItem(c, item.i, id)) return;
+        store(); [659, 880].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
+        announce(`ใส่${itemName(item)}ให้${E.CARDS[id].name}`);
+        cardSheet(id);
+      }, `ใส่${itemName(item)}`);
+      wear.disabled = !c.units[id];
+      const acts = [wear];
+      if (!item.o) acts.push(button("codex-chip", `ย่อย ⛏${E.SALVAGE_ORE[item.r - 1]}`, () => salvage([item.i], id), `ย่อย${itemName(item)}เป็นแร่ ${E.SALVAGE_ORE[item.r - 1]}`));
+      const note = el("small", "item-note");
+      if (c.units[id]) { const d = powerWith(c, id, item) - now; note.append(el("em", d >= 0 ? "item-up" : "item-down", `พลัง ${d >= 0 ? "+" : ""}${fmt(d)}`)); }
+      if (item.o) note.append(` · ใส่อยู่กับ${E.CARDS[item.o].name}`);
+      list.append(itemTile(item, acts, note));
+    }
+    if (!bag.length) list.append(el("p", "gear-total", `ยังไม่มี${slot.name}ในกระเป๋า`));
+    box.append(list);
+    const junk = items.filter(it => !it.o && it.r <= 2);
+    if (junk.length) box.append(button("codex-btn is-small item-junk", `ย่อยไอเทมธรรมดาและดีที่ไม่ได้ใส่ ${junk.length} ชิ้น · ⛏ ${junk.reduce((sum, it) => sum + E.SALVAGE_ORE[it.r - 1], 0)}`, () => salvage(junk.map(it => it.i), id)));
+    return box;
   }
   // the picked piece: enhance it a level at a time, up to its tier's cap
   function gearPane(c, id) {
@@ -1444,7 +1557,7 @@
     info.append(lvRow, pair, xpRow, table);
     if (def.passive) info.append(el("p", "codex-passive", `ติดตัว · ${def.passive.text}`));
     // the rest sits behind tabs, one at a time, so the sheet fits the screen
-    const panes = [["skills", "สกิล", () => def.skills.map((skill, n) => {
+    const panes = [["item", "ไอเทม", () => [itemPane(c, id)]], ["skills", "สกิล", () => def.skills.map((skill, n) => {
       const row = el("div", "sheet-skill");
       row.append(el("span", "sheet-skill-icon", skill.icon), el("b", null, `สกิล ${n + 1} · ${skill.name}`), el("p", null, E.describe(skill)));
       return row;
@@ -2019,7 +2132,7 @@
     if (stage.dungeon) { finishDungeon(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
-    let coins = 0, gems = 0, ore = 0;
+    let coins = 0, gems = 0, ore = 0, loot = null;
     const xp = E.stageXp(stage, won);
     const ups = shareXp(c.team.filter(Boolean), xp);
     store();
@@ -2029,6 +2142,8 @@
       if (first) { gems = stage.gems; addGems(gems); c.dust += stage.dust || 0; c.wings += stage.wings || 0; }
       ore = E.stageOre(stage, first);
       c.ore += ore;
+      const want = E.stageLoot(stage, first);
+      loot = grantLoot(want.count + (Math.random() < want.chance ? 1 : 0), want.luck);
       c.stars[stage.num] = Math.max(c.stars[stage.num] || 0, got);
       questTick("win");
       save().coins += coins;
@@ -2050,6 +2165,7 @@
       }
       box.append(goals);
       box.append(el("p", "end-reward battle-reward", `ได้รับ ${gems ? `💎 ${gems} · ` : ""}${first && stage.dust ? `✧ ผลึกดาว ${stage.dust} · ` : ""}${first && stage.wings ? `🪽 ${stage.wings} · ` : ""}⛏ แร่ ${ore} · ● ${fmt(coins)}${c.team.includes("pupa") ? " (รวมโบนัส Pupa)" : ""} · EXP ${xp} ต่อการ์ด`));
+      if (hasLoot(loot)) box.append(lootRow(loot));
       if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
       if (gems) [659, 784, 988, 1319].forEach((note, n) => tone(note, .14, "triangle", .06, .3 + n * .09));
     } else box.append(el("p", null, `${b.turn >= E.MAX_TURNS ? `⏱ หมดเวลา ${E.MAX_TURNS} เทิร์น · ` : ""}ได้ EXP ${xp} ต่อการ์ด${ups.length ? ` · เลเวลอัป! ${ups.join(" · ")}` : ""} · ลองอัปเลเวลการ์ด เปลี่ยนทีม หรือเรียงลำดับสกิลใหม่ แล้วมาลองอีกครั้ง`));
@@ -2098,19 +2214,25 @@
   }
   function finishTower(v) {
     const b = v.state, floor = v.stage, c = cards(), won = b.result === "won";
+    let loot = null;
     const first = won && floor.num > c.tower;
     const xp = Math.round(floor.xp * (won ? 1 : .3));
     const ups = shareXp(c.team.filter(Boolean), xp);
     if (won) {
       questTick("win");
       save().coins += first ? floor.coins : Math.round(floor.coins / 4);
-      if (first) { addGems(floor.gems); c.dust += floor.dust; c.wings += floor.wings; c.ore += floor.ore; c.tower = floor.num; }
+      if (first) {
+        addGems(floor.gems); c.dust += floor.dust; c.wings += floor.wings; c.ore += floor.ore; c.tower = floor.num;
+        // a great boss drops two, rare or better
+        loot = grantLoot(floor.num % 10 === 0 ? 2 : 1, Math.min(2.5, .5 + floor.num / 75), floor.num % 10 === 0 ? 3 : 1);
+      }
     }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? "🗼" : "☾"), el("h2", null, won ? `ผ่านหอคอยชั้น ${floor.num}!` : "พ่ายแพ้…"));
     box.append(el("p", "end-reward battle-reward", won ? (first ? `ได้รับ 💎 ${floor.gems} · ✧ ${floor.dust}${floor.wings ? ` · 🪽 ${floor.wings}` : ""} · ⛏ แร่ ${floor.ore} · ● ${fmt(floor.coins)} · EXP ${xp} ต่อการ์ด` : `ได้รับ ● ${fmt(Math.round(floor.coins / 4))} · EXP ${xp} ต่อการ์ด (รางวัลครั้งแรกรับไปแล้ว)`) : `ได้ EXP ${xp} ต่อการ์ด · อัปการ์ดหรือเปลี่ยนทีมแล้วลองใหม่`));
+    if (hasLoot(loot)) box.append(lootRow(loot));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     const actions = el("div", "title-actions");
     if (won && floor.num < E.TOWER_FLOORS) actions.append(button("primary-button", `ชั้น ${floor.num + 1} ▶`, () => { battle = null; startBattle(E.towerFloor(floor.num + 1)); }));
@@ -2130,12 +2252,17 @@
     const xp = Math.round(tier.xp * (won ? 1 : .3));
     const ups = shareXp(b.heroes.filter(Boolean).map(u => u.id), xp);
     questTick("arena"); if (won) questTick("win");
-    if (won) { save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.wings += tier.wings || 0; c.ore += tier.ore || 0; c.arena = Math.max(c.arena, tier.num + 1); }
+    let loot = null;
+    if (won) {
+      save().coins += tier.coins; addGems(tier.gems); c.dust += tier.dust || 0; c.wings += tier.wings || 0; c.ore += tier.ore || 0; c.arena = Math.max(c.arena, tier.num + 1);
+      loot = grantLoot(1, Math.min(2, tier.num / 40), tier.boss ? 2 : 1);
+    }
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card");
     box.append(el("span", "moon-icon", won ? "✦" : "☾"), el("h2", null, won ? `ผ่านชั้น ${tier.num}!` : "พ่ายแพ้…"));
     box.append(el("p", "end-reward battle-reward", `${won ? `ได้รับ 💎 ${tier.gems} · ✧ ${tier.dust}${tier.wings ? ` · 🪽 ${tier.wings}` : ""} · ⛏ แร่ ${tier.ore} · ● ${fmt(tier.coins)} · ` : ""}EXP ${xp} ต่อการ์ด`));
+    if (hasLoot(loot)) box.append(lootRow(loot));
     if (ups.length) box.append(el("p", "battle-ups", `เลเวลอัป! ${ups.join(" · ")}`));
     const actions = el("div", "title-actions");
     if (won) actions.append(button("primary-button", `ชั้น ${tier.num + 1} ▶`, () => { battle = null; startBattle(E.arenaTier(tier.num + 1)); }));

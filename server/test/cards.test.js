@@ -246,6 +246,35 @@ test("cards: gear is enhanced to its tier's cap, reforged, and adds to the card 
   assert.ok(E.cardPower(c, "chantra") > E.power("chantra", 40));
 });
 
+test("cards: items drop with random stats, are worn one a slot and broken down into ore", () => {
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 200; k++) {
+    const item = E.rollItem(rnd, 1);
+    assert.ok(item.s >= 0 && item.s < E.GEAR_SLOTS.length && item.r >= 1 && item.r <= 5 && item.m >= 0 && item.m <= 100);
+    assert.equal(item.x.length, item.r - 1); // rarer items have more extra stats
+    assert.equal(new Set(item.x.map(x => Math.floor(x / 1000))).size, item.x.length); // no stat twice
+  }
+  assert.ok(E.rollItem(rnd, 0, 4).r >= 4); // a floor for bosses
+  // luck makes rare items more common
+  const rare = (luck) => { let n = 0; for (let k = 0; k < 2000; k++) if (E.rollItem(rnd, luck).r >= 4) n++; return n; };
+  assert.ok(rare(2) > rare(0) * 2);
+  const c = { units: { pupa: 10, jibjib: 10 }, ore: 0, items: [
+    { i: "a", s: 0, r: 5, m: 100, x: [1100], o: "" }, { i: "b", s: 0, r: 1, m: 0, x: [], o: "" }, { i: "c", s: 3, r: 2, m: 50, x: [4050], o: "" }
+  ] };
+  assert.ok(E.itemScore(c.items[0]) > E.itemScore(c.items[1]));
+  assert.ok(E.equipItem(c, "a", "pupa"));
+  assert.ok(E.gearBonus(c, "pupa").atk > 0);
+  assert.ok(E.equipItem(c, "b", "pupa")); // the same slot: "a" comes off
+  assert.deepEqual(c.items.map(it => it.o), ["", "pupa", ""]);
+  assert.ok(E.equipItem(c, "b", "jibjib")); // worn by another card: it moves
+  assert.deepEqual(c.items.map(it => it.o), ["", "jibjib", ""]);
+  assert.equal(E.equipItem(c, "a", "pangji"), false); // not owned
+  assert.equal(E.salvageItems(c, ["a", "b", "c"]), E.SALVAGE_ORE[4] + E.SALVAGE_ORE[1]); // the worn one stays
+  assert.deepEqual(c.items.map(it => it.i), ["b"]);
+  assert.equal(c.ore, E.SALVAGE_ORE[4] + E.SALVAGE_ORE[1]);
+});
+
 test("cards: bonds raise the attack of members fielded together", () => {
   const stage = E.STAGES[0];
   const solo = E.createBattle({ team: [{ id: "chada", lv: 10 }, { id: "pupa", lv: 10 }], stage, seed: 1 });

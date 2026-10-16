@@ -221,6 +221,24 @@ test("merge: gear keeps each piece's higher tier and level, ore the higher count
   assert.deepEqual(b.cards.gear, { pupag0: 112, pupag1: 205, pupag2: 103 });
 });
 
+test("merge: items from both copies, none broken down on either, one worn a slot", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { pupa: 5, jibjib: 5 }, items: [
+    { i: "aaa1", s: 0, r: 3, m: 50, x: [1020, 3040], o: "pupa" },
+    { i: "aaa2", s: 1, r: 1, m: 10, x: [], o: "" },
+    { i: "bad!", s: 0, r: 3, m: 50, x: [], o: "" },
+    { i: "aaa3", s: 9, r: 3, m: 50, x: [], o: "" }
+  ] } })), 0);
+  assert.deepEqual(a.cards.items.map(it => it.i), ["aaa1", "aaa2"]);
+  // the other device broke aaa2 down and found a weapon of its own for Pupa
+  const b = mergeSave(a, cleanSave(device(0, { cards: { units: { pupa: 5, jibjib: 5 }, gone: ["aaa2"], items: [
+    { i: "aaa1", s: 0, r: 3, m: 50, x: [1020, 3040], o: "" },
+    { i: "bbb1", s: 0, r: 5, m: 99, x: [1, 1002, 2003, 3004, 4005], o: "pupa" }
+  ] } })), 0);
+  assert.deepEqual(b.cards.items.map(it => `${it.i}:${it.o}`).sort(), ["aaa1:", "bbb1:pupa"]);
+  assert.deepEqual(b.cards.gone, ["aaa2"]);
+  assert.equal(b.cards.items.find(it => it.i === "bbb1").x.length, 4); // rarity 5: four extras at most
+});
+
 test("merge: the wing compensation, once given, stays given", () => {
   const a = mergeSave(null, cleanSave(device(0, { cards: { wingComp: true, wings: 9 } })), 0);
   const b = mergeSave(a, cleanSave(device(0, { cards: { wings: 3 } })), 0);

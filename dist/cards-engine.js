@@ -1912,14 +1912,15 @@
   // cards.gear[gearKey(id, slot)] = tier * 100 + level (none: tier 1, level 0).
   // gives: per level, a share of hp, atk, def or crit, or speed points.
   const GEAR_SLOTS = [
-    { key: "weapon", name: "อาวุธ", gives: { atk: .004 } },
-    { key: "helm", name: "หมวก", gives: { hp: .004 } },
-    { key: "armor", name: "เกราะ", gives: { def: .004 } },
-    { key: "boots", name: "รองเท้า", gives: { spd: .2 } },
-    { key: "ring", name: "แหวน", gives: { crit: .0013 } },
-    { key: "amulet", name: "สร้อย", gives: { hp: .002, atk: .002, def: .002 } },
-    { key: "gloves", name: "ถุงมือ", gives: { atk: .0014, crit: .0006 } },
-    { key: "cloak", name: "ผ้าคลุม", gives: { hp: .0014, def: .0014 } }
+    // main: what an item for this slot gives at the lowest rarity (see items)
+    { key: "weapon", name: "อาวุธ", gives: { atk: .004 }, main: { atk: .02 } },
+    { key: "helm", name: "หมวก", gives: { hp: .004 }, main: { hp: .02 } },
+    { key: "armor", name: "เกราะ", gives: { def: .004 }, main: { def: .02 } },
+    { key: "boots", name: "รองเท้า", gives: { spd: .2 }, main: { spd: 2 } },
+    { key: "ring", name: "แหวน", gives: { crit: .0013 }, main: { crit: .008 } },
+    { key: "amulet", name: "สร้อย", gives: { hp: .002, atk: .002, def: .002 }, main: { hp: .01, atk: .01, def: .01 } },
+    { key: "gloves", name: "ถุงมือ", gives: { atk: .0014, crit: .0006 }, main: { atk: .01, crit: .004 } },
+    { key: "cloak", name: "ผ้าคลุม", gives: { hp: .0014, def: .0014 }, main: { hp: .01, def: .01 } }
   ];
   const GEAR_STAT_NAMES = { hp: "พลังชีวิต", atk: "โจมตี", def: "ป้องกัน", spd: "ความเร็ว", crit: "คริติคอล" };
   const GEAR_TIERS = [
@@ -1935,14 +1936,80 @@
   }
   // what one piece gives at a tier and level, stat by stat
   const gearGives = (n, tier, lv) => Object.fromEntries(Object.entries(GEAR_SLOTS[n].gives).map(([stat, per]) => [stat, lv * per * GEAR_TIERS[tier - 1].mult]));
+  // the enhanced slots, plus the items the card wears
   function gearBonus(cards, id) {
     const out = { hp: 0, atk: 0, def: 0, spd: 0, crit: 0 };
     GEAR_SLOTS.forEach((_, n) => {
       const g = gearOf(cards, id, n);
       for (const [stat, v] of Object.entries(gearGives(n, g.tier, g.lv))) out[stat] += v;
     });
+    for (const item of cards.items || []) if (item.o === id) for (const [stat, v] of Object.entries(itemStats(item))) out[stat] += v;
     return out;
   }
+
+  // ---- Items ----
+  // Pieces that drop from battles, each for one slot, with a rarity, a main
+  // stat (by slot, rolled within a range) and as many random extra stats as
+  // its rarity allows. A card wears one in each slot, on top of the slot's
+  // enhancement. In cards.items: { i: id, s: slot, r: rarity 1-5, m: main
+  // roll 0-100, x: extra stats (stat * 1000 + roll 0-100), o: card worn by
+  // or "" }. An item no longer wanted turns into ore.
+  const ITEM_RARITY = [
+    { name: "ธรรมดา", weight: 50, mult: 1 }, { name: "ดี", weight: 30, mult: 1.5 }, { name: "หายาก", weight: 14, mult: 2 },
+    { name: "มหากาพย์", weight: 5, mult: 2.6 }, { name: "ตำนาน", weight: 1, mult: 3.3 }
+  ];
+  const ITEM_EXTRAS = ["hp", "atk", "def", "spd", "crit"];
+  const EXTRA_BASE = { hp: .008, atk: .008, def: .008, spd: .8, crit: .004 };
+  const BAG_SIZE = 120;
+  const SALVAGE_ORE = [2, 4, 8, 16, 32];
+  // an item's main stats and its extra ones, each [stat, value]
+  function itemParts(item) {
+    const mult = ITEM_RARITY[item.r - 1]?.mult || 1;
+    const main = Object.entries(GEAR_SLOTS[item.s]?.main || {}).map(([stat, v]) => [stat, v * mult * (.8 + .4 * item.m / 100)]);
+    const extras = (item.x || []).map(x => [ITEM_EXTRAS[Math.floor(x / 1000)], x % 1000]).filter(([stat]) => stat).map(([stat, roll]) => [stat, EXTRA_BASE[stat] * mult * (.6 + .8 * roll / 100)]);
+    return { main, extras };
+  }
+  function itemStats(item) {
+    const out = {}, parts = itemParts(item);
+    for (const [stat, v] of [...parts.main, ...parts.extras]) out[stat] = (out[stat] || 0) + v;
+    return out;
+  }
+  // a single number to rank items by (speed counts as about a hundredth)
+  const itemScore = (item) => Object.entries(itemStats(item)).reduce((sum, [stat, v]) => sum + v * (stat === "spd" ? .01 : stat === "crit" ? 2 : 1), 0);
+  // rnd: () => 0..1; luck (0 to about 2) moves the odds toward rarer items
+  function rollItem(rnd, luck = 0, minRarity = 1) {
+    const weights = ITEM_RARITY.map((t, n) => (n + 1 < minRarity ? 0 : t.weight * (1 + luck * n * .6)));
+    let roll = rnd() * weights.reduce((a, b) => a + b, 0), r = 1;
+    for (let n = 0; n < weights.length; n++) { if (roll < weights[n]) { r = n + 1; break; } roll -= weights[n]; r = n + 1; }
+    const s = Math.floor(rnd() * GEAR_SLOTS.length), m = Math.floor(rnd() * 101);
+    const pool = [...ITEM_EXTRAS.keys()], x = [];
+    for (let k = 0; k < r - 1; k++) x.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0] * 1000 + Math.floor(rnd() * 101));
+    return { s, r, m, x };
+  }
+  // Wear item (by id) on a card, taking off what that card wore in the
+  // slot; an item worn by another card moves. false if it cannot.
+  function equipItem(cards, itemId, id) {
+    const item = (cards.items || []).find(it => it.i === itemId);
+    if (!item || !cards.units?.[id]) return false;
+    for (const other of cards.items) if (other !== item && other.o === id && other.s === item.s) other.o = "";
+    item.o = id;
+    return true;
+  }
+  const unequipItem = (cards, itemId) => { const item = (cards.items || []).find(it => it.i === itemId); if (!item) return false; item.o = ""; return true; };
+  // the ore an item gives when broken down; worn items are kept
+  function salvageItems(cards, ids) {
+    const want = new Set(ids);
+    let ore = 0;
+    cards.items = (cards.items || []).filter(item => {
+      if (!want.has(item.i) || item.o) return true;
+      ore += SALVAGE_ORE[item.r - 1] || 0;
+      return false;
+    });
+    cards.ore = (cards.ore || 0) + ore;
+    return ore;
+  }
+  // What battles drop: count items, with luck, a rarer floor for bosses.
+  const stageLoot = (stage, first) => ({ count: first ? 1 + (stage.num % 10 === 0 ? 1 : 0) : 0, chance: first ? 0 : .3, luck: Math.min(2, stage.num / 80) + (stage.num % 10 === 0 ? .5 : 0) });
   // a card's own strength with stars, costume and gear
   const cardPower = (cards, id) => power(id, cards.units[id] || 1, 0, cardBonus(cards, id), gearBonus(cards, id));
   const enhanceCost = (lv, tier) => ({ coins: 50 + 4 * lv * tier, ore: 1 + Math.floor(lv / 10) });
@@ -2043,7 +2110,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

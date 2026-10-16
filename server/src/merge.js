@@ -31,14 +31,54 @@ const mergeQuest = (a, b) => {
   return { day: a.day, counts, claimed: [...new Set([...a.claimed, ...b.claimed])] };
 };
 
+// Items from battles: { i: id, s: slot 0-7, r: rarity 1-5, m: main roll
+// 0-100, x: up to four extra stats (stat 0-4 * 1000 + roll 0-100), o: the
+// card wearing it or "" } (one a slot per card); gone: items broken down.
+const ITEMS_MAX = 150;
+const itemId = (v) => typeof v === "string" && /^[a-z0-9]{1,12}$/.test(v);
+const cleanItems = (raw, units) => {
+  const items = [], seen = new Set(), worn = new Set();
+  for (const it of Array.isArray(raw) ? raw : []) {
+    if (!it || !itemId(it.i) || seen.has(it.i) || items.length >= ITEMS_MAX) continue;
+    const s = Math.floor(Number(it.s)), r = Math.floor(Number(it.r)), m = Math.floor(Number(it.m));
+    if (!(s >= 0 && s <= 7 && r >= 1 && r <= 5 && m >= 0 && m <= 100)) continue;
+    const x = (Array.isArray(it.x) ? it.x : []).map(Number).filter(v => Number.isInteger(v) && v >= 0 && Math.floor(v / 1000) <= 4 && v % 1000 <= 100).slice(0, r - 1);
+    let o = typeof it.o === "string" && units[it.o] ? it.o : "";
+    if (o && worn.has(`${o}:${s}`)) o = "";
+    if (o) worn.add(`${o}:${s}`);
+    seen.add(it.i);
+    items.push({ i: it.i, s, r, m, x, o });
+  }
+  return items;
+};
+const cleanGone = (raw) => (Array.isArray(raw) ? raw.filter(itemId).slice(-300) : []);
+// Both copies' items, but none broken down on either; for an item on both,
+// and for which item a card wears in a slot, the device's copy wins.
+function mergeItems(now, next) {
+  const gone = [...new Set([...now.gone, ...next.gone])].slice(-300), dead = new Set(gone);
+  const fromNext = new Set(next.items.map(it => it.i));
+  const byId = new Map();
+  for (const it of [...next.items, ...now.items]) if (!dead.has(it.i) && !byId.has(it.i)) byId.set(it.i, it);
+  const worn = new Set();
+  const items = [...byId.values()].sort((a, b) => fromNext.has(b.i) - fromNext.has(a.i)).map(it => {
+    if (!it.o) return it;
+    const key = `${it.o}:${it.s}`;
+    if (worn.has(key)) return { ...it, o: "" };
+    worn.add(key);
+    return it;
+  }).slice(0, ITEMS_MAX);
+  return { items, gone };
+}
+
 // Card battles: each card's level, the best stars per stage, the team of
 // five ("" for an empty slot) and two switches.
 const cleanCards = (raw) => {
   const cards = raw && typeof raw === "object" ? raw : {};
   const team = Array.isArray(cards.team) ? cards.team.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) : [];
   const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
+  const units = intMap(cards.units, 200);
   return {
-    units: intMap(cards.units, 200), stars: intMap(cards.stars, 3), team, arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
+    units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
     xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
   };
@@ -78,6 +118,7 @@ function mergeCards(current, incoming) {
     ore: now.ore == null && next.ore == null ? undefined : Math.max(now.ore || 0, next.ore || 0),
     // gear only goes up (tier * 100 + level), so the higher of each piece
     gear: maxMap(now.gear, next.gear),
+    ...mergeItems(now, next),
     // star bonuses paid on either copy stay paid
     // the later day's quests; on the same day the most done and every claim
     quest: mergeQuest(now.quest, next.quest),
