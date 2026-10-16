@@ -1323,6 +1323,7 @@
       up.disabled = !awakeReady(c, id);
       up.setAttribute("aria-label", `อัปดาว${def.name}เป็นดาวแดง ${cost.star} ดวง ใช้เศษ ${cost.fromShards}${cost.fromDust ? ` ผลึกดาว ${cost.fromDust}` : ""} ปีกอัพดาว ${cost.wingsNeed} และ ${cost.coins} เหรียญ`);
       box.append(up, flowText);
+      if (up.disabled) box.append(el("small", "awake-why", `ยังอัปดาวไม่ได้: ${[cost.lv < cost.lvNeed ? `เลเวลยังไม่เต็ม (${cost.lv}/${cost.lvNeed})` : "", cost.dust < cost.fromDust ? "เศษ/ผลึกดาวไม่พอ" : "", cost.wings < cost.wingsNeed ? "ปีกอัพดาวไม่พอ" : "", save().coins < cost.coins ? "เหรียญไม่พอ" : ""].filter(Boolean).join(" · ")}`));
       if (cost.lv < cost.lvNeed) box.append(el("small", "awake-lv", `ต้องอัปเลเวลให้เต็ม Lv ${cost.lvNeed} ก่อน จึงอัปดาวได้ (ตอนนี้ Lv ${cost.lv})`));
       if (cost.fromDust) box.append(el("small", null, cost.dust >= cost.fromDust ? `ใช้ผลึกดาวแทน ${cost.fromDust}` : `เศษไม่พอ ขาด ${cost.fromDust - cost.dust}`));
       if (cost.wings < cost.wingsNeed) {
@@ -1453,8 +1454,10 @@
     const chips = el("div", "sheet-tabs codex-chips"), pane = el("div", "sheet-pane codex-pane"), actions = el("div", "codex-actions");
     chips.setAttribute("role", "tablist");
     const buttons = [];
+    let openedAt = 0;
     const pick = (key) => {
       sheetTab = key;
+      openedAt = performance.now();
       for (const t of buttons) { const on = t.dataset.key === key; t.classList.toggle("is-on", on); t.setAttribute("aria-selected", String(on)); }
       pane.replaceChildren(...every.find(([k]) => k === key)[2]());
     };
@@ -1463,8 +1466,24 @@
       t.dataset.key = key; t.setAttribute("role", "tab");
       chips.append(t); buttons.push(t);
     }
+    // a gold button opens its pane; pressed again with the pane open, it
+    // does what the pane offers (star up, enhance the picked piece, reforge)
+    const act = {
+      awake: () => (awakeReady(c, id) ? (awakenCard(id), true) : false),
+      enhance: () => (gearCanUp(c, id, gearSlot) ? (enhance(id, gearSlot, 1), true) : false),
+      reforge: () => (gearCanReforge(c, id, gearSlot) ? (reforge(id, gearSlot), true) : false)
+    };
     for (const [key, label] of big) {
-      const t = button("codex-btn codex-big", label, () => { pick(key); tone(587, .04, "triangle", .03); });
+      const t = button("codex-btn codex-big", label, () => {
+        if (sheetTab === key && performance.now() - openedAt > 400) {
+          if (act[key]()) return;
+          tone(150, .12, "square", .05);
+          pane.classList.remove("is-nudge"); void pane.offsetWidth; pane.classList.add("is-nudge");
+          announce(key === "awake" ? "ยังอัปดาวไม่ได้ ดูเงื่อนไขในกรอบด้านบน" : key === "enhance" ? "ยังเสริมแกร่งไม่ได้ ดูเงื่อนไขในกรอบด้านบน" : "ยังหลอมล้างไม่ได้ ดูเงื่อนไขในกรอบด้านบน");
+          return;
+        }
+        pick(key); tone(587, .04, "triangle", .03);
+      });
       t.dataset.key = key; t.setAttribute("role", "tab");
       if ((key === "awake" && awakeReady(c, id)) || (key === "reforge" && E.GEAR_SLOTS.some((_, n) => gearCanReforge(c, id, n)))) t.append(el("i", "codex-dot"));
       actions.append(t); buttons.push(t);
