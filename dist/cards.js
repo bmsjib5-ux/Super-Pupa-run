@@ -1093,21 +1093,70 @@
     }
     const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า · ลากการ์ดไปวางในช่องทีมเพื่อใส่หรือสลับตัว`);
     const bonds = bondStrip(c.team);
-    const heading = el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`);
+    const head = el("div", "cards-sort-head");
+    head.append(el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`));
     const grid = el("div", "cards-grid");
     grid.dataset.drop = "out";
-    // owned cards first, then each from the highest grade down, stars, level
-    const order = E.CARD_IDS.map((id, n) => ({ id, n })).sort((x, y) => {
-      const a = x.id, b = y.id, ha = c.units[a] ? 1 : 0, hb = c.units[b] ? 1 : 0;
-      return hb - ha || E.CARDS[b].rarity - E.CARDS[a].rarity || (c.awake[b] || 0) - (c.awake[a] || 0) || (c.units[b] || 0) - (c.units[a] || 0) || x.n - y.n;
-    }).map(o => o.id);
-    for (const id of order) {
-      const tile = cardTile(id, () => cardSheet(id));
-      if (c.units[id]) tile.dataset.card = id;
-      grid.append(tile);
-    }
-    panel.append(formation, sum, bonds, heading, grid);
+    const sorter = el("div", "cards-sort");
+    sorter.setAttribute("role", "group");
+    sorter.setAttribute("aria-label", "เรียงการ์ด");
+    const fill = () => {
+      for (const id of sortedCards(c, E.CARD_IDS)) {
+        const tile = cardTile(id, () => cardSheet(id));
+        if (c.units[id]) tile.dataset.card = id;
+        grid.append(tile);
+      }
+    };
+    const chips = () => sorter.replaceChildren(...CARD_SORTS.map(([key, icon, label]) => {
+      const on = cardSort.key === key;
+      const chip = button(`cards-sort-chip${on ? " is-on" : ""}`, `${icon} ${label}${on ? (cardSort.up ? " ▲" : " ▼") : ""}`, () => {
+        // the chosen one again turns the order round
+        setCardSort(key, on ? !cardSort.up : false);
+        tone(587, .04, "triangle", .03);
+        chips();
+        grid.replaceChildren();
+        fill();
+      }, `เรียงตาม${label}${on ? (cardSort.up ? " จากน้อยไปมาก" : " จากมากไปน้อย") : ""}`);
+      chip.setAttribute("aria-pressed", String(on));
+      return chip;
+    }));
+    chips();
+    fill();
+    head.append(sorter);
+    panel.append(formation, sum, bonds, head, grid);
     teamDrag(panel);
+  }
+
+  // How the cards are laid out: by grade (ระดับ), level or power, the highest first
+  // unless turned round; cards not yet owned always come last.
+  const CARD_SORTS = [["grade", "💎", "ระดับ"], ["level", "⬆", "เลเวล"], ["power", "⚔", "พลังต่อสู้"]];
+  const SORT_KEY = "super-pupa-card-sort";
+  let cardSort = (() => {
+    try {
+      const [key, dir] = String(localStorage.getItem(SORT_KEY) || "").split(":");
+      if (CARD_SORTS.some(s => s[0] === key)) return { key, up: dir === "up" };
+    } catch { /* no storage: the default order */ }
+    return { key: "grade", up: false };
+  })();
+  function setCardSort(key, up) {
+    cardSort = { key, up };
+    try { localStorage.setItem(SORT_KEY, `${key}:${up ? "up" : "down"}`); } catch { /* kept for this visit only */ }
+  }
+  function sortedCards(c, ids) {
+    const pow = {};
+    for (const id of ids) pow[id] = c.units[id] ? E.cardPower(c, id) : 0;
+    const by = {
+      grade: (a, b) => E.CARDS[b].rarity - E.CARDS[a].rarity || (c.awake[b] || 0) - (c.awake[a] || 0) || (c.units[b] || 0) - (c.units[a] || 0) || pow[b] - pow[a],
+      level: (a, b) => (c.units[b] || 0) - (c.units[a] || 0) || pow[b] - pow[a] || E.CARDS[b].rarity - E.CARDS[a].rarity,
+      power: (a, b) => pow[b] - pow[a] || E.CARDS[b].rarity - E.CARDS[a].rarity
+    }[cardSort.key];
+    return ids.map((id, n) => ({ id, n })).sort((x, y) => {
+      const a = x.id, b = y.id, ha = c.units[a] ? 1 : 0, hb = c.units[b] ? 1 : 0;
+      if (ha !== hb) return hb - ha;
+      // locked cards stay highest grade first
+      if (!ha) return E.CARDS[b].rarity - E.CARDS[a].rarity || x.n - y.n;
+      return (cardSort.up ? -by(a, b) : by(a, b)) || x.n - y.n;
+    }).map(o => o.id);
   }
 
   // Dragging cards about: a [data-card] in `panel` can be picked up and
@@ -1267,11 +1316,12 @@
   function cardTile(id, onPick, extra = "") {
     const def = E.CARDS[id], lv = cards().units[id];
     const tile = button(`tcard r${def.rarity}${lv ? "" : " is-locked"}${cards().team.includes(id) ? " is-picked" : ""} ${extra}`, null, onPick);
-    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ระดับ ${gradeOf(id)}${lv ? ` เลเวล ${lv}` : " ยังไม่มี"}${cards().awake?.[id] ? (cards().awake[id] > E.MAX_AWAKE ? ` ปลุกพลังขั้น 2 ดาวทอง ${cards().awake[id] - E.MAX_AWAKE}` : ` ดาวแดง ${cards().awake[id]}`) : ""}`);
+    tile.setAttribute("aria-label", `${def.name} ${E.ROLES[def.role].name} ระดับ ${gradeOf(id)}${lv ? ` เลเวล ${lv} พลังต่อสู้ ${fmt(E.cardPower(cards(), id))}` : " ยังไม่มี"}${cards().awake?.[id] ? (cards().awake[id] > E.MAX_AWAKE ? ` ปลุกพลังขั้น 2 ดาวทอง ${cards().awake[id] - E.MAX_AWAKE}` : ` ดาวแดง ${cards().awake[id]}`) : ""}`);
     const art = el("span", "tcard-art");
     art.append(portrait(id));
     const awake = cards().awake?.[id] || 0;
     tile.append(art, gradeBadge(id, "tcard-rare grade"), el("span", "tcard-role", E.ROLES[def.role].icon), el("b", "tcard-name", def.name), el("small", "tcard-lv", lv ? `Lv ${lv}` : "🔒"));
+    if (lv) tile.append(el("small", "tcard-power", `⚔ ${fmt(E.cardPower(cards(), id))}`));
     if (awake) { const st = redStars(awake); st.classList.add("tcard-stars"); tile.append(st); }
     if (awake) tile.classList.add(`awake-${awake}`);
     if (awake > E.MAX_AWAKE) tile.classList.add("is-awake2");
@@ -1548,7 +1598,7 @@
   // of gear, level, power and stats, and tabs below).
   function codexList(c, id) {
     const list = el("div", "codex-list cards-scroll");
-    const ids = Object.keys(c.units).filter(k => E.CARDS[k]).sort((a, b) => E.cardPower(c, b) - E.cardPower(c, a));
+    const ids = sortedCards(c, Object.keys(c.units).filter(k => E.CARDS[k]));
     for (const k of ids) {
       const def = E.CARDS[k], lv = c.units[k], cap = E.capFor(c.awake[k]);
       const need = lv < cap ? E.xpNeed(lv) : 0, have = c.xp[k] || 0;
@@ -2357,7 +2407,8 @@
 
   // Straight to the pulls, from the market or the lobby.
   function openPulls() { tab = "pulls"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
-  window.PupaCards = { open, openPulls, close, key, get isOpen() { return isShown; } };
+  function openTeam() { tab = "team"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
+  window.PupaCards = { open, openPulls, openTeam, close, key, get isOpen() { return isShown; } };
   document.querySelectorAll("[data-open-cards]").forEach(node => game()?.onTap(node, open));
   // Test link: ?cards opens straight into the card battles.
   if (new URLSearchParams(location.search).has("cards")) setTimeout(() => open(), 400);
