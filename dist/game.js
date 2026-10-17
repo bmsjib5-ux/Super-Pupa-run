@@ -4411,6 +4411,8 @@
   function frame(time) {
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
+    // the card screen covers everything: leave the phone's time to it
+    if (cardsOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5850,7 +5852,13 @@
       normalizeShop();
       mergeHeroXp(xp);
       mergeHeroXp(remote.shop?.heroXp);
-      save.cards = mergeCards(cards, remote.cards, !full);
+      // merged into the same object: the card screen's open buttons hold
+      // it, and a tap after a sync must still land in the save
+      const merged = mergeCards(cards, remote.cards, !full);
+      if (cards && typeof cards === "object") {
+        for (const key of Object.keys(cards)) delete cards[key];
+        save.cards = Object.assign(cards, merged);
+      } else save.cards = merged;
       writeSave(true);
       refreshCoins();
     },
@@ -6335,10 +6343,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-16h";
+  const NEWS_VERSION = "2026-10-17a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ปรับปรุง", title: "🛠 ใส่ไอเทมลื่นขึ้น", text: "กด ใส่ / ถอด / ย่อย ไอเทมในหน้าการ์ดตอบสนองเร็วขึ้นมาก (บนมือถือเร็วขึ้นราว 3 เท่า) รายการไอเทมไม่เด้งกลับขึ้นบนสุดหลังกดแล้ว ไอเทมที่เพิ่งใส่จะเรืองแสงให้เห็นว่าใส่สำเร็จ และแก้ปัญหาที่การกดบางครั้งหายไปหลังเกมซิงก์เซฟกับบัญชี", image: "gear", open: () => { closeNews(); window.PupaCards?.openTeam?.(); } },
     { tag: "ของขวัญ", title: "🎁 แจกเพชร 💎 10,000 อีกรอบ!", text: "ของขวัญพิเศษรอบใหม่สำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดทันทีเมื่อเปิดเกม (บัญชีละ 1 ครั้ง ถึงจะเคยรับรอบก่อนแล้วก็รับได้อีก) ใช้สุ่มการ์ดตัวละคร สัตว์เลี้ยง หรือตู้สุ่มไอเทมได้เลย", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ปรับปรุง", title: "★★★ ด่านบอส ชนะภายใน 10 เทิร์น", text: "ดาวดวงที่ 3 ของด่านบอสในศึกการ์ด (ด่าน 5, 10, 15 … ทุกด่านที่มีบอส) จากเดิมต้องชนะภายใน 8 เทิร์น ตอนนี้ได้ถึง 10 เทิร์นแล้ว ด่านธรรมดายังเหมือนเดิม กลับไปเล่นด่านบอสที่ยังไม่ครบ 3 ดาวเพื่อเก็บดาว และรับโบนัสดาวครบทุก 5 ด่านได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "⚔ พลังต่อสู้บนการ์ด · เรียงการ์ดได้", text: "การ์ดทุกใบที่มีแล้วบอกพลังต่อสู้ ⚔ ใต้เลเวล (รวมดาว คอสตูม อุปกรณ์ และไอเทมที่ใส่) ทั้งในแท็บทีม หน้าด่าน และลานประลอง แท็บ 👥 ทีม มีปุ่มเรียงการ์ด 💎 ระดับ · ⬆ เลเวล · ⚔ พลังต่อสู้ แตะปุ่มเดิมอีกครั้งเพื่อสลับมากไปน้อย ▼ / น้อยไปมาก ▲ การ์ดที่ยังไม่มีอยู่ท้ายเสมอ เกมจำการเรียงไว้ และรายการการ์ดในหน้าการ์ดก็เรียงตามด้วย", image: "gacha6", open: () => { closeNews(); (window.PupaCards?.openTeam || window.PupaCards?.open)?.(); } },

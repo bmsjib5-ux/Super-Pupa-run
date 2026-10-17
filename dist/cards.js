@@ -1330,18 +1330,19 @@
   }
 
   // ---- Detail panels ----
-  function openSheet(content) {
+  function openSheet(content, kind = "") {
     closeSheet(true);
     sheet = el("div", "cards-sheet");
     sheet.setAttribute("role", "dialog");
     sheet.setAttribute("aria-modal", "true");
-    const box = el("div", "cards-sheet-box cards-scroll");
+    // its kind is set before it is shown, so the page is laid out only once
+    const box = el("div", `cards-sheet-box cards-scroll${kind ? ` ${kind}` : ""}`);
     const x = button("icon-button cards-sheet-close", "✕", () => closeSheet(), "ปิด");
     box.append(x, ...content);
     sheet.append(box);
     sheet.addEventListener("click", (event) => { if (event.target === sheet) closeSheet(); });
     frame.append(sheet);
-    x.focus();
+    x.focus({ preventScroll: true });
   }
   function closeSheet(quiet) {
     if (!sheet) return;
@@ -1472,7 +1473,7 @@
     const box = el("div", "gear-pane item-pane");
     const worn = wornItem(c, id, n);
     box.append(el("p", "item-title", `ช่อง${slot.name} · เสริมแกร่ง Lv ${g.lv}/${g.cap} (${gearText(n, g.tier, g.lv)})`));
-    if (worn) box.append(itemTile(worn, [button("codex-chip", "ถอด", () => { E.unequipItem(c, worn.i); store(); tone(440, .08, "triangle", .05); cardSheet(id); }, `ถอด${itemName(worn)}`)], el("small", "item-on", "ใส่อยู่")));
+    if (worn) box.append(itemTile(worn, [button("codex-chip", "ถอด", () => { if (!E.unequipItem(cards(), worn.i)) return; store(); tone(440, .08, "triangle", .05); cardSheet(id); }, `ถอด${itemName(worn)}`)], el("small", "item-on", "ใส่อยู่")));
     else box.append(el("p", "gear-note", c.units[id] ? `ยังไม่ได้ใส่${slot.name} · ไอเทมดรอปจากการชนะด่าน หอคอย ลานประลอง ด่านประจำวัน และล่าอัตโนมัติ` : "ได้การ์ดนี้ก่อน จึงใส่ไอเทมได้"));
     const items = c.items || [];
     const bag = items.filter(it => it.s === n && it !== worn).sort((a, b) => E.itemScore(b) - E.itemScore(a));
@@ -1481,10 +1482,10 @@
     const list = el("div", "item-list");
     for (const item of bag.slice(0, 40)) {
       const wear = button("codex-chip is-gold", "ใส่", () => {
-        if (!E.equipItem(c, item.i, id)) return;
+        if (!E.equipItem(cards(), item.i, id)) return;
         store(); [659, 880].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
         announce(`ใส่${itemName(item)}ให้${E.CARDS[id].name}`);
-        cardSheet(id);
+        cardSheet(id, { worn: true });
       }, `ใส่${itemName(item)}`);
       wear.disabled = !c.units[id];
       const acts = [wear];
@@ -1614,11 +1615,15 @@
     }
     return list;
   }
-  function cardSheet(id) {
+  // the parts of the card book that scroll on their own
+  const SHEET_SCROLLERS = [".cards-sheet-box", ".codex-detail", ".codex-pane"];
+  function cardSheet(id, { worn = false } = {}) {
     const c = cards(), def = E.CARDS[id], lv = c.units[id], owned = Boolean(lv);
     // redrawing the same card keeps its picture (and 3D model) and scroll
     const same = sheet?.dataset.card === id;
     const listTop = sheet?.querySelector(".codex-list")?.scrollTop;
+    const samePane = same && sheet.dataset.pane === `${sheetTab}:${gearSlot}`;
+    const tops = same ? SHEET_SCROLLERS.map(sel => sheet.querySelector(sel)?.scrollTop || 0) : null;
     const look = wearing(id) ? "costume" : "plain";
     let art = same && artCache?.id === id && artCache.look === look ? artCache.node : null;
     if (!art) {
@@ -1732,12 +1737,22 @@
     detail.append(stars, stage, title, team, info, chips, pane, actions);
     const book = el("div", "codex");
     book.append(codexList(c, id), detail);
-    openSheet([book]);
+    openSheet([book], "is-codex");
     sheet.dataset.card = id;
-    sheet.querySelector(".cards-sheet-box").classList.add("is-codex");
     const list = sheet.querySelector(".codex-list");
     if (listTop != null) list.scrollTop = listTop;
     else list.querySelector(".is-on")?.scrollIntoView({ block: "center" });
+    sheet.dataset.pane = `${sheetTab}:${gearSlot}`;
+    if (tops) SHEET_SCROLLERS.forEach((sel, k) => {
+      const node = sheet.querySelector(sel);
+      if (node && (sel !== ".codex-pane" || samePane)) node.scrollTop = tops[k];
+    });
+    // a piece just put on: glide back up to it so it shows it took
+    const on = worn && sheet.querySelector(".item-pane .item-on")?.closest(".item-row");
+    if (on) {
+      on.classList.add("is-new");
+      on.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
   }
 
   function enhance(id, n, times = 1) {
