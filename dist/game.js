@@ -5902,9 +5902,12 @@
       return out;
     };
     const team = (keepTeam && Array.isArray(a.team) && a.team.some(Boolean)) ? a.team : Array.isArray(b.team) ? b.team : a.team;
+    // saved team sets come from this device unless it has none (or the account's save replaces it)
+    const setsFrom = (keepTeam && Array.isArray(a.sets) && a.sets.some(Boolean)) || !Array.isArray(b.sets) || !b.sets.some(Boolean) ? a : b;
     const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
     return {
       ...b, ...a, units: most(a.units, b.units, 200), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
+      sets: setsFrom.sets, set: setsFrom.set,
       xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 10), shards: most(a.shards, b.shards, 1e6),
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
       // left out until the card screen first gives the starting wings
@@ -6343,10 +6346,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-17a";
+  const NEWS_VERSION = "2026-10-17b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "👥 ทีมเซ็ต · บันทึกได้ 5 ทีม", text: "แท็บ 👥 ทีม มีแถบ ทีมเซ็ต 5 ช่อง แตะช่องว่าง (+ สร้าง) เพื่อสร้างทีมใหม่จากทีมปัจจุบัน แล้วจัดการ์ดได้ตามใจ ทุกการเปลี่ยนแปลงบันทึกลงเซ็ตที่เลือกอยู่ แตะเซ็ตอื่นเพื่อสลับทีมทันที กด ✎ ตั้งชื่อ เช่น ทีมบอส ทีมหอคอย สลับเซ็ตได้ในหน้าด่าน หอคอย และด่านประจำวันด้วย และทีมเซ็ตซิงก์กับบัญชีข้ามเครื่องได้", image: "cards", open: () => { closeNews(); (window.PupaCards?.openTeam || window.PupaCards?.open)?.(); } },
     { tag: "ปรับปรุง", title: "🛠 ใส่ไอเทมลื่นขึ้น", text: "กด ใส่ / ถอด / ย่อย ไอเทมในหน้าการ์ดตอบสนองเร็วขึ้นมาก (บนมือถือเร็วขึ้นราว 3 เท่า) รายการไอเทมไม่เด้งกลับขึ้นบนสุดหลังกดแล้ว ไอเทมที่เพิ่งใส่จะเรืองแสงให้เห็นว่าใส่สำเร็จ และแก้ปัญหาที่การกดบางครั้งหายไปหลังเกมซิงก์เซฟกับบัญชี", image: "gear", open: () => { closeNews(); window.PupaCards?.openTeam?.(); } },
     { tag: "ของขวัญ", title: "🎁 แจกเพชร 💎 10,000 อีกรอบ!", text: "ของขวัญพิเศษรอบใหม่สำหรับผู้เล่นทุกคน รับเพชร 10,000 เม็ดทันทีเมื่อเปิดเกม (บัญชีละ 1 ครั้ง ถึงจะเคยรับรอบก่อนแล้วก็รับได้อีก) ใช้สุ่มการ์ดตัวละคร สัตว์เลี้ยง หรือตู้สุ่มไอเทมได้เลย", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ปรับปรุง", title: "★★★ ด่านบอส ชนะภายใน 10 เทิร์น", text: "ดาวดวงที่ 3 ของด่านบอสในศึกการ์ด (ด่าน 5, 10, 15 … ทุกด่านที่มีบอส) จากเดิมต้องชนะภายใน 8 เทิร์น ตอนนี้ได้ถึง 10 เทิร์นแล้ว ด่านธรรมดายังเหมือนเดิม กลับไปเล่นด่านบอสที่ยังไม่ครบ 3 ดาวเพื่อเก็บดาว และรับโบนัสดาวครบทุก 5 ด่านได้เลย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },

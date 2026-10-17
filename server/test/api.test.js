@@ -219,6 +219,25 @@ test("merge: star-up wings keep the higher count, and stay unset until given", (
   assert.equal(b.cards.wings, 7);
 });
 
+test("merge: team sets come from the device, kept when a device has none", () => {
+  const sets = [{ n: "ทีมบอส", t: ["pupa", "jibjib", "", "", ""] }, null, { n: "<b>x</b>".repeat(9), t: ["baitoey", "BAD ID", "", "", "", "extra"] }];
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { pupa: 5, jibjib: 3, baitoey: 2 }, team: ["pupa", "", "", "", ""], sets, set: 2 } })), 0);
+  assert.equal(a.cards.sets.length, 5);
+  assert.deepEqual(a.cards.sets[0], { n: "ทีมบอส", t: ["pupa", "jibjib", "", "", ""] });
+  assert.equal(a.cards.sets[1], null);
+  assert.equal(a.cards.sets[2].n.length, 16);
+  assert.deepEqual(a.cards.sets[2].t, ["baitoey", "", "", "", ""]);
+  assert.equal(a.cards.set, 2);
+  // a device that never made a set leaves the account's sets alone
+  const b = mergeSave(a, cleanSave(device(0, { cards: { units: { pupa: 5 }, team: ["pupa", "", "", "", ""], set: 9 } })), 0);
+  assert.deepEqual(b.cards.sets, a.cards.sets);
+  assert.equal(b.cards.set, 2);
+  // a device with sets replaces them
+  const c = mergeSave(b, cleanSave(device(0, { cards: { units: { pupa: 5 }, team: ["pupa", "", "", "", ""], sets: [null, { n: "", t: ["pupa", "", "", "", ""] }], set: 1 } })), 0);
+  assert.equal(c.cards.sets[0], null);
+  assert.equal(c.cards.set, 1);
+});
+
 test("merge: gear keeps each piece's higher tier and level, ore the higher count", () => {
   const none = mergeSave(null, cleanSave(device(0, { cards: { dust: 1 } })), 0);
   assert.equal(none.cards.ore, undefined);

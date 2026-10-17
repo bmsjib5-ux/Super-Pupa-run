@@ -298,7 +298,17 @@
     const arenaFront = [...new Set((Array.isArray(raw.arenaFront) ? raw.arenaFront : []).filter(id => arenaPick.includes(id)))].slice(0, E.ARENA_FRONT);
     const achv = [...new Set((Array.isArray(raw.achv) ? raw.achv : []).filter(id => typeof id === "string"))];
     const starPaid = [...new Set((Array.isArray(raw.starPaid) ? raw.starPaid : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 99))].sort((a, b) => a - b);
-    s.cards = { units, team, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    // saved teams: five slots, each a name and five places ("" empty)
+    const sets = Array.from({ length: TEAM_SETS }, (_, k) => {
+      const one = Array.isArray(raw.sets) ? raw.sets[k] : null;
+      if (!one || !Array.isArray(one.t)) return null;
+      const t = one.t.slice(0, E.TEAM_SIZE).map(id => (typeof id === "string" && units[id] ? id : ""));
+      while (t.length < E.TEAM_SIZE) t.push("");
+      t.forEach((id, n) => { if (id && t.indexOf(id) !== n) t[n] = ""; });
+      return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t };
+    });
+    const set = Math.min(TEAM_SETS - 1, Math.max(0, Math.floor(Number(raw.set) || 0)));
+    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -362,6 +372,79 @@
   // a card as the power numbers see it: level, stars, costume and gear
   const powerEntry = (id) => ({ id, lv: cards().units[id], bonus: E.cardBonus(cards(), id), gear: E.gearBonus(cards(), id) });
   const teamPower = () => E.teamPowerOf(cards().team.filter(Boolean).map(powerEntry));
+
+  // ---- Team sets ----
+  // Five saved teams. The one picked is the team in play (c.team); the
+  // others wait in c.sets until picked. A new set starts as a copy of the
+  // team in play.
+  const TEAM_SETS = 5, SET_NAME_MAX = 16;
+  const setName = (c, k) => c.sets?.[k]?.n || `ทีม ${k + 1}`;
+  const setTeamOf = (c, k) => (k === c.set ? c.team : c.sets?.[k]?.t || null);
+  const setPower = (c, k) => E.teamPowerOf((setTeamOf(c, k) || []).filter(id => id && c.units[id]).map(powerEntry));
+  function pickSet(k, after) {
+    const c = cards();
+    if (k === c.set) return;
+    if (!Array.isArray(c.sets)) c.sets = Array(TEAM_SETS).fill(null);
+    // the team as it stands goes back into its own set
+    c.sets[c.set] = { n: c.sets[c.set]?.n || "", t: [...c.team] };
+    const saved = c.sets[k], fresh = !saved?.t?.some(id => id && c.units[id]);
+    if (fresh) c.sets[k] = { n: saved?.n || "", t: [...c.team] };
+    else c.team = saved.t.map(id => (id && c.units[id] ? id : ""));
+    c.set = k;
+    store();
+    [587, 784].forEach((note, i) => tone(note, .06, "triangle", .04, i * .05));
+    announce(fresh ? `สร้าง${setName(c, k)} จากทีมปัจจุบัน จัดการ์ดได้เลย` : `ใช้${setName(c, k)} พลังทีม ${fmt(teamPower())}`);
+    after();
+  }
+  // the row of set buttons; `after` redraws whatever shows it
+  function setStrip(after, compact = false) {
+    const c = cards();
+    const box = el("div", `team-sets${compact ? " is-compact" : ""}`);
+    if (!compact) box.append(el("span", "team-sets-label", "ทีมเซ็ต"));
+    const row = el("div", "team-sets-row");
+    row.setAttribute("role", "tablist");
+    row.setAttribute("aria-label", "ทีมเซ็ต");
+    for (let k = 0; k < TEAM_SETS; k++) {
+      const on = k === c.set, has = Boolean(setTeamOf(c, k)?.some(Boolean));
+      const chip = button(`team-set${on ? " is-on" : ""}${has ? "" : " is-empty"}`, null, () => pickSet(k, after),
+        `${setName(c, k)}${on ? " (ใช้อยู่)" : has ? ` พลังทีม ${fmt(setPower(c, k))}` : " ว่าง แตะเพื่อสร้างจากทีมปัจจุบัน"}`);
+      chip.setAttribute("role", "tab");
+      chip.setAttribute("aria-selected", String(on));
+      chip.append(el("b", null, setName(c, k)), el("small", null, has ? `⚔ ${fmt(setPower(c, k))}` : "+ สร้าง"));
+      row.append(chip);
+    }
+    box.append(row);
+    if (!compact) box.append(button("team-set-name", "✎ ตั้งชื่อ", () => renameSet(after), `ตั้งชื่อ${setName(c, c.set)}`));
+    return box;
+  }
+  function renameSet(after) {
+    const c = cards(), k = c.set;
+    const form = el("form", "set-name-form");
+    const input = el("input", "set-name-input");
+    input.type = "text";
+    input.maxLength = SET_NAME_MAX;
+    input.value = c.sets?.[k]?.n || "";
+    input.placeholder = `ทีม ${k + 1}`;
+    input.setAttribute("aria-label", "ชื่อทีมเซ็ต");
+    input.autocomplete = "off";
+    const done = () => {
+      const now = cards();
+      if (!Array.isArray(now.sets)) now.sets = Array(TEAM_SETS).fill(null);
+      now.sets[k] = { n: input.value.trim().slice(0, SET_NAME_MAX), t: [...(k === now.set ? now.team : now.sets[k]?.t || now.team)] };
+      store();
+      tone(660, .08, "triangle", .05);
+      announce(`ตั้งชื่อเป็น ${setName(now, k)} แล้ว`);
+      closeSheet(true);
+      after();
+    };
+    form.addEventListener("submit", (event) => { event.preventDefault(); done(); });
+    const actions = el("div", "title-actions sheet-actions");
+    actions.append(button("primary-button", "บันทึก", done), button("secondary-button", "ยกเลิก", () => closeSheet(true)));
+    form.append(input, actions);
+    openSheet([el("h3", "sheet-title", `ตั้งชื่อ${setName(c, k)}`), el("p", "sheet-sub", `ไม่เกิน ${SET_NAME_MAX} ตัวอักษร · เว้นว่างไว้เพื่อใช้ชื่อ ทีม ${k + 1}`), form]);
+    input.focus();
+    input.select();
+  }
   // The stage a card is the first-clear prize of.
 
   // ---- The frame ----
@@ -687,7 +770,7 @@
   }
   function renderDungeons(panel) {
     if (cards().dungeon.day !== today()) cards().dungeon = { day: today(), exp: false, coin: false };
-    panel.append(el("p", "cards-intro", `รับรางวัลได้ด่านละ 1 ครั้งต่อวัน · แพ้แล้วลองใหม่ได้ · รีเซ็ตใน ${untilMidnight()}`));
+    panel.append(el("p", "cards-intro", `รับรางวัลได้ด่านละ 1 ครั้งต่อวัน · แพ้แล้วลองใหม่ได้ · รีเซ็ตใน ${untilMidnight()}`), setStrip(() => showHub(), true));
     const grid = el("div", "dungeon-grid");
     for (const kind of ["exp", "coin"]) {
       const d = E.DUNGEONS[kind], stage = E.dungeon(kind, bestStage()), done = doneToday(kind);
@@ -1123,7 +1206,7 @@
     chips();
     fill();
     head.append(sorter);
-    panel.append(formation, sum, bonds, head, grid);
+    panel.append(setStrip(() => showHub()), formation, sum, bonds, head, grid);
     teamDrag(panel);
   }
 
@@ -1863,7 +1946,7 @@
     parts.push(reward, el("p", "sheet-goals", `★ ชนะ · ★ ไม่มีการ์ดล้ม · ★ ชนะภายใน ${stage.par} เทิร์น`));
     const team = el("div", "sheet-team");
     for (const id of c.team) team.append(id ? cardTile(id, () => { tab = "team"; cardSheet(id); }) : el("span", "cards-empty is-flat", "–"));
-    parts.push(el("p", "sheet-sub", `ทีมของคุณ · พลังทีม ${fmt(teamPower())}`), team);
+    parts.push(el("p", "sheet-sub", `ทีมของคุณ · พลังทีม ${fmt(teamPower())}`), setStrip(() => stageSheet(stage), true), team);
     const actions = el("div", "title-actions sheet-actions");
     actions.append(button("primary-button", "เริ่มต่อสู้ ⚔", () => startBattle(stage)), button("secondary-button", "จัดทีม", () => { tab = "team"; closeSheet(); }));
     parts.push(actions);
@@ -2329,7 +2412,7 @@
   // cleared ones replayed for EXP and coins.
   function renderTower(panel) {
     const c = cards(), next = Math.min(E.TOWER_FLOORS, c.tower + 1), done = c.tower >= E.TOWER_FLOORS;
-    panel.append(el("p", "cards-intro", `หอคอยบอส ${E.TOWER_FLOORS} ชั้น · ทุกชั้นมีบอส ทุก 10 ชั้นเป็นบอสใหญ่ · ใช้ทีม 5 ใบจากแท็บทีม · ผ่านแล้ว ${c.tower}/${E.TOWER_FLOORS} ชั้น`));
+    panel.append(el("p", "cards-intro", `หอคอยบอส ${E.TOWER_FLOORS} ชั้น · ทุกชั้นมีบอส ทุก 10 ชั้นเป็นบอสใหญ่ · ใช้ทีม 5 ใบจากแท็บทีม · ผ่านแล้ว ${c.tower}/${E.TOWER_FLOORS} ชั้น`), setStrip(() => showHub(), true));
     const tower = el("div", "tower");
     const top = Math.min(E.TOWER_FLOORS, next + 4), bottom = Math.max(1, next - 3);
     for (let n = top; n >= bottom; n--) {
