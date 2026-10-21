@@ -667,12 +667,20 @@
 
     // ---- What cards.js calls ----
     // A card uses a skill (or a plain attack) on these targets.
-    function cast(actor, targets, name, side) {
+    // `skill` is set for a named skill, `big` for a hero's second skill or
+    // a boss's: a rune circle opens under the caster, a big one with a
+    // pillar of light.
+    function cast(actor, targets, name, side, { skill = false, big = false } = {}) {
       if (!alive || still()) return;
       const look = LOOKS[name] || LOOKS.slash;
       const from = at(actor);
       const ends = targets.map(at);
       glow(from, look.glow, .35, 1.6);
+      if (skill || big) add({ life: big ? .9 : .6, x: from.x, y: from.y + from.r * .95, r: from.r * (big ? 1.7 : 1.25), colour: look.glow, kind: "circle" });
+      if (big) {
+        add({ life: .7, x: from.x, y: from.y + from.r * .95, r: from.r * .9, colour: look.glow, kind: "pillar" });
+        for (let k = 0; k < 10; k++) add({ life: rand(.5, .8), delay: k * .03, x: from.x + rand(-from.r, from.r) * .8, y: from.y + from.r * .8, vx: 0, vy: rand(-160, -90), gy: 0, r: rand(1.5, 3), colour: look.colour, kind: "spark" });
+      }
       switch (look.kind) {
         case "orb": case "ribbon": case "seed": case "spore": case "bite":
           ends.forEach((to, n) => travel(from, to, look, { delay: n * .04, arc: look.kind === "seed" ? -60 : look.kind === "ribbon" ? 40 : -25 }));
@@ -717,10 +725,14 @@
       }
       if (look.kind === "bite") add({ life: .28, x: p.x, y: p.y, r: p.r, colour: look.colour, kind: "bite" });
       if (look.kind === "fire") for (let k = 0; k < 8; k++) add({ life: rand(.4, .7), x: p.x + rand(-p.r, p.r) * .6, y: p.y + rand(-4, 8), vx: rand(-10, 10), vy: rand(-90, -50), gy: 0, r: rand(3, 6), colour: Math.random() < .5 ? "#ffb347" : "#ff6a2a", kind: "spark" });
-      sparks(p, look.glow, crit ? 22 : 12, crit ? 240 : 170);
-      ring(p, look.colour, crit ? 3 : 2.2, .35, crit ? 5 : 3);
+      // the hit itself: a white star of light, sparks flying off it
+      add({ life: crit ? .24 : .18, x: p.x + rand(-4, 4), y: p.y + rand(-4, 4), r: Math.min(crit ? 64 : 50, p.r * (crit ? .95 : .7)), colour: look.glow, spikes: crit ? 10 : 7, rot: rand(0, TAU), kind: "burst" });
+      sparks(p, look.glow, crit ? 22 : 12, crit ? 300 : 210);
+      sparks(p, "#ffffff", crit ? 8 : 4, crit ? 260 : 180);
+      ring(p, look.colour, crit ? 3 : 2.2, .35, crit ? 6 : 4);
       glow(p, look.glow, .25, crit ? 2.6 : 1.8);
-      if (crit || boss) shake = Math.max(shake, crit ? 9 : 5);
+      if (crit) add({ life: .4, x: p.x, y: p.y, r: p.r, colour: "rgba(255,246,214,.9)", seed: rand(0, TAU), kind: "lines" });
+      if (crit || boss) shake = Math.max(shake, crit ? 10 : 5);
       if (crit) { flash = Math.max(flash, .15); flashColour = "rgba(255,240,180,.3)"; }
     }
 
@@ -728,6 +740,7 @@
       if (!alive || still()) return;
       const look = leafy ? LOOKS.leaf : LOOKS.heal, p = at(target);
       glow(p, look.glow, .5, 2);
+      add({ life: .6, x: p.x, y: p.y + p.r * .95, r: p.r * .75, colour: look.glow, kind: "pillar" });
       for (let k = 0; k < 9; k++) add({ life: rand(.6, .9), delay: k * .03, x: p.x + rand(-p.r, p.r), y: p.y + rand(0, p.r), vx: 0, vy: rand(-70, -40), gy: 0, r: rand(5, 8), colour: look.colour, kind: leafy ? "leaf" : "plus" });
     }
     function shield(target) {
@@ -744,8 +757,17 @@
       if (!alive || still()) return;
       const p = at(target);
       for (let k = 0; k < 14; k++) add({ life: rand(.5, .8), x: p.x + rand(-p.r, p.r), y: p.y + p.r * .8, vx: rand(-60, 60), vy: rand(-50, -10), gy: 40, r: rand(4, 9), colour: "rgba(200,190,220,.5)", kind: "dust" });
+      add({ life: .3, x: p.x, y: p.y, r: Math.min(64, p.r), colour: "#ffffff", spikes: 8, rot: rand(0, TAU), kind: "burst" });
+      ring(p, "rgba(255,255,255,.8)", 2.8, .5, 5);
+      for (let k = 0; k < 8; k++) add({ life: rand(.8, 1.2), delay: .1 + k * .05, x: p.x + rand(-p.r, p.r) * .6, y: p.y, vx: rand(-10, 10), vy: rand(-80, -50), gy: 0, r: rand(3, 5), colour: "rgba(220,235,255,.95)", kind: "twinkle" });
     }
     function wave() { if (alive && !still()) { flash = .3; flashColour = "rgba(255,215,106,.25)"; } }
+    // the battle won: confetti from the top of the field
+    function confetti() {
+      if (!alive || still()) return;
+      const colours = ["#ffd76a", "#ff6fb5", "#7fe3ff", "#9dffb8", "#ffffff", "#c58bff"];
+      for (let k = 0; k < 70; k++) add({ life: rand(1.6, 2.4), delay: rand(0, .5), x: rand(0, w), y: rand(-30, -5), vx: rand(-30, 30), vy: rand(70, 150), gy: 30, r: rand(3, 6), spin: rand(0, TAU), vs: rand(-6, 6), flip: rand(4, 10), colour: colours[k % colours.length], kind: "confetti" });
+    }
 
     // ---- Every frame ----
     function frame(now) {
@@ -816,8 +838,66 @@
     function drawBit(b, k, t) {
       g.save();
       switch (b.kind) {
-        case "spark": case "dust":
-          g.globalAlpha = 1 - k; g.fillStyle = b.colour; g.beginPath(); g.arc(b.x, b.y, b.r * (b.kind === "dust" ? 1 + k : 1 - k * .5), 0, TAU); g.fill(); break;
+        case "spark":
+          // a streak along its flight, glowing where streaks cross
+          g.globalAlpha = 1 - k; g.globalCompositeOperation = "lighter"; g.strokeStyle = b.colour; g.lineCap = "round";
+          g.lineWidth = b.r * (1 - k * .5);
+          g.beginPath(); g.moveTo(b.x - b.vx * .035, b.y - b.vy * .035); g.lineTo(b.x, b.y); g.stroke(); break;
+        case "dust":
+          g.globalAlpha = 1 - k; g.fillStyle = b.colour; g.beginPath(); g.arc(b.x, b.y, b.r * (1 + k), 0, TAU); g.fill(); break;
+        case "twinkle":
+          g.globalAlpha = (1 - k) * (.6 + Math.sin(t * 20 + b.x) * .4); g.globalCompositeOperation = "lighter";
+          star(g, b.x, b.y, b.r * (1 - k * .3), b.colour); break;
+        case "burst": {
+          // a white star of light with a coloured halo, opening fast
+          const r = b.r * (.45 + easeOut(Math.min(1, k * 1.6)) * .9);
+          g.globalAlpha = 1 - k * k; g.globalCompositeOperation = "lighter";
+          const halo = g.createRadialGradient(b.x, b.y, 0, b.x, b.y, r * 1.3);
+          halo.addColorStop(0, "rgba(255,255,255,.95)"); halo.addColorStop(.35, b.colour); halo.addColorStop(1, "rgba(0,0,0,0)");
+          g.fillStyle = halo; g.beginPath(); g.arc(b.x, b.y, r * 1.3, 0, TAU); g.fill();
+          g.translate(b.x, b.y); g.rotate(b.rot);
+          const spike = g.createRadialGradient(0, 0, 0, 0, 0, r * 1.15);
+          spike.addColorStop(0, "#ffffff"); spike.addColorStop(.45, "rgba(255,255,255,.9)"); spike.addColorStop(1, b.colour);
+          g.fillStyle = spike;
+          g.beginPath();
+          for (let n = 0; n < b.spikes * 2; n++) { const a = n * Math.PI / b.spikes, len = n % 2 ? r * .18 : r * (n % 4 ? .8 : 1.15); g.lineTo(Math.cos(a) * len, Math.sin(a) * len); }
+          g.closePath(); g.fill(); break;
+        }
+        case "lines":
+          // speed lines rushing in to a critical hit
+          g.globalAlpha = (1 - k) * .6; g.translate(b.x, b.y); g.fillStyle = b.colour;
+          for (let n = 0; n < 30; n++) {
+            const a = b.seed + n * TAU / 30 + (n % 3) * .04, r0 = b.r * (1.5 + (n % 4) * .35) + k * 40, r1 = Math.hypot(w, h);
+            g.beginPath(); g.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); g.lineTo(Math.cos(a - .018) * r1, Math.sin(a - .018) * r1); g.lineTo(Math.cos(a + .018) * r1, Math.sin(a + .018) * r1); g.fill();
+          }
+          break;
+        case "circle": {
+          // a rune circle on the ground, turning
+          const grow = easeOut(Math.min(1, k * 3)), r = b.r * grow;
+          g.globalAlpha = k < .7 ? .95 : (1 - k) / .3; g.globalCompositeOperation = "lighter";
+          g.translate(b.x, b.y); g.scale(1, .36); g.rotate(t * 2.2);
+          g.strokeStyle = b.colour; g.fillStyle = b.colour;
+          g.lineWidth = 3; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.stroke();
+          g.lineWidth = 2; g.beginPath(); g.arc(0, 0, r * .74, 0, TAU); g.stroke();
+          g.beginPath(); for (let n = 0; n <= 5; n++) { const a = n * 2 * TAU / 5; g.lineTo(Math.cos(a) * r * .74, Math.sin(a) * r * .74); } g.stroke();
+          for (let n = 0; n < 12; n++) { const a = n * TAU / 12; g.fillRect(Math.cos(a) * r * .87 - 2.5, Math.sin(a) * r * .87 - 2.5, 5, 5); }
+          break;
+        }
+        case "pillar": {
+          // a column of light from the sky to the caster's feet
+          const pw = b.r * (.8 + .35 * Math.sin(k * Math.PI));
+          g.globalAlpha = Math.sin(k * Math.PI) * .75; g.globalCompositeOperation = "lighter";
+          const col = g.createLinearGradient(b.x - pw, 0, b.x + pw, 0);
+          col.addColorStop(0, "rgba(0,0,0,0)"); col.addColorStop(.5, b.colour); col.addColorStop(1, "rgba(0,0,0,0)");
+          g.fillStyle = col; g.fillRect(b.x - pw, 0, pw * 2, b.y);
+          const core = g.createLinearGradient(b.x - pw * .3, 0, b.x + pw * .3, 0);
+          core.addColorStop(0, "rgba(255,255,255,0)"); core.addColorStop(.5, "rgba(255,255,255,.8)"); core.addColorStop(1, "rgba(255,255,255,0)");
+          g.fillStyle = core; g.fillRect(b.x - pw * .3, 0, pw * .6, b.y);
+          break;
+        }
+        case "confetti":
+          g.globalAlpha = k > .8 ? (1 - k) / .2 : 1; g.translate(b.x, b.y); g.rotate(b.spin + t * b.vs); g.scale(1, Math.cos(t * b.flip + b.spin));
+          g.fillStyle = b.colour; g.fillRect(-b.r, -b.r * .5, b.r * 2, b.r); break;
         case "ring":
           g.globalAlpha = 1 - k; g.strokeStyle = b.colour; g.lineWidth = b.width * (1 - k * .6);
           g.beginPath(); g.arc(b.x, b.y, b.r0 + (b.r1 - b.r0) * easeOut(k), 0, TAU); g.stroke(); break;
@@ -833,11 +913,15 @@
           break;
         }
         case "slash": {
-          g.globalAlpha = 1 - k; g.lineCap = "round";
-          g.translate(b.x, b.y); g.rotate(b.angle);
-          g.shadowColor = b.glowColour; g.shadowBlur = 14; g.strokeStyle = b.colour; g.lineWidth = 5 * (1 - k) + 1;
-          const reach = b.r * easeOut(Math.min(1, k * 2.2));
-          g.beginPath(); g.moveTo(-b.r, 0); g.lineTo(-b.r + reach * 2, 0); g.stroke();
+          // a crescent blade swept across the target: a wide glow, then the white edge
+          const fade = 1 - k * k;
+          g.globalCompositeOperation = "lighter";
+          const R = b.r * 1.05, sweep = easeOut(Math.min(1, k * 2.6)), a0 = -1.25, a1 = a0 + 2.5 * sweep;
+          g.translate(b.x, b.y); g.rotate(b.angle); g.translate(-R * .6, 0);
+          for (const [grow, colour, alpha] of [[1.2, b.glowColour, .5], [1, b.colour, 1]]) {
+            g.globalAlpha = fade * alpha; g.fillStyle = colour;
+            g.beginPath(); g.arc(0, 0, R * grow, a0, a1); g.arc(R * .22, 0, R * .84 * grow, a1, a0, true); g.closePath(); g.fill();
+          }
           break;
         }
         case "bite": {
@@ -905,7 +989,7 @@
     }
 
     return {
-      cast, impact, heal, shield, buff, knockout, wave,
+      cast, impact, heal, shield, buff, knockout, wave, confetti,
       follow(fn) { units = fn; },
       destroy() { alive = false; observer?.disconnect(); back.remove(); front.remove(); field.style.transform = ""; }
     };

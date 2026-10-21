@@ -1989,7 +1989,11 @@
     field.append(v.heroSide, v.foeSide);
     v.banner = el("div", "battle-banner");
     v.banner.setAttribute("aria-hidden", "true");
-    field.append(v.banner);
+    v.cutin = el("div", "battle-cutin");
+    v.cutin.setAttribute("aria-hidden", "true");
+    v.finale = el("div", "battle-finale");
+    v.finale.setAttribute("aria-hidden", "true");
+    field.append(v.banner, v.cutin, v.finale);
     if (v.state.bonds?.length) {
       const strip = el("div", "battle-bonds");
       for (const bond of v.state.bonds) strip.append(el("span", null, `${bond.icon} ${bond.name} +${Math.round(bond.atk * 100)}%`));
@@ -2055,7 +2059,7 @@
         art.append(side === "foe" ? foeArt(u.id) : portrait(u.id));
         const head = el("span", "unit-head");
         const hp = el("span", "unit-hp");
-        hp.append(el("i", "unit-hp-fill"), el("i", "unit-hp-shield"));
+        hp.append(el("i", "unit-hp-lag"), el("i", "unit-hp-fill"), el("i", "unit-hp-shield"));
         head.append(el("span", "unit-fx"), hp, el("small", "unit-lv", `Lv ${u.lv}`));
         tile.append(el("span", "unit-shadow"), art, head);
         if (side === "hero") tile.append(el("span", "unit-queue"));
@@ -2093,6 +2097,8 @@
     if (!tile) return;
     const fill = Math.max(0, snap.hp / snap.maxHp);
     tile.querySelector(".unit-hp-fill").style.width = `${fill * 100}%`;
+    // the health just lost lingers a moment as a pale chunk
+    tile.querySelector(".unit-hp-lag").style.width = `${fill * 100}%`;
     tile.querySelector(".unit-hp-shield").style.width = `${Math.min(1, snap.sh / snap.maxHp) * 100}%`;
     tile.classList.toggle("is-low", fill < .3);
     if (snap.alive === false && !tile.classList.contains("is-ko") && tile.isConnected) show?.knockout(tile);
@@ -2229,6 +2235,10 @@
 
   async function runBattle(v) {
     const b = v.state;
+    // the opening call: a warning when a boss is waiting
+    const bossFirst = b.foes.some(u => u?.boss);
+    banner(bossFirst ? "⚠ บอสปรากฏตัว!" : "เริ่มต่อสู้!", bossFirst ? "boss" : "start");
+    await wait((bossFirst ? 1100 : 750) * speed());
     while (b.phase !== "done" && !v.token.stopped) {
       if (b.phase === "foe") {
         v.busy = true; drawBar();
@@ -2260,8 +2270,44 @@
       drawBar();
       await play(v, E.heroTurn(b, queue, b.focus));
     }
-    if (!v.token.stopped) finish(v);
+    if (v.token.stopped) return;
+    await finale(v, b.result === "won");
+    if (!v.token.stopped && battle === v) finish(v);
   }
+
+  // The battle's last word, big across the field, before the results.
+  async function finale(v, won) {
+    if (!v.finale) return;
+    v.finale.replaceChildren(el("b", null, won ? "ชัยชนะ!" : "พ่ายแพ้…"));
+    hint(won ? "ชนะแล้ว!" : "แพ้แล้ว ลองจัดทีมใหม่ดูนะ");
+    v.finale.className = `battle-finale ${won ? "is-won" : "is-lost"}`;
+    void v.finale.offsetWidth;
+    v.finale.classList.add("is-on");
+    if (won) { show?.confetti(); [523, 659, 784, 1047].forEach((note, n) => tone(note, .14, "triangle", .05, n * .09)); }
+    else [392, 330, 262].forEach((note, n) => tone(note, .18, "triangle", .04, n * .14));
+    await wait(1300 * speed());
+    v.finale.classList.remove("is-on");
+  }
+
+  // A big skill: the fighter's picture and the skill's name sweep across
+  // the field. Returns how long it runs.
+  const CUTIN_MS = 950;
+  function cutIn(v, u, side, skill) {
+    if (!v.cutin || calm()) return 0;
+    const art = el("span", "cutin-art");
+    art.append(side === "foe" ? foeArt(u.id) : portrait(u.id));
+    const words = el("span", "cutin-words");
+    words.append(el("small", null, side === "foe" ? "สกิลบอส" : `สกิลพิเศษ · ${u.name}`), el("b", null, `${skill.icon ? `${skill.icon} ` : ""}${skill.name}`));
+    v.cutin.replaceChildren(el("span", "cutin-band"), art, words);
+    const time = CUTIN_MS * speed();
+    v.cutin.style.setProperty("--time", `${Math.round(time)}ms`);
+    v.cutin.className = `battle-cutin is-${side}`;
+    void v.cutin.offsetWidth;
+    v.cutin.classList.add("is-on");
+    setTimeout(() => v.cutin.classList.remove("is-on"), time);
+    return time;
+  }
+  const calm = () => Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 
   // Animate what happened, one event at a time.
   async function play(v, events) {
@@ -2273,8 +2319,13 @@
         case "turn": drawTop(); break;
         case "act": {
           const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i];
+          const skill = ev.s >= 0 ? u?.skills?.[ev.s] : null;
+          // a hero's second skill and every boss skill get the full show
+          const big = Boolean(skill && u && !v.stage.arena && (side === "hero" ? ev.s === 1 : u.boss));
+          const held = big ? cutIn(v, u, side, skill) : 0;
+          if (held) { tone(side === "hero" ? 659 : 196, .16, "sawtooth", .03); await wait(held * .82); if (v.token.stopped) return; }
           if (tile) { tile.classList.remove("is-acting"); void tile.offsetWidth; tile.classList.add("is-acting"); }
-          if (ev.name) banner(ev.name, side);
+          if (ev.name && !held) banner(ev.name, side, skill?.icon);
           if (u && tile && show) {
             // everyone this action reaches, up to the next action
             look = lookOf(u, ev.s);
@@ -2284,7 +2335,7 @@
               const node = v.tiles[next.side]?.[next.i];
               if (node && next.side !== side && !reached.includes(node)) reached.push(node);
             }
-            show.cast(tile, reached, look, side);
+            show.cast(tile, reached, look, side, { skill: ev.s >= 0, big });
             if (MELEE.has(look) && reached.length === 1) dash(v, tile, reached[0]);
           }
           if (side === "hero" && ev.s >= 0) v.queue = v.queue.filter(q => q.i !== ev.i);
@@ -2297,27 +2348,28 @@
         case "skip": pop(tile, "มึนงง!", "is-miss"); tone(200, .1, "sawtooth", .03); break;
         case "hit":
           paintUnit(side, ev.i, ev.u);
-          if (tile) { tile.classList.remove("is-hit"); void tile.offsetWidth; tile.classList.add("is-hit"); }
+          if (tile) { tile.classList.remove("is-hit", "is-crit-hit"); void tile.offsetWidth; tile.classList.add("is-hit"); if (ev.crit) tile.classList.add("is-crit-hit"); }
           if (tile) show?.impact(tile, look, ev.crit, (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]?.boss);
-          pop(tile, `${ev.crit ? "คริ! " : ""}-${fmt(ev.v)}`, ev.crit ? "is-crit" : "is-dmg");
+          pop(tile, fmt(ev.v), ev.crit ? "is-crit" : "is-dmg", ev.crit ? "คริติคอล!" : null);
           tone(ev.crit ? 180 : 140, .07, "square", ev.crit ? .06 : .04);
           if (ev.ko) { tone(110, .25, "sawtooth", .05); const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]; if (u) announce(`${u.name} ล้มแล้ว`); }
           break;
         case "heal": paintUnit(side, ev.i, ev.u); if (tile) show?.heal(tile, look === "leaf"); if (ev.v > 0) { pop(tile, `+${fmt(ev.v)}`, "is-heal"); tone(880, .08, "sine", .04); } break;
         case "shield": paintUnit(side, ev.i, ev.u); if (tile) show?.shield(tile); pop(tile, "เกราะ", "is-shield"); break;
         case "fx": paintUnit(side, ev.i, ev.u); if (tile && ["atkUp", "defUp", "defDown"].includes(ev.k)) show?.buff(tile, ev.k === "defDown"); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
-        case "burn": paintUnit(side, ev.i, ev.u); if (tile) show?.impact(tile, "fire", false, false); pop(tile, `🔥-${fmt(ev.v)}`, "is-dmg"); break;
+        case "burn": paintUnit(side, ev.i, ev.u); if (tile) show?.impact(tile, "fire", false, false); pop(tile, `🔥${fmt(ev.v)}`, "is-burn"); break;
         case "status": paintUnit(side, ev.i, ev.u); break;
         case "wave":
           drawSide("foe"); drawTop(); show?.wave();
           v.tiles.foe.forEach((node, n) => { if (node) { node.style.animationDelay = `${n * 70}ms`; node.classList.add("is-arriving"); setTimeout(() => node.classList.remove("is-arriving"), 1000); } });
-          banner(`คลื่นที่ ${ev.n}/${ev.total}`, "wave");
+          if (v.state.foes.some(u => u?.boss)) { banner(`⚠ คลื่นที่ ${ev.n}/${ev.total} · บอสปรากฏตัว!`, "boss"); await wait(500 * speed()); }
+          else banner(`คลื่นที่ ${ev.n}/${ev.total}`, "wave");
           announce(`มอนสเตอร์คลื่นที่ ${ev.n} มาแล้ว`);
           [392, 523, 659].forEach((note, n) => tone(note, .1, "triangle", .05, n * .08));
           break;
         default: break;
       }
-      await wait((DELAY[ev.t] ?? 100) * speed());
+      await wait(((DELAY[ev.t] ?? 100) + (ev.t === "hit" && ev.crit ? 120 : 0)) * speed());
     }
     if (!v.token.stopped && battle === v) {
       // settle every card on its final numbers
@@ -2327,17 +2379,27 @@
     }
   }
 
-  function pop(tile, text, kind) {
+  // A number jumping off a fighter. Hits in a row fan out rather than
+  // pile up on each other.
+  const POP_SPREAD = [[0, 0], [20, -10], [-20, -18], [10, -28]];
+  function pop(tile, text, kind, label) {
     if (!tile) return;
-    const n = el("span", `unit-pop ${kind}`, text);
-    n.style.setProperty("--dx", `${Math.round((Math.random() - .5) * 30)}px`);
+    const n = el("span", `unit-pop ${kind}`);
+    if (label) n.append(el("small", null, label));
+    n.append(el("b", null, text));
+    const now = performance.now();
+    tile.pops = now - (tile.popAt || 0) < 700 ? ((tile.pops || 0) + 1) % POP_SPREAD.length : 0;
+    tile.popAt = now;
+    const [dx, dy] = POP_SPREAD[tile.pops];
+    n.style.setProperty("--dx", `${dx + Math.round((Math.random() - .5) * 10)}px`);
+    n.style.setProperty("--dy", `${dy}px`);
     tile.append(n);
-    setTimeout(() => n.remove(), 1100);
+    setTimeout(() => n.remove(), 1400);
   }
-  function banner(text, side) {
+  function banner(text, side, icon) {
     const v = battle;
     if (!v) return;
-    v.banner.textContent = text;
+    v.banner.replaceChildren(...(icon ? [el("i", null, icon)] : []), el("span", null, text));
     v.banner.className = `battle-banner is-${side}`;
     void v.banner.offsetWidth;
     v.banner.classList.add("is-on");
