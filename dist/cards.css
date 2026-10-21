@@ -1572,3 +1572,4 @@ button.unit { cursor: crosshair; }
 }
 /* the team's bonuses stay readable over the effects */
 .battle-bonds { z-index: 5; }
+.fav-note { margin: 0; color: var(--muted, #cfc4e2); font-size: .68rem; text-align: center; }

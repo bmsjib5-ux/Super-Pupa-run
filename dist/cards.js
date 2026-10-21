@@ -404,29 +404,39 @@
       row.append(tile);
     }
     box.append(head, row);
-    const ready = favs.filter(id => c.units[id] && !c.team.includes(id));
-    if (ready.length) box.append(button("secondary-button fav-fill", `⭐ ใส่ตัวแนะนำที่มีลงทีม (${ready.length})`, () => { fillFavs(stage); after(); }));
+    const ready = favs.filter(id => c.units[id] && !c.team.includes(id)), plan = planFavs(c, stage);
+    if (plan.added.length) box.append(button("secondary-button fav-fill", `⭐ ใส่ตัวแนะนำที่มีลงทีม (${plan.added.length})`, () => { fillFavs(stage); after(); }));
+    else if (ready.length) box.append(el("p", "fav-note", "ทีมเต็มด้วยตัวแนะนำและตัวฮีลแล้ว · เก็บตัวฮีลไว้ จัดเองได้ที่แท็บทีม"));
     return box;
   }
-  // Put the recommended cards this player owns in the team: into empty
-  // places first, then in place of the weakest card that is not one.
-  function fillFavs(stage) {
-    const c = cards(), favs = E.favsOf(stage), team = c.team, added = [];
+  // A card that heals, which the button below never takes out of the team.
+  const isHealer = (id) => E.CARDS[id]?.skills.some(skill => skill.heal);
+  // Where the recommended cards this player owns would go: into empty
+  // places first, then in place of the weakest card that is neither
+  // recommended nor a healer.
+  function planFavs(c, stage) {
+    const favs = E.favsOf(stage), team = [...c.team], added = [];
     for (const id of favs) {
       if (!c.units[id] || team.includes(id)) continue;
       let slot = team.indexOf("");
       if (slot < 0) {
-        const out = team.map((t, n) => ({ t, n })).filter(o => o.t && !favs.includes(o.t)).sort((a, b) => E.cardPower(c, a.t) - E.cardPower(c, b.t))[0];
+        const out = team.map((t, n) => ({ t, n })).filter(o => o.t && !favs.includes(o.t) && !isHealer(o.t)).sort((a, b) => E.cardPower(c, a.t) - E.cardPower(c, b.t))[0];
         if (!out) break;
         slot = out.n;
       }
       team[slot] = id;
-      added.push(E.CARDS[id].name);
+      added.push(id);
     }
-    if (!added.length) return;
+    return { team, added };
+  }
+  function fillFavs(stage) {
+    const c = cards(), plan = planFavs(c, stage);
+    if (!plan.added.length) return;
+    plan.team.forEach((id, n) => { c.team[n] = id; });
     store();
     [659, 880, 1047].forEach((note, i) => tone(note, .07, "triangle", .04, i * .06));
-    announce(`ใส่${added.join(" ")}ลงทีมแล้ว โจมตีทั้งทีม +${pct(E.favAtk(team, stage))}`);
+    const kept = c.team.filter(id => id && isHealer(id) && !plan.added.includes(id)).map(id => E.CARDS[id].name);
+    announce(`ใส่${plan.added.map(id => E.CARDS[id].name).join(" ")}ลงทีมแล้ว โจมตีทั้งทีม +${pct(E.favAtk(c.team, stage))}${kept.length ? ` · เก็บตัวฮีล ${kept.join(" ")} ไว้` : ""}`);
   }
 
   // ---- Team sets ----
