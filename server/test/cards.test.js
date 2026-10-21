@@ -41,6 +41,29 @@ test("cards: a boss stage's third star allows ten turns", () => {
   assert.equal(E.starsFor({ result: "won", turn: 11, heroes: [{ alive: true }] }, stage), 2);
 });
 
+test("cards: each stage recommends three cards, and fielding them raises the team's attack", () => {
+  for (const stage of [...E.STAGES, E.towerFloor(1), E.towerFloor(150)]) {
+    const favs = E.favsOf(stage);
+    assert.equal(new Set(favs).size, 3, `stage ${stage.num}`);
+    // one of D to B, one A, one S or SSS
+    assert.deepEqual(favs.map(id => E.CARDS[id].rarity).map(r => (r <= 3 ? 0 : r === 4 ? 1 : 2)), [0, 1, 2]);
+    assert.deepEqual(E.favsOf(stage), favs);
+  }
+  assert.notDeepEqual(E.favsOf(E.STAGES[0]), E.favsOf(E.STAGES[1]));
+  assert.deepEqual(E.favsOf(E.arenaTier(3)), []);
+  const stage = E.STAGES[9], favs = E.favsOf(stage);
+  const others = E.CARD_IDS.filter(id => !favs.includes(id)).slice(0, 5);
+  const field = (ids) => E.createBattle({ team: ids.map(id => ({ id, lv: 20 })), stage, seed: 3 });
+  const plain = field(others);
+  assert.equal(plain.favs.atk, 0);
+  // two recommended cards in: +20% attack for everyone
+  const withTwo = field([favs[0], favs[1], ...others.slice(0, 3)]);
+  assert.equal(withTwo.favs.atk, 2 * E.FAV_ATK);
+  const lone = E.createBattle({ team: [{ id: others[0], lv: 20 }], stage, seed: 3 }).heroes[0];
+  const helped = withTwo.heroes.find(u => u?.id === others[0]);
+  assert.equal(helped.atk, Math.round(lone.atk * (1 + 2 * E.FAV_ATK)));
+});
+
 test("cards: the same seed gives the same battle", () => {
   const a = play(E.STAGES[9], 6, 42), b = play(E.STAGES[9], 6, 42);
   assert.equal(a.result, b.result);

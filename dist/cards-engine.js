@@ -1276,6 +1276,28 @@
   const bondAtk = (ids, id) => activeBonds(ids).filter(bond => bond.members.includes(id)).reduce((sum, bond) => sum + bond.atk, 0);
   const bondsOf = (id) => BONDS.filter(bond => bond.ids.includes(id));
 
+  // ---- Recommended cards ----
+  // Each stage and tower floor names three cards that know its monsters:
+  // one of grade D to B, one A and one S or SSS, so every player owns
+  // some. Each one fielded raises the whole team's attack by FAV_ATK.
+  // Arena tiers and daily dungeons have none.
+  const FAV_ATK = .1;
+  const FAV_POOLS = [[1, 3], [4, 4], [5, 6]].map(([lo, hi]) => Object.keys(CARDS).filter(id => CARDS[id].rarity >= lo && CARDS[id].rarity <= hi));
+  const favCache = new Map();
+  function favsOf(stage) {
+    if (!stage || stage.arena || stage.dungeon || !stage.num) return [];
+    const key = stage.tower ? 1000 + stage.num : stage.num;
+    if (!favCache.has(key)) {
+      // a spread hash of the stage, a different slice of it per pool
+      let h = Math.imul(key ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
+      h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+      favCache.set(key, FAV_POOLS.map((pool, n) => pool[(((h >>> (n * 9)) ^ (key * (n + 3))) >>> 0) % pool.length]));
+    }
+    return favCache.get(key);
+  }
+  // the team's extra attack on this stage from the recommended cards in it
+  const favAtk = (ids, stage) => { const favs = favsOf(stage); return new Set(ids.filter(id => favs.includes(id))).size * FAV_ATK; };
+
   // ---- Numbers ----
   function statsOf(def, lv, foe) {
     const role = ROLES[def.role];
@@ -1362,6 +1384,9 @@
     const ids = living(b.heroes).map(u => u.id);
     b.bonds = activeBonds(ids).map(bond => ({ id: bond.id, name: bond.name, icon: bond.icon, atk: bond.atk, members: bond.members }));
     for (const hero of living(b.heroes)) { const extra = bondAtk(ids, hero.id); if (extra) { hero.atk = Math.round(hero.atk * (1 + extra)); hero.bond = extra; } }
+    // recommended cards fielded: the whole team hits harder
+    b.favs = { ids: favsOf(stage), atk: favAtk(ids, stage) };
+    if (b.favs.atk) for (const hero of living(b.heroes)) hero.atk = Math.round(hero.atk * (1 + b.favs.atk));
     for (const hero of living(b.heroes)) {
       if (hero.passive?.shield) addStatus(hero, { k: "shield", v: Math.round(hero.maxHp * hero.passive.shield), turns: 2 });
       // a guardian's passive shields the whole team
@@ -2137,7 +2162,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    BOSS_PAR, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    BOSS_PAR, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });

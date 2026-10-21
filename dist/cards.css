@@ -1543,3 +1543,32 @@ button.unit { cursor: crosshair; }
   .battle-finale b, .battle-finale::before { animation: none !important; }
 }
 @keyframes dmg-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- Recommended cards for a stage ---- */
+.fav-strip { display: grid; gap: .45rem; margin-top: .7rem; padding: .6rem .7rem .7rem; border: 1px solid rgba(255,215,106,.4); border-radius: .9rem; background: linear-gradient(160deg, rgba(255,215,106,.12), rgba(13,8,36,.35)); }
+.fav-strip.is-active { border-color: #ffd76a; box-shadow: 0 0 .9rem rgba(255,215,106,.3); }
+.fav-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; margin: 0; }
+.fav-head b { color: #ffe08a; font-size: .86rem; }
+.fav-head span { color: var(--muted, #cfc4e2); font-size: .7rem; }
+.fav-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.fav-card { position: relative; display: grid; justify-items: center; gap: .12rem; min-width: 0; padding: .4rem .3rem .35rem; border: 1.5px solid var(--frame, rgba(255,255,255,.25)); border-radius: .75rem; color: var(--ink); font: inherit; text-align: center; background: rgba(255,255,255,.06); cursor: pointer; transition: transform .15s ease; }
+.fav-card:hover { transform: translateY(-2px); }
+.fav-card.is-on { background: rgba(255,215,106,.16); box-shadow: 0 0 0 2px #ffd76a, 0 0 .8rem rgba(255,215,106,.45); }
+.fav-card.is-locked { opacity: .6; }
+.fav-card.is-locked .fav-face { filter: grayscale(.9) brightness(.6); }
+.fav-face { position: relative; display: block; width: 3.2rem; height: 3.2rem; overflow: hidden; border-radius: .6rem; background: var(--bg, none) center / cover, rgba(0,0,0,.3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.fav-face .card-art { width: 100%; height: 100%; }
+.fav-grade { position: absolute; top: .25rem; right: .3rem; }
+.fav-card b { max-width: 100%; overflow: hidden; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.fav-card small { color: var(--muted, #cfc4e2); font-size: .6rem; font-weight: 700; }
+.fav-card.is-on small { color: #ffe08a; }
+.fav-fill { justify-self: center; padding: .45rem 1rem; font-size: .8rem; }
+.tcard-fav { position: absolute; z-index: 6; left: 50%; bottom: -.45rem; padding: 0 .35rem; border-radius: 999px; color: #3a1606; font-size: .52rem; font-weight: 900; white-space: nowrap; background: linear-gradient(180deg, #fff3b0, #ffc94d); box-shadow: 0 1px 3px rgba(0,0,0,.5); transform: translateX(-50%); }
+.battle-bonds span.is-fav { color: #fff; background: linear-gradient(135deg, #ff9a4a, #e0482a); box-shadow: 0 0 .6rem rgba(255,120,60,.6); }
+.tower .fav-strip, .cards-scroll > .fav-strip { margin: .2rem 0 .7rem; }
+@media (max-width: 34rem) {
+  .fav-face { width: 2.7rem; height: 2.7rem; }
+  .fav-head span { font-size: .64rem; }
+}
+/* the team's bonuses stay readable over the effects */
+.battle-bonds { z-index: 5; }

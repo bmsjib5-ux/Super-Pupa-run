@@ -383,6 +383,52 @@
   const powerEntry = (id) => ({ id, lv: cards().units[id], bonus: E.cardBonus(cards(), id), gear: E.gearBonus(cards(), id) });
   const teamPower = () => E.teamPowerOf(cards().team.filter(Boolean).map(powerEntry));
 
+  // ---- Recommended cards ----
+  // Three cards per stage and tower floor (E.favsOf); each one in the team
+  // gives everyone attack +E.FAV_ATK there. `after` redraws what shows it.
+  function favStrip(stage, after) {
+    const c = cards(), favs = E.favsOf(stage);
+    if (!favs.length) return null;
+    const fielded = favs.filter(id => c.team.includes(id)).length;
+    const box = el("div", `fav-strip${fielded ? " is-active" : ""}`);
+    const head = el("p", "fav-head");
+    head.append(el("b", null, "⭐ ตัวละครแนะนำ"), el("span", null, `ลงทีมใบละ โจมตีทั้งทีม +${pct(E.FAV_ATK)} · ตอนนี้ ${fielded}/${favs.length} ใบ +${pct(fielded * E.FAV_ATK)}`));
+    const row = el("div", "fav-row");
+    for (const id of favs) {
+      const def = E.CARDS[id], owned = Boolean(c.units[id]), on = c.team.includes(id);
+      const tile = button(`fav-card r${def.rarity}${owned ? "" : " is-locked"}${on ? " is-on" : ""}`, null, () => { tab = "team"; cardSheet(id); },
+        `${def.name} ระดับ ${gradeOf(id)} ${on ? "อยู่ในทีมแล้ว" : owned ? "มีแล้ว ยังไม่อยู่ในทีม" : "ยังไม่มีการ์ดนี้"}`);
+      const face = backdrop(el("span", "fav-face"), id);
+      face.append(portrait(id));
+      tile.append(face, gradeBadge(id, "fav-grade grade"), el("b", null, def.name), el("small", null, on ? "ในทีม ✓" : owned ? "มีแล้ว" : "🔒 ยังไม่มี"));
+      row.append(tile);
+    }
+    box.append(head, row);
+    const ready = favs.filter(id => c.units[id] && !c.team.includes(id));
+    if (ready.length) box.append(button("secondary-button fav-fill", `⭐ ใส่ตัวแนะนำที่มีลงทีม (${ready.length})`, () => { fillFavs(stage); after(); }));
+    return box;
+  }
+  // Put the recommended cards this player owns in the team: into empty
+  // places first, then in place of the weakest card that is not one.
+  function fillFavs(stage) {
+    const c = cards(), favs = E.favsOf(stage), team = c.team, added = [];
+    for (const id of favs) {
+      if (!c.units[id] || team.includes(id)) continue;
+      let slot = team.indexOf("");
+      if (slot < 0) {
+        const out = team.map((t, n) => ({ t, n })).filter(o => o.t && !favs.includes(o.t)).sort((a, b) => E.cardPower(c, a.t) - E.cardPower(c, b.t))[0];
+        if (!out) break;
+        slot = out.n;
+      }
+      team[slot] = id;
+      added.push(E.CARDS[id].name);
+    }
+    if (!added.length) return;
+    store();
+    [659, 880, 1047].forEach((note, i) => tone(note, .07, "triangle", .04, i * .06));
+    announce(`ใส่${added.join(" ")}ลงทีมแล้ว โจมตีทั้งทีม +${pct(E.favAtk(team, stage))}`);
+  }
+
   // ---- Team sets ----
   // Five saved teams. The one picked is the team in play (c.team); the
   // others wait in c.sets until picked. A new set starts as a copy of the
@@ -1962,8 +2008,17 @@
       : `รางวัลเล่นซ้ำ: ● ${stage.repeat}`;
     parts.push(reward, el("p", "sheet-goals", `★ ชนะ · ★ ไม่มีการ์ดล้ม · ★ ชนะภายใน ${stage.par} เทิร์น`));
     const team = el("div", "sheet-team");
-    for (const id of c.team) team.append(id ? cardTile(id, () => { tab = "team"; cardSheet(id); }) : el("span", "cards-empty is-flat", "–"));
-    parts.push(el("p", "sheet-sub", `ทีมของคุณ · พลังทีม ${fmt(teamPower())}`), setStrip(() => stageSheet(stage), true), team);
+    const favs = E.favsOf(stage);
+    for (const id of c.team) {
+      if (!id) { team.append(el("span", "cards-empty is-flat", "–")); continue; }
+      const tile = cardTile(id, () => { tab = "team"; cardSheet(id); });
+      if (favs.includes(id)) tile.append(el("span", "tcard-fav", "⭐ แนะนำ"));
+      team.append(tile);
+    }
+    const boost = E.favAtk(c.team, stage);
+    parts.push(el("p", "sheet-sub", `ทีมของคุณ · พลังทีม ${fmt(teamPower())}${boost ? ` · ⭐ โจมตี +${pct(boost)} ในด่านนี้` : ""}`), setStrip(() => stageSheet(stage), true), team);
+    const fav = favStrip(stage, () => stageSheet(stage));
+    if (fav) parts.push(fav);
     const actions = el("div", "title-actions sheet-actions");
     actions.append(button("primary-button", "เริ่มต่อสู้ ⚔", () => startBattle(stage)), button("secondary-button", "จัดทีม", () => { tab = "team"; closeSheet(); }));
     parts.push(actions);
@@ -1985,7 +2040,7 @@
     frame.classList.toggle("is-arena", Boolean(stage.arena));
     buildBattle();
     tone(392, .1, "triangle", .05); tone(523, .12, "triangle", .05, .1);
-    announce((stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`) + (state.bonds.length ? ` · ความสัมพันธ์ ${state.bonds.map(b => b.name).join(" ")}` : ""));
+    announce((stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`) + (state.bonds.length ? ` · ความสัมพันธ์ ${state.bonds.map(b => b.name).join(" ")}` : "") + (state.favs?.atk ? ` · ตัวละครแนะนำ โจมตี +${Math.round(state.favs.atk * 100)}%` : ""));
     runBattle(battle);
   }
 
@@ -2011,9 +2066,10 @@
     v.finale = el("div", "battle-finale");
     v.finale.setAttribute("aria-hidden", "true");
     field.append(v.banner, v.cutin, v.finale);
-    if (v.state.bonds?.length) {
+    if (v.state.bonds?.length || v.state.favs?.atk) {
       const strip = el("div", "battle-bonds");
-      for (const bond of v.state.bonds) strip.append(el("span", null, `${bond.icon} ${bond.name} +${Math.round(bond.atk * 100)}%`));
+      if (v.state.favs?.atk) strip.append(el("span", "is-fav", `⭐ ตัวแนะนำ ×${Math.round(v.state.favs.atk / E.FAV_ATK)} · โจมตี +${Math.round(v.state.favs.atk * 100)}%`));
+      for (const bond of v.state.bonds || []) strip.append(el("span", null, `${bond.icon} ${bond.name} +${Math.round(bond.atk * 100)}%`));
       field.append(strip);
     }
     v.hintLine = el("p", "battle-hint");
@@ -2511,6 +2567,10 @@
       tower.append(row);
     }
     if (done) panel.append(el("p", "sheet-reward", `🏆 พิชิตหอคอยครบ ${E.TOWER_FLOORS} ชั้นแล้ว!`));
+    else {
+      const fav = favStrip(E.towerFloor(next), () => showHub());
+      if (fav) { fav.querySelector(".fav-head b").textContent = `⭐ ตัวละครแนะนำ ชั้น ${next}`; panel.append(fav); }
+    }
     panel.append(tower);
   }
   function finishTower(v) {
