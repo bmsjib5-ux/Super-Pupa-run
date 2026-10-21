@@ -34,7 +34,12 @@ test("cards: a boss stage's third star allows ten turns", () => {
   const bosses = E.STAGES.filter(stage => stage.boss);
   assert.ok(bosses.length > 0);
   for (const stage of bosses) assert.ok(stage.par >= E.BOSS_PAR && E.BOSS_PAR === 10, `stage ${stage.num}`);
-  for (const stage of E.STAGES.filter(stage => !stage.boss)) assert.equal(stage.par, stage.waves.length * 2 + 2);
+  // the turn limit only grows from chapter to chapter
+  for (const stage of E.STAGES.filter(stage => !stage.boss)) {
+    assert.equal(stage.par, E.parFor(stage.num, stage.waves.length, false));
+    assert.ok(stage.par >= stage.waves.length * 2 + 2);
+  }
+  assert.ok(E.STAGES[159].par > E.STAGES[0].par + 20);
   // nine turns on a boss stage still earns the star
   const stage = bosses[0];
   assert.equal(E.starsFor({ result: "won", turn: 9, heroes: [{ alive: true }] }, stage), 3);
@@ -62,6 +67,30 @@ test("cards: each stage recommends three cards, and fielding them raises the tea
   const lone = E.createBattle({ team: [{ id: others[0], lv: 20 }], stage, seed: 3 }).heroes[0];
   const helped = withTwo.heroes.find(u => u?.id === others[0]);
   assert.equal(helped.atk, Math.round(lone.atk * (1 + 2 * E.FAV_ATK)));
+});
+
+test("cards: story monsters have less health from chapter 2 on, the tower's do not", () => {
+  const field = (stage) => E.createBattle({ team: [{ id: "pupa", lv: 30 }], stage, seed: 1 }).foes[0];
+  const late = E.STAGES[40], floor = E.towerFloor(41);
+  assert.equal(E.STAGES[3].ease, 1);
+  assert.equal(late.ease, E.FOE_EASE);
+  const foe = field(late), tower = field(floor);
+  const plain = E.createBattle({ team: [{ id: "pupa", lv: 30 }], stage: { ...late, ease: 1 }, seed: 1 }).foes[0];
+  assert.equal(foe.maxHp, Math.round(plain.maxHp * E.FOE_EASE));
+  assert.ok(!floor.ease && tower.maxHp > 0);
+});
+
+test("cards: a team that can win a stage gets three stars most of the time", () => {
+  const strong = ["thongkham", "phloeng", "chantra", "mekha", "pupav2"], top = ["thongkham", "phloeng", "chantra", "asani", "pupav2"];
+  const setup = (n) => n > 130 ? [130, top, E.awakeBonus(10)] : n > 120 ? [120, top, E.awakeBonus(9)] : n > 110 ? [110, top, E.awakeBonus(8)] : n > 80 ? [80, top, 5 * E.AWAKE_BONUS] : n > 60 ? [80, strong, 5 * E.AWAKE_BONUS] : n > 50 ? [75, strong, 4 * E.AWAKE_BONUS] : n > 40 ? [50, strong, 2 * E.AWAKE_BONUS] : n > 20 ? [30, strong, 0] : [20, null, 0];
+  for (let ch = 0; ch < E.STAGES.length / 10; ch++) {
+    let three = 0, runs = 0;
+    for (const stage of E.STAGES.slice(ch * 10, ch * 10 + 10)) {
+      const [lv, ids, bonus] = setup(stage.num);
+      for (let s = 1; s <= 4; s++) { runs++; if (E.starsFor(play(stage, lv, stage.num * 53 + s, ids, bonus), stage) === 3) three++; }
+    }
+    assert.ok(three / runs >= .6, `chapter ${ch + 1}: three stars in ${three} of ${runs}`);
+  }
 });
 
 test("cards: the same seed gives the same battle", () => {

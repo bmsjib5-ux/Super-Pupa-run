@@ -1218,6 +1218,15 @@
     waves[last] = waves[last].replace(u.from, u.id);
   }
   const BOSS_PAR = 10;
+  // Story stages are kinder than the tower: their monsters have less
+  // health from chapter 2 on (FOE_EASE), and the third star's turn limit
+  // grows with the chapter, as later fights run longer (parFor).
+  const FOE_EASE = .6, PAR_STEP = 2;
+  const easeFor = (num) => (num > 10 ? FOE_EASE : 1);
+  function parFor(num, waves, boss) {
+    const base = waves * 2 + 2 + Math.floor((Math.ceil(num / 10) - 1) * PAR_STEP);
+    return boss ? Math.max(BOSS_PAR, base) : base;
+  }
   const parseWave = (text) => {
     const [front, back = ""] = text.split("/");
     const list = (part, row) => part.split(",").filter(Boolean).map(id => ({ id, row }));
@@ -1232,7 +1241,9 @@
       boss: parsed.some(wave => wave.some(foe => FOES[foe.id].boss)),
       // the third star: win within this many hero turns (a boss stage
       // gets at least BOSS_PAR)
-      par: parsed.some(wave => wave.some(foe => FOES[foe.id].boss)) ? Math.max(BOSS_PAR, parsed.length * 2 + 2) : parsed.length * 2 + 2,
+      par: parFor(num, parsed.length, parsed.some(wave => wave.some(foe => FOES[foe.id].boss))),
+      // the monsters' health here, as a share of the tower's
+      ease: easeFor(num),
       coins: 20 + 5 * num,       // first clear
       repeat: 5 + num,           // every clear after that
       // characters come only from card pulls now: the first clear gives
@@ -1373,7 +1384,7 @@
   function createBattle({ team, stage, seed = 1 }) {
     const b = {
       stage: stage.num, waves: stage.waves, waveLv: stage.lv, wave: 0,
-      seed: seed >>> 0, turn: 0, phase: "hero", result: null, focus: -1,
+      seed: seed >>> 0, turn: 0, phase: "hero", result: null, focus: -1, ease: stage.ease || 1,
       heroes: [], foes: []
     };
     for (let slot = 0; slot < team.length; slot++) {
@@ -1400,6 +1411,7 @@
 
   function spawnWave(b) {
     b.foes = b.waves[b.wave].map((foe, slot) => makeUnit("foe", slot, foe.id, b.waveLv, foe.row));
+    if (b.ease !== 1) for (const u of b.foes) u.maxHp = u.hp = Math.max(1, Math.round(u.hp * b.ease));
     b.focus = -1;
   }
 
@@ -2162,7 +2174,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
-    BOSS_PAR, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
+    BOSS_PAR, FOE_EASE, parFor, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe
   };
 });
