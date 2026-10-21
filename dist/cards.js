@@ -21,11 +21,21 @@
     if (text != null) node.textContent = text;
     return node;
   };
+  // A tap on something that has only just appeared is dropped: a quick
+  // second tap (or a slow phone's late one) after opening a stage would
+  // otherwise land on what opened under the finger, like a team card.
+  const TAP_GUARD_MS = 400;
+  let freshBox = null, freshAt = 0;
+  const freshen = (box) => { freshBox = box; freshAt = performance.now(); };
   const button = (className, text, handler, label) => {
     const node = el("button", className, text);
     node.type = "button";
     if (label) node.setAttribute("aria-label", label);
-    if (handler) game().onTap(node, (event) => { if (!node.disabled) handler(event); });
+    if (handler) game().onTap(node, (event) => {
+      if (node.disabled) return;
+      if (freshBox?.contains(node) && performance.now() - freshAt < TAP_GUARD_MS) return;
+      handler(event);
+    });
     return node;
   };
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -525,6 +535,8 @@
     stopShow();
     stopMap();
     battle = null;
+    // back from a sheet or a battle: the hub's cards appear under the finger
+    const back = Boolean(sheet) || frame.classList.contains("is-battle");
     sheet = null;
     frame.classList.remove("is-battle", "is-arena");
     showCoins();
@@ -542,6 +554,7 @@
     panel.setAttribute("role", "tabpanel");
     if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else if (tab === "tower") renderTower(panel); else renderTeam(panel);
     body.replaceChildren(idleBanner(), tabs, panel);
+    if (back) freshen(body);
   }
 
   // ---- Auto hunting ----
@@ -818,6 +831,7 @@
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;
+    freshen(v.result);
     hint("");
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(won ? `ผ่าน${stage.name} ได้ ${stage.coins} เหรียญ และ EXP ${xp}` : "พ่ายแพ้ ลองใหม่ได้");
@@ -1413,7 +1427,9 @@
   }
 
   // ---- Detail panels ----
-  function openSheet(content, kind = "") {
+  // `fresh` is false when the same sheet is drawn again in place (a card
+  // after wearing an item), which must take quick taps.
+  function openSheet(content, kind = "", fresh = true) {
     closeSheet(true);
     sheet = el("div", "cards-sheet");
     sheet.setAttribute("role", "dialog");
@@ -1425,13 +1441,14 @@
     sheet.append(box);
     sheet.addEventListener("click", (event) => { if (event.target === sheet) closeSheet(); });
     frame.append(sheet);
+    if (fresh) freshen(sheet);
     x.focus({ preventScroll: true });
   }
   function closeSheet(quiet) {
     if (!sheet) return;
     sheet.remove();
     sheet = null;
-    if (!quiet) showHub();
+    if (!quiet) { showHub(); freshen(body); }
   }
 
   // Card bonds: the ones active in the team, as chips with their bonus.
@@ -1820,7 +1837,7 @@
     detail.append(stars, stage, title, team, info, chips, pane, actions);
     const book = el("div", "codex");
     book.append(codexList(c, id), detail);
-    openSheet([book], "is-codex");
+    openSheet([book], "is-codex", !same);
     sheet.dataset.card = id;
     const list = sheet.querySelector(".codex-list");
     if (listTop != null) list.scrollTop = listTop;
@@ -2006,6 +2023,7 @@
     v.result.hidden = true;
     view.append(top, field, v.hintLine, v.bar, v.result);
     body.replaceChildren(view);
+    freshen(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
     show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.scene || v.stage.chapter : Math.min(16, Math.ceil(v.stage.num / 10)) }) || null;
@@ -2462,6 +2480,7 @@
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;
+    freshen(v.result);
     hint("");
     game().tone(won ? 784 : 220, .2, "triangle", .06);
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
@@ -2523,6 +2542,7 @@
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;
+    freshen(v.result);
     hint("");
     if (won) [523, 659, 784, 1047, 1319].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(won ? `ผ่านหอคอยชั้น ${floor.num}` : "พ่ายแพ้ในหอคอย");
@@ -2553,6 +2573,7 @@
     box.append(actions);
     v.result.replaceChildren(box);
     v.result.hidden = false;
+    freshen(v.result);
     hint("");
     if (won) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(won ? `ผ่านลานประลองชั้น ${tier.num}` : "พ่ายแพ้ในลานประลอง");
