@@ -13,14 +13,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261023b">
-    <link rel="stylesheet" href="cards.css?v=20261023b">
-    <script src="cards-engine.js?v=20261023b" defer></script>
-    <script src="game.js?v=20261023b" defer></script>
-    <script src="cards-fx.js?v=20261023b" defer></script>
-    <script src="cards-3d.js?v=20261023b" defer></script>
-    <script src="cards.js?v=20261023b" defer></script>
-    <script type="module" src="pupa3d.js?v=20261023b"></script>
+    <link rel="stylesheet" href="styles.css?v=20261023c">
+    <link rel="stylesheet" href="cards.css?v=20261023c">
+    <link rel="stylesheet" href="match.css?v=20261023c">
+    <script src="cards-engine.js?v=20261023c" defer></script>
+    <script src="game.js?v=20261023c" defer></script>
+    <script src="cards-fx.js?v=20261023c" defer></script>
+    <script src="cards-3d.js?v=20261023c" defer></script>
+    <script src="cards.js?v=20261023c" defer></script>
+    <script src="match-engine.js?v=20261023c" defer></script>
+    <script src="match.js?v=20261023c" defer></script>
+    <script type="module" src="pupa3d.js?v=20261023c"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
     <script src="config.js?v=20261011a"></script>
     <script type="module" src="account.js?v=20261011h"></script>
@@ -207,6 +210,11 @@
                 <span class="mode-picture mode-trio"><img src="assets/ikuya-hero.webp" alt=""><img src="assets/pangji-hero.webp" alt=""><img src="assets/baitoey-hero.webp" alt=""></span>
                 <b>ศึกการ์ดแสงจันทร์</b>
                 <span>จัดทีม 5 ใบ เลือกลำดับสกิล สู้มอนสเตอร์</span>
+              </button>
+              <button class="mode-item mode-match" type="button" data-mode="match">
+                <span class="mode-picture mode-tiles"><img src="assets/chantra-hero.webp" alt=""><img src="assets/chantra-hero.webp" alt=""><img src="assets/jibjib-hero.webp" alt=""><img src="assets/jibjib-hero.webp" alt=""></span>
+                <b>จับคู่การ์ด</b>
+                <span>จับคู่การ์ดหน้าเหมือนกันก่อนหมดเวลา 30 ด่าน</span>
                 <i class="mode-new">ใหม่!</i>
               </button>
             </div>
@@ -244,6 +252,9 @@
             <div id="levelList" class="shop-list level-list"></div>
           </div>
         </div>
+
+        <!-- The match mode: filled in by match.js. -->
+        <div id="matchScreen" class="overlay shop-overlay match-overlay" role="dialog" aria-modal="true" aria-labelledby="matchTitle" hidden></div>
 
         <!-- Card battles: filled in by cards.js. -->
         <div id="cardsScreen" class="overlay shop-overlay cards-overlay" role="dialog" aria-modal="true" aria-labelledby="cardsTitle" hidden></div>

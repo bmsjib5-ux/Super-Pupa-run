@@ -246,6 +246,19 @@ test("merge: team sets come from the device, kept when a device has none", () =>
   assert.equal(c.cards.set, 1);
 });
 
+test("merge: the match mode keeps each level's best stars and score", () => {
+  const a = mergeSave(null, cleanSave(device(0, { match: { stars: { 1: 3, 2: 1, "bad key": 9 }, best: { 1: 1500, 2: 400 } } })), 0);
+  assert.deepEqual(a.match, { stars: { 1: 3, 2: 1 }, best: { 1: 1500, 2: 400 } });
+  // another device: better at 2, worse at 1, and level 3
+  const b = mergeSave(a, cleanSave(device(0, { match: { stars: { 1: 1, 2: 3, 3: 2 }, best: { 1: 900, 2: 1800, 3: 700 } } })), 0);
+  assert.deepEqual(b.match.stars, { 1: 3, 2: 3, 3: 2 });
+  assert.deepEqual(b.match.best, { 1: 1500, 2: 1800, 3: 700 });
+  // a device that never played it leaves it be
+  assert.deepEqual(mergeSave(b, cleanSave(device(0)), 0).match, b.match);
+  // stars never above three
+  assert.equal(cleanSave(device(0, { match: { stars: { 4: 7 } } })).match.stars[4], 3);
+});
+
 test("merge: gear keeps each piece's higher tier and level, ore the higher count", () => {
   const none = mergeSave(null, cleanSave(device(0, { cards: { dust: 1 } })), 0);
   assert.equal(none.cards.ore, undefined);

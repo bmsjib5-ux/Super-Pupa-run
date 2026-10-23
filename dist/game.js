@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6010,6 +6010,9 @@
       normalizeShop();
       mergeHeroXp(xp);
       mergeHeroXp(remote.shop?.heroXp);
+      // the match mode's best stars and scores, the higher of each
+      const most = (a = {}, b = {}) => { const out = { ...a }; for (const [k, v] of Object.entries(b || {})) out[k] = Math.max(Number(out[k]) || 0, Number(v) || 0); return out; };
+      if (remote.match || match) save.match = { stars: most(match?.stars, remote.match?.stars), best: most(match?.best, remote.match?.best) };
       // merged into the same object: the card screen's open buttons hold
       // it, and a tap after a sync must still land in the save
       const merged = mergeCards(cards, remote.cards, !full);
@@ -6037,11 +6040,19 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // The match mode (match.js) covers the game the same way.
+    setMatchOpen(open) {
+      matchOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
 
   let cardsOpen = false;
+  let matchOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6452,7 +6463,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6489,6 +6500,7 @@
     document.body.classList.remove("dialog-open");
     [523, 659, 784].forEach((note, i) => tone(note, .08, "triangle", .05, i * .06));
     if (mode === "cards") { window.PupaCards?.open(); return; }
+    if (mode === "match") { window.PupaMatch?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6504,10 +6516,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-23b";
+  const NEWS_VERSION = "2026-10-23c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "🃏 จับคู่การ์ด · 30 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แตะการ์ดหน้าเหมือนกัน 2 ใบเพื่อจับคู่ แบบเกมจับคู่โปเกม่อน เส้นเชื่อมหักมุมได้ไม่เกิน 2 ครั้ง อ้อมขอบนอกกระดานได้ แต่ห้ามผ่านการ์ดใบอื่น เก็บให้หมดก่อนหมดเวลา จับคู่ติด ๆ กันได้คอมโบคะแนนเพิ่ม การ์ดเป็นตัวละครศึกการ์ดทั้ง 43 ใบ ตั้งแต่ด่าน 11 มีมอนสเตอร์มาเพิ่ม บางด่านการ์ดไหลลง ขึ้น ซ้าย หรือขวาหลังจับคู่ มีคำใบ้ 💡 และสลับการ์ด 🔀 ด่านละ 3 ครั้ง ถ้าไม่มีคู่ให้จับจะสลับให้ฟรี เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 15 และได้ 3 ดาวครั้งแรกได้อีก 💎 15", image: "cards", open: () => { closeNews(); window.PupaMatch?.open(); } },
     { tag: "ปรับปรุง", title: "✨ โหมดผจญภัย: เอฟเฟควิ่ง กระโดด ปล่อยพลัง", text: "วิ่งแล้วมีฝุ่นฟุ้งที่เท้า (ยิ่งเร็วยิ่งฟุ้ง) กระโดดมีฝุ่นและวงลม กระโดดกลางอากาศมีวงแหวนแสงกับประกาย ลงพื้นมีกลุ่มฝุ่น ตกจากที่สูงจอสั่นนิด ๆ และตัวละครยุบ-ยืดตอนลงพื้นและตอนกระโดด ปล่อยพลัง (เลเซอร์ ดาวกระจาย ลม ระเบิด) มีแสงวาบที่มือพร้อมวงพลัง ลูกดาวและลมมีประกายตามหลัง โหมดอมตะ พุ่งตัว และเร่งความเร็วมีเงาตามตัว และมอนสเตอร์ล้มมีแสงรูปดาวระเบิด", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ปรับปรุง", title: "★★★ โหมดผจญภัย เก็บ 3 ดาวง่ายขึ้น", text: "ดาวดวงที่ 2 เก็บเหรียญแค่ 50% ของด่าน (เดิม 70%) และดาวดวงที่ 3 เสียหัวใจได้ไม่เกิน 1 ดวง (เดิมห้ามเสียเลย) ดาวที่เคยได้แล้วยังอยู่ครบ กลับไปเก็บดาวที่ขาด ครบ 30 ดาวในโลกไหนรับ 500 เหรียญกับหมวกพิเศษประจำโลกนั้นได้เลย", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ปรับปรุง", title: "📱 เมนูศึกการ์ดย้ายไปด้านล่าง", text: "เมนูของศึกการ์ด (ด่าน · สุ่ม · ประจำวัน · ประลอง · หอคอย · เควส · ทีม) ย้ายไปเป็นแถบด้านล่างของจอแบบเกมมือถือ กดด้วยนิ้วโป้งได้ง่าย มีชื่อใต้ไอคอนทุกปุ่ม ปุ่มที่เปิดอยู่เป็นสีทอง และแถบอยู่กับที่ตลอดตอนเลื่อนดูการ์ด", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -8394,6 +8407,7 @@
   window.addEventListener("keydown", (event) => {
     // The market takes the keyboard while it is open: Escape closes it.
     if (cardsOpen) { window.PupaCards?.key?.(event); return; }
+    if (matchOpen) { window.PupaMatch?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }

@@ -108,6 +108,8 @@ export function cleanSave(raw) {
     stars: intMap(raw.stars, 3),
     worldRewards: numberList(raw.worldRewards),
     cards: cleanCards(raw.cards),
+    // the match mode: best stars and score per level
+    match: { stars: intMap(raw.match?.stars, 3), best: intMap(raw.match?.best, 10_000_000) },
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
@@ -173,6 +175,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     stars: maxMap(current.stars, incoming.stars),
     worldRewards: [...new Set([...(current.worldRewards || []), ...incoming.worldRewards])].sort((a, b) => a - b),
     cards: mergeCards(current.cards, incoming.cards),
+    match: { stars: maxMap(current.match?.stars, incoming.match?.stars), best: maxMap(current.match?.best, incoming.match?.best) },
     shop
   };
 }
