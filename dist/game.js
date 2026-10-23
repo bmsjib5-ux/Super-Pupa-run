@@ -1969,9 +1969,10 @@
   const xpForLevel = (lv) => HERO_XP_STEP * lv * (lv - 1) / 2;
   const FREE_IDS = ["pupa", "jibjib", "cherry", "nohat", "nopet"];
   // Stars: one for clearing a level, one for STAR_COIN_SHARE of its coins and
-  // one for losing no heart. All 30 stars of a world give WORLD_STAR_COINS
-  // coins and that world's hat (WORLD_HATS[world - 1]).
-  const STAR_COIN_SHARE = .7;
+  // one for losing at most STAR_HEARTS_LOST hearts. All 30 stars of a world
+  // give WORLD_STAR_COINS coins and that world's hat (WORLD_HATS[world - 1]).
+  const STAR_COIN_SHARE = .5;
+  const STAR_HEARTS_LOST = 1;
   const WORLD_STAR_COINS = 500;
   const WORLD_HATS = SHOP.hats.filter(entry => entry.reward).sort((a, b) => a.reward - b.reward).map(entry => entry.id);
   const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
@@ -2105,6 +2106,7 @@
   let solids;
   let items = [];
   let particles = [];
+  let moves = [];        // movement and power effects (see addMove)
   let cameraX = 0;
   let state = "menu";
   let nextScenePrimed = false;
@@ -2143,6 +2145,7 @@
     solids = platforms.concat(blocks);
     items = [];
     particles = [];
+    moves = [];
     cameraX = 0;
     checkpoint = 90;
     lastSafe = null;
@@ -2328,7 +2331,7 @@
     const total = runner ? runner.coinTotal : cherries.length;
     const taken = runner ? runner.coinsTaken : cherries.filter(cherry => cherry.taken).length;
     const coins = total === 0 || taken >= Math.ceil(total * STAR_COIN_SHARE);
-    const safe = levelHits === 0;
+    const safe = levelHits <= STAR_HEARTS_LOST;
     return { stars: 1 + coins + safe, taken, total, coins, safe };
   }
 
@@ -2374,7 +2377,7 @@
     const goals = [
       [true, "ผ่านด่าน"],
       [result.coins, `เก็บเหรียญ ${Math.round(STAR_COIN_SHARE * 100)}% (${result.taken}/${result.total})`],
-      [result.safe, result.safe ? "ไม่เสียหัวใจเลย" : `ไม่เสียหัวใจ (เสียไป ${levelHits} ดวง)`]
+      [result.safe, `เสียหัวใจไม่เกิน ${STAR_HEARTS_LOST} ดวง${levelHits ? ` (เสียไป ${levelHits} ดวง)` : " (ไม่เสียเลย)"}`]
     ];
     ui.endGoals.replaceChildren(...goals.map(([done, text]) => {
       const item = document.createElement("li");
@@ -2568,6 +2571,139 @@
     }
   }
 
+  // ---- Movement and power effects ----
+  // Dust kicked up while running, a puff and a ring of air on each jump, a
+  // cloud on landing, a flash at the hand when a power goes off, a star of
+  // light when a monster falls. Short-lived shapes in world space, drawn
+  // behind the hero (dust) or in front (light); none with reduced motion.
+  const calmMotion = () => Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  function addMove(piece) {
+    if (moves.length > 240 || calmMotion()) return;
+    moves.push({ age: 0, vx: 0, vy: 0, grow: 0, ...piece });
+  }
+  // a little cloud of dust at (x, y), drifting to `dir` (or both ways)
+  function dust(x, y, count, dir = 0, size = 1) {
+    for (let i = 0; i < count; i++) {
+      const side = dir || (i % 2 ? 1 : -1);
+      addMove({ kind: "dust", x: x + (Math.random() - .5) * 18, y: y - Math.random() * 6, vx: side * (40 + Math.random() * 110) * size, vy: -20 - Math.random() * 50, r: (5 + Math.random() * 6) * size, grow: 22 * size, life: .35 + Math.random() * .25 });
+    }
+  }
+  function jumpMoves(second) {
+    const x = player.x + player.w / 2, y = player.y + player.h;
+    if (second) {
+      // a ring of air under the feet and sparkles
+      addMove({ kind: "ring", x, y: y - 4, r: 14, grow: 150, flat: .35, life: .32, colour: "rgba(255,255,255,.9)", width: 4 });
+      for (let i = 0; i < 8; i++) { const a = Math.PI * (i / 7); addMove({ kind: "spark", x, y: y - 4, vx: Math.cos(a) * 220, vy: Math.sin(a) * 60 + 40, r: 2.5, life: .35, colour: "#fff6c2" }); }
+    } else {
+      dust(x, y, 6, 0, .9);
+      addMove({ kind: "ring", x, y: y - 2, r: 10, grow: 90, flat: .25, life: .25, colour: "rgba(255,255,255,.6)", width: 3 });
+    }
+    player.pose = { kind: "stretch", time: .16 };
+  }
+  function landMoves(speed) {
+    const x = player.x + player.w / 2, y = player.y + player.h, hard = speed > 1100;
+    dust(x, y, hard ? 10 : 6, 0, hard ? 1.25 : .9);
+    if (hard) { addMove({ kind: "ring", x, y: y - 2, r: 12, grow: 170, flat: .22, life: .3, colour: "rgba(255,240,220,.7)", width: 4 }); shake = Math.max(shake, .12); }
+    player.pose = { kind: "squash", time: .14, depth: Math.min(1, speed / 1400) };
+  }
+  // a power let loose: a flash at the hand in the power's colour
+  function castMoves(colour, big = false) {
+    const x = player.x + player.w / 2 + player.facing * 30, y = player.y + player.h * .42;
+    addMove({ kind: "flash", x, y, r: big ? 36 : 26, grow: big ? 64 : 44, life: .3, colour });
+    addMove({ kind: "ring", x, y, r: 8, grow: big ? 120 : 80, flat: 1, life: .3, colour, width: 3 });
+    // a big power rings the whole hero for a moment
+    if (big) addMove({ kind: "ring", x: player.x + player.w / 2, y: player.y + player.h * .55, r: player.h * .45, grow: player.h * .5, flat: 1, life: .32, colour, width: 5 });
+    for (let i = 0; i < (big ? 9 : 6); i++) { const a = (Math.random() - .5) * 1.4; addMove({ kind: "spark", x, y, vx: Math.cos(a) * player.facing * (220 + Math.random() * 220), vy: Math.sin(a) * 260, r: 2 + Math.random() * 1.5, life: .28, colour }); }
+  }
+  // a monster beaten: a star of light and a ring
+  function popMoves(x, y, colour) {
+    addMove({ kind: "star", x, y, r: 26, grow: 40, life: .22, colour, spin: Math.random() * Math.PI });
+    addMove({ kind: "ring", x, y, r: 12, grow: 110, flat: 1, life: .3, colour: "rgba(255,255,255,.85)", width: 4 });
+  }
+  function updateMoves(dt) {
+    // the hero's own wake: dust while running, ghosts while dashing or starred
+    if (player && !player.flag && state === "playing") {
+      const speed = Math.abs(player.vx);
+      if (player.grounded && speed > 150) {
+        player.dustTime = (player.dustTime || 0) - dt;
+        if (player.dustTime <= 0) {
+          dust(player.x + player.w / 2 - player.facing * 16, player.y + player.h, 1, -player.facing, .75 + Math.min(.5, speed / 900));
+          player.dustTime = Math.max(.045, .1 - speed / 9000);
+        }
+      }
+      if ((player.dash > 0 || player.star > 0 || player.boost > 0 && speed > 200) && Math.random() < dt * 30) {
+        addMove({ kind: "ghost", x: player.x, y: player.y, w: player.w, h: player.h, life: .22, colour: player.dash > 0 ? "#ff9a3c" : player.star > 0 ? "#ffe27a" : "#89f0c0" });
+      }
+      if (player.pose && (player.pose.time -= dt) <= 0) player.pose = null;
+    }
+    moves = moves.filter(m => {
+      m.age += dt;
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (m.kind === "dust") { m.vx *= 1 - Math.min(1, dt * 4); m.vy -= 30 * dt; }
+      if (m.kind === "spark") m.vy += 420 * dt;
+      return m.age < m.life;
+    });
+  }
+  // layer: "back" (dust, ghosts) before the hero, "front" (light) after
+  function drawMoves(layer) {
+    for (const m of moves) {
+      const back = m.kind === "dust" || m.kind === "ghost";
+      if ((layer === "back") !== back) continue;
+      const k = m.age / m.life, x = m.x - cameraX;
+      ctx.save();
+      switch (m.kind) {
+        case "dust": {
+          ctx.globalAlpha = (1 - k) * .55;
+          ctx.fillStyle = "#f4ead8";
+          ctx.beginPath(); ctx.arc(x, m.y, m.r + m.grow * k, 0, Math.PI * 2); ctx.fill();
+          break;
+        }
+        case "ghost": {
+          // a soft after-image in the power's colour
+          ctx.globalAlpha = (1 - k) * .35;
+          ctx.fillStyle = m.colour;
+          ctx.beginPath(); ctx.ellipse(x + m.w / 2, m.y + m.h * .55, m.w * .5, m.h * .5, 0, 0, Math.PI * 2); ctx.fill();
+          break;
+        }
+        case "ring": {
+          ctx.globalAlpha = 1 - k;
+          ctx.strokeStyle = m.colour; ctx.lineWidth = m.width * (1 - k * .6);
+          ctx.beginPath(); ctx.ellipse(x, m.y, m.r + m.grow * k, (m.r + m.grow * k) * m.flat, 0, 0, Math.PI * 2); ctx.stroke();
+          break;
+        }
+        case "spark": {
+          ctx.globalAlpha = 1 - k; ctx.globalCompositeOperation = "lighter";
+          ctx.strokeStyle = m.colour; ctx.lineWidth = m.r; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(x - m.vx * .03, m.y - m.vy * .03); ctx.lineTo(x, m.y); ctx.stroke();
+          break;
+        }
+        case "flash": {
+          const r = m.r + m.grow * k;
+          ctx.globalAlpha = 1 - k; ctx.globalCompositeOperation = "lighter";
+          const glow = ctx.createRadialGradient(x, m.y, 0, x, m.y, r);
+          glow.addColorStop(0, "rgba(255,255,255,.95)"); glow.addColorStop(.35, m.colour); glow.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, m.y, r, 0, Math.PI * 2); ctx.fill();
+          break;
+        }
+        case "star": {
+          // eight spikes of light, opening fast
+          const r = m.r + m.grow * Math.min(1, k * 1.6);
+          ctx.globalAlpha = 1 - k * k; ctx.globalCompositeOperation = "lighter";
+          ctx.translate(x, m.y); ctx.rotate(m.spin);
+          const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+          glow.addColorStop(0, "#ffffff"); glow.addColorStop(.5, "rgba(255,255,255,.85)"); glow.addColorStop(1, m.colour);
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, len = i % 2 ? r * .2 : r * (i % 4 ? .75 : 1.1); ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len); }
+          ctx.closePath(); ctx.fill();
+          break;
+        }
+        default: break;
+      }
+      ctx.restore();
+    }
+  }
+
   function setBig(big) {
     // Resize around the feet so Pupa neither sinks into nor hovers above the floor.
     const size = big ? BIG : SMALL;
@@ -2752,6 +2888,7 @@
     enemy.alive = false;
     addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
     burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, color, 12);
+    popMoves(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, color);
   }
 
   // The laser hits everything in a straight line in front of Pupa at once,
@@ -2764,6 +2901,8 @@
     const x0 = player.x + player.w / 2 + dir * 20;
     const band = { x: dir > 0 ? x0 : x0 - LASER_LENGTH, y: y - 14, w: LASER_LENGTH, h: 28 };
     beams.push({ x: x0, y, dir, life: .2 });
+    castMoves("#ff4fd8", true);
+    for (let i = 0; i < 14; i++) addMove({ kind: "spark", x: x0 + dir * Math.random() * LASER_LENGTH, y: y + (Math.random() - .5) * 16, vx: dir * (60 + Math.random() * 120), vy: (Math.random() - .5) * 160, r: 2, life: .3, colour: Math.random() < .5 ? "#ff9ae8" : "#ffffff" });
     for (const enemy of enemies) if (enemy.alive && rectsOverlap(band, enemy)) defeatEnemy(enemy, "#ff4fd8");
     if (boss?.active && boss.alive && boss.hurt <= 0 && rectsOverlap(band, boss)) damageBoss();
     tone(1320, .08, "sawtooth", .04); tone(880, .1, "square", .03, .03);
@@ -2777,6 +2916,7 @@
     for (const spread of [-.5, -.25, 0, .25, .5]) {
       starShots.push({ x: cx, y: cy, vx: Math.cos(spread) * 640 * player.facing, vy: Math.sin(spread) * 640, life: .85, spin: 0 });
     }
+    castMoves("#ffe27a");
     tone(988, .06, "triangle", .04); tone(1319, .08, "triangle", .04, .04);
   }
 
@@ -2786,6 +2926,7 @@
     if (player.bombCooldown > 0) return;
     player.bombCooldown = WIND_COOLDOWN;
     starShots.push({ x: player.x + player.w / 2 + player.facing * 26, y: player.y + player.h * .42, vx: player.facing * 720, vy: 0, life: .6, spin: 0, wind: true, dir: player.facing });
+    castMoves("#9ff0ff", true);
     tone(520, .06, "sawtooth", .03); tone(880, .1, "triangle", .04, .03);
   }
 
@@ -2797,6 +2938,7 @@
       shot.y += shot.vy * dt;
       shot.spin += dt * 16;
       if (shot.life <= 0) return false;
+      if (Math.random() < dt * 40) addMove({ kind: "spark", x: shot.x, y: shot.y + (Math.random() - .5) * 10, vx: -shot.vx * .15, vy: (Math.random() - .5) * 40, r: shot.wind ? 3 : 2.2, life: .25, colour: shot.wind ? "#c8f6ff" : "#fff2a0" });
       const box = { x: shot.x - 11, y: shot.y - 11, w: 22, h: 22 };
       for (const enemy of enemies) {
         if (enemy.alive && rectsOverlap(box, enemy)) { defeatEnemy(enemy, "#ffe27a"); return false; }
@@ -2826,11 +2968,13 @@
     if (player.bomb <= 0 || player.bombCooldown > 0) return;
     player.bombCooldown = .35;
     bombs.push({ x: player.x + player.w / 2 + player.facing * 24, y: player.y + player.h * .35, vx: player.facing * 520 + player.vx * .4, vy: -360, life: 1.8, spin: 0 });
+    castMoves("#ff8fa8");
     tone(300, .08, "square", .05);
   }
 
   function explode(x, y) {
     blasts.push({ x, y, life: .35 });
+    addMove({ kind: "ring", x, y, r: 20, grow: 130, flat: 1, life: .35, colour: "rgba(255,210,120,.9)", width: 6 });
     burst(x, y, "#ff5f6e", 18);
     burst(x, y, "#ffd76a", 10);
     shake = Math.max(shake, .18);
@@ -2843,6 +2987,7 @@
       enemy.alive = false;
       addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
       burst(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff", 12);
+      popMoves(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff");
     }
     if (boss?.active && boss.alive && boss.hurt <= 0) {
       const dx = Math.max(boss.x, Math.min(boss.x + boss.w, x)) - x;
@@ -3156,10 +3301,8 @@
     // Double jump: one extra jump in mid-air, refilled on landing.
     if (keys.jump && (player.grounded || player.airJumps > 0)) {
       const second = !player.grounded;
-      if (second) {
-        player.airJumps--;
-        burst(player.x + player.w / 2, player.y + player.h, "#ffffff", 7);
-      }
+      if (second) player.airJumps--;
+      jumpMoves(second);
       player.vy = (player.boost > 0 ? -1080 : -900) * (second ? .92 : 1) * (heroIs("pupav2") ? 1.06 : 1) * heroJump();
       player.grounded = false;
       tone((player.boost > 0 ? 480 : 360) * (second ? 1.35 : 1), .11, "triangle", .06);
@@ -3185,6 +3328,7 @@
     player.x = Math.max(0, Math.min(WORLD.width - player.w, player.x));
     // The arena seals behind Pupa until the boss falls.
     if (boss?.active && boss.alive) player.x = Math.max(boss.left, Math.min(boss.right - player.w, player.x));
+    const wasAirborne = !player.grounded, fallSpeed = player.vy;
     player.grounded = false;
     player.ride = null;
 
@@ -3210,10 +3354,13 @@
           player.vy = -1280;
           player.airJumps = airJumpsFor();
           p.bounce = .3;
+          addMove({ kind: "ring", x: player.x + player.w / 2, y: p.y, r: 16, grow: 140, flat: .3, life: .35, colour: "rgba(137,240,192,.9)", width: 5 });
+          player.pose = { kind: "stretch", time: .2 };
           tone(330, .08, "triangle", .06); tone(660, .16, "triangle", .06, .06);
           continue;
         }
         player.vy = 0;
+        if (wasAirborne && !player.grounded && fallSpeed > 380) landMoves(fallSpeed);
         player.grounded = true;
         player.airJumps = airJumpsFor();
         player.ride = p;
@@ -3279,6 +3426,7 @@
         enemy.alive = false;
         addScore(200, enemy.x + enemy.w / 2, enemy.y - 10);
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#ffe27a", 18);
+        popMoves(enemy.x + enemy.w / 2, enemy.y + 25, "#ffe27a");
         tone(330, .07, "square", .05);
         tone(660, .1, "triangle", .05, .05);
         continue;
@@ -3290,6 +3438,8 @@
         addScore(enemy.type === "walker" ? 200 : 300, enemy.x + enemy.w / 2, enemy.y - 10);
         player.vy = -560;
         burst(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff", 15);
+        popMoves(enemy.x + enemy.w / 2, enemy.y + 25, "#c68cff");
+        player.pose = { kind: "stretch", time: .16 };
         tone(210, .08, "square", .05);
         tone(420, .11, "triangle", .05, .05);
       } else hurtPlayer();
@@ -3339,6 +3489,7 @@
       p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt;
       return p.life > 0;
     });
+    updateMoves(dt);
     popups = popups.filter(p => { p.life -= dt; p.y -= 55 * dt; return p.life > 0; });
     updateHud();
   }
@@ -3968,6 +4119,11 @@
       if (player.hurt > 0 && Math.floor(player.hurt * 12) % 2) ctx.globalAlpha = .35;
       ctx.shadowColor = player.dash > 0 ? "#ff9a3c" : player.star > 0 ? "#ffe27a" : player.boost > 0 ? "rgba(137,240,192,.8)" : "rgba(255,92,150,.35)";
       ctx.shadowBlur = player.star > 0 || player.dash > 0 ? 34 + Math.sin(time * .02) * 10 : 20;
+      // squash on landing, stretch on take-off, about the feet
+      const pose = player.pose, k = pose ? Math.sin(Math.min(1, pose.time / (pose.kind === "squash" ? .14 : .16)) * Math.PI) : 0;
+      const sy = pose ? (pose.kind === "squash" ? 1 - .16 * (pose.depth ?? 1) * k : 1 + .1 * k) : 1, sx = pose ? 1 + (1 - sy) * .8 : 1;
+      const footY = player.y + player.h;
+      ctx.translate(x + player.w / 2, footY); ctx.scale(sx, sy); ctx.translate(-(x + player.w / 2), -footY);
       ctx.drawImage(model.canvas, x + player.w / 2 - size / 2, player.y + player.h - feet, size, size);
       drawHat(save.shop.hat, x + player.w / 2 + HAT_SHIFT * player.facing * size / 164, player.y + player.h - feet + size * hero.headTop, size / 164, player.facing, time);
       ctx.restore();
@@ -4395,8 +4551,10 @@
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
+    drawMoves("back");
     drawPet(time);
     drawPlayer(time);
+    drawMoves("front");
     drawShield(time);
     drawWeapons(time);
     drawBalls();
@@ -6346,10 +6504,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-23a";
+  const NEWS_VERSION = "2026-10-23b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ปรับปรุง", title: "✨ โหมดผจญภัย: เอฟเฟควิ่ง กระโดด ปล่อยพลัง", text: "วิ่งแล้วมีฝุ่นฟุ้งที่เท้า (ยิ่งเร็วยิ่งฟุ้ง) กระโดดมีฝุ่นและวงลม กระโดดกลางอากาศมีวงแหวนแสงกับประกาย ลงพื้นมีกลุ่มฝุ่น ตกจากที่สูงจอสั่นนิด ๆ และตัวละครยุบ-ยืดตอนลงพื้นและตอนกระโดด ปล่อยพลัง (เลเซอร์ ดาวกระจาย ลม ระเบิด) มีแสงวาบที่มือพร้อมวงพลัง ลูกดาวและลมมีประกายตามหลัง โหมดอมตะ พุ่งตัว และเร่งความเร็วมีเงาตามตัว และมอนสเตอร์ล้มมีแสงรูปดาวระเบิด", image: "stars", open: () => { closeNews(); openLevels(); } },
+    { tag: "ปรับปรุง", title: "★★★ โหมดผจญภัย เก็บ 3 ดาวง่ายขึ้น", text: "ดาวดวงที่ 2 เก็บเหรียญแค่ 50% ของด่าน (เดิม 70%) และดาวดวงที่ 3 เสียหัวใจได้ไม่เกิน 1 ดวง (เดิมห้ามเสียเลย) ดาวที่เคยได้แล้วยังอยู่ครบ กลับไปเก็บดาวที่ขาด ครบ 30 ดาวในโลกไหนรับ 500 เหรียญกับหมวกพิเศษประจำโลกนั้นได้เลย", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ปรับปรุง", title: "📱 เมนูศึกการ์ดย้ายไปด้านล่าง", text: "เมนูของศึกการ์ด (ด่าน · สุ่ม · ประจำวัน · ประลอง · หอคอย · เควส · ทีม) ย้ายไปเป็นแถบด้านล่างของจอแบบเกมมือถือ กดด้วยนิ้วโป้งได้ง่าย มีชื่อใต้ไอคอนทุกปุ่ม ปุ่มที่เปิดอยู่เป็นสีทอง และแถบอยู่กับที่ตลอดตอนเลื่อนดูการ์ด", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ของขวัญ", title: "🎁 แจกเพชร 💎 10,000 อีกรอบ!", text: "ฉลองด่านง่ายขึ้น เก็บ 3 ดาวได้จริง แจกเพชร 10,000 เม็ดให้ผู้เล่นทุกคนทันทีเมื่อเปิดเกม (บัญชีละ 1 ครั้ง ถึงจะเคยรับรอบก่อน ๆ แล้วก็รับได้อีก) ไปสุ่มการ์ดหาตัวละครแนะนำประจำด่าน หรือสุ่มไอเทมได้เลย", image: "gacha6", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "ปรับปรุง", title: "★★★ ด่านง่ายขึ้น เก็บ 3 ดาวได้จริง", text: "ด่านศึกการ์ดตั้งแต่บทที่ 2 มอนสเตอร์เลือดเหลือ 60% ของเดิม ตีจบเร็วขึ้นและชนะง่ายขึ้น และดาวดวงที่ 3 (ชนะภายในกี่เทิร์น) ให้เทิร์นเพิ่มตามบท เพราะบทหลัง ๆ สู้นานกว่า เช่น บทที่ 2 ได้ 10 เทิร์น บทที่ 6 ได้ 18 บทที่ 11 ได้ 28 บทที่ 16 ได้ 38 เทิร์น ด่านบอสยังได้อย่างน้อย 10 เทิร์น ดาวที่เคยได้แล้วยังอยู่ครบ กลับไปเก็บดาวที่ขาดและรับโบนัสดาวครบทุก 5 ด่านได้เลย (หอคอยยังยากเท่าเดิม)", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
@@ -6402,7 +6562,7 @@
     { tag: "ตัวละครใหม่", title: "สุ่มการ์ด · 8 ตัวใหม่", text: "ซากุระ จันทรา ทองคำ มิว ราตรี กระต่ายจันทร์ นกฮูกดาว หมาป่าเงิน ตัวละครและสัตว์เลี้ยงทุกตัวได้จากการสุ่มการ์ดด้วยเพชร เพชรได้จากผ่านด่านครั้งแรก รางวัลรายวัน ลานประลอง และด่านประจำวัน เล่นได้ทั้งผจญภัยและศึกการ์ด", image: "gacha", open: () => { closeNews(); window.PupaCards?.openPulls(); } },
     { tag: "โหมดใหม่", title: "ศึกการ์ดแสงจันทร์", text: "จัดทีมการ์ด 5 ใบ เลือกลำดับสกิลเองทุกเทิร์น สู้มอนสเตอร์ 20 ด่าน 2 บท พร้อมบอส ชนะแล้วได้เหรียญและการ์ดใหม่ ใช้เหรียญอัปเลเวลการ์ด ตัวละครและสัตว์เลี้ยงที่มีในเกมได้การ์ดของตัวนั้นด้วย", image: "cards", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "โหมดใหม่", title: "ด่านวิ่งหลบ", text: "5 ด่านพิเศษ วิ่งบนถนน 3 เลน ฉากไหลเข้ามาจากด้านบน ปัดหรือกดซ้ายขวาเปลี่ยนเลน กระโดดข้ามรั้ว หมอบลอดคาน เก็บเหรียญและไอเทมตลอดทาง เล่นได้เลยไม่ต้องปลดล็อก", image: "runner", open: () => { closeNews(); openRunnerLevels(); } },
-    { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 70% ได้อีก 1 ดาว ไม่เสียหัวใจได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
+    { tag: "ระบบใหม่", title: "ดาว 3 ดวงทุกด่าน", text: "ผ่านด่านได้ 1 ดาว เก็บเหรียญ 50% ได้อีก 1 ดาว เสียหัวใจไม่เกิน 1 ดวงได้อีก 1 ดาว ครบ 30 ดาวในโลกไหน รับ 500 เหรียญและหมวกพิเศษประจำโลกนั้น", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ด่านใหม่", title: "โลก 10 · หุบเขาไดโนเสาร์", text: "ด่าน 91–100 หุบเขาไดโนเสาร์ ป่าเฟิร์นยักษ์ ถ้ำฟอสซิลอำพัน ภูเขาไฟ จนถึงฝนดาวตกวันสิ้นยุค พร้อมบอสราชาทีเร็กซ์เพลิง และจักรพรรดิไดโนเสาร์อุกกาบาต", image: "world10", open: () => { closeNews(); openLevels(); } },
     { tag: "ระบบใหม่", title: "ตัวละครอัปเลเวลได้", text: "เล่นแล้วได้ XP ทุกตัวละครอัปได้ถึง Lv 10 วิ่งเร็วขึ้นทุกเลเวล Lv 3 หัวใจ 4 ดวง Lv 5 เริ่มด่านตัวใหญ่ Lv 7 กระโดดสูงขึ้น Lv 10 หัวใจ 5 ดวง", image: "trio", open: () => { closeNews(); showLobby(); } },
     { tag: "อีเวนต์ใหม่", title: "ประตูมิติโบนัส", text: "บางด่านจะมีประตูมิติโผล่กลางทาง เดินเข้าไปเก็บเหรียญให้ได้มากที่สุดใน 15 วินาที", image: "portal", open: () => { closeNews(); showLobby(); } },
