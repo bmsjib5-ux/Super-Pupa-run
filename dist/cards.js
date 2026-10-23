@@ -596,11 +596,14 @@
     sheet = null;
     frame.classList.remove("is-battle", "is-arena");
     showCoins();
-    const tabs = el("div", "shop-tabs cards-tabs");
+    // the menu sits at the foot of the screen, as in a phone game: an
+    // icon and a short name; the full name is the label and tooltip
+    const tabs = el("nav", "shop-tabs cards-tabs cards-footer");
     tabs.setAttribute("role", "tablist");
-    // icons only; the name is the button's label and tooltip
-    for (const [key, icon, label] of [["stages", "🗺️", "ด่าน"], ["pulls", "🎴", "สุ่มการ์ด"], ["daily", "🌞", "ด่านประจำวัน"], ["arena", "⚔️", "ลานประลอง"], ["tower", "🗼", "หอคอย"], ["quests", "📜", "เควส"], ["team", "👥", "ทีม"]]) {
-      const t = button(`cards-tab-icon${key === "quests" && questsReady() ? " has-dot" : ""}`, icon, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); }, label);
+    tabs.setAttribute("aria-label", "เมนูศึกการ์ด");
+    for (const [key, icon, label, short] of [["stages", "🗺️", "ด่าน", "ด่าน"], ["pulls", "🎴", "สุ่มการ์ด", "สุ่ม"], ["daily", "🌞", "ด่านประจำวัน", "ประจำวัน"], ["arena", "⚔️", "ลานประลอง", "ประลอง"], ["tower", "🗼", "หอคอย", "หอคอย"], ["quests", "📜", "เควส", "เควส"], ["team", "👥", "ทีม", "ทีม"]]) {
+      const t = button(`cards-tab-icon${key === "quests" && questsReady() ? " has-dot" : ""}`, null, () => { tab = key; showHub(); tone(587, .05, "triangle", .04); }, label);
+      t.append(el("span", "tab-icon", icon), el("small", "tab-name", short));
       t.title = label;
       t.setAttribute("role", "tab");
       t.setAttribute("aria-selected", String(tab === key));
@@ -609,7 +612,7 @@
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
     if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else if (tab === "tower") renderTower(panel); else renderTeam(panel);
-    body.replaceChildren(idleBanner(), tabs, panel);
+    body.replaceChildren(idleBanner(), panel, tabs);
     if (back) freshen(body);
   }
 

@@ -1573,3 +1573,45 @@ button.unit { cursor: crosshair; }
 /* the team's bonuses stay readable over the effects */
 .battle-bonds { z-index: 5; }
 .fav-note { margin: 0; color: var(--muted, #cfc4e2); font-size: .68rem; text-align: center; }
+
+/* ---- The menu as a footer bar ---- */
+.cards-tabs.cards-footer {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: .2rem;
+  margin: 0;
+  padding: .35rem max(.45rem, calc((100% - 46rem) / 2)) .4rem;
+  border-top: 1px solid rgba(255,215,106,.4);
+  background: linear-gradient(180deg, rgba(46,22,88,.97), rgba(14,7,36,.99));
+  box-shadow: 0 -.5rem 1.2rem rgba(0,0,0,.45);
+}
+.cards-footer > button.cards-tab-icon {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: .12rem;
+  min-width: 0;
+  padding: .32rem 0 .28rem;
+  border: 0;
+  border-radius: .85rem;
+  color: #cfc4e2;
+  background: transparent;
+  font-size: inherit;
+  line-height: 1;
+  transition: transform .15s ease, background .15s ease;
+}
+.cards-footer .tab-icon { font-size: clamp(1.25rem, 5.6vw, 1.55rem); filter: drop-shadow(0 .1rem .1rem rgba(0,0,0,.5)); }
+.cards-footer .tab-name { max-width: 100%; overflow: hidden; font-size: clamp(.56rem, 2.5vw, .74rem); font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.cards-footer > button.cards-tab-icon:not([aria-selected="true"]):hover { color: #fff; background: rgba(255,255,255,.08); }
+.cards-footer > button[aria-selected="true"] {
+  color: #30102d;
+  background: linear-gradient(180deg, #fff6c2, #ffcf5a 55%, #f0a43a);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 0 .9rem rgba(255,200,90,.5), 0 .25rem .4rem rgba(0,0,0,.4);
+  transform: translateY(-.3rem);
+}
+.cards-footer > button:focus-visible { outline: 2px solid #ffd76a; outline-offset: 1px; }
+.cards-footer .has-dot::after { top: .2rem; right: calc(50% - 1.05rem); }
+@media (prefers-reduced-motion: reduce) { .cards-footer > button[aria-selected="true"] { transform: none; } }
