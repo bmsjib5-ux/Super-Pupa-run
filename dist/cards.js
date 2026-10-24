@@ -265,6 +265,10 @@
     const idleAt = Math.min(now, Math.max(0, Math.floor(Number(raw.idleAt) || 0))) || now;
     const daily = raw.daily && typeof raw.daily.day === "string" ? { day: raw.daily.day.slice(0, 10), streak: Math.max(1, Math.min(7, Math.floor(Number(raw.daily.streak) || 1))) } : null;
     const dungeon = raw.dungeon && raw.dungeon.day === today() ? { day: today(), exp: raw.dungeon.exp === true, coin: raw.dungeon.coin === true } : { day: today(), exp: false, coin: false };
+    // the dragon raid: today's best score and the coins paid for it, and
+    // the best score ever
+    const count = (v) => Math.max(0, Math.floor(Number(v) || 0));
+    const raid = raw.raid?.day === today() ? { day: today(), best: count(raw.raid.best), paid: count(raw.raid.paid), top: count(raw.raid.top) } : { day: today(), best: 0, paid: 0, top: count(raw.raid?.top) };
     const awake = {}, shards = {};
     for (const id of E.CARD_IDS) {
       const a = Math.min(E.maxAwake(id), Math.floor(Number(raw.awake?.[id]) || 0));
@@ -318,7 +322,7 @@
       return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t };
     });
     const set = Math.min(TEAM_SETS - 1, Math.max(0, Math.floor(Number(raw.set) || 0)));
-    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -858,7 +862,123 @@
       box.append(actions);
       grid.append(box);
     }
+    grid.append(raidBox());
     panel.append(grid);
+  }
+
+  // ---- The dragon raid ----
+  // Any number of runs; a day pays for its best: a run scoring more than
+  // the day's best so far pays the difference in coins.
+  const raidToday = () => {
+    const c = cards();
+    if (c.raid?.day !== today()) c.raid = { day: today(), best: 0, paid: 0, top: c.raid?.top || 0 };
+    return c.raid;
+  };
+  // coins for 1,000 points, shown with a decimal when small
+  const perThousand = (stage) => { const v = stage.rate * 1000; return v < 10 ? v.toFixed(1) : fmt(v); };
+  function raidBox() {
+    const stage = E.raid(bestStage()), r = raidToday();
+    const box = el("section", "dungeon-box is-raid");
+    box.append(el("span", "dungeon-icon", "🐉"), el("h3", null, stage.name), el("p", "sheet-text", `ตีมังกรรูนโบราณให้ได้มากที่สุดใน ${stage.time} วินาที ทุกความเสียหายคือคะแนน ได้ทองตามคะแนน มังกรล้มแล้วจะฟื้นขึ้นมาแกร่งกว่าเดิม`));
+    const foes = el("div", "sheet-foes");
+    const fig = el("figure", "sheet-foe is-boss");
+    fig.append(foeArt("raiddragon"), el("figcaption", null, E.FOES.raiddragon.name));
+    foes.append(fig);
+    box.append(foes, el("p", "sheet-sub", `มังกร Lv ${stage.lv} · ⏱ ${stage.time} วินาที · ทุก 1,000 คะแนน = ● ${perThousand(stage)}`));
+    box.append(el("p", "sheet-reward", r.best ? `วันนี้: คะแนนสูงสุด ${fmt(r.best)} · ได้ทองแล้ว ● ${fmt(r.paid)}` : "วันนี้ยังไม่ได้ตีมังกร"));
+    if (r.top) box.append(el("p", "sheet-sub", `🏆 สถิติสูงสุด ${fmt(r.top)} คะแนน`));
+    box.append(el("p", "raid-note", "ตีได้ไม่จำกัดรอบ · ทองต่อวันคิดจากรอบที่ได้คะแนนสูงสุด ตีใหม่ได้คะแนนมากกว่าเดิมรับส่วนต่างเพิ่ม"));
+    const actions = el("div", "title-actions sheet-actions");
+    actions.append(button("primary-button", r.best ? "ตีมังกรอีกรอบ ⚔" : "ตีมังกร ⚔", () => startBattle(E.raid(bestStage()))));
+    box.append(actions);
+    return box;
+  }
+  function finishRaid(v) {
+    const r = raidToday(), stage = v.stage, b = v.state;
+    const score = Math.round(v.raid.score), coins = E.raidCoins(stage, score);
+    const pay = Math.max(0, coins - r.paid);
+    const record = score > r.top;
+    r.best = Math.max(r.best, score);
+    r.paid += pay;
+    r.top = Math.max(r.top, score);
+    questTick("dungeon");
+    save().coins += pay;
+    store(); showCoins();
+    v.busy = true;
+    const box = el("div", "message-card battle-card raid-card");
+    const why = v.raid.quit ? "จบรอบ" : b.result === "lost" ? "ทีมล้มหมด!" : "หมดเวลา!";
+    box.append(el("span", "moon-icon", "🐉"), el("h2", null, why));
+    const total = el("p", "raid-total");
+    total.append(el("small", null, "คะแนน"), el("b", null, fmt(score)));
+    box.append(total, el("p", null, `มังกรระยะที่ ${b.raid.phase} · ${b.turn} เทิร์น`));
+    box.append(el("p", "end-reward battle-reward", pay ? `ได้รับ ● ${fmt(pay)}${pay < coins ? ` (คะแนนรอบนี้ = ● ${fmt(coins)} รับส่วนต่างจากรอบก่อนวันนี้)` : ""}` : coins ? `รอบนี้ = ● ${fmt(coins)} ไม่เกินรอบที่ดีที่สุดวันนี้ (● ${fmt(r.paid)}) จึงไม่ได้ทองเพิ่ม` : "ยังไม่มีคะแนน ลองใหม่ได้เลย"));
+    box.append(el("p", null, record ? "🏆 สถิติใหม่!" : `วันนี้สูงสุด ${fmt(r.best)} · สถิติ ${fmt(r.top)}`));
+    const actions = el("div", "title-actions");
+    actions.append(button("primary-button", "ตีอีกรอบ", () => { battle = null; startBattle(E.raid(bestStage())); }));
+    actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "daily"; showHub(); }));
+    box.append(actions);
+    v.result.replaceChildren(box);
+    v.result.hidden = false;
+    freshen(v.result);
+    hint("");
+    if (pay) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
+    announce(`ได้ ${fmt(score)} คะแนน${pay ? ` ได้รับ ${fmt(pay)} เหรียญ` : ""}`);
+    actions.querySelector("button")?.focus();
+  }
+
+  // Over the field: the clock counting down, the score and its coins.
+  function raidHud(v) {
+    const r = v.raid;
+    const hud = el("div", "raid-hud");
+    hud.setAttribute("aria-hidden", "true");
+    r.clock = el("b", "raid-clock");
+    const bar = el("span", "raid-time");
+    r.fill = el("i");
+    bar.append(r.fill);
+    r.points = el("span", "raid-points");
+    r.coins = el("small", "raid-coins");
+    hud.append(r.clock, bar, r.points, r.coins);
+    r.hud = hud;
+    drawRaid(v);
+    return hud;
+  }
+  function drawRaid(v) {
+    const r = v.raid, total = v.stage.time * 1000;
+    if (!r?.hud) return;
+    const left = r.end ? Math.max(0, r.end - performance.now()) : total;
+    const sec = Math.ceil(left / 1000);
+    r.clock.textContent = `⏱ ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+    r.fill.style.width = `${left / total * 100}%`;
+    r.points.textContent = `คะแนน ${fmt(r.score)}`;
+    r.coins.textContent = `≈ ● ${fmt(E.raidCoins(v.stage, r.score))}`;
+    r.hud.classList.toggle("is-low", r.end > 0 && sec <= 10);
+    if (sec !== r.sec) {
+      r.sec = sec;
+      if (r.end && sec <= 5 && sec > 0) tone(880, .05, "square", .04);
+      if (r.end && (sec === 30 || sec === 10)) announce(`เหลือ ${sec} วินาที`);
+    }
+  }
+  // The clock starts after the opening call and runs in real time.
+  function startRaidClock(v) {
+    const r = v.raid;
+    r.end = performance.now() + v.stage.time * 1000;
+    const tick = () => {
+      if (battle !== v || v.token.stopped || r.over) return;
+      drawRaid(v);
+      if (performance.now() < r.end) { r.timer = setTimeout(tick, 100); return; }
+      endRaid(v);
+    };
+    tick();
+  }
+  const stopRaidClock = (v) => clearTimeout(v.raid.timer);
+  // Time is up, or the player ended the run: a turn waiting on the player
+  // gives way, and the battle stops at the next thing it would show.
+  function endRaid(v) {
+    const r = v.raid;
+    if (r.over) return;
+    r.over = true;
+    stopRaidClock(v);
+    if (v.go) { const go = v.go; v.go = null; go([]); }
   }
   function finishDungeon(v) {
     const b = v.state, stage = v.stage, c = cards(), won = b.result === "won";
@@ -2048,12 +2168,12 @@
     mapChapter = 0; // back from battle, the map follows the next stage
     const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: E.cardBonus(c, id), gear: E.gearBonus(c, id) } : null));
     const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
-    battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0 };
+    battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0, raid: stage.raid ? { score: 0, end: 0, over: false, quit: false, sec: -1 } : null };
     frame.classList.add("is-battle");
     frame.classList.toggle("is-arena", Boolean(stage.arena));
     buildBattle();
     tone(392, .1, "triangle", .05); tone(523, .12, "triangle", .05, .1);
-    announce((stage.arena ? `เริ่ม${stage.name}` : `เริ่มด่าน ${stage.num} ${stage.name}`) + (state.bonds.length ? ` · ความสัมพันธ์ ${state.bonds.map(b => b.name).join(" ")}` : "") + (state.favs?.atk ? ` · ตัวละครแนะนำ โจมตี +${Math.round(state.favs.atk * 100)}%` : ""));
+    announce((stage.arena ? `เริ่ม${stage.name}` : stage.raid ? `เริ่มตีมังกร ${stage.time} วินาที` : `เริ่มด่าน ${stage.num} ${stage.name}`) + (state.bonds.length ? ` · ความสัมพันธ์ ${state.bonds.map(b => b.name).join(" ")}` : "") + (state.favs?.atk ? ` · ตัวละครแนะนำ โจมตี +${Math.round(state.favs.atk * 100)}%` : ""));
     runBattle(battle);
   }
 
@@ -2067,6 +2187,8 @@
     const fast = button("battle-toggle", "×2", () => toggleFast());
     const quit = button("battle-toggle battle-quit", "ออก", () => leaveBattle());
     v.auto = auto; v.fast = fast; v.quit = quit;
+    // the raid keeps a pace of its own, the same for everyone
+    fast.hidden = Boolean(v.raid);
     top.append(v.title, v.wave, auto, fast, quit);
     const field = el("div", "battle-field");
     v.foeSide = el("div", "battle-side is-foes");
@@ -2079,6 +2201,7 @@
     v.finale = el("div", "battle-finale");
     v.finale.setAttribute("aria-hidden", "true");
     field.append(v.banner, v.cutin, v.finale);
+    if (v.raid) field.append(raidHud(v));
     if (v.state.bonds?.length || v.state.favs?.atk) {
       const strip = el("div", "battle-bonds");
       if (v.state.favs?.atk) strip.append(el("span", "is-fav", `⭐ ตัวแนะนำ ×${Math.round(v.state.favs.atk / E.FAV_ATK)} · โจมตี +${Math.round(v.state.favs.atk * 100)}%`));
@@ -2095,7 +2218,7 @@
     freshen(view);
     v.tiles = { hero: [], foe: [] };
     stopShow();
-    show = window.PupaCardsFx?.create(field, { chapter: v.stage.tower ? v.stage.scene || v.stage.chapter : Math.min(16, Math.ceil(v.stage.num / 10)) }) || null;
+    show = window.PupaCardsFx?.create(field, { chapter: v.stage.scene || (v.stage.tower ? v.stage.chapter : Math.min(16, Math.ceil(v.stage.num / 10))) }) || null;
     show?.follow(() => [...v.tiles.hero, ...v.tiles.foe].filter(Boolean).map(tile => ({ el: tile, stun: tile.status?.includes("stun"), burn: tile.status?.includes("burn"), taunt: tile.status?.includes("taunt") })));
     drawSide("hero");
     drawSide("foe");
@@ -2105,8 +2228,8 @@
 
   function drawTop() {
     const v = battle, b = v.state;
-    v.title.textContent = v.stage.tower ? `🗼 ${v.stage.name}` : v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
-    v.wave.textContent = `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
+    v.title.textContent = v.stage.raid ? "🐉 ด่านประจำวัน · ตีมังกร" : v.stage.tower ? `🗼 ${v.stage.name}` : v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
+    v.wave.textContent = b.raid ? `ระยะที่ ${b.raid.phase} · เทิร์น ${Math.max(1, b.turn)}` : `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
     v.auto.setAttribute("aria-pressed", String(cards().auto));
     v.fast.setAttribute("aria-pressed", String(cards().fast));
   }
@@ -2303,30 +2426,38 @@
   function leaveBattle() {
     const v = battle;
     if (!v) return;
-    if (v.state.phase !== "done" && Date.now() - v.quitArmed > 2500) {
+    // a raid runs until its clock stops, then goes on to its results
+    const running = v.raid ? !v.raid.over && v.state.phase !== "done" : v.state.phase !== "done";
+    if (running && Date.now() - v.quitArmed > 2500) {
       v.quitArmed = Date.now();
-      v.quit.textContent = "ออกจริง?";
+      v.quit.textContent = v.raid ? "จบรอบ?" : "ออกจริง?";
       setTimeout(() => { if (battle === v) v.quit.textContent = "ออก"; }, 2500);
       tone(330, .08, "square", .04);
-      announce("กดออกอีกครั้งเพื่อยอมแพ้และกลับ");
+      announce(v.raid ? "กดอีกครั้งเพื่อจบรอบ รับทองตามคะแนนที่ทำได้" : "กดออกอีกครั้งเพื่อยอมแพ้และกลับ");
       return;
     }
+    // the raid: the run ends here and is paid for its score
+    if (v.raid && running) { v.raid.quit = true; endRaid(v); return; }
+    if (v.raid && v.result.hidden) return;
     v.token.stopped = true;
     battle = null;
-    tab = v.stage.tower ? "tower" : v.stage.arena ? "arena" : v.stage.dungeon ? "daily" : "stages";
+    tab = v.stage.tower ? "tower" : v.stage.arena ? "arena" : v.stage.dungeon || v.stage.raid ? "daily" : "stages";
     showHub();
   }
 
-  const speed = () => (cards().fast ? .45 : 1);
-  const DELAY = { turn: 200, act: 330, hit: 230, heal: 200, shield: 140, fx: 110, skip: 380, burn: 260, wave: 900, status: 0, end: 300 };
+  const RAID_PACE = .6;
+  const speed = () => (battle?.raid ? RAID_PACE : cards().fast ? .45 : 1);
+  const DELAY = { turn: 200, act: 330, hit: 230, heal: 200, shield: 140, fx: 110, skip: 380, burn: 260, wave: 900, rise: 900, status: 0, end: 300 };
 
   async function runBattle(v) {
     const b = v.state;
     // the opening call: a warning when a boss is waiting
     const bossFirst = b.foes.some(u => u?.boss);
-    banner(bossFirst ? "⚠ บอสปรากฏตัว!" : "เริ่มต่อสู้!", bossFirst ? "boss" : "start");
+    if (v.raid) banner(`⏱ ตีมังกรให้ได้มากที่สุดใน ${v.stage.time} วินาที!`, "boss");
+    else banner(bossFirst ? "⚠ บอสปรากฏตัว!" : "เริ่มต่อสู้!", bossFirst ? "boss" : "start");
     await wait((bossFirst ? 1100 : 750) * speed());
-    while (b.phase !== "done" && !v.token.stopped) {
+    if (v.raid && !v.raid.over && !v.token.stopped) startRaidClock(v);
+    while (b.phase !== "done" && !v.token.stopped && !v.raid?.over) {
       if (b.phase === "foe") {
         v.busy = true; drawBar();
         hint("ฝ่ายมอนสเตอร์กำลังโจมตี…");
@@ -2352,21 +2483,23 @@
         queue = await new Promise(resolve => { v.go = resolve; drawBar(); });
       }
       if (v.token.stopped) return;
+      if (v.raid?.over) break;
       v.busy = true;
       v.queue = queue;
       drawBar();
       await play(v, E.heroTurn(b, queue, b.focus));
     }
     if (v.token.stopped) return;
-    await finale(v, b.result === "won");
+    if (v.raid) { stopRaidClock(v); await finale(v, true, v.raid.quit ? "จบรอบ" : b.result === "lost" ? "ทีมล้มหมด!" : "หมดเวลา!"); }
+    else await finale(v, b.result === "won");
     if (!v.token.stopped && battle === v) finish(v);
   }
 
   // The battle's last word, big across the field, before the results.
-  async function finale(v, won) {
+  async function finale(v, won, text) {
     if (!v.finale) return;
-    v.finale.replaceChildren(el("b", null, won ? "ชัยชนะ!" : "พ่ายแพ้…"));
-    hint(won ? "ชนะแล้ว!" : "แพ้แล้ว ลองจัดทีมใหม่ดูนะ");
+    v.finale.replaceChildren(el("b", null, text || (won ? "ชัยชนะ!" : "พ่ายแพ้…")));
+    hint(text || (won ? "ชนะแล้ว!" : "แพ้แล้ว ลองจัดทีมใหม่ดูนะ"));
     v.finale.className = `battle-finale ${won ? "is-won" : "is-lost"}`;
     void v.finale.offsetWidth;
     v.finale.classList.add("is-on");
@@ -2400,8 +2533,10 @@
   async function play(v, events) {
     let look = "slash";
     for (const [index, ev] of events.entries()) {
-      if (v.token.stopped) return;
+      // the raid: only what is shown before time runs out counts
+      if (v.token.stopped || v.raid?.over) return;
       const side = ev.side, tile = side ? v.tiles[side]?.[ev.i] : null;
+      if (v.raid && side === "foe" && (ev.t === "hit" || ev.t === "burn")) { v.raid.score += ev.v; drawRaid(v); }
       switch (ev.t) {
         case "turn": drawTop(); break;
         case "act": {
@@ -2446,6 +2581,13 @@
         case "fx": paintUnit(side, ev.i, ev.u); if (tile && ["atkUp", "defUp", "defDown"].includes(ev.k)) show?.buff(tile, ev.k === "defDown"); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
         case "burn": paintUnit(side, ev.i, ev.u); if (tile) show?.impact(tile, "fire", false, false); pop(tile, `🔥${fmt(ev.v)}`, "is-burn"); break;
         case "status": paintUnit(side, ev.i, ev.u); break;
+        case "rise":
+          drawSide("foe"); drawTop(); show?.wave();
+          if (v.tiles.foe[ev.i]) v.tiles.foe[ev.i].classList.add("is-arriving");
+          banner(`🐉 มังกรฟื้นคืนชีพ! ระยะที่ ${ev.n} · แกร่งขึ้น`, "boss");
+          announce(`มังกรฟื้นคืนชีพ ระยะที่ ${ev.n}`);
+          [262, 330, 392, 523].forEach((note, n) => tone(note, .14, "sawtooth", .035, n * .07));
+          break;
         case "wave":
           drawSide("foe"); drawTop(); show?.wave();
           v.tiles.foe.forEach((node, n) => { if (node) { node.style.animationDelay = `${n * 70}ms`; node.classList.add("is-arriving"); setTimeout(() => node.classList.remove("is-arriving"), 1000); } });
@@ -2499,6 +2641,7 @@
     if (stage.arena) { finishArena(v); return; }
     if (stage.tower) { finishTower(v); return; }
     if (stage.dungeon) { finishDungeon(v); return; }
+    if (stage.raid) { finishRaid(v); return; }
     const got = E.starsFor(b, stage);
     const first = won && !isCleared(stage.num);
     let coins = 0, gems = 0, ore = 0, loot = null;
@@ -2662,7 +2805,8 @@
   // Straight to the pulls, from the market or the lobby.
   function openPulls() { tab = "pulls"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
   function openTeam() { tab = "team"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
-  window.PupaCards = { open, openPulls, openTeam, close, key, get isOpen() { return isShown; } };
+  function openDaily() { tab = "daily"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
+  window.PupaCards = { open, openPulls, openTeam, openDaily, close, key, get isOpen() { return isShown; } };
   document.querySelectorAll("[data-open-cards]").forEach(node => game()?.onTap(node, open));
   // Test link: ?cards opens straight into the card battles.
   if (new URLSearchParams(location.search).has("cards")) setTimeout(() => open(), 400);

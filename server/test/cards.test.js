@@ -144,6 +144,54 @@ test("cards: daily dungeons can be won at the furthest stage's level", () => {
   }
 });
 
+test("cards: the dragon raid can't be won, rises stronger, and pays coins in proportion to its score", () => {
+  const stage = E.raid(60);
+  assert.equal(stage.lv, E.STAGES[59].lv);
+  assert.ok(stage.raid && stage.time === E.RAID_TIME && stage.hp > 0 && stage.rate > 0);
+  // the first stages are too few monsters: the dragon starts at stage 5's
+  assert.deepEqual(E.raid(0), E.raid(5));
+  const team = ["thongkham", "phloeng", "chantra", "asani", "pupav2"].map(id => ({ id, lv: 70, bonus: E.awakeBonus(4) }));
+  const b = E.createBattle({ team, stage, seed: 3 });
+  assert.equal(b.foes.length, 1);
+  assert.equal(b.foes[0].maxHp, stage.hp);
+  const atk = b.foes[0].atk;
+  let dealt = 0, rose = 0;
+  for (let n = 0; n < 60 && b.phase !== "done"; n++) {
+    const events = b.phase === "hero" ? E.heroTurn(b, E.autoQueue(b)) : E.enemyTurn(b);
+    for (const ev of events) {
+      if (ev.side === "foe" && (ev.t === "hit" || ev.t === "burn")) dealt += ev.v;
+      if (ev.t === "rise") { rose++; assert.equal(ev.n, rose + 1); assert.equal(ev.u.hp, ev.u.maxHp); }
+    }
+  }
+  // past the turn limit of a stage, never won; each fall a new phase, harder
+  assert.notEqual(b.result, "won");
+  assert.ok(rose >= 1 && b.raid.phase === rose + 1, `rose ${rose}`);
+  assert.ok(b.foes[0].atk > atk && b.foes[0].maxHp > stage.hp);
+  assert.equal(b.raid.dealt, dealt);
+  // coins: a share of the score
+  assert.equal(E.raidCoins(stage, 0), 0);
+  assert.ok(Math.abs(E.raidCoins(stage, 20000) - 2 * E.raidCoins(stage, 10000)) <= 1);
+  assert.equal(E.raidCoins(stage, stage.hp), Math.floor(stage.hp * stage.rate));
+});
+
+test("cards: a team ready for its furthest stage breaks about two of the dragon's phases in a raid's turns", () => {
+  // levels that just win stages 20, 60 and 130 (see the stage tests);
+  // fourteen turns is about the raid's sixty seconds at its pace
+  for (const [best, lv] of [[20, 5], [60, 54], [130, 108]]) {
+    const stage = E.raid(best), coinVault = E.dungeon("coin", best).coins;
+    let phases = 0, coins = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const team = ["thongkham", "phloeng", "chantra", "asani", "pupav2"].map(id => ({ id, lv, bonus: E.awakeBonus(Math.max(0, Math.ceil((lv - 30) / 10))) }));
+      const b = E.createBattle({ team, stage, seed });
+      while (b.turn < 14 && b.phase !== "done") { if (b.phase === "hero") E.heroTurn(b, E.autoQueue(b)); else E.enemyTurn(b); }
+      phases += b.raid.dealt / stage.hp / 6;
+      coins += E.raidCoins(stage, b.raid.dealt) / 6;
+    }
+    assert.ok(phases > 1.3 && phases < 3.5, `stage ${best}: ${phases.toFixed(2)} phases`);
+    assert.ok(coins > coinVault * .7 && coins < coinVault * 2, `stage ${best}: ${Math.round(coins)} coins, the vault ${coinVault}`);
+  }
+});
+
 test("cards: red stars raise the level cap, cost shards or star dust plus wings, and stop at five", () => {
   const cards = { units: { ikuya: 30 }, xp: {}, awake: {}, shards: { ikuya: 4 }, dust: 6, wings: 0 };
   assert.equal(E.giveXp(cards, "ikuya", 100000), 0); // capped at 30 without stars

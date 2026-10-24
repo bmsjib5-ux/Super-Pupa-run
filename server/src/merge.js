@@ -78,6 +78,18 @@ const cleanSets = (raw) => Array.from({ length: TEAM_SETS }, (_, k) => {
   return { n: typeof one.n === "string" ? one.n.slice(0, 16) : "", t: one.t.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) };
 });
 
+// The dragon raid: a day's best score and the coins paid for it, and the
+// best score ever.
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+const cleanRaid = (raw) => (raw && typeof raw === "object" && isDay(raw.day) ? { day: raw.day, best: int(raw.best, 1e12), paid: int(raw.paid, 1e9), top: int(raw.top, 1e12) } : null);
+function mergeRaid(now, next) {
+  if (!now || !next) return next || now;
+  const top = Math.max(now.top, next.top);
+  // the same day: the best on either copy, and every coin paid stays paid
+  if (now.day === next.day) return { day: now.day, best: Math.max(now.best, next.best), paid: Math.max(now.paid, next.paid), top };
+  return { ...(next.day > now.day ? next : now), top };
+}
+
 // Card battles: each card's level, the best stars per stage, the team of
 // five ("" for an empty slot) and two switches.
 const cleanCards = (raw) => {
@@ -88,7 +100,8 @@ const cleanCards = (raw) => {
   return {
     units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, sets: cleanSets(cards.sets), set: int(cards.set, TEAM_SETS - 1), arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
     xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
-    dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null
+    dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null,
+    raid: cleanRaid(cards.raid)
   };
 };
 
@@ -145,7 +158,8 @@ function mergeCards(current, incoming) {
     // a dungeon cleared today on either copy stays cleared
     dungeon: now.dungeon && next.dungeon && now.dungeon.day === next.dungeon.day
       ? { day: now.dungeon.day, exp: now.dungeon.exp || next.dungeon.exp, coin: now.dungeon.coin || next.dungeon.coin }
-      : (next.dungeon?.day || "") >= (now.dungeon?.day || "") ? next.dungeon : now.dungeon
+      : (next.dungeon?.day || "") >= (now.dungeon?.day || "") ? next.dungeon : now.dungeon,
+    raid: mergeRaid(now.raid, next.raid)
   };
 }
 

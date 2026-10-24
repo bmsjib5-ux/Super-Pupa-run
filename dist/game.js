@@ -6094,7 +6094,15 @@
       })(),
       starPaid: [...new Set([...(Array.isArray(a.starPaid) ? a.starPaid : []), ...(Array.isArray(b.starPaid) ? b.starPaid : [])].map(Number).filter(n => Number.isInteger(n) && n > 0))].sort((x, y) => x - y),
       arena: Math.max(Number(a.arena) || 1, Number(b.arena) || 1), tower: Math.max(Number(a.tower) || 0, Number(b.tower) || 0), idleAt: Math.max(Number(a.idleAt) || 0, Number(b.idleAt) || 0), daily: later(a.daily, b.daily),
-      dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon)
+      dungeon: String(a.dungeon?.day || "") === String(b.dungeon?.day || "") ? { day: a.dungeon?.day, exp: Boolean(a.dungeon?.exp || b.dungeon?.exp), coin: Boolean(a.dungeon?.coin || b.dungeon?.coin) } : later(a.dungeon, b.dungeon),
+      // the dragon raid: on the same day the best and every coin paid; the best ever from either
+      raid: (() => {
+        const x = a.raid, y = b.raid, num = (v) => Math.max(0, Math.floor(Number(v) || 0));
+        if (!x?.day || !y?.day) return x?.day ? x : y?.day ? y : undefined;
+        const top = Math.max(num(x.top), num(y.top));
+        if (x.day === y.day) return { day: x.day, best: Math.max(num(x.best), num(y.best)), paid: Math.max(num(x.paid), num(y.paid)), top };
+        return { ...(x.day > y.day ? x : y), top };
+      })()
     };
   }
 
@@ -6516,10 +6524,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-24a";
+  const NEWS_VERSION = "2026-10-24b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ด่านใหม่", title: "🐉 ด่านประจำวันใหม่: ตีมังกรรูนโบราณ", text: "ศึกการ์ด แท็บ 🌞 ประจำวัน มีด่านใหม่ รังมังกรรูนโบราณ จับเวลานับถอยหลัง 60 วินาที ตีมังกรให้ได้มากที่สุด ทุกความเสียหายคือคะแนน (นับรวมไฟเผาด้วย) ได้ทองตามสัดส่วนคะแนน ยิ่งตีได้มากยิ่งได้ทองมาก มุมขวาบนบอกเวลาที่เหลือ คะแนน และทองที่จะได้ตลอดเวลา มังกรล้มแล้วจะฟื้นขึ้นมาเป็นระยะใหม่ เลือดและพลังโจมตีมากขึ้น มังกรเก่งตามด่านที่ไปถึง และทองต่อคะแนนก็มากขึ้นตามด่าน ตีได้ไม่จำกัดรอบ ทองต่อวันคิดจากรอบที่ได้คะแนนสูงสุด ทำคะแนนได้มากกว่าเดิมรับส่วนต่างเพิ่ม (นับเป็นเควสด่านประจำวันด้วย)", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
     { tag: "ใหม่", title: "🎬 วิดีโอเปิดเกม: ศึกมังกรรูนโบราณ", text: "เปิดเกมแล้วจะเจอวิดีโอฉากต่อสู้ศึกการ์ด 10 วินาทีระหว่างโหลด อัสนี เพลิง จันทรา และทองคำ รุมสู้มังกรรูนโบราณ วิดีโอเล่นแบบปิดเสียงไว้ก่อน แตะ 🔇 เพื่อเปิดเสียง แตะ ข้าม เพื่อเข้าเกมได้ทันที แตะการ์ดนี้เพื่อดูอีกครั้ง", image: "intro", open: () => { closeNews(); replayIntro(); } },
     { tag: "โหมดใหม่", title: "🃏 จับคู่การ์ด · 30 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แตะการ์ดหน้าเหมือนกัน 2 ใบเพื่อจับคู่ แบบเกมจับคู่โปเกม่อน เส้นเชื่อมหักมุมได้ไม่เกิน 2 ครั้ง อ้อมขอบนอกกระดานได้ แต่ห้ามผ่านการ์ดใบอื่น เก็บให้หมดก่อนหมดเวลา จับคู่ติด ๆ กันได้คอมโบคะแนนเพิ่ม การ์ดเป็นตัวละครศึกการ์ดทั้ง 43 ใบ ตั้งแต่ด่าน 11 มีมอนสเตอร์มาเพิ่ม บางด่านการ์ดไหลลง ขึ้น ซ้าย หรือขวาหลังจับคู่ มีคำใบ้ 💡 และสลับการ์ด 🔀 ด่านละ 3 ครั้ง ถ้าไม่มีคู่ให้จับจะสลับให้ฟรี เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 15 และได้ 3 ดาวครั้งแรกได้อีก 💎 15", image: "cards", open: () => { closeNews(); window.PupaMatch?.open(); } },
     { tag: "ปรับปรุง", title: "✨ โหมดผจญภัย: เอฟเฟควิ่ง กระโดด ปล่อยพลัง", text: "วิ่งแล้วมีฝุ่นฟุ้งที่เท้า (ยิ่งเร็วยิ่งฟุ้ง) กระโดดมีฝุ่นและวงลม กระโดดกลางอากาศมีวงแหวนแสงกับประกาย ลงพื้นมีกลุ่มฝุ่น ตกจากที่สูงจอสั่นนิด ๆ และตัวละครยุบ-ยืดตอนลงพื้นและตอนกระโดด ปล่อยพลัง (เลเซอร์ ดาวกระจาย ลม ระเบิด) มีแสงวาบที่มือพร้อมวงพลัง ลูกดาวและลมมีประกายตามหลัง โหมดอมตะ พุ่งตัว และเร่งความเร็วมีเงาตามตัว และมอนสเตอร์ล้มมีแสงรูปดาวระเบิด", image: "stars", open: () => { closeNews(); openLevels(); } },
@@ -6701,6 +6710,13 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "raid") {
+      const img = document.createElement("img");
+      img.className = "news-boss";
+      img.src = "assets/foe-runedragon.webp";
+      img.alt = "";
+      return img;
     }
     if (kind === "intro") {
       const img = document.createElement("img");

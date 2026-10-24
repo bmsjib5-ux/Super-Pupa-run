@@ -1385,6 +1385,8 @@
     const b = {
       stage: stage.num, waves: stage.waves, waveLv: stage.lv, wave: 0,
       seed: seed >>> 0, turn: 0, phase: "hero", result: null, focus: -1, ease: stage.ease || 1,
+      // the dragon raid: its phase and the damage done to it
+      raid: stage.raid ? { phase: 1, dealt: 0, hp: stage.hp, tier: stage.tier || 1 } : null,
       heroes: [], foes: []
     };
     for (let slot = 0; slot < team.length; slot++) {
@@ -1412,6 +1414,8 @@
   function spawnWave(b) {
     b.foes = b.waves[b.wave].map((foe, slot) => makeUnit("foe", slot, foe.id, b.waveLv, foe.row));
     if (b.ease !== 1) for (const u of b.foes) u.maxHp = u.hp = Math.max(1, Math.round(u.hp * b.ease));
+    // the raid dragon: its phase's health, and it hits as hard as the stage's monsters
+    if (b.raid) for (const u of b.foes) { u.maxHp = u.hp = b.raid.hp; u.atk = Math.round(u.atk * b.raid.tier); }
     b.focus = -1;
   }
 
@@ -1439,6 +1443,7 @@
     }
     u.hp = Math.max(0, u.hp - left);
     if (u.hp <= 0) { u.alive = false; u.status = []; }
+    if (b.raid && u.side === "foe") b.raid.dealt += amount;
     events.push({ t: "hit", side: u.side, i: u.slot, v: amount, crit, ko: !u.alive, u: snap(u) });
     return left + absorbed;
   }
@@ -1567,6 +1572,7 @@
       if (burn) {
         u.hp = Math.max(0, u.hp - burn.v);
         if (u.hp <= 0) { u.alive = false; u.status = []; }
+        if (b.raid && u.side === "foe") b.raid.dealt += burn.v;
         events.push({ t: "burn", side: u.side, i: u.slot, v: burn.v, ko: !u.alive, u: snap(u) });
       }
     }
@@ -1590,6 +1596,7 @@
       return true;
     }
     if (!living(b.foes).length) {
+      if (b.raid) { rise(b, events); return false; }
       if (b.wave + 1 >= b.waves.length) {
         b.result = "won"; b.phase = "done";
         events.push({ t: "end", result: "won" });
@@ -1615,8 +1622,9 @@
   function heroTurn(b, queue = [], focus = b.focus) {
     const events = [];
     if (b.phase !== "hero") return events;
-    // a fight that drags past MAX_TURNS is lost (it can be tried again)
-    if (b.turn >= MAX_TURNS) {
+    // a fight that drags past MAX_TURNS is lost (it can be tried again);
+    // the raid has the page's clock instead
+    if (b.turn >= MAX_TURNS && !b.raid) {
       b.result = "lost"; b.phase = "done";
       events.push({ t: "end", result: "lost", timeout: true });
       return events;
@@ -1889,6 +1897,56 @@
       xp: kind === "exp" ? 120 + 40 * best : 20 + 6 * best,
       gems: 20, dust: 5, wings: 1, ore: 15 + Math.floor(best / 8)
     };
+  }
+
+  // ---- Daily dragon raid ----
+  // The Ancient Rune Dragon (the opening video's), as strong as the
+  // monsters of the furthest stage cleared. It can't be beaten, only hurt:
+  // the team strikes it for RAID_TIME seconds and every point of damage
+  // scores (the page keeps the clock, and the score of what it showed before
+  // time ran out). Each time its health runs out it rises again, harder: a
+  // new phase. Coins are a share of the score (rate per point); a day pays
+  // for its best run.
+  const RAID_TIME = 60;
+  // A phase's health: this share of all the furthest stage's monsters',
+  // less further on (a team ready for a later stage does less to it, for
+  // its monsters' health), so a team just ready breaks about two phases.
+  const RAID_HP = .96;
+  const raidShare = (at) => RAID_HP * Math.pow(at / 5, -.33);
+  const RAID_RISE = { hp: .2, atk: .1 };
+  FOES.raiddragon = {
+    name: "มังกรรูนโบราณ", role: "magic", art: "runedragon", glow: "rgba(255,200,90,.95)", boss: true, hp: 9, atk: 1.4, def: 1.3, spd: 120,
+    skills: [
+      { name: "ลมหายใจรูนเพลิง", cd: 3, target: "all", power: 1.05, fx: [{ k: "burn", power: .3, turns: 2 }] },
+      { name: "กรงเล็บอักขระ", cd: 4, first: 1, target: "front", power: 1.6, fx: [{ k: "defDown", v: .25, turns: 2 }] }
+    ]
+  };
+  // (pitched at stage 5 at least: the first stages' monsters are too few)
+  function raid(best) {
+    const at = Math.max(5, Math.min(best, STAGES.length)), stage = STAGES[at - 1];
+    const foes = stage.waves.flat();
+    const tier = Math.max(...foes.map(f => FOES[f.id].tier || 1));
+    const hp = Math.round(foes.reduce((sum, f) => sum + makeUnit("foe", 0, f.id, stage.lv).maxHp, 0) * (stage.ease || 1) * raidShare(at));
+    return {
+      num: 0, raid: true, name: "รังมังกรรูนโบราณ", lv: stage.lv, tier, hp, scene: 11,
+      waves: [[{ id: "raiddragon", row: "front" }]], par: 99, boss: true, time: RAID_TIME,
+      // coins a point: a phase's worth of damage pays raidPhaseCoins
+      rate: raidPhaseCoins(at) / hp
+    };
+  }
+  // a phase pays a little over half the coin vault's coins
+  const raidPhaseCoins = (at) => Math.round(.55 * dungeon("coin", at).coins);
+  const raidCoins = (stage, score) => Math.floor(Math.max(0, score) * stage.rate);
+
+  // The raid dragon falls only to rise again, harder.
+  function rise(b, events) {
+    const u = b.foes[0];
+    b.raid.phase++;
+    u.alive = true;
+    u.status = [];
+    u.maxHp = u.hp = Math.round(u.maxHp * (1 + RAID_RISE.hp));
+    u.atk = Math.round(u.atk * (1 + RAID_RISE.atk));
+    events.push({ t: "rise", side: "foe", i: u.slot, n: b.raid.phase, u: snap(u) });
   }
 
   // ---- Card pulls ----
@@ -2172,7 +2230,7 @@
     GRADES, DUPE_WINGS, AWAKE_WINGS, WING_PRICE, STAR_WINGS, wingCompensation,
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
-    DUNGEONS, dungeon,
+    DUNGEONS, dungeon, RAID_TIME, RAID_RISE, raid, raidCoins,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     BOSS_PAR, FOE_EASE, parFor, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe

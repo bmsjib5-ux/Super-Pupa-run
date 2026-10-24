@@ -259,6 +259,23 @@ test("merge: the match mode keeps each level's best stars and score", () => {
   assert.equal(cleanSave(device(0, { match: { stars: { 4: 7 } } })).match.stars[4], 3);
 });
 
+test("merge: the dragon raid keeps the day's best, every coin paid, and the best ever", () => {
+  const raid = (day, best, paid, top) => device(0, { cards: { units: { pupa: 5 }, team: ["pupa", "", "", "", ""], raid: { day, best, paid, top } } });
+  const a = mergeSave(null, cleanSave(raid("2026-10-24", 5000, 300, 9000)), 0);
+  assert.deepEqual(a.cards.raid, { day: "2026-10-24", best: 5000, paid: 300, top: 9000 });
+  // the same day on another device: the higher of each
+  const b = mergeSave(a, cleanSave(raid("2026-10-24", 7000, 250, 7000)), 0);
+  assert.deepEqual(b.cards.raid, { day: "2026-10-24", best: 7000, paid: 300, top: 9000 });
+  // a later day starts over, keeping the best ever
+  const c = mergeSave(b, cleanSave(raid("2026-10-25", 100, 6, 100)), 0);
+  assert.deepEqual(c.cards.raid, { day: "2026-10-25", best: 100, paid: 6, top: 9000 });
+  // an older day does not undo it, and a device without a raid leaves it be
+  assert.deepEqual(mergeSave(c, cleanSave(raid("2026-10-24", 99999, 9999, 99999)), 0).cards.raid, { day: "2026-10-25", best: 100, paid: 6, top: 99999 });
+  assert.deepEqual(mergeSave(c, cleanSave(device(0, { cards: { units: { pupa: 5 } } })), 0).cards.raid, c.cards.raid);
+  // nonsense is dropped
+  assert.equal(cleanSave(raid("yesterday", 1, 1, 1)).cards.raid, null);
+});
+
 test("merge: gear keeps each piece's higher tier and level, ore the higher count", () => {
   const none = mergeSave(null, cleanSave(device(0, { cards: { dust: 1 } })), 0);
   assert.equal(none.cards.ore, undefined);
