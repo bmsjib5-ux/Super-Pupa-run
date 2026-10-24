@@ -13,17 +13,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261023c">
-    <link rel="stylesheet" href="cards.css?v=20261023c">
-    <link rel="stylesheet" href="match.css?v=20261023c">
-    <script src="cards-engine.js?v=20261023c" defer></script>
-    <script src="game.js?v=20261023c" defer></script>
-    <script src="cards-fx.js?v=20261023c" defer></script>
-    <script src="cards-3d.js?v=20261023c" defer></script>
-    <script src="cards.js?v=20261023c" defer></script>
-    <script src="match-engine.js?v=20261023c" defer></script>
-    <script src="match.js?v=20261023c" defer></script>
-    <script type="module" src="pupa3d.js?v=20261023c"></script>
+    <link rel="stylesheet" href="styles.css?v=20261024a">
+    <link rel="stylesheet" href="cards.css?v=20261024a">
+    <link rel="stylesheet" href="match.css?v=20261024a">
+    <script src="cards-engine.js?v=20261024a" defer></script>
+    <script src="game.js?v=20261024a" defer></script>
+    <script src="cards-fx.js?v=20261024a" defer></script>
+    <script src="cards-3d.js?v=20261024a" defer></script>
+    <script src="cards.js?v=20261024a" defer></script>
+    <script src="match-engine.js?v=20261024a" defer></script>
+    <script src="match.js?v=20261024a" defer></script>
+    <script type="module" src="pupa3d.js?v=20261024a"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
     <script src="config.js?v=20261011a"></script>
     <script type="module" src="account.js?v=20261011h"></script>
@@ -33,6 +33,12 @@
     <main id="game" tabindex="-1">
       <section class="game-shell" aria-labelledby="game-title">
         <div class="loading-screen" id="loadingScreen" role="status" aria-live="polite">
+          <!-- The opening video (game.js playIntro). -->
+          <div class="loading-intro" id="loadingIntro" hidden>
+            <video class="loading-video" id="loadingVideo" muted playsinline preload="auto" aria-hidden="true"></video>
+            <button class="loading-sound" id="loadingSound" type="button" aria-pressed="false">🔇 เปิดเสียง</button>
+            <button class="loading-skip" id="loadingSkip" type="button">ข้าม ›</button>
+          </div>
           <div class="loading-card">
             <img class="loading-hero" src="assets/pupa-hero-3d.webp" alt="" width="160" height="160">
             <p class="loading-title">Super Pupa Run</p>

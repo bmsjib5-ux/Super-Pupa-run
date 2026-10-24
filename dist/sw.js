@@ -1,6 +1,6 @@
 // Offline support for the installed game. Network first, so a new release is
 // picked up as soon as the device is online; the cache is only a fallback.
-const CACHE = "super-pupa-run-v80-match";
+const CACHE = "super-pupa-run-v81-intro";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -116,6 +116,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || new URL(request.url).origin !== location.origin) return;
+  // Video is left to the browser: it asks for byte ranges, which this
+  // whole-file copy would answer wrongly (Safari then won't play it).
+  if (request.destination === "video" || request.headers.has("range")) return;
   event.respondWith(
     // Always check with the server (a cheap 304 when nothing changed) so an
     // update never mixes a new page with an older script or stylesheet.

@@ -6516,10 +6516,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-23c";
+  const NEWS_VERSION = "2026-10-24a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ใหม่", title: "🎬 วิดีโอเปิดเกม: ศึกมังกรรูนโบราณ", text: "เปิดเกมแล้วจะเจอวิดีโอฉากต่อสู้ศึกการ์ด 10 วินาทีระหว่างโหลด อัสนี เพลิง จันทรา และทองคำ รุมสู้มังกรรูนโบราณ วิดีโอเล่นแบบปิดเสียงไว้ก่อน แตะ 🔇 เพื่อเปิดเสียง แตะ ข้าม เพื่อเข้าเกมได้ทันที แตะการ์ดนี้เพื่อดูอีกครั้ง", image: "intro", open: () => { closeNews(); replayIntro(); } },
     { tag: "โหมดใหม่", title: "🃏 จับคู่การ์ด · 30 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แตะการ์ดหน้าเหมือนกัน 2 ใบเพื่อจับคู่ แบบเกมจับคู่โปเกม่อน เส้นเชื่อมหักมุมได้ไม่เกิน 2 ครั้ง อ้อมขอบนอกกระดานได้ แต่ห้ามผ่านการ์ดใบอื่น เก็บให้หมดก่อนหมดเวลา จับคู่ติด ๆ กันได้คอมโบคะแนนเพิ่ม การ์ดเป็นตัวละครศึกการ์ดทั้ง 43 ใบ ตั้งแต่ด่าน 11 มีมอนสเตอร์มาเพิ่ม บางด่านการ์ดไหลลง ขึ้น ซ้าย หรือขวาหลังจับคู่ มีคำใบ้ 💡 และสลับการ์ด 🔀 ด่านละ 3 ครั้ง ถ้าไม่มีคู่ให้จับจะสลับให้ฟรี เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 15 และได้ 3 ดาวครั้งแรกได้อีก 💎 15", image: "cards", open: () => { closeNews(); window.PupaMatch?.open(); } },
     { tag: "ปรับปรุง", title: "✨ โหมดผจญภัย: เอฟเฟควิ่ง กระโดด ปล่อยพลัง", text: "วิ่งแล้วมีฝุ่นฟุ้งที่เท้า (ยิ่งเร็วยิ่งฟุ้ง) กระโดดมีฝุ่นและวงลม กระโดดกลางอากาศมีวงแหวนแสงกับประกาย ลงพื้นมีกลุ่มฝุ่น ตกจากที่สูงจอสั่นนิด ๆ และตัวละครยุบ-ยืดตอนลงพื้นและตอนกระโดด ปล่อยพลัง (เลเซอร์ ดาวกระจาย ลม ระเบิด) มีแสงวาบที่มือพร้อมวงพลัง ลูกดาวและลมมีประกายตามหลัง โหมดอมตะ พุ่งตัว และเร่งความเร็วมีเงาตามตัว และมอนสเตอร์ล้มมีแสงรูปดาวระเบิด", image: "stars", open: () => { closeNews(); openLevels(); } },
     { tag: "ปรับปรุง", title: "★★★ โหมดผจญภัย เก็บ 3 ดาวง่ายขึ้น", text: "ดาวดวงที่ 2 เก็บเหรียญแค่ 50% ของด่าน (เดิม 70%) และดาวดวงที่ 3 เสียหัวใจได้ไม่เกิน 1 ดวง (เดิมห้ามเสียเลย) ดาวที่เคยได้แล้วยังอยู่ครบ กลับไปเก็บดาวที่ขาด ครบ 30 ดาวในโลกไหนรับ 500 เหรียญกับหมวกพิเศษประจำโลกนั้นได้เลย", image: "stars", open: () => { closeNews(); openLevels(); } },
@@ -6700,6 +6701,13 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "intro") {
+      const img = document.createElement("img");
+      img.className = "news-cover";
+      img.src = "assets/intro-battle.webp";
+      img.alt = "";
+      return img;
     }
     if (kind === "fasai3d") {
       const row = document.createElement("div");
@@ -9120,6 +9128,138 @@
     setTimeout(() => { if (!loadingBusy) loadUi.screen.hidden = true; }, 750);
   }
 
+  // ---- Opening video ----
+  // A short card-mode battle plays behind the loading bar when the game
+  // opens, muted (browsers only autoplay it so) with a button for sound.
+  // The loader waits for it to end or for ข้าม. It is left out with reduced
+  // motion or data saver and on direct links, and gives up when it can't
+  // play (no autoplay, offline, too slow to start).
+  const intro = {
+    box: document.querySelector("#loadingIntro"),
+    video: document.querySelector("#loadingVideo"),
+    sound: document.querySelector("#loadingSound"),
+    skip: document.querySelector("#loadingSkip")
+  };
+  const INTRO_SOURCES = [
+    ["assets/intro-battle.mp4", 'video/mp4; codecs="avc1.64001F, mp4a.40.2"'],
+    ["assets/intro-battle.webm", 'video/webm; codecs="vp9, opus"']
+  ];
+  const INTRO_START_MS = 6000;
+  let introFinish = null;
+  let introStarted = false;
+  let introRun = 0;
+
+  function showIntroSound() {
+    const on = !intro.video.muted;
+    intro.sound.textContent = on ? "🔊 ปิดเสียง" : "🔇 เปิดเสียง";
+    intro.sound.setAttribute("aria-pressed", String(on));
+  }
+
+  // The wait is over; hide drops the video and leaves the plain loader.
+  function endIntro(hide) {
+    const finish = introFinish;
+    introFinish = null;
+    if (hide && intro.box) {
+      intro.video.pause();
+      intro.box.hidden = true;
+      loadUi.screen.classList.remove("has-intro");
+    }
+    finish?.();
+  }
+
+  // Starts the video; returns a promise for its end (or skip), or null when
+  // there is none. asked: the player chose to watch, so it may have sound.
+  function playIntro(asked = false) {
+    const { box, video } = intro;
+    if (!box || !video || !loadUi.screen || introFinish) return null;
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.connection?.saveData;
+    if (!asked && (calm || skipModes)) return null;
+    const over = new Promise(resolve => { introFinish = resolve; });
+    const run = ++introRun;
+    introStarted = false;
+    for (const [src, type] of INTRO_SOURCES) {
+      const source = document.createElement("source");
+      source.src = src;
+      source.type = type;
+      video.append(source);
+    }
+    // the last source failing means none would play
+    video.lastElementChild.addEventListener("error", () => { if (run === introRun) endIntro(true); });
+    video.poster = "assets/intro-battle.webp";
+    video.muted = !(asked && soundOn);
+    showIntroSound();
+    box.hidden = false;
+    loadUi.screen.classList.add("has-intro");
+    video.load();
+    video.play()?.catch(() => {
+      if (run !== introRun || !introFinish) return;
+      if (video.muted) { endIntro(true); return; }
+      // sound wasn't allowed: try again without
+      video.muted = true;
+      showIntroSound();
+      video.play().catch(() => { if (run === introRun) endIntro(true); });
+    });
+    setTimeout(() => { if (run === introRun && !introStarted) endIntro(true); }, INTRO_START_MS);
+    return over;
+  }
+
+  // Loading is done while the video still plays: ข้าม becomes "เข้าเกม".
+  function waitIntro(over) {
+    setLoading(1, "พร้อมแล้ว!");
+    loadUi.screen.classList.add("is-ready");
+    intro.skip.textContent = "เข้าเกม ›";
+    return over;
+  }
+
+  // Once the loader has faded: stop the video and let the browser drop it.
+  function closeIntro() {
+    const { box, video } = intro;
+    if (!box || !video) return;
+    introRun++;
+    endIntro(false);
+    video.pause();
+    video.querySelectorAll("source").forEach(source => source.remove());
+    video.load();
+    box.hidden = true;
+    loadUi.screen.classList.remove("has-intro", "is-ready", "is-replay");
+    intro.skip.textContent = "ข้าม ›";
+  }
+
+  if (intro.video) {
+    intro.video.addEventListener("playing", () => { introStarted = true; });
+    intro.video.addEventListener("error", () => endIntro(true));
+    intro.video.addEventListener("ended", () => {
+      endIntro(false);
+      // still loading: run it again rather than stop on the last frame
+      if (loadingBusy && loadingShown < 1) { intro.video.currentTime = 0; intro.video.play().catch(() => {}); }
+    });
+    intro.sound.addEventListener("click", () => { intro.video.muted = !intro.video.muted; showIntroSound(); });
+    // while loading, skipping leaves the plain loader; after, it goes on
+    intro.skip.addEventListener("click", () => endIntro(loadingShown < 1));
+  }
+
+  // Watch the opening video again (its news card).
+  async function replayIntro() {
+    if (loadingBusy || !loadUi.screen) return;
+    loadingBusy = true;
+    loadingShown = 1;
+    loadUi.screen.hidden = false;
+    loadUi.screen.classList.remove("is-done");
+    loadUi.screen.classList.add("is-replay");
+    const over = playIntro(true);
+    if (over) {
+      intro.skip.textContent = "ปิด ✕";
+      await over;
+    }
+    loadingBusy = false;
+    loadUi.screen.classList.add("is-done");
+    setTimeout(() => {
+      if (loadingBusy) return;
+      loadUi.screen.hidden = true;
+      closeIntro();
+    }, 450);
+  }
+
   const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   const waitImage = (img) => img.complete ? Promise.resolve() : new Promise(resolve => {
     img.addEventListener("load", resolve, { once: true });
@@ -9149,9 +9289,12 @@
   async function bootLoading() {
     nextLoadingTip();
     loadingTipTimer = setInterval(nextLoadingTip, 3200);
+    const introOver = playIntro();
     // A slow network never keeps the player out for long.
     await Promise.race([bootSteps(), pause(20000)]);
+    if (introFinish) await waitIntro(introOver);
     hideLoading();
+    setTimeout(closeIntro, 800);
     if (!skipModes) showModes();
   }
 

@@ -621,6 +621,7 @@ button { touch-action: manipulation; }
   background: radial-gradient(circle at 50% 60%, rgba(255,120,168,.28), rgba(13,8,36,.6) 70%);
 }
 .news-picture img, .news-picture canvas { width: 82%; height: 82%; object-fit: contain; }
+.news-picture img.news-cover { width: 100%; height: 100%; object-fit: cover; }
 .news-scene {
   display: grid;
   place-items: center;
@@ -994,6 +995,61 @@ button { touch-action: manipulation; }
   to { transform: translateY(-1.1rem) scale(.97, 1.03); }
 }
 @media (prefers-reduced-motion: reduce) { .loading-hero { animation: none; } }
+
+/* the opening video behind the loader (game.js playIntro) */
+.loading-screen.has-intro { place-items: end center; background: #05020f; }
+.loading-intro { position: absolute; inset: 0; overflow: hidden; background: #05020f; }
+.loading-intro[hidden] { display: none; }
+.loading-intro::before {
+  /* the first frame, blurred, round a video that doesn't fill a tall screen */
+  content: "";
+  position: absolute;
+  inset: -2rem;
+  background: url("assets/intro-battle.webp") center / cover;
+  filter: blur(1.4rem) brightness(.45) saturate(1.2);
+}
+.loading-intro::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 45%;
+  background: linear-gradient(transparent, rgba(5,2,15,.92));
+  pointer-events: none;
+}
+.loading-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+@media (max-aspect-ratio: 4/3) { .loading-video { object-fit: contain; object-position: 50% 40%; } }
+.loading-sound, .loading-skip {
+  position: absolute;
+  top: max(.8rem, env(safe-area-inset-top));
+  min-height: 2.5rem;
+  padding: .4rem 1rem;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 999px;
+  color: #fff;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 800;
+  background: rgba(10,5,30,.6);
+  cursor: pointer;
+}
+.loading-sound { left: max(.8rem, env(safe-area-inset-left)); }
+.loading-skip { right: max(.8rem, env(safe-area-inset-right)); }
+.loading-screen.is-ready .loading-skip {
+  border-color: #fff3a6;
+  color: #30102d;
+  background: linear-gradient(180deg, #ffe58f, #ffb81f);
+  box-shadow: 0 0 1rem rgba(255,200,60,.6);
+  animation: loading-ready .8s ease-in-out infinite alternate;
+}
+@keyframes loading-ready { to { transform: scale(1.07); } }
+.has-intro .loading-card { position: relative; width: min(30rem, 100%); gap: .45rem; }
+.has-intro .loading-hero, .has-intro .loading-title { display: none; }
+.has-intro .loading-status, .has-intro .loading-tip { text-shadow: 0 1px 3px #000; }
+/* a tall screen has room for the name under the video */
+@media (max-aspect-ratio: 4/3) { .has-intro .loading-title { display: block; margin-bottom: .4rem; } }
+.loading-screen.is-replay .loading-card { display: none; }
+@media (max-height: 30rem) { .has-intro .loading-tip { display: none; } }
+@media (prefers-reduced-motion: reduce) { .loading-screen.is-ready .loading-skip { animation: none; } }
 
 /* ---- Hero level ---- */
 .lobby-xp { width: 100%; display: flex; align-items: center; gap: .5rem; }
