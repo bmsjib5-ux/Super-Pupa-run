@@ -35,7 +35,8 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
   // Until the keys are in place, only health answers.
   const ready = (req, res, next) => missing.length ? res.status(503).json({ error: "not_configured", missing }) : next();
 
-  app.get("/api/health", (req, res) => res.json({ ok: missing.length === 0, devMode, missing, firebaseKey: devMode ? "dev" : firebaseKeyStatus(), time: Date.now() }));
+  // commit: the code running (Render sets RENDER_GIT_COMMIT)
+  app.get("/api/health", (req, res) => res.json({ ok: missing.length === 0, devMode, missing, firebaseKey: devMode ? "dev" : firebaseKeyStatus(), commit: (process.env.RENDER_GIT_COMMIT || "").slice(0, 7), time: Date.now() }));
   app.get("/api/packs", (req, res) => res.json({ packs: Object.values(PACKS).map(({ amount, ...pack }) => pack), methods: METHODS }));
 
   // The account's view of a user: profile plus the save the game loads.
