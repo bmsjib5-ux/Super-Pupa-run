@@ -8,6 +8,9 @@
 //   POST /api/topup               start a payment for a pack
 //   GET  /api/orders/:id          how a payment is going (settles it too)
 //   POST /api/webhooks/omise      Opn tells us a charge finished
+//   POST /api/raid/start          a ranked dragon raid run: seed and team
+//   POST /api/raid/finish         the run's turns, replayed for its score
+//   GET  /api/raid/board          this week's ranking (pays last week's place)
 
 import { randomUUID } from "node:crypto";
 import express from "express";
@@ -16,6 +19,7 @@ import { PACKS, METHODS, APP_RETURN_URL, missingSettings, firebaseKeyStatus } fr
 import { cleanSave, mergeSave, grantGift } from "./merge.js";
 import { chargeOutcome, OmiseError } from "./omise.js";
 import { requireUser } from "./auth.js";
+import { startRun, finishRun, board } from "./raid.js";
 
 const MAX_PENDING_ORDERS = 5;
 const PHONE = /^0[689]\d{8}$/;
@@ -112,6 +116,19 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
       const user = await store.getUser(req.user.uid);
       res.json({ ...orderView(order, charge), balance: user?.save?.coins ?? null });
     } catch (error) { next(error); }
+  });
+
+  // The weekly dragon raid ranking (raid.js).
+  const RAID_STATUS = { no_team: 400, bad_run: 400, no_run: 409, run_expired: 410, week_over: 410, old_rules: 409, too_many_runs: 429 };
+  const answer = (res, out) => (out.error ? res.status(RAID_STATUS[out.error] || 400).json(out) : res.json(out));
+  app.post("/api/raid/start", ready, auth, async (req, res, next) => {
+    try { answer(res, await startRun(store, req.user)); } catch (error) { next(error); }
+  });
+  app.post("/api/raid/finish", ready, auth, async (req, res, next) => {
+    try { answer(res, await finishRun(store, req.user, req.body)); } catch (error) { next(error); }
+  });
+  app.get("/api/raid/board", ready, auth, async (req, res, next) => {
+    try { res.json(await board(store, req.user)); } catch (error) { next(error); }
   });
 
   // Opn posts { key: "charge.complete", data: <charge> }. The body is not

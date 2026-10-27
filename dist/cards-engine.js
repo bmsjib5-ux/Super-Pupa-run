@@ -1921,15 +1921,16 @@
       { name: "กรงเล็บอักขระ", cd: 4, first: 1, target: "front", power: 1.6, fx: [{ k: "defDown", v: .25, turns: 2 }] }
     ]
   };
-  // (pitched at stage 5 at least: the first stages' monsters are too few)
-  function raid(best) {
+  // (pitched at stage 5 at least: the first stages' monsters are too few;
+  // pumpkin: Halloween's dragon, the same in all but its looks)
+  function raid(best, { pumpkin = false } = {}) {
     const at = Math.max(5, Math.min(best, STAGES.length)), stage = STAGES[at - 1];
     const foes = stage.waves.flat();
     const tier = Math.max(...foes.map(f => FOES[f.id].tier || 1));
     const hp = Math.round(foes.reduce((sum, f) => sum + makeUnit("foe", 0, f.id, stage.lv).maxHp, 0) * (stage.ease || 1) * raidShare(at));
     return {
-      num: 0, raid: true, name: "รังมังกรรูนโบราณ", lv: stage.lv, tier, hp, scene: 11,
-      waves: [[{ id: "raiddragon", row: "front" }]], par: 99, boss: true, time: RAID_TIME,
+      num: 0, raid: true, name: pumpkin ? "รังมังกรฟักทอง" : "รังมังกรรูนโบราณ", lv: stage.lv, tier, hp, scene: 11, pumpkin,
+      waves: [[{ id: pumpkin ? "pumpkindragon" : "raiddragon", row: "front" }]], par: 99, boss: true, time: RAID_TIME,
       // coins a point: a phase's worth of damage pays raidPhaseCoins
       rate: raidPhaseCoins(at) / hp
     };
@@ -1948,6 +1949,92 @@
     u.atk = Math.round(u.atk * (1 + RAID_RISE.atk));
     events.push({ t: "rise", side: "foe", i: u.slot, n: b.raid.phase, u: snap(u) });
   }
+
+  // ---- How long the page takes to show a battle ----
+  // Each event's pause in ms at speed 1 (the page waits this long after
+  // showing it); a critical hit lingers a little longer, and a hero's
+  // second skill or a boss's skill first holds for its cut-in. The raid
+  // runs at RAID_PACE. Shared with the page, so the server can tell how
+  // much of a raid fits in its clock.
+  const EVENT_DELAY = { turn: 200, act: 330, hit: 230, heal: 200, shield: 140, fx: 110, skip: 380, burn: 260, wave: 900, rise: 900, status: 0, end: 300 };
+  const CRIT_DELAY = 120;
+  const CUTIN_MS = 950, CUTIN_HOLD = .82;
+  const RAID_PACE = .6;
+  // an act that gets the cut-in (the page leaves it out in the arena)
+  function bigAct(b, ev) {
+    if (ev.t !== "act" || !(ev.s >= 0)) return false;
+    const u = (ev.side === "hero" ? b.heroes : b.foes)[ev.i];
+    return Boolean(u?.skills?.[ev.s] && (ev.side === "hero" ? ev.s === 1 : u.boss));
+  }
+  const eventTime = (b, ev, pace = 1) => ((EVENT_DELAY[ev.t] ?? 100) + (ev.t === "hit" && ev.crit ? CRIT_DELAY : 0) + (bigAct(b, ev) ? CUTIN_MS * CUTIN_HOLD : 0)) * pace;
+
+  // ---- Checking a raid run (the weekly ranking) ----
+  // The page plays a ranked run from the server's seed and team and sends
+  // back its turns ({ q: skill queue, f: focus } for each hero turn) and how
+  // many events it showed. The server replays it here: the same battle,
+  // events in order, each taking eventTime at RAID_PACE, until the clock
+  // (RAID_TIME) is up or the page's count is reached (an honest page shows
+  // no more than the clock allows; fewer if the player stopped to choose
+  // skills). The score is the damage to the dragon in what was shown.
+  // Bump RAID_RULES whenever a change would replay a run differently.
+  const RAID_RULES = 1;
+  function raidReplay({ team, stage, seed, turns = [], shown = Infinity }) {
+    const b = createBattle({ team, stage, seed });
+    const limit = (stage.time || RAID_TIME) * 1000;
+    let clock = 0, count = 0, score = 0, phase = 1, k = 0, over = false;
+    while (!over && b.phase !== "done") {
+      let events;
+      if (b.phase === "hero") {
+        if (k >= turns.length) break;
+        const turn = turns[k++];
+        events = heroTurn(b, turn.q, turn.f);
+      } else events = enemyTurn(b);
+      for (const ev of events) {
+        if (clock >= limit || count >= shown) { over = true; break; }
+        count++;
+        if (ev.side === "foe" && (ev.t === "hit" || ev.t === "burn")) score += ev.v;
+        if (ev.t === "rise") phase = ev.n;
+        clock += eventTime(b, ev, RAID_PACE);
+      }
+    }
+    return { score, shown: count, phase, turns: k };
+  }
+  // The five a save fields, as the page and the server both build them.
+  const fielded = (cards) => Array.from({ length: TEAM_SIZE }, (_, n) => {
+    const id = cards?.team?.[n];
+    return id && CARDS[id] && cards.units?.[id] > 0 ? { id, lv: Math.min(cards.units[id], capFor(cards.awake?.[id] || 0)), bonus: cardBonus(cards, id), gear: gearBonus(cards, id) } : null;
+  });
+  // The furthest story stage with a star.
+  const bestStageOf = (stars) => STAGES.reduce((best, s) => ((stars?.[s.num] || 0) > 0 ? s.num : best), 0);
+
+  // ---- Halloween 2026 ----
+  // From `from` to `to` (the device's local days; the server's in Bangkok)
+  // every battle won drops candy (more for a boss, up to dayCap a day), a
+  // day's first look at the event gives `gift`, and the raid is fought with
+  // the pumpkin dragon and pays candy for its best run of the day, like its
+  // coins. The candy shop stays open until `shop`. Candy left is what was
+  // earned less what the shop took (cards.event: earned, bought), so two
+  // devices merge by the higher of each.
+  const HALLOWEEN = {
+    id: "halloween2026", name: "เทศกาลฮาโลวีน", from: "2026-10-27", to: "2026-11-03", shop: "2026-11-05",
+    win: 4, boss: 8, dayCap: 100, gift: 20, raidPerPhase: 15, card: "nilakan"
+  };
+  const HALLOWEEN_SHOP = [
+    { key: "card", price: 600, limit: 1, give: { card: HALLOWEEN.card } },
+    { key: "shards", price: 80, limit: 5, give: { shards: 10 } },
+    { key: "item", price: 120, limit: 3, give: { item: 4 } },
+    { key: "wings", price: 50, limit: 10, give: { wings: 2 } },
+    { key: "gems", price: 50, limit: 10, give: { gems: 100 } },
+    { key: "dust", price: 40, limit: 10, give: { dust: 10 } },
+    { key: "coins", price: 40, limit: 10, give: { coins: 3000 } },
+    { key: "ore", price: 30, limit: 10, give: { ore: 50 } }
+  ];
+  const halloweenOn = (day) => day >= HALLOWEEN.from && day <= HALLOWEEN.to;
+  const halloweenShopOpen = (day) => day >= HALLOWEEN.from && day <= HALLOWEEN.shop;
+  const candyLeft = (ev) => Math.max(0, (ev?.earned || 0) - HALLOWEEN_SHOP.reduce((sum, item) => sum + item.price * (ev?.bought?.[item.key] || 0), 0));
+  const winCandy = (stage) => (stage.boss ? HALLOWEEN.boss : HALLOWEEN.win);
+  const raidCandy = (stage, score) => Math.floor(Math.max(0, score) / stage.hp * HALLOWEEN.raidPerPhase);
+  FOES.pumpkindragon = { ...FOES.raiddragon, name: "มังกรฟักทองรัตติกาล", art: "pumpkindragon", glow: "rgba(255,150,40,.95)" };
 
   // ---- Card pulls ----
   // Characters and pets are only found here. Gems pay for a pull. The odds
@@ -2231,6 +2318,8 @@
     STAR_BONUS, STAR_GROUP, starGroups, groupStars, dueStarBonus,
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon, RAID_TIME, RAID_RISE, raid, raidCoins,
+    EVENT_DELAY, CRIT_DELAY, CUTIN_MS, CUTIN_HOLD, RAID_PACE, bigAct, eventTime, RAID_RULES, raidReplay, fielded, bestStageOf,
+    HALLOWEEN, HALLOWEEN_SHOP, halloweenOn, halloweenShopOpen, candyLeft, winCandy, raidCandy,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     BOSS_PAR, FOE_EASE, parFor, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe

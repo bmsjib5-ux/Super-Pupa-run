@@ -5,6 +5,7 @@ import { MemoryStore } from "../src/store.js";
 import { FakeOmise } from "../src/omise.js";
 import { devVerifier } from "../src/auth.js";
 import { cleanSave, mergeSave } from "../src/merge.js";
+import { E, startRun, finishRun, board, weekOf, weekEnds, dayOf, shortName, prizeFor, RUNS_A_DAY } from "../src/raid.js";
 
 function boot() {
   const store = new MemoryStore();
@@ -326,4 +327,131 @@ test("merge: card levels past 99 (second awakening) and the arena team survive a
   assert.equal(a.cards.units.phloeng, 125);
   assert.deepEqual(a.cards.arenaPick, ["phloeng"]);
   assert.deepEqual(a.cards.arenaFront, ["phloeng"]);
+});
+
+// ---- The weekly dragon raid ranking ----
+
+// A save whose team can fight the raid.
+const raider = (lv = 60) => device(0, { cards: { units: { thongkham: lv, phloeng: lv, chantra: lv, asani: lv, pupav2: lv }, awake: { thongkham: 3, phloeng: 3, chantra: 3, asani: 3, pupav2: 3 }, team: ["thongkham", "phloeng", "chantra", "asani", "pupav2"], stars: { 1: 3, 2: 3, 40: 2 } } });
+
+// Plays a ranked run as the page does (auto, the clock at the raid's pace)
+// and returns what the page would send.
+function playRun(run) {
+  const stage = E.raid(run.best, { pumpkin: run.pumpkin });
+  const b = E.createBattle({ team: run.team, stage, seed: run.seed });
+  const turns = [];
+  let clock = 0, shown = 0, score = 0;
+  outer: while (b.phase !== "done") {
+    let events;
+    if (b.phase === "hero") { const q = E.autoQueue(b); turns.push({ q, f: b.focus }); events = E.heroTurn(b, q, b.focus); }
+    else events = E.enemyTurn(b);
+    for (const ev of events) {
+      if (clock >= E.RAID_TIME * 1000) break outer;
+      shown++;
+      if (ev.side === "foe" && (ev.t === "hit" || ev.t === "burn")) score += ev.v;
+      clock += E.eventTime(b, ev, E.RAID_PACE);
+    }
+  }
+  return { turns, shown, score };
+}
+
+test("raid: a ranked run is replayed on the server to the page's score", async () => {
+  const { call, close } = boot();
+  try {
+    // no team synced yet
+    assert.equal((await call("POST", "/api/raid/start")).json.error, "no_team");
+    await call("PUT", "/api/save", { body: { save: raider(), baseCoins: 0, syncId: "s1" } });
+    const start = await call("POST", "/api/raid/start");
+    assert.equal(start.status, 200);
+    const run = start.json;
+    assert.ok(run.runId && run.seed > 0 && run.best === 40 && run.team.length === 5 && run.team[0].lv === 60 && run.rules === E.RAID_RULES);
+    const page = playRun(run);
+    const done = await call("POST", "/api/raid/finish", { body: { runId: run.runId, turns: page.turns, shown: page.shown } });
+    assert.equal(done.status, 200);
+    assert.equal(done.json.score, page.score);
+    assert.equal(done.json.rank, 1);
+    // a run counts once
+    assert.equal((await call("POST", "/api/raid/finish", { body: { runId: run.runId, turns: page.turns, shown: page.shown } })).json.error, "no_run");
+    // another player, a weaker team: second; claiming more shown than the clock allows gains nothing
+    await call("PUT", "/api/save", { token: "dev:bob", body: { save: raider(40), baseCoins: 0, syncId: "s2" } });
+    const bobRun = (await call("POST", "/api/raid/start", { token: "dev:bob" })).json;
+    const bobPage = playRun(bobRun);
+    const bob = await call("POST", "/api/raid/finish", { token: "dev:bob", body: { runId: bobRun.runId, turns: bobPage.turns, shown: 1e6 } });
+    assert.equal(bob.json.score, bobPage.score);
+    const boardAnn = (await call("GET", "/api/raid/board")).json;
+    assert.equal(boardAnn.top.length, 2);
+    assert.deepEqual(boardAnn.top.map(p => p.name), page.score > bobPage.score ? ["ann", "bob"] : ["bob", "ann"]);
+    assert.equal(boardAnn.me.score, page.score);
+    assert.ok(boardAnn.top.find(p => p.name === "ann").me && !boardAnn.top.find(p => p.name === "bob").me);
+    assert.ok(boardAnn.endsAt > Date.now() && boardAnn.prizes.length && boardAnn.runsLeft === RUNS_A_DAY - 1);
+    // nonsense turns are refused
+    const again = (await call("POST", "/api/raid/start")).json;
+    assert.equal((await call("POST", "/api/raid/finish", { body: { runId: again.runId, turns: [{ q: [{ i: 99, s: 0 }] }], shown: 5 } })).json.error, "bad_run");
+  } finally { close(); }
+});
+
+test("raid: runs expire, a day allows so many, a week ends on Monday in Bangkok and pays its places once", async () => {
+  const store = new MemoryStore();
+  const ann = { uid: "ann", name: "Ann Lee" }, bob = { uid: "bob", name: "บ๊อบ ใจดี" };
+  for (const who of [ann, bob]) await store.updateUser(who.uid, () => ({ uid: who.uid, save: cleanSave(raider(who === ann ? 60 : 40)) }));
+  // weeks: Sunday 23:59 in Bangkok is still the old week
+  assert.equal(weekOf(Date.parse("2026-10-25T16:59:59Z")), "2026-10-19");
+  assert.equal(weekOf(Date.parse("2026-10-25T17:00:00Z")), "2026-10-26");
+  assert.equal(weekEnds("2026-10-26"), Date.parse("2026-11-01T17:00:00Z"));
+  assert.equal(dayOf(Date.parse("2026-10-26T18:00:00Z")), "2026-10-27");
+  const t0 = Date.parse("2026-10-28T05:00:00Z");
+  // too late to finish
+  const stale = await startRun(store, ann, t0);
+  assert.equal((await finishRun(store, ann, { runId: stale.runId, turns: [], shown: 0 }, t0 + 16 * 60_000)).error, "run_expired");
+  // two players this week
+  for (const who of [ann, bob]) {
+    const run = await startRun(store, who, t0);
+    const page = playRun(run);
+    const out = await finishRun(store, who, { runId: run.runId, ...page }, t0 + 70_000);
+    assert.equal(out.score, page.score);
+  }
+  // a worse run later keeps the best
+  const weak = await startRun(store, ann, t0);
+  const best = (await store.raidScore("2026-10-26", "ann")).score;
+  await finishRun(store, ann, { runId: weak.runId, turns: [], shown: 0 }, t0 + 1000);
+  assert.equal((await store.raidScore("2026-10-26", "ann")).score, best);
+  assert.equal((await store.raidScore("2026-10-26", "bob")).name, "บ๊อบ ใ.");
+  // during the week: no prize yet; next week (after it settles) the places pay, once
+  assert.equal((await board(store, ann, t0)).reward, null);
+  const next = Date.parse("2026-11-02T02:00:00Z");
+  const first = (await store.raidScore("2026-10-26", "ann")).score > (await store.raidScore("2026-10-26", "bob")).score ? ann : bob;
+  const second = first === ann ? bob : ann;
+  const gemsBefore = (await store.getUser(first.uid)).save.gems || 0;
+  const paid = await board(store, first, next);
+  assert.deepEqual([paid.reward.week, paid.reward.rank, paid.reward.gems], ["2026-10-26", 1, prizeFor(1)]);
+  assert.equal((await store.getUser(first.uid)).save.gems, gemsBefore + prizeFor(1));
+  assert.equal((await board(store, first, next)).reward, null);
+  assert.equal((await board(store, second, next)).reward.rank, 2);
+  assert.equal(paid.week, "2026-11-02");
+  // so many runs a day
+  const runner = { uid: "cat", name: "cat" };
+  await store.updateUser("cat", () => ({ uid: "cat", save: cleanSave(raider()) }));
+  for (let n = 0; n < RUNS_A_DAY; n++) assert.ok((await startRun(store, runner, t0)).runId);
+  assert.equal((await startRun(store, runner, t0)).error, "too_many_runs");
+  assert.ok((await startRun(store, runner, t0 + 86_400_000)).runId);
+  // names: a word and an initial, never an e-mail address
+  assert.equal(shortName("Somchai Jaidee"), "Somchai J.");
+  assert.equal(shortName("someone@example.com"), "som***");
+  assert.equal(shortName(""), "ผู้เล่น");
+  assert.deepEqual([prizeFor(1), prizeFor(3), prizeFor(10), prizeFor(11), prizeFor(500)], [3000, 1500, 1000, 500, 100]);
+});
+
+test("merge: Halloween candy keeps what was earned and every buy, never more", () => {
+  const ev = (earned, bought, day, battle, gift, raid) => device(0, { cards: { units: { pupa: 5 }, team: ["pupa", "", "", "", ""], event: { id: "halloween2026", earned, bought, day, battle, gift, raid } } });
+  const a = mergeSave(null, cleanSave(ev(500, { card: 0, ore: 2 }, "2026-10-28", 40, true, 20)), 0);
+  assert.deepEqual(a.cards.event, { id: "halloween2026", earned: 500, bought: { card: 0, ore: 2 }, day: "2026-10-28", battle: 40, gift: true, raid: 20 });
+  // a device that spent elsewhere and earned less: the buys stay, the earnings stay
+  const b = mergeSave(a, cleanSave(ev(450, { card: 1 }, "2026-10-28", 60, false, 10)), 0);
+  assert.deepEqual(b.cards.event, { id: "halloween2026", earned: 500, bought: { ore: 2, card: 1 }, day: "2026-10-28", battle: 60, gift: true, raid: 20 });
+  // a new day starts its counts over
+  const c = mergeSave(b, cleanSave(ev(520, {}, "2026-10-29", 4, false, 0)), 0);
+  assert.deepEqual([c.cards.event.earned, c.cards.event.day, c.cards.event.battle, c.cards.event.gift, c.cards.event.raid], [520, "2026-10-29", 4, false, 0]);
+  assert.equal(c.cards.event.bought.card, 1);
+  // nonsense is dropped
+  assert.equal(cleanSave(device(0, { cards: { event: { id: "Bad Id!", earned: 5 } } })).cards.event, null);
 });

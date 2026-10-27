@@ -90,6 +90,21 @@ function mergeRaid(now, next) {
   return { ...(next.day > now.day ? next : now), top };
 }
 
+// A time-limited event (Halloween's candy): what it earned, what the shop
+// took (bought: offer -> times), and the day's candy from battles, the
+// day's gift and the day's raid candy. Candy left is earned less bought,
+// so the higher of each, merged, never makes candy out of nothing.
+const cleanEvent = (raw) => (raw && typeof raw === "object" && typeof raw.id === "string" && /^[a-z0-9]{1,30}$/.test(raw.id)
+  ? { id: raw.id, earned: int(raw.earned, 1e7), bought: intMap(raw.bought, 1000), day: isDay(raw.day) ? raw.day : "", battle: int(raw.battle, 1e6), gift: raw.gift === true, raid: int(raw.raid, 1e6) }
+  : null);
+function mergeEvent(now, next) {
+  if (!now || !next || now.id !== next.id) return next || now;
+  const days = now.day === next.day
+    ? { day: now.day, battle: Math.max(now.battle, next.battle), gift: now.gift || next.gift, raid: Math.max(now.raid, next.raid) }
+    : (next.day > now.day ? { day: next.day, battle: next.battle, gift: next.gift, raid: next.raid } : { day: now.day, battle: now.battle, gift: now.gift, raid: now.raid });
+  return { id: now.id, earned: Math.max(now.earned, next.earned), bought: maxMap(now.bought, next.bought), ...days };
+}
+
 // Card battles: each card's level, the best stars per stage, the team of
 // five ("" for an empty slot) and two switches.
 const cleanCards = (raw) => {
@@ -101,7 +116,8 @@ const cleanCards = (raw) => {
     units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, sets: cleanSets(cards.sets), set: int(cards.set, TEAM_SETS - 1), arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
     xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null,
-    raid: cleanRaid(cards.raid)
+    raid: cleanRaid(cards.raid),
+    event: cleanEvent(cards.event)
   };
 };
 
@@ -159,7 +175,8 @@ function mergeCards(current, incoming) {
     dungeon: now.dungeon && next.dungeon && now.dungeon.day === next.dungeon.day
       ? { day: now.dungeon.day, exp: now.dungeon.exp || next.dungeon.exp, coin: now.dungeon.coin || next.dungeon.coin }
       : (next.dungeon?.day || "") >= (now.dungeon?.day || "") ? next.dungeon : now.dungeon,
-    raid: mergeRaid(now.raid, next.raid)
+    raid: mergeRaid(now.raid, next.raid),
+    event: mergeEvent(now.event, next.event)
   };
 }
 

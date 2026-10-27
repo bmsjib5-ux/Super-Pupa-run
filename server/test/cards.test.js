@@ -192,6 +192,73 @@ test("cards: a team ready for its furthest stage breaks about two of the dragon'
   }
 });
 
+test("cards: a ranked raid replays to the page's score, and never past the clock", () => {
+  const cards = { team: ["thongkham", "phloeng", "", "asani", "pupav2"], units: { thongkham: 70, phloeng: 70, asani: 70, pupav2: 70, chantra: 70 }, awake: { thongkham: 4, phloeng: 4, asani: 4, pupav2: 4 } };
+  const team = E.fielded(cards);
+  assert.equal(team[2], null);
+  assert.ok(team[0].lv === 70 && team[0].bonus > 0 && team[0].gear);
+  const stage = E.raid(E.bestStageOf({ 1: 3, 2: 1, 60: 2, 61: 0 }));
+  assert.equal(stage.lv, E.STAGES[59].lv);
+  // play it as the page does: auto turns recorded, the clock at the raid's pace
+  const play = (seed, stopAt = Infinity) => {
+    const b = E.createBattle({ team, stage, seed });
+    const turns = [];
+    let clock = 0, shown = 0, score = 0;
+    outer: while (b.phase !== "done") {
+      let events;
+      if (b.phase === "hero") { const q = E.autoQueue(b); turns.push({ q, f: b.focus }); events = E.heroTurn(b, q, b.focus); }
+      else events = E.enemyTurn(b);
+      for (const ev of events) {
+        if (clock >= E.RAID_TIME * 1000 || shown >= stopAt) break outer;
+        shown++;
+        if (ev.side === "foe" && (ev.t === "hit" || ev.t === "burn")) score += ev.v;
+        clock += E.eventTime(b, ev, E.RAID_PACE);
+      }
+    }
+    return { turns, shown, score };
+  };
+  for (const seed of [5, 6]) {
+    const run = play(seed);
+    assert.ok(run.score > 0 && run.turns.length > 5);
+    assert.equal(E.raidReplay({ team, stage, seed, turns: run.turns, shown: run.shown }).score, run.score);
+    // claiming more shown than the clock allows changes nothing
+    assert.equal(E.raidReplay({ team, stage, seed, turns: run.turns, shown: 1e9 }).score, run.score);
+    // a page that showed less (a player choosing skills) scores less
+    const part = play(seed, Math.floor(run.shown / 2));
+    assert.equal(E.raidReplay({ team, stage, seed, turns: part.turns, shown: part.shown }).score, part.score);
+    assert.ok(part.score < run.score);
+    // another seed is another battle
+    assert.notEqual(E.raidReplay({ team, stage, seed: seed + 100, turns: run.turns, shown: run.shown }).score, run.score);
+  }
+  // the pumpkin dragon only looks different
+  const run = play(9), pumpkin = E.raid(60, { pumpkin: true });
+  assert.equal(pumpkin.waves[0][0].id, "pumpkindragon");
+  assert.equal(E.raidReplay({ team, stage: pumpkin, seed: 9, turns: run.turns, shown: run.shown }).score, run.score);
+  // a cut-in holds the clock: a hero's second skill, a boss's skill
+  const b = E.createBattle({ team, stage, seed: 1 });
+  assert.ok(E.eventTime(b, { t: "act", side: "hero", i: 0, s: 1 }) > E.eventTime(b, { t: "act", side: "hero", i: 0, s: 0 }));
+  assert.ok(E.eventTime(b, { t: "act", side: "foe", i: 0, s: 0 }) > E.eventTime(b, { t: "act", side: "foe", i: 0, s: -1 }));
+  assert.equal(E.eventTime(b, { t: "hit", crit: true }, .5), (E.EVENT_DELAY.hit + E.CRIT_DELAY) * .5);
+});
+
+test("cards: Halloween drops candy for a while, and the shop takes it", () => {
+  const H = E.HALLOWEEN;
+  assert.ok(E.halloweenOn(H.from) && E.halloweenOn(H.to) && !E.halloweenOn("2026-10-26") && !E.halloweenOn("2026-11-04"));
+  assert.ok(E.halloweenShopOpen(H.shop) && !E.halloweenShopOpen("2026-11-06"));
+  assert.equal(E.winCandy({ boss: true }), H.boss);
+  assert.equal(E.winCandy({ boss: false }), H.win);
+  const stage = E.raid(40);
+  assert.equal(E.raidCandy(stage, stage.hp * 2), 2 * H.raidPerPhase);
+  // candy left: earned less what the shop took
+  const card = E.HALLOWEEN_SHOP.find(item => item.key === "card"), ore = E.HALLOWEEN_SHOP.find(item => item.key === "ore");
+  assert.equal(E.candyLeft({ earned: 1000, bought: { card: 1, ore: 2 } }), 1000 - card.price - 2 * ore.price);
+  assert.equal(E.candyLeft({ earned: 10, bought: { card: 1 } }), 0);
+  assert.equal(E.candyLeft(null), 0);
+  // the featured card is a real one; every offer has a price and a limit
+  assert.ok(E.CARDS[H.card]);
+  for (const item of E.HALLOWEEN_SHOP) assert.ok(item.price > 0 && item.limit > 0 && Object.keys(item.give).length === 1, item.key);
+});
+
 test("cards: red stars raise the level cap, cost shards or star dust plus wings, and stop at five", () => {
   const cards = { units: { ikuya: 30 }, xp: {}, awake: {}, shards: { ikuya: 4 }, dust: 6, wings: 0 };
   assert.equal(E.giveXp(cards, "ikuya", 100000), 0); // capped at 30 without stars

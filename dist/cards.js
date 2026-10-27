@@ -62,6 +62,8 @@
     ...Object.fromEntries(["angelguard", "cherub", "angelknight", "angelharp", "angelshield", "seraph", "angelmage", "stormangel", "archking", "archqueen"].map(id => [id, `assets/foe-${id}.webp`])),
     // the upper tower's five zones (floors 101-150)
     ...Object.fromEntries(E.TOWER_ZONES.flatMap(z => [...Object.keys(z.guards), z.lord[0], z.queen[0], z.great]).map(id => [id, `assets/foe-${id}.webp`])),
+    // Halloween's raid dragon
+    pumpkindragon: "assets/foe-pumpkindragon.webp",
     // bosses with art of their own
     serpent: "assets/boss-serpent.webp", golem: "assets/boss-golem.webp", icedragon: "assets/boss-icedragon.webp", reaper: "assets/boss-reaper.webp", kraken: "assets/boss-kraken.webp"
   };
@@ -269,6 +271,11 @@
     // the best score ever
     const count = (v) => Math.max(0, Math.floor(Number(v) || 0));
     const raid = raw.raid?.day === today() ? { day: today(), best: count(raw.raid.best), paid: count(raw.raid.paid), top: count(raw.raid.top) } : { day: today(), best: 0, paid: 0, top: count(raw.raid?.top) };
+    // Halloween's candy (see E.HALLOWEEN): earned, bought, today's counts
+    const re = raw.event?.id === E.HALLOWEEN.id ? raw.event : null;
+    const bought = {};
+    for (const item of E.HALLOWEEN_SHOP) { const n = Math.min(item.limit, count(re?.bought?.[item.key])); if (n) bought[item.key] = n; }
+    const event = { id: E.HALLOWEEN.id, earned: count(re?.earned), bought, ...(re?.day === today() ? { day: today(), battle: count(re.battle), gift: re.gift === true, raid: count(re.raid) } : { day: today(), battle: 0, gift: false, raid: 0 }) };
     const awake = {}, shards = {};
     for (const id of E.CARD_IDS) {
       const a = Math.min(E.maxAwake(id), Math.floor(Number(raw.awake?.[id]) || 0));
@@ -322,7 +329,7 @@
       return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t };
     });
     const set = Math.min(TEAM_SETS - 1, Math.max(0, Math.floor(Number(raw.set) || 0)));
-    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, event, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -616,7 +623,8 @@
     const panel = el("div", "shop-list cards-scroll");
     panel.setAttribute("role", "tabpanel");
     if (tab === "stages") renderStages(panel); else if (tab === "pulls") renderPulls(panel); else if (tab === "daily") renderDungeons(panel); else if (tab === "arena") renderArena(panel); else if (tab === "quests") renderQuests(panel); else if (tab === "tower") renderTower(panel); else renderTeam(panel);
-    body.replaceChildren(idleBanner(), panel, tabs);
+    const event = eventBanner();
+    body.replaceChildren(idleBanner(), ...(event ? [event] : []), panel, tabs);
     if (back) freshen(body);
   }
 
@@ -877,22 +885,130 @@
   // coins for 1,000 points, shown with a decimal when small
   const perThousand = (stage) => { const v = stage.rate * 1000; return v < 10 ? v.toFixed(1) : fmt(v); };
   function raidBox() {
-    const stage = E.raid(bestStage()), r = raidToday();
-    const box = el("section", "dungeon-box is-raid");
-    box.append(el("span", "dungeon-icon", "🐉"), el("h3", null, stage.name), el("p", "sheet-text", `ตีมังกรรูนโบราณให้ได้มากที่สุดใน ${stage.time} วินาที ทุกความเสียหายคือคะแนน ได้ทองตามคะแนน มังกรล้มแล้วจะฟื้นขึ้นมาแกร่งกว่าเดิม`));
+    const on = E.halloweenOn(today());
+    const stage = E.raid(bestStage(), { pumpkin: on }), r = raidToday(), dragon = stage.waves[0][0].id;
+    const box = el("section", `dungeon-box is-raid${on ? " is-pumpkin" : ""}`);
+    box.append(el("span", "dungeon-icon", on ? "🎃" : "🐉"), el("h3", null, stage.name), el("p", "sheet-text", `ตี${E.FOES[dragon].name}ให้ได้มากที่สุดใน ${stage.time} วินาที ทุกความเสียหายคือคะแนน ได้ทองตามคะแนน มังกรล้มแล้วจะฟื้นขึ้นมาแกร่งกว่าเดิม`));
     const foes = el("div", "sheet-foes");
     const fig = el("figure", "sheet-foe is-boss");
-    fig.append(foeArt("raiddragon"), el("figcaption", null, E.FOES.raiddragon.name));
+    fig.append(foeArt(dragon), el("figcaption", null, E.FOES[dragon].name));
     foes.append(fig);
     box.append(foes, el("p", "sheet-sub", `มังกร Lv ${stage.lv} · ⏱ ${stage.time} วินาที · ทุก 1,000 คะแนน = ● ${perThousand(stage)}`));
+    if (on) box.append(el("p", "raid-candy-note", `🎃 ช่วงฮาโลวีน: ได้ลูกอม 🍬 ${E.HALLOWEEN.raidPerPhase} ต่อระยะที่ตีได้ (คิดรอบดีที่สุดของวัน)`));
     box.append(el("p", "sheet-reward", r.best ? `วันนี้: คะแนนสูงสุด ${fmt(r.best)} · ได้ทองแล้ว ● ${fmt(r.paid)}` : "วันนี้ยังไม่ได้ตีมังกร"));
     if (r.top) box.append(el("p", "sheet-sub", `🏆 สถิติสูงสุด ${fmt(r.top)} คะแนน`));
     box.append(el("p", "raid-note", "ตีได้ไม่จำกัดรอบ · ทองต่อวันคิดจากรอบที่ได้คะแนนสูงสุด ตีใหม่ได้คะแนนมากกว่าเดิมรับส่วนต่างเพิ่ม"));
+    const ranking = el("div", "raid-ranking");
+    box.append(ranking);
+    drawRanking(ranking);
     const actions = el("div", "title-actions sheet-actions");
-    actions.append(button("primary-button", r.best ? "ตีมังกรอีกรอบ ⚔" : "ตีมังกร ⚔", () => startBattle(E.raid(bestStage()))));
+    actions.append(button("primary-button raid-go", r.best ? "ตีมังกรอีกรอบ ⚔" : "ตีมังกร ⚔", () => goRaid()));
     box.append(actions);
     return box;
   }
+
+  // ---- The weekly ranking (server: server/src/raid.js) ----
+  // Signed in, a run is ranked: the server deals its seed and team (as last
+  // synced), the page plays it and sends its turns back, and the server
+  // replays them for the score. Without an account, or when the server
+  // can't be reached, the run is the page's own and still pays coins.
+  const account = () => window.PupaAccount;
+  const signedIn = () => Boolean(account()?.state?.user);
+  const RANK_FRESH_MS = 30000;
+  let ranking = null, rankingAt = 0, rankingLoad = null;
+  const RAID_WHY = { too_many_runs: "วันนี้ตีจัดอันดับครบ 40 รอบแล้ว", no_team: "ทีมยังไม่ได้บันทึกขึ้นคลาวด์", timeout: "เซิร์ฟเวอร์ตอบช้า", old_rules: "ต้องอัปเดตเกมก่อน (รีเฟรชหน้า)" };
+  const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const thaiDay = (ymd, add = 0) => { const d = new Date(`${ymd}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + add); return `${d.getUTCDate()} ${THAI_MONTHS[d.getUTCMonth()]}`; };
+  function timeLeft(ms) {
+    const mins = Math.max(0, Math.ceil(ms / 60000)), days = Math.floor(mins / 1440), hours = Math.floor(mins % 1440 / 60);
+    return days ? `${days} วัน ${hours} ชม.` : `${hours} ชม. ${mins % 60} นาที`;
+  }
+  function loadRanking(force = false) {
+    if (!signedIn()) return Promise.resolve(null);
+    if (!force && ranking && Date.now() - rankingAt < RANK_FRESH_MS) return Promise.resolve(ranking);
+    rankingLoad = rankingLoad || account().raidBoard().then(out => {
+      ranking = out; rankingAt = Date.now();
+      // last week's place paid on the server: show it and bring the gems down
+      if (out.reward) { rewardSheet(out.reward); account().sync(); }
+      return out;
+    }).finally(() => { rankingLoad = null; });
+    return rankingLoad;
+  }
+  function drawRanking(node) {
+    node.replaceChildren(el("b", "raid-ranking-title", "🏆 อันดับตีมังกรประจำสัปดาห์"));
+    if (!account()?.state?.available) { node.append(el("p", "raid-ranking-line", "การจัดอันดับใช้ได้เมื่อเชื่อมต่อเซิร์ฟเวอร์")); return; }
+    if (!signedIn()) {
+      node.append(el("p", "raid-ranking-line", "เข้าสู่ระบบเพื่อร่วมจัดอันดับ ชิงเพชรสูงสุด 💎 3,000 ทุกสัปดาห์"));
+      node.append(button("secondary-button raid-signin", "เข้าสู่ระบบด้วย Google", () => account().signIn()));
+      return;
+    }
+    const fill = (out) => {
+      node.replaceChildren(el("b", "raid-ranking-title", `🏆 อันดับประจำสัปดาห์ · ปิดใน ${timeLeft(out.endsAt - Date.now())}`));
+      node.append(el("p", "raid-ranking-line", out.me ? `คุณ: อันดับ #${out.me.rank} · ${fmt(out.me.score)} คะแนน` : "สัปดาห์นี้คุณยังไม่มีคะแนน ตีมังกรเพื่อขึ้นอันดับ"));
+      const list = el("ol", "raid-top");
+      for (const p of out.top.slice(0, 3)) {
+        const li = el("li", p.me ? "is-me" : null);
+        li.append(el("span", "raid-top-rank", `#${p.rank}`), el("span", "raid-top-name", p.name), el("b", null, fmt(p.score)));
+        list.append(li);
+      }
+      if (out.top.length) node.append(list);
+      node.append(button("secondary-button raid-board-open", "ดูอันดับทั้งหมด ›", () => rankingSheet(out)));
+    };
+    if (ranking) fill(ranking);
+    else node.append(el("p", "raid-ranking-line", "กำลังโหลดอันดับ…"));
+    loadRanking().then(out => { if (out && node.isConnected) fill(out); }).catch(() => { if (node.isConnected && !ranking) node.replaceChildren(el("b", "raid-ranking-title", "🏆 อันดับตีมังกรประจำสัปดาห์"), el("p", "raid-ranking-line", "โหลดอันดับไม่ได้ ลองใหม่ภายหลัง")); });
+  }
+  function rankingSheet(out) {
+    const parts = [el("h3", "sheet-title", "🏆 อันดับตีมังกรประจำสัปดาห์"), el("p", "sheet-sub", `${thaiDay(out.week)} – ${thaiDay(out.week, 6)} · ปิดใน ${timeLeft(out.endsAt - Date.now())}`)];
+    const list = el("ol", "raid-board");
+    for (const p of out.top) {
+      const li = el("li", p.me ? "is-me" : null);
+      li.append(el("span", "raid-top-rank", `#${p.rank}`), el("span", "raid-top-name", p.name), el("small", null, `ระยะ ${p.phase}`), el("b", null, fmt(p.score)));
+      list.append(li);
+    }
+    if (!out.top.length) list.append(el("li", "raid-board-empty", "ยังไม่มีใครตีมังกรสัปดาห์นี้ เป็นคนแรกเลย!"));
+    if (out.me && !out.top.some(p => p.me)) {
+      const li = el("li", "is-me");
+      li.append(el("span", "raid-top-rank", `#${out.me.rank}`), el("span", "raid-top-name", "คุณ"), el("small", null, `ระยะ ${out.me.phase}`), el("b", null, fmt(out.me.score)));
+      list.append(li);
+    }
+    parts.push(list);
+    const prizes = el("ul", "raid-prizes");
+    let from = 1;
+    for (const p of out.prizes) {
+      prizes.append(el("li", null, `${p.upTo == null ? "ร่วมตี" : from === p.upTo ? `อันดับ ${from}` : `อันดับ ${from}–${p.upTo}`} · 💎 ${fmt(p.gems)}`));
+      from = (p.upTo || 0) + 1;
+    }
+    parts.push(el("b", "raid-prizes-title", "รางวัลเมื่อจบสัปดาห์"), prizes);
+    parts.push(el("p", "raid-note", `คิดคะแนนสูงสุดของสัปดาห์ (จันทร์–อาทิตย์ เวลาไทย) เซิร์ฟเวอร์เล่นรอบซ้ำเพื่อตรวจคะแนนทุกรอบ · รางวัลเข้าเมื่อเปิดหน้านี้ในสัปดาห์ถัดไป · ตีจัดอันดับได้วันละ 40 รอบ (เหลือวันนี้ ${out.runsLeft})`));
+    openSheet(parts);
+  }
+  function rewardSheet(reward) {
+    openSheet([el("span", "moon-icon", "🏆"), el("h3", "sheet-title", "รางวัลอันดับตีมังกร"), el("p", "sheet-sub", `สัปดาห์ ${thaiDay(reward.week)} – ${thaiDay(reward.week, 6)}`), el("p", "raid-total", `อันดับ #${reward.rank}`), el("p", "sheet-reward", `${fmt(reward.score)} คะแนน · ได้รับ 💎 ${fmt(reward.gems)}`)]);
+    [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
+    announce(`รางวัลอันดับตีมังกร อันดับ ${reward.rank} ได้เพชร ${reward.gems}`);
+  }
+  // The raid box's button: a ranked run when signed in, else the page's own.
+  async function goRaid() {
+    const local = (why = "") => { startBattle(E.raid(bestStage(), { pumpkin: E.halloweenOn(today()) })); if (battle?.raid) battle.raid.why = why; };
+    if (!signedIn()) { local(); return; }
+    const go = body.querySelector(".raid-go");
+    if (go) { go.disabled = true; go.textContent = "กำลังเตรียมรอบจัดอันดับ…"; }
+    let run = null, why = "";
+    try {
+      // the server fields the team as last synced: sync first (a sleeping
+      // server can be slow to wake; the run is then dealt from the last sync)
+      await Promise.race([account().sync(), wait(8000)]);
+      run = await account().raidStart();
+    } catch (error) {
+      why = RAID_WHY[error.code] || "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
+    }
+    // (gone elsewhere meanwhile: no run)
+    if (!isShown || battle || tab !== "daily") return;
+    if (run) startBattle(E.raid(run.best, { pumpkin: run.pumpkin }), run);
+    else local(why);
+  }
+
   function finishRaid(v) {
     const r = raidToday(), stage = v.stage, b = v.state;
     const score = Math.round(v.raid.score), coins = E.raidCoins(stage, score);
@@ -901,20 +1017,40 @@
     r.best = Math.max(r.best, score);
     r.paid += pay;
     r.top = Math.max(r.top, score);
+    // Halloween: the pumpkin dragon pays candy too, by the day's best run
+    let candy = 0;
+    if (stage.pumpkin && E.halloweenOn(today())) {
+      const ev = eventToday();
+      candy = Math.max(0, E.raidCandy(stage, score) - ev.raid);
+      ev.raid += candy;
+      ev.earned += candy;
+    }
     questTick("dungeon");
     save().coins += pay;
     store(); showCoins();
     v.busy = true;
     const box = el("div", "message-card battle-card raid-card");
     const why = v.raid.quit ? "จบรอบ" : b.result === "lost" ? "ทีมล้มหมด!" : "หมดเวลา!";
-    box.append(el("span", "moon-icon", "🐉"), el("h2", null, why));
+    box.append(el("span", "moon-icon", stage.pumpkin ? "🎃" : "🐉"), el("h2", null, why));
     const total = el("p", "raid-total");
     total.append(el("small", null, "คะแนน"), el("b", null, fmt(score)));
     box.append(total, el("p", null, `มังกรระยะที่ ${b.raid.phase} · ${b.turn} เทิร์น`));
     box.append(el("p", "end-reward battle-reward", pay ? `ได้รับ ● ${fmt(pay)}${pay < coins ? ` (คะแนนรอบนี้ = ● ${fmt(coins)} รับส่วนต่างจากรอบก่อนวันนี้)` : ""}` : coins ? `รอบนี้ = ● ${fmt(coins)} ไม่เกินรอบที่ดีที่สุดวันนี้ (● ${fmt(r.paid)}) จึงไม่ได้ทองเพิ่ม` : "ยังไม่มีคะแนน ลองใหม่ได้เลย"));
+    if (candy) box.append(el("p", "event-candy", `🎃 ได้ลูกอม 🍬 +${candy}`));
     box.append(el("p", null, record ? "🏆 สถิติใหม่!" : `วันนี้สูงสุด ${fmt(r.best)} · สถิติ ${fmt(r.top)}`));
+    // the ranking: a ranked run's turns go to the server for its score
+    const ranked = v.raid.ranked;
+    const rankLine = el("p", "raid-rank-line", ranked ? "🏆 กำลังส่งคะแนนจัดอันดับ…" : v.raid.why ? `รอบนี้ไม่ได้จัดอันดับ · ${v.raid.why}` : signedIn() ? "" : "เข้าสู่ระบบเพื่อร่วมจัดอันดับประจำสัปดาห์");
+    if (rankLine.textContent) box.append(rankLine);
+    if (ranked) {
+      account().raidFinish({ runId: ranked.runId, turns: v.raid.turns, shown: v.raid.shown }).then(out => {
+        rankingAt = 0;
+        rankLine.textContent = `🏆 คะแนนจัดอันดับ ${fmt(out.score)} · อันดับ #${out.rank} สัปดาห์นี้${out.best > out.score ? ` (ดีที่สุด ${fmt(out.best)})` : ""}`;
+        announce(`อันดับ ${out.rank} สัปดาห์นี้`);
+      }).catch(error => { rankLine.textContent = `ส่งคะแนนจัดอันดับไม่สำเร็จ${RAID_WHY[error.code] ? ` · ${RAID_WHY[error.code]}` : ""}`; });
+    }
     const actions = el("div", "title-actions");
-    actions.append(button("primary-button", "ตีอีกรอบ", () => { battle = null; startBattle(E.raid(bestStage())); }));
+    actions.append(button("primary-button", "ตีอีกรอบ", () => { battle = null; tab = "daily"; showHub(); goRaid(); }));
     actions.append(button("secondary-button", "กลับ", () => { battle = null; tab = "daily"; showHub(); }));
     box.append(actions);
     v.result.replaceChildren(box);
@@ -924,6 +1060,130 @@
     if (pay) [523, 659, 784, 1047].forEach((note, n) => tone(note, .12, "triangle", .05, n * .1));
     announce(`ได้ ${fmt(score)} คะแนน${pay ? ` ได้รับ ${fmt(pay)} เหรียญ` : ""}`);
     actions.querySelector("button")?.focus();
+  }
+
+  // ---- Halloween (E.HALLOWEEN) ----
+  // cards.event: candy earned, what the shop took, and today's candy from
+  // battles, today's gift and today's raid candy (reset each day).
+  const eventToday = () => {
+    const c = cards();
+    if (c.event?.id !== E.HALLOWEEN.id) c.event = { id: E.HALLOWEEN.id, earned: 0, bought: {}, day: today(), battle: 0, gift: false, raid: 0 };
+    if (c.event.day !== today()) Object.assign(c.event, { day: today(), battle: 0, gift: false, raid: 0 });
+    return c.event;
+  };
+  const featured = () => E.CARDS[E.HALLOWEEN.card];
+  // what each offer is called, and its picture or icon
+  function offerLook(item) {
+    const g = item.give, name = featured().name;
+    if (g.card) return { icon: portrait(E.HALLOWEEN.card), name: cards().units[g.card] ? `การ์ด${name} (มีแล้ว: ได้เศษ ×30)` : `การ์ด${name} · SSS` };
+    if (g.shards) return { icon: portrait(E.HALLOWEEN.card), name: `เศษการ์ด${name} ×${g.shards}` };
+    if (g.item) return { icon: "🎁", name: "กล่องไอเทมมหากาพย์ขึ้นไป" };
+    if (g.wings) return { icon: "🪽", name: `ปีกอัพดาว ×${g.wings}` };
+    if (g.gems) return { icon: "💎", name: `เพชร ${fmt(g.gems)}` };
+    if (g.dust) return { icon: "✧", name: `ผลึกดาว ×${g.dust}` };
+    if (g.coins) return { icon: "●", name: `เหรียญ ${fmt(g.coins)}` };
+    return { icon: "⛏", name: `แร่ ×${g.ore}` };
+  }
+  // The strip across the hub while the event (or its shop) is on.
+  function eventBanner() {
+    if (!E.halloweenShopOpen(today())) return null;
+    const H = E.HALLOWEEN, ev = eventToday(), on = E.halloweenOn(today());
+    const box = button("event-banner", null, () => eventSheet(), "เปิดเทศกาลฮาโลวีน");
+    const art = el("span", "event-art");
+    art.append(foeArt("pumpkindragon"));
+    const text = el("span", "event-text");
+    text.append(el("b", null, "🎃 เทศกาลฮาโลวีน"), el("small", null, on ? `ชนะการต่อสู้ได้ลูกอม · ถึง ${thaiDay(H.to)}` : `แลกของได้ถึง ${thaiDay(H.shop)}`));
+    box.append(art, text, el("span", "event-candy-count", `🍬 ${fmt(E.candyLeft(ev))}`), el("span", "event-go", on && !ev.gift ? "รับลูกอม!" : "แลกของ ›"));
+    if (on && !ev.gift) box.classList.add("has-gift");
+    return box;
+  }
+  // note: what was just bought, shown at the top
+  function eventSheet(note = "") {
+    const H = E.HALLOWEEN, ev = eventToday(), on = E.halloweenOn(today()), left = E.candyLeft(ev);
+    const parts = [el("h3", "sheet-title", "🎃 เทศกาลฮาโลวีน"), el("p", "sheet-sub", `${thaiDay(H.from)} – ${thaiDay(H.to)} · แลกของได้ถึง ${thaiDay(H.shop)}`)];
+    if (note) parts.push(el("p", "event-got", note));
+    const total = el("p", "raid-total");
+    total.append(el("small", null, "ลูกอมที่มี"), el("b", null, `🍬 ${fmt(left)}`));
+    parts.push(total);
+    const how = el("ul", "event-how");
+    how.append(
+      el("li", null, `ชนะการต่อสู้ในศึกการ์ด (ด่าน หอคอย ลานประลอง ด่านประจำวัน) ได้ 🍬 ${H.win} · บอส 🍬 ${H.boss} · วันละไม่เกิน ${H.dayCap} (วันนี้ ${ev.battle}/${H.dayCap})`),
+      el("li", null, `ตีมังกรฟักทองในด่านประจำวัน ได้ 🍬 ${H.raidPerPhase} ต่อระยะที่ตีได้ คิดจากรอบที่ดีที่สุดของวัน (วันนี้ได้แล้ว ${ev.raid})`),
+      el("li", null, `ลูกอมประจำวัน 🍬 ${H.gift} กดรับได้วันละครั้ง`)
+    );
+    parts.push(how);
+    const gift = button("primary-button", ev.gift ? "รับลูกอมวันนี้แล้ว ✓" : `รับลูกอมวันนี้ 🍬 ${H.gift}`, () => {
+      const e = eventToday();
+      if (e.gift || !E.halloweenOn(today())) return;
+      e.gift = true;
+      e.earned += H.gift;
+      store();
+      [659, 784, 988].forEach((note, n) => tone(note, .1, "triangle", .05, n * .08));
+      announce(`ได้ลูกอม ${H.gift}`);
+      // (the hub redraws its strip; the sheet goes first, showHub keeps no sheet)
+      closeSheet(true);
+      showHub();
+      eventSheet();
+    });
+    gift.disabled = ev.gift || !on;
+    const actions = el("div", "title-actions sheet-actions");
+    actions.append(gift);
+    parts.push(actions, el("b", "event-shop-title", "ร้านแลกของ"));
+    const shop = el("div", "event-shop");
+    for (const item of E.HALLOWEEN_SHOP) {
+      const look = offerLook(item), have = ev.bought[item.key] || 0;
+      const row = el("div", `event-offer${item.key === "card" ? " is-featured" : ""}`);
+      const icon = el("span", "event-offer-icon");
+      if (typeof look.icon === "string") icon.textContent = look.icon; else icon.append(look.icon);
+      const words = el("span", "event-offer-text");
+      words.append(el("b", null, look.name), el("small", null, `แลกได้อีก ${item.limit - have}/${item.limit}`));
+      const buy = button("shop-buy", `🍬 ${fmt(item.price)}`, () => buyEvent(item), `แลก ${look.name} ด้วยลูกอม ${item.price}`);
+      buy.disabled = have >= item.limit || left < item.price || !E.halloweenShopOpen(today());
+      row.append(icon, words, buy);
+      shop.append(row);
+    }
+    parts.push(shop);
+    openSheet(parts);
+  }
+  function buyEvent(item) {
+    const ev = eventToday(), c = cards(), g = item.give, name = featured().name;
+    if (!E.halloweenShopOpen(today()) || (ev.bought[item.key] || 0) >= item.limit || E.candyLeft(ev) < item.price) return;
+    ev.bought[item.key] = (ev.bought[item.key] || 0) + 1;
+    let got = offerLook(item).name;
+    if (g.card) {
+      if (c.units[g.card]) { c.shards[g.card] = (c.shards[g.card] || 0) + 30; got = `เศษการ์ด${name} ×30`; }
+      else {
+        c.units[g.card] = 1;
+        if (save().shop && !save().shop.owned.includes(g.card)) save().shop.owned.push(g.card);
+        got = `การ์ด${name} (SSS)`;
+      }
+    } else if (g.shards) c.shards[E.HALLOWEEN.card] = (c.shards[E.HALLOWEEN.card] || 0) + g.shards;
+    else if (g.item) {
+      const loot = grantLoot(1, 2, g.item);
+      got = loot.items.length ? `ไอเทม${E.ITEM_RARITY[loot.items[0].r - 1].name} (${E.GEAR_SLOTS[loot.items[0].s].name})` : `กระเป๋าเต็ม: ได้แร่ ⛏ ${loot.ore}`;
+    } else if (g.wings) c.wings += g.wings;
+    else if (g.gems) addGems(g.gems);
+    else if (g.dust) c.dust += g.dust;
+    else if (g.coins) save().coins += g.coins;
+    else if (g.ore) c.ore += g.ore;
+    store(); showCoins();
+    [523, 659, 784, 1047].forEach((note, n) => tone(note, .1, "triangle", .05, n * .07));
+    announce(`แลกได้ ${got}`);
+    closeSheet(true);
+    showHub();
+    eventSheet(`🎃 แลกได้ ${got}`);
+  }
+  // Halloween: a battle won drops candy (the raid pays its own); returns
+  // the line for its result card, or "".
+  function treat(v) {
+    const H = E.HALLOWEEN;
+    if (v.stage.raid || v.state.result !== "won" || !E.halloweenOn(today())) return "";
+    const ev = eventToday(), n = Math.min(E.winCandy(v.stage), Math.max(0, H.dayCap - ev.battle));
+    if (!n) return `🎃 ลูกอมจากการต่อสู้วันนี้ครบ ${H.dayCap} แล้ว`;
+    ev.battle += n;
+    ev.earned += n;
+    store();
+    return `🎃 ได้ลูกอม 🍬 +${n} (วันนี้ ${ev.battle}/${H.dayCap})`;
   }
 
   // Over the field: the clock counting down, the score and its coins.
@@ -2159,16 +2419,18 @@
   }
 
   // ---- Battle ----
-  function startBattle(stage) {
+  // ranked: a ranked raid run from the server ({ runId, seed, team, ... }),
+  // fought with its team and seed so the server can replay it
+  function startBattle(stage, ranked = null) {
     const c = cards();
     if (!c.team.some(Boolean)) return;
     if (stage.dungeon && doneToday(stage.dungeon)) { tone(150, .12, "square", .05); announce("ด่านนี้ผ่านแล้ววันนี้ มาใหม่พรุ่งนี้"); return; }
     closeSheet(true);
     stopMap();
     mapChapter = 0; // back from battle, the map follows the next stage
-    const team = stage.arena ? E.arenaTeam(c) : c.team.map(id => (id ? { id, lv: c.units[id], bonus: E.cardBonus(c, id), gear: E.gearBonus(c, id) } : null));
-    const state = E.createBattle({ team, stage, seed: (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
-    battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0, raid: stage.raid ? { score: 0, end: 0, over: false, quit: false, sec: -1 } : null };
+    const team = ranked ? ranked.team : stage.arena ? E.arenaTeam(c) : E.fielded(c);
+    const state = E.createBattle({ team, stage, seed: ranked ? ranked.seed : (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
+    battle = { stage, state, queue: [], token: {}, go: null, hint: "", busy: false, quitArmed: 0, raid: stage.raid ? { score: 0, end: 0, over: false, quit: false, sec: -1, shown: 0, turns: [], ranked, why: "" } : null };
     frame.classList.add("is-battle");
     frame.classList.toggle("is-arena", Boolean(stage.arena));
     buildBattle();
@@ -2228,7 +2490,7 @@
 
   function drawTop() {
     const v = battle, b = v.state;
-    v.title.textContent = v.stage.raid ? "🐉 ด่านประจำวัน · ตีมังกร" : v.stage.tower ? `🗼 ${v.stage.name}` : v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
+    v.title.textContent = v.stage.raid ? `${v.stage.pumpkin ? "🎃" : "🐉"} ด่านประจำวัน · ตีมังกร${v.raid?.ranked ? " · 🏆 จัดอันดับ" : ""}` : v.stage.tower ? `🗼 ${v.stage.name}` : v.stage.arena ? `⚔ ${v.stage.name} · 10 vs 10` : v.stage.dungeon ? `${E.DUNGEONS[v.stage.dungeon].icon} ด่านประจำวัน · ${v.stage.name}` : `ด่าน ${v.stage.num} · ${v.stage.name}`;
     v.wave.textContent = b.raid ? `ระยะที่ ${b.raid.phase} · เทิร์น ${Math.max(1, b.turn)}` : `คลื่น ${b.wave + 1}/${b.waves.length} · เทิร์น ${Math.max(1, b.turn)}`;
     v.auto.setAttribute("aria-pressed", String(cards().auto));
     v.fast.setAttribute("aria-pressed", String(cards().fast));
@@ -2445,9 +2707,10 @@
     showHub();
   }
 
-  const RAID_PACE = .6;
-  const speed = () => (battle?.raid ? RAID_PACE : cards().fast ? .45 : 1);
-  const DELAY = { turn: 200, act: 330, hit: 230, heal: 200, shield: 140, fx: 110, skip: 380, burn: 260, wave: 900, rise: 900, status: 0, end: 300 };
+  // How long each thing shows: the engine's numbers, which the server
+  // also uses to replay a ranked raid run within its clock.
+  const speed = () => (battle?.raid ? E.RAID_PACE : cards().fast ? .45 : 1);
+  const DELAY = E.EVENT_DELAY;
 
   async function runBattle(v) {
     const b = v.state;
@@ -2475,7 +2738,8 @@
         queue = E.autoQueue(b);
       } else if (cards().auto) {
         hint("สู้อัตโนมัติ · กดปุ่มอัตโนมัติเพื่อเลือกสกิลเอง");
-        await wait(350 * speed());
+        // (the raid's clock gets no pause here: the server's replay has none)
+        await wait((v.raid ? 0 : 350) * speed());
         if (v.token.stopped) return;
         queue = cards().auto ? E.autoQueue(b) : await new Promise(resolve => { v.go = resolve; drawBar(); });
       } else {
@@ -2487,6 +2751,8 @@
       v.busy = true;
       v.queue = queue;
       drawBar();
+      // the raid keeps its turns, for a ranked run's replay on the server
+      if (v.raid) v.raid.turns.push({ q: queue.map(({ i, s }) => ({ i, s })), f: b.focus });
       await play(v, E.heroTurn(b, queue, b.focus));
     }
     if (v.token.stopped) return;
@@ -2511,7 +2777,7 @@
 
   // A big skill: the fighter's picture and the skill's name sweep across
   // the field. Returns how long it runs.
-  const CUTIN_MS = 950;
+  const CUTIN_MS = E.CUTIN_MS;
   function cutIn(v, u, side, skill) {
     if (!v.cutin || calm()) return 0;
     const art = el("span", "cutin-art");
@@ -2535,6 +2801,7 @@
     for (const [index, ev] of events.entries()) {
       // the raid: only what is shown before time runs out counts
       if (v.token.stopped || v.raid?.over) return;
+      if (v.raid) v.raid.shown++;
       const side = ev.side, tile = side ? v.tiles[side]?.[ev.i] : null;
       if (v.raid && side === "foe" && (ev.t === "hit" || ev.t === "burn")) { v.raid.score += ev.v; drawRaid(v); }
       switch (ev.t) {
@@ -2543,9 +2810,12 @@
           const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i];
           const skill = ev.s >= 0 ? u?.skills?.[ev.s] : null;
           // a hero's second skill and every boss skill get the full show
-          const big = Boolean(skill && u && !v.stage.arena && (side === "hero" ? ev.s === 1 : u.boss));
-          const held = big ? cutIn(v, u, side, skill) : 0;
-          if (held) { tone(side === "hero" ? 659 : 196, .16, "sawtooth", .03); await wait(held * .82); if (v.token.stopped) return; }
+          const big = !v.stage.arena && E.bigAct(v.state, ev);
+          let held = big ? cutIn(v, u, side, skill) : 0;
+          if (held) tone(side === "hero" ? 659 : 196, .16, "sawtooth", .03);
+          // a raid holds as long unseen (reduced motion), to keep its clock
+          else if (big && v.raid) held = CUTIN_MS * speed();
+          if (held) { await wait(held * E.CUTIN_HOLD); if (v.token.stopped) return; }
           if (tile) { tile.classList.remove("is-acting"); void tile.offsetWidth; tile.classList.add("is-acting"); }
           if (ev.name && !held) banner(ev.name, side, skill?.icon);
           if (u && tile && show) {
@@ -2598,7 +2868,7 @@
           break;
         default: break;
       }
-      await wait(((DELAY[ev.t] ?? 100) + (ev.t === "hit" && ev.crit ? 120 : 0)) * speed());
+      await wait(((DELAY[ev.t] ?? 100) + (ev.t === "hit" && ev.crit ? E.CRIT_DELAY : 0)) * speed());
     }
     if (!v.token.stopped && battle === v) {
       // settle every card on its final numbers
@@ -2636,6 +2906,12 @@
 
   // ---- Result ----
   function finish(v) {
+    const line = treat(v);
+    finishBattle(v);
+    const card = line && v.result.querySelector(".message-card");
+    if (card) card.insertBefore(el("p", "event-candy", line), card.querySelector(".title-actions"));
+  }
+  function finishBattle(v) {
     const b = v.state, stage = v.stage, c = cards();
     const won = b.result === "won";
     if (stage.arena) { finishArena(v); return; }
@@ -2806,6 +3082,11 @@
   function openPulls() { tab = "pulls"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
   function openTeam() { tab = "team"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
   function openDaily() { tab = "daily"; if (isShown) { closeSheet(true); if (!battle) showHub(); } else open(); }
+  // signing in (or out) on the daily tab redraws the ranking there
+  window.addEventListener("pupa-account", () => {
+    const node = isShown && !battle && tab === "daily" ? body.querySelector(".raid-ranking") : null;
+    if (node && !account()?.state?.busy) drawRanking(node);
+  });
   window.PupaCards = { open, openPulls, openTeam, openDaily, close, key, get isOpen() { return isShown; } };
   document.querySelectorAll("[data-open-cards]").forEach(node => game()?.onTap(node, open));
   // Test link: ?cards opens straight into the card battles.

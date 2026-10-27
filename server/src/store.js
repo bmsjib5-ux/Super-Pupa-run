@@ -5,9 +5,12 @@
 // server-owned coin balance inside it, or null before the first sync.
 // An order is { id, uid, pack, coins, amount, method, chargeId, status
 // ("pending" | "paid" | "failed"), createdAt, paidAt }.
+// The dragon raid ranking keeps each player's best score of a week,
+// { uid, name, score, phase, at }, per week (see raid.js); a user also holds
+// its open ranked run (raidRun), its runs that day and the last week paid.
 
 export class MemoryStore {
-  constructor() { this.users = new Map(); this.orders = new Map(); }
+  constructor() { this.users = new Map(); this.orders = new Map(); this.raid = new Map(); }
   async getUser(uid) { return this.users.get(uid) ?? null; }
   // Read-modify-write under a lock per user, so two requests cannot both
   // start from the same balance.
@@ -31,6 +34,17 @@ export class MemoryStore {
     }
     return structuredClone(order);
   }
+  async raidScore(week, uid) { const entry = this.raid.get(week)?.get(uid); return entry ? structuredClone(entry) : null; }
+  // Keeps the higher score; the name always follows the latest.
+  async putRaidScore(week, entry) {
+    if (!this.raid.has(week)) this.raid.set(week, new Map());
+    const scores = this.raid.get(week), old = scores.get(entry.uid);
+    const next = !old || entry.score > old.score ? { ...entry } : { ...old, name: entry.name };
+    scores.set(entry.uid, next);
+    return structuredClone(next);
+  }
+  async raidTop(week, count) { return [...(this.raid.get(week)?.values() ?? [])].sort((a, b) => b.score - a.score || a.at - b.at).slice(0, count).map(e => structuredClone(e)); }
+  async raidRank(week, score) { return 1 + [...(this.raid.get(week)?.values() ?? [])].filter(e => e.score > score).length; }
 }
 
 export class FirestoreStore {
@@ -69,6 +83,22 @@ export class FirestoreStore {
       return order;
     });
   }
+  // raidWeeks/<week>/scores/<uid>: one collection a week, so its ordering
+  // and counting use Firestore's automatic single-field index
+  raidScores(week) { return this.db.collection("raidWeeks").doc(week).collection("scores"); }
+  async raidScore(week, uid) { const doc = await this.raidScores(week).doc(uid).get(); return doc.exists ? doc.data() : null; }
+  async putRaidScore(week, entry) {
+    const ref = this.raidScores(week).doc(entry.uid);
+    return this.db.runTransaction(async tx => {
+      const doc = await tx.get(ref);
+      const old = doc.exists ? doc.data() : null;
+      const next = !old || entry.score > old.score ? entry : { ...old, name: entry.name };
+      tx.set(ref, next);
+      return next;
+    });
+  }
+  async raidTop(week, count) { const snap = await this.raidScores(week).orderBy("score", "desc").limit(count).get(); return snap.docs.map(d => d.data()); }
+  async raidRank(week, score) { const snap = await this.raidScores(week).where("score", ">", score).count().get(); return 1 + snap.data().count; }
 }
 
 // Add an order's coins to the account. The coins wait in the save even if

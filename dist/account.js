@@ -164,6 +164,14 @@ async function flushSync() {
   api("/api/save", { method: "PUT", body, keepalive: true }).catch(() => { /* next visit syncs again */ });
 }
 
+// ---- The weekly dragon raid ranking ----
+// A ranked run's seed and team, its turns back for the score, the ranking.
+// Each gives up after `ms` (the free server can take a while to wake).
+const timed = (promise, ms) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new ApiError(0, { error: "timeout" })), ms))]);
+export const raidStart = (ms = 12000) => timed(api("/api/raid/start", { method: "POST" }), ms);
+export const raidFinish = (body, ms = 15000) => timed(api("/api/raid/finish", { method: "POST", body }), ms);
+export const raidBoard = (ms = 15000) => timed(api("/api/raid/board"), ms);
+
 // ---- Top-ups ----
 
 export const PACKS = [
@@ -247,5 +255,5 @@ async function start() {
   window.addEventListener("pagehide", flushSync);
 }
 
-window.PupaAccount = { state, signIn, signOut, sync, createTopup, getOrder, watchOrder, PACKS, devAuth: DEV_AUTH };
+window.PupaAccount = { state, signIn, signOut, sync, createTopup, getOrder, watchOrder, raidStart, raidFinish, raidBoard, PACKS, devAuth: DEV_AUTH };
 start();

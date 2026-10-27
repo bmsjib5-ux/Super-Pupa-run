@@ -6102,6 +6102,17 @@
         const top = Math.max(num(x.top), num(y.top));
         if (x.day === y.day) return { day: x.day, best: Math.max(num(x.best), num(y.best)), paid: Math.max(num(x.paid), num(y.paid)), top };
         return { ...(x.day > y.day ? x : y), top };
+      })(),
+      // an event's candy: the most earned and every buy on either copy (the
+      // candy left is earned less bought); today's counts as for the raid
+      event: (() => {
+        const x = a.event, y = b.event, num = (v) => Math.max(0, Math.floor(Number(v) || 0));
+        if (!x?.id || !y?.id || x.id !== y.id) return x?.id ? x : y?.id ? y : undefined;
+        const bought = { ...(x.bought || {}) };
+        for (const [k, n] of Object.entries(y.bought || {})) bought[k] = Math.max(num(bought[k]), num(n));
+        const today = x.day === y.day ? { day: x.day, battle: Math.max(num(x.battle), num(y.battle)), gift: Boolean(x.gift || y.gift), raid: Math.max(num(x.raid), num(y.raid)) }
+          : (() => { const z = String(x.day) > String(y.day) ? x : y; return { day: z.day, battle: num(z.battle), gift: Boolean(z.gift), raid: num(z.raid) }; })();
+        return { id: x.id, earned: Math.max(num(x.earned), num(y.earned)), bought, ...today };
       })()
     };
   }
@@ -6524,10 +6535,12 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-24b";
+  const NEWS_VERSION = "2026-10-27a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "อีเวนต์", title: "🎃 เทศกาลฮาโลวีน · 27 ต.ค. – 3 พ.ย.", text: "อีเวนต์จำกัดเวลาในศึกการ์ด ชนะการต่อสู้ทุกแบบ (ด่าน หอคอย ลานประลอง ด่านประจำวัน) ได้ลูกอม 🍬 4 (บอส 🍬 8) วันละไม่เกิน 100 กดรับลูกอมประจำวันได้อีกวันละ 20 และมังกรในด่านประจำวันกลายเป็นมังกรฟักทองรัตติกาล ตีได้ลูกอม 15 ต่อระยะ (คิดรอบดีที่สุดของวัน) เอาลูกอมไปแลกของที่แถบ 🎃 ด้านบนหน้าศึกการ์ด: การ์ด SSS นิลกาฬ (🍬 600) เศษการ์ดนิลกาฬ กล่องไอเทมมหากาพย์ขึ้นไป ปีกอัพดาว เพชร ผลึกดาว เหรียญ และแร่ ร้านเปิดแลกได้ถึง 5 พ.ย.", image: "halloween", open: () => { closeNews(); window.PupaCards?.open(); } },
+    { tag: "ระบบใหม่", title: "🏆 อันดับตีมังกรประจำสัปดาห์", text: "เข้าสู่ระบบแล้วตีมังกรในด่านประจำวันจะนับเป็นรอบจัดอันดับ แข่งคะแนนสูงสุดของสัปดาห์กับผู้เล่นทุกคน (จันทร์–อาทิตย์ เวลาไทย) เซิร์ฟเวอร์จะเล่นรอบซ้ำเพื่อตรวจคะแนนทุกรอบ จบสัปดาห์ได้เพชรตามอันดับ: อันดับ 1 💎 3,000 · 2 💎 2,000 · 3 💎 1,500 · 4–10 💎 1,000 · 11–50 💎 500 · 51–100 💎 300 · ร่วมตี 💎 100 ดูอันดับได้ในกล่องรังมังกร รางวัลเข้าเมื่อเปิดหน้าอันดับในสัปดาห์ถัดไป ตีจัดอันดับได้วันละ 40 รอบ", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
     { tag: "ด่านใหม่", title: "🐉 ด่านประจำวันใหม่: ตีมังกรรูนโบราณ", text: "ศึกการ์ด แท็บ 🌞 ประจำวัน มีด่านใหม่ รังมังกรรูนโบราณ จับเวลานับถอยหลัง 60 วินาที ตีมังกรให้ได้มากที่สุด ทุกความเสียหายคือคะแนน (นับรวมไฟเผาด้วย) ได้ทองตามสัดส่วนคะแนน ยิ่งตีได้มากยิ่งได้ทองมาก มุมขวาบนบอกเวลาที่เหลือ คะแนน และทองที่จะได้ตลอดเวลา มังกรล้มแล้วจะฟื้นขึ้นมาเป็นระยะใหม่ เลือดและพลังโจมตีมากขึ้น มังกรเก่งตามด่านที่ไปถึง และทองต่อคะแนนก็มากขึ้นตามด่าน ตีได้ไม่จำกัดรอบ ทองต่อวันคิดจากรอบที่ได้คะแนนสูงสุด ทำคะแนนได้มากกว่าเดิมรับส่วนต่างเพิ่ม (นับเป็นเควสด่านประจำวันด้วย)", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
     { tag: "ใหม่", title: "🎬 วิดีโอเปิดเกม: ศึกมังกรรูนโบราณ", text: "เปิดเกมแล้วจะเจอวิดีโอฉากต่อสู้ศึกการ์ด 10 วินาทีระหว่างโหลด อัสนี เพลิง จันทรา และทองคำ รุมสู้มังกรรูนโบราณ วิดีโอเล่นแบบปิดเสียงไว้ก่อน แตะ 🔇 เพื่อเปิดเสียง แตะ ข้าม เพื่อเข้าเกมได้ทันที แตะการ์ดนี้เพื่อดูอีกครั้ง", image: "intro", open: () => { closeNews(); replayIntro(); } },
     { tag: "โหมดใหม่", title: "🃏 จับคู่การ์ด · 30 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แตะการ์ดหน้าเหมือนกัน 2 ใบเพื่อจับคู่ แบบเกมจับคู่โปเกม่อน เส้นเชื่อมหักมุมได้ไม่เกิน 2 ครั้ง อ้อมขอบนอกกระดานได้ แต่ห้ามผ่านการ์ดใบอื่น เก็บให้หมดก่อนหมดเวลา จับคู่ติด ๆ กันได้คอมโบคะแนนเพิ่ม การ์ดเป็นตัวละครศึกการ์ดทั้ง 43 ใบ ตั้งแต่ด่าน 11 มีมอนสเตอร์มาเพิ่ม บางด่านการ์ดไหลลง ขึ้น ซ้าย หรือขวาหลังจับคู่ มีคำใบ้ 💡 และสลับการ์ด 🔀 ด่านละ 3 ครั้ง ถ้าไม่มีคู่ให้จับจะสลับให้ฟรี เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 15 และได้ 3 ดาวครั้งแรกได้อีก 💎 15", image: "cards", open: () => { closeNews(); window.PupaMatch?.open(); } },
@@ -6710,6 +6723,13 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "halloween") {
+      const img = document.createElement("img");
+      img.className = "news-boss";
+      img.src = "assets/foe-pumpkindragon.webp";
+      img.alt = "";
+      return img;
     }
     if (kind === "raid") {
       const img = document.createElement("img");
