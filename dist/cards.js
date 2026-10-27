@@ -80,7 +80,12 @@
     return node;
   };
   const MODELS_3D = Object.fromEntries(E.CARD_IDS.map(id => [id, { bin: `assets/${id}-3d.bin`, texture: `assets/${id}-3d.webp` }]));
-  const wearing = (id) => save()?.cards?.outfit?.[id] === 2;
+  // Halloween costumes (E.hasHallo: S and SSS cards), a gift: assets/<id>-halloween.webp
+  const halloArt = (id) => `assets/${id}-halloween.webp`;
+  const HALLO_NAME = { pupav2: "ชุดแม่มดฟักทอง", dragon: "ชุดมังกรฟักทอง", chantra: "ชุดแม่มดจันทร์เสี้ยว", ratri: "ชุดนักล่าแวมไพร์", phloeng: "ชุดนักรบเปลวฟักทอง", silverwolf: "ชุดมนุษย์หมาป่าจันทร์เพ็ญ", chada: "ชุดซามูไรภูตผี", anchan: "ชุดจิ้งจอกวิญญาณ", phayak: "ชุดมัมมี่พยัคฆ์", wayu: "ชุดโครงกระดูกจอมซน", sila: "ชุดอัศวินฟักทอง", nilakan: "ชุดยมทูต", arunee: "ชุดแม่มดแสงทอง", kalawit: "ชุดนักฆ่าค้างคาว", thamin: "ชุดอัศวินแฟรงเกนสไตน์", nisa: "ชุดเจ้าสาวภูตพราย", asura: "ชุดราชาปีศาจ", prapha: "ชุดภูตแคนดี้คอร์น", suriyan: "ชุดพาลาดินฟักทอง", ratsami: "ชุดภูตเทียนไข", thinakorn: "ชุดฟาโรห์มัมมี่", seraphina: "ชุดเทวดาราตรี", asani: "ชุดเคานต์แดร็กคูล่า", phoenix: "ชุดวิหคไฟผี", vajira: "ชุดอัศวินโครงกระดูก", naphalai: "ชุดราชินีแม่มด", qilin: "ชุดกิเลนฟักทอง" };
+  // what a card wears: "halloween", "costume" or ""
+  const skinOf = (id) => { const c = save()?.cards; return c?.hallo?.[id] === 1 && E.hasHallo(id) ? "halloween" : c?.outfit?.[id] === 2 ? "costume" : ""; };
+  const wearing = (id) => Boolean(skinOf(id));
   // A monster's picture; the burning ones of chapter 3 are recoloured.
   function foeArt(id) {
     const art = portrait(E.FOES[id].art);
@@ -91,8 +96,8 @@
   }
   function portrait(kind) {
     if (E.CARDS[kind] && wearing(kind)) {
-      const img = el("img", "card-art is-costume");
-      img.src = costumeArt(kind);
+      const img = el("img", `card-art is-costume${skinOf(kind) === "halloween" ? " is-halloween" : ""}`);
+      img.src = skinOf(kind) === "halloween" ? halloArt(kind) : costumeArt(kind);
       img.alt = "";
       img.draggable = false;
       return img;
@@ -256,12 +261,14 @@
       const n = Math.min(3, Math.floor(Number(raw.stars?.[stage.num]) || 0));
       if (n > 0) best[stage.num] = n;
     }
-    const xp = {}, outfit = {};
+    const xp = {}, outfit = {}, hallo = {};
     for (const id of Object.keys(units)) {
       const n = Math.max(0, Math.floor(Number(raw.xp?.[id]) || 0));
       if (n > 0) xp[id] = n;
       const o = Math.floor(Number(raw.outfit?.[id]) || 0);
       if (o === 1 || o === 2) outfit[id] = o;
+      // a Halloween costume worn takes the shop costume off
+      if (raw.hallo?.[id] === 1 && E.hasHallo(id)) { hallo[id] = 1; if (outfit[id] === 2) outfit[id] = 1; }
     }
     const now = Date.now();
     const idleAt = Math.min(now, Math.max(0, Math.floor(Number(raw.idleAt) || 0))) || now;
@@ -329,7 +336,7 @@
       return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t };
     });
     const set = Math.min(TEAM_SETS - 1, Math.max(0, Math.floor(Number(raw.set) || 0)));
-    s.cards = { units, team, sets, set, stars: best, xp, outfit, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, event, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, sets, set, stars: best, xp, outfit, hallo, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, event, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -563,7 +570,43 @@
     tone(587, .07, "triangle", .04);
     closeButton.focus();
     if (cards().daily?.day !== today()) dailySheet();
-    else if (!showWingGift()) payStarBonus(true);
+    else if (!showWingGift() && !halloGiftSheet()) payStarBonus(true);
+  }
+
+  // The Halloween costumes' gift note, once on this device; returns whether
+  // it showed.
+  const HALLO_SEEN_KEY = "superPupaRunHalloGift";
+  function halloGiftSheet() {
+    try {
+      if (localStorage.getItem(HALLO_SEEN_KEY)) return false;
+      localStorage.setItem(HALLO_SEEN_KEY, "1");
+    } catch { return false; }
+    const c = cards(), all = E.CARD_IDS.filter(E.hasHallo), mine = all.filter(id => c.units[id]);
+    const grid = el("div", "hallo-gift");
+    for (const id of (mine.length ? mine : all).slice(0, 12)) {
+      const fig = el("figure", "hallo-gift-card");
+      const img = el("img");
+      img.src = halloArt(id);
+      img.alt = "";
+      fig.append(img, el("figcaption", null, E.CARDS[id].name));
+      grid.append(fig);
+    }
+    const parts = [el("span", "moon-icon", "🎃"), el("h3", "sheet-title", `ของขวัญฮาโลวีน · ชุดคอสตูม ${all.length} ชุด`),
+      el("p", "sheet-sub", `การ์ดระดับ S และ SSS ทุกใบได้ชุดฮาโลวีนฟรี ใส่แล้วเพิ่มพลังชีวิต โจมตี ป้องกัน +${Math.round(E.COSTUME_BONUS * 100)}% เท่าชุดคอสตูม (ใส่ได้ทีละชุด) เปลี่ยนชุดได้ที่หน้าการ์ด แท็บคอสตูม`), grid];
+    const actions = el("div", "title-actions sheet-actions");
+    if (mine.length) {
+      actions.append(button("primary-button", `ใส่ชุดฮาโลวีนให้ทั้ง ${mine.length} ใบ`, () => {
+        for (const id of mine) { c.hallo[id] = 1; if (c.outfit[id] === 2) c.outfit[id] = 1; }
+        store();
+        [784, 988, 1319].forEach((note, i) => tone(note, .1, "triangle", .05, i * .07));
+        announce("ใส่ชุดฮาโลวีนให้การ์ดระดับ S ขึ้นไปแล้ว");
+        closeSheet();
+      }));
+    } else parts.push(el("p", null, "ยังไม่มีการ์ดระดับ S ได้การ์ด S หรือ SSS เมื่อไร ชุดฮาโลวีนพร้อมใส่ทันที"));
+    actions.append(button("secondary-button", "ไว้ทีหลัง", () => closeSheet()));
+    parts.push(actions);
+    openSheet(parts);
+    return true;
   }
 
   function close() {
@@ -2130,8 +2173,23 @@
       });
       buyIt.disabled = save().coins < E.COSTUME_PRICE;
       row.append(buyIt);
-    } else row.append(button("shop-equip", own === 2 ? "ถอดชุด" : "สวมชุด", () => { c.outfit[id] = own === 2 ? 1 : 2; store(); tone(660, .08, "triangle", .05); cardSheet(id); }));
-    return row;
+    } else row.append(button("shop-equip", own === 2 ? "ถอดชุด" : "สวมชุด", () => { c.outfit[id] = own === 2 ? 1 : 2; if (own !== 2) delete c.hallo[id]; store(); tone(660, .08, "triangle", .05); cardSheet(id); }));
+    if (!E.hasHallo(id)) return row;
+    // the Halloween costume, a gift to S and SSS cards: one costume at a time
+    const box = el("div", "costume-list");
+    const hallo = el("div", "sheet-costume is-halloween");
+    const pic = el("img", "costume-look");
+    pic.src = halloArt(id);
+    pic.alt = HALLO_NAME[id];
+    const on = c.hallo[id] === 1;
+    hallo.append(pic, el("b", null, `🎃 ${HALLO_NAME[id]}`), el("span", null, `ของขวัญฮาโลวีนสำหรับการ์ดระดับ S ขึ้นไป ใส่ได้ฟรี เพิ่มพลังชีวิต โจมตี ป้องกัน +${Math.round(E.COSTUME_BONUS * 100)}% เท่าชุดคอสตูม (ใส่ได้ทีละชุด)`));
+    hallo.append(button("shop-equip", on ? "ถอดชุด" : "สวมชุด", () => {
+      if (on) delete c.hallo[id];
+      else { c.hallo[id] = 1; if (c.outfit[id] === 2) c.outfit[id] = 1; }
+      store(); tone(660, .08, "triangle", .05); cardSheet(id);
+    }));
+    box.append(hallo, row);
+    return box;
   }
   // The card book: on a wide screen the owned cards in a list on the left,
   // the open card on the right (stars, its picture between its six pieces
@@ -2163,7 +2221,7 @@
     const listTop = sheet?.querySelector(".codex-list")?.scrollTop;
     const samePane = same && sheet.dataset.pane === `${sheetTab}:${gearSlot}`;
     const tops = same ? SHEET_SCROLLERS.map(sel => sheet.querySelector(sel)?.scrollTop || 0) : null;
-    const look = wearing(id) ? "costume" : "plain";
+    const look = skinOf(id) || "plain";
     let art = same && artCache?.id === id && artCache.look === look ? artCache.node : null;
     if (!art) {
       art = backdrop(el("div", `sheet-art r${def.rarity}`), id);

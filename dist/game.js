@@ -6077,7 +6077,7 @@
     return {
       ...b, ...a, units: most(a.units, b.units, 200), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
       sets: setsFrom.sets, set: setsFrom.set,
-      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), awake: most(a.awake, b.awake, 10), shards: most(a.shards, b.shards, 1e6),
+      xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), hallo: most(a.hallo, b.hallo, 1), awake: most(a.awake, b.awake, 10), shards: most(a.shards, b.shards, 1e6),
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
       // left out until the card screen first gives the starting wings
       wings: a.wings == null && b.wings == null ? undefined : Math.max(Number(a.wings) || 0, Number(b.wings) || 0),
@@ -6535,10 +6535,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-27a";
+  const NEWS_VERSION = "2026-10-27b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ของขวัญ", title: "🎃 แจกชุดคอสตูมฮาโลวีน · การ์ด S ขึ้นไป 27 ชุด", text: "การ์ดระดับ S และ SSS ทุกใบได้ชุดฮาโลวีนฟรี วาดใหม่ทุกตัวในธีมที่เข้ากับตัวละคร เช่น ยมทูต แม่มด แวมไพร์ มัมมี่ อัศวินฟักทอง ใส่แล้วเพิ่มพลังชีวิต โจมตี ป้องกัน +8% เท่าชุดคอสตูมในร้าน (ใส่ได้ทีละชุด) เปลี่ยนชุดได้ที่หน้าการ์ด แท็บคอสตูม ครั้งแรกที่เปิดศึกการ์ดมีปุ่มใส่ชุดฮาโลวีนให้ทุกใบในครั้งเดียว ชุดเป็นของถาวร ได้การ์ด S หรือ SSS ใหม่เมื่อไรก็ใส่ได้ทันที", image: "hallocostume", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
     { tag: "อีเวนต์", title: "🎃 เทศกาลฮาโลวีน · 27 ต.ค. – 3 พ.ย.", text: "อีเวนต์จำกัดเวลาในศึกการ์ด ชนะการต่อสู้ทุกแบบ (ด่าน หอคอย ลานประลอง ด่านประจำวัน) ได้ลูกอม 🍬 4 (บอส 🍬 8) วันละไม่เกิน 100 กดรับลูกอมประจำวันได้อีกวันละ 20 และมังกรในด่านประจำวันกลายเป็นมังกรฟักทองรัตติกาล ตีได้ลูกอม 15 ต่อระยะ (คิดรอบดีที่สุดของวัน) เอาลูกอมไปแลกของที่แถบ 🎃 ด้านบนหน้าศึกการ์ด: การ์ด SSS นิลกาฬ (🍬 600) เศษการ์ดนิลกาฬ กล่องไอเทมมหากาพย์ขึ้นไป ปีกอัพดาว เพชร ผลึกดาว เหรียญ และแร่ ร้านเปิดแลกได้ถึง 5 พ.ย.", image: "halloween", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "🏆 อันดับตีมังกรประจำสัปดาห์", text: "เข้าสู่ระบบแล้วตีมังกรในด่านประจำวันจะนับเป็นรอบจัดอันดับ แข่งคะแนนสูงสุดของสัปดาห์กับผู้เล่นทุกคน (จันทร์–อาทิตย์ เวลาไทย) เซิร์ฟเวอร์จะเล่นรอบซ้ำเพื่อตรวจคะแนนทุกรอบ จบสัปดาห์ได้เพชรตามอันดับ: อันดับ 1 💎 3,000 · 2 💎 2,000 · 3 💎 1,500 · 4–10 💎 1,000 · 11–50 💎 500 · 51–100 💎 300 · ร่วมตี 💎 100 ดูอันดับได้ในกล่องรังมังกร รางวัลเข้าเมื่อเปิดหน้าอันดับในสัปดาห์ถัดไป ตีจัดอันดับได้วันละ 40 รอบ", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
     { tag: "ด่านใหม่", title: "🐉 ด่านประจำวันใหม่: ตีมังกรรูนโบราณ", text: "ศึกการ์ด แท็บ 🌞 ประจำวัน มีด่านใหม่ รังมังกรรูนโบราณ จับเวลานับถอยหลัง 60 วินาที ตีมังกรให้ได้มากที่สุด ทุกความเสียหายคือคะแนน (นับรวมไฟเผาด้วย) ได้ทองตามสัดส่วนคะแนน ยิ่งตีได้มากยิ่งได้ทองมาก มุมขวาบนบอกเวลาที่เหลือ คะแนน และทองที่จะได้ตลอดเวลา มังกรล้มแล้วจะฟื้นขึ้นมาเป็นระยะใหม่ เลือดและพลังโจมตีมากขึ้น มังกรเก่งตามด่านที่ไปถึง และทองต่อคะแนนก็มากขึ้นตามด่าน ตีได้ไม่จำกัดรอบ ทองต่อวันคิดจากรอบที่ได้คะแนนสูงสุด ทำคะแนนได้มากกว่าเดิมรับส่วนต่างเพิ่ม (นับเป็นเควสด่านประจำวันด้วย)", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
@@ -6719,6 +6720,17 @@
       for (const id of ["runedragon", "phantomknight", "chimera", "clocktitan", "towersovereign"]) {
         const img = document.createElement("img");
         img.src = `assets/foe-${id}.webp`;
+        img.alt = "";
+        row.append(img);
+      }
+      return row;
+    }
+    if (kind === "hallocostume") {
+      const row = document.createElement("div");
+      row.className = "news-trio";
+      for (const id of ["nilakan", "asani", "pupav2"]) {
+        const img = document.createElement("img");
+        img.src = `assets/${id}-halloween.webp`;
         img.alt = "";
         row.append(img);
       }

@@ -114,7 +114,7 @@ const cleanCards = (raw) => {
   const units = intMap(cards.units, 200);
   return {
     units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, sets: cleanSets(cards.sets), set: int(cards.set, TEAM_SETS - 1), arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
-    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
+    xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), hallo: intMap(cards.hallo, 1), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null,
     raid: cleanRaid(cards.raid),
     event: cleanEvent(cards.event)
@@ -153,7 +153,7 @@ function mergeCards(current, incoming) {
     ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team,
     // the device's team sets, unless it has none yet
     ...(next.sets.some(Boolean) ? { sets: next.sets, set: next.set } : { sets: now.sets, set: now.set }),
-    xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), awake: maxMap(now.awake, next.awake),
+    xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), hallo: maxMap(now.hallo, next.hallo), awake: maxMap(now.awake, next.awake),
     // shards and star dust are spent on stars: this device's count, unless the account is ahead
     shards: maxMap(now.shards, next.shards), dust: Math.max(now.dust, next.dust), wings: now.wings == null && next.wings == null ? undefined : Math.max(now.wings || 0, next.wings || 0),
     ore: now.ore == null && next.ore == null ? undefined : Math.max(now.ore || 0, next.ore || 0),

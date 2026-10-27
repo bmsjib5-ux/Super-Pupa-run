@@ -2085,9 +2085,15 @@
     cards.awake[id] = cost.star;
     return coins - cost.coins;
   }
+  // Halloween costumes: a gift for every S and SSS card (rarity HALLO_RARITY
+  // and up), worn in place of the shop costume and giving the same bonus.
+  // cards.hallo: id -> 1 while one is worn.
+  const HALLO_RARITY = 5;
+  const hasHallo = (id) => (CARDS[id]?.rarity || 0) >= HALLO_RARITY;
+  const costumeOn = (cards, id) => cards.outfit?.[id] === 2 || (cards.hallo?.[id] === 1 && hasHallo(id));
   // Battle bonus from stars and a worn costume.
   const awakeBonus = (n = 0) => Math.min(n, MAX_AWAKE) * AWAKE_BONUS + Math.max(0, n - MAX_AWAKE) * AWAKE2_BONUS;
-  const cardBonus = (cards, id) => awakeBonus(cards.awake?.[id] || 0) + (cards.outfit?.[id] === 2 ? COSTUME_BONUS : 0);
+  const cardBonus = (cards, id) => awakeBonus(cards.awake?.[id] || 0) + (costumeOn(cards, id) ? COSTUME_BONUS : 0);
 
   // ---- Gear ----
   // Eight pieces on every card, enhanced a level at a time with ore and
@@ -2319,7 +2325,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon, RAID_TIME, RAID_RISE, raid, raidCoins,
     EVENT_DELAY, CRIT_DELAY, CUTIN_MS, CUTIN_HOLD, RAID_PACE, bigAct, eventTime, RAID_RULES, raidReplay, fielded, bestStageOf,
-    HALLOWEEN, HALLOWEEN_SHOP, halloweenOn, halloweenShopOpen, candyLeft, winCandy, raidCandy,
+    HALLO_RARITY, hasHallo, costumeOn, HALLOWEEN, HALLOWEEN_SHOP, halloweenOn, halloweenShopOpen, candyLeft, winCandy, raidCandy,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     BOSS_PAR, FOE_EASE, parFor, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,
     levelCost, cardStats, power, createBattle, heroTurn, enemyTurn, autoQueue, starsFor, describe

@@ -241,6 +241,17 @@ test("cards: a ranked raid replays to the page's score, and never past the clock
   assert.equal(E.eventTime(b, { t: "hit", crit: true }, .5), (E.EVENT_DELAY.hit + E.CRIT_DELAY) * .5);
 });
 
+test("cards: S and SSS cards wear a Halloween costume for the costume's bonus, never both", () => {
+  const s = E.CARD_IDS.find(id => E.CARDS[id].rarity === 5), sss = E.CARD_IDS.find(id => E.CARDS[id].rarity === 6), a = E.CARD_IDS.find(id => E.CARDS[id].rarity === 4);
+  assert.ok(E.hasHallo(s) && E.hasHallo(sss) && !E.hasHallo(a));
+  assert.equal(E.CARD_IDS.filter(E.hasHallo).length, 27);
+  const cards = { awake: {}, outfit: { [s]: 2 }, hallo: { [s]: 1, [sss]: 1, [a]: 1 } };
+  assert.equal(E.cardBonus(cards, s), E.COSTUME_BONUS);
+  assert.equal(E.cardBonus(cards, sss), E.COSTUME_BONUS);
+  assert.equal(E.cardBonus(cards, a), 0);
+  assert.equal(E.cardBonus({ awake: {}, outfit: {}, hallo: {} }, sss), 0);
+});
+
 test("cards: Halloween drops candy for a while, and the shop takes it", () => {
   const H = E.HALLOWEEN;
   assert.ok(E.halloweenOn(H.from) && E.halloweenOn(H.to) && !E.halloweenOn("2026-10-26") && !E.halloweenOn("2026-11-04"));

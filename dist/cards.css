@@ -1692,3 +1692,14 @@ button.unit { cursor: crosshair; }
   .event-go { padding: .25rem .5rem; font-size: .7rem; }
 }
 @media (prefers-reduced-motion: reduce) { .event-banner.has-gift .event-go { animation: none; } }
+
+/* ---- Halloween costumes (S and SSS cards) ---- */
+.costume-list { display: grid; gap: .1rem; }
+.sheet-costume.is-halloween { border-color: rgba(255,150,50,.7); background: linear-gradient(90deg, rgba(255,130,30,.16), rgba(120,40,170,.14)); }
+.sheet-costume.is-halloween .costume-look { filter: drop-shadow(0 0 .3rem rgba(255,140,40,.7)); }
+.is-codex .sheet-costume.is-halloween { border-color: #f0a050; background: linear-gradient(90deg, #fff1df, #f6e8ff); }
+.card-art.is-costume.is-halloween { filter: drop-shadow(0 0 .35rem rgba(255,140,40,.9)); }
+.hallo-gift { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: .35rem; margin: .4rem 0; }
+.hallo-gift-card { margin: 0; padding: .2rem; border: 1px solid rgba(255,150,50,.45); border-radius: .7rem; background: linear-gradient(180deg, rgba(255,130,30,.18), rgba(70,20,100,.35)); }
+.hallo-gift-card img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: contain; filter: drop-shadow(0 0 .25rem rgba(255,140,40,.6)); }
+.hallo-gift-card figcaption { color: #ffcf7a; font-size: .66rem; text-align: center; }

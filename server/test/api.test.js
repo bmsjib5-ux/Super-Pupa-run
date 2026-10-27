@@ -441,6 +441,12 @@ test("raid: runs expire, a day allows so many, a week ends on Monday in Bangkok 
   assert.deepEqual([prizeFor(1), prizeFor(3), prizeFor(10), prizeFor(11), prizeFor(500)], [3000, 1500, 1000, 500, 100]);
 });
 
+test("merge: a worn Halloween costume is kept", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { asani: 5 }, team: ["asani", "", "", "", ""], hallo: { asani: 1, nope: 7 } } })), 0);
+  assert.deepEqual(a.cards.hallo, { asani: 1, nope: 1 });
+  assert.deepEqual(mergeSave(a, cleanSave(device(0, { cards: { units: { asani: 5 } } })), 0).cards.hallo, a.cards.hallo);
+});
+
 test("merge: Halloween candy keeps what was earned and every buy, never more", () => {
   const ev = (earned, bought, day, battle, gift, raid) => device(0, { cards: { units: { pupa: 5 }, team: ["pupa", "", "", "", ""], event: { id: "halloween2026", earned, bought, day, battle, gift, raid } } });
   const a = mergeSave(null, cleanSave(ev(500, { card: 0, ore: 2 }, "2026-10-28", 40, true, 20)), 0);
