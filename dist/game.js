@@ -6076,6 +6076,8 @@
     const later = (x, y) => (String(x?.day || "") >= String(y?.day || "") ? x : y) || null;
     return {
       ...b, ...a, units: most(a.units, b.units, 200), stars: most(a.stars, b.stars, 3), team: Array.isArray(team) ? team.slice(0, 5) : [],
+      // the formation stands with its team; levels only go up
+      form: team === a.team ? a.form : b.form, formLv: most(a.formLv, b.formLv, 30),
       sets: setsFrom.sets, set: setsFrom.set,
       xp: most(a.xp, b.xp, 1e6), outfit: most(a.outfit, b.outfit, 2), hallo: most(a.hallo, b.hallo, 1), awake: most(a.awake, b.awake, 10), shards: most(a.shards, b.shards, 1e6),
       dust: Math.max(Number(a.dust) || 0, Number(b.dust) || 0),
@@ -6535,10 +6537,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-10-27b";
+  const NEWS_VERSION = "2026-10-27c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "ระบบใหม่", title: "📐 แผนการยืน 9 ช่อง · หน้า กลาง หลัง", text: "จัดทีมศึกการ์ดบนสนาม 3×3 ได้แล้ว เลือกแผนได้ 6 แบบ เน้นต่างกัน: สมดุล (แผนสองแนว แผนดาวห้าแฉก) ตั้งรับ (แผนกำแพงเหล็ก แผนกระดองเต่า) และโจมตี (แผนหัวลูกศร แผนปีกอินทรี) แต่ละแผนเปิดช่องยืนต่างกันและเพิ่มค่าให้การ์ดทั้งทีม เช่น พลังชีวิต โจมตี ป้องกัน ความเร็ว คริติคอล อัปเลเวลแผนได้ถึง Lv 30 ด้วยเหรียญและแร่ ยิ่งเลเวลสูงยิ่งเพิ่มมาก แถวหน้าโดนตีบ่อยที่สุด แถวกลางรองลงมา สกิลที่โจมตีแถวหลังจะโดนแถวกลางด้วย แผนใหม่เปิดตามด่านที่ผ่าน (ด่าน 5, 10, 20, 30, 45) ใช้ในด่าน หอคอย และด่านประจำวัน รวมถึงตีมังกรจัดอันดับ ทีมเซ็ตแต่ละทีมจำแผนของตัวเองไว้ด้วย", image: "formation", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
     { tag: "ของขวัญ", title: "🎃 แจกชุดคอสตูมฮาโลวีน · การ์ด S ขึ้นไป 27 ชุด", text: "การ์ดระดับ S และ SSS ทุกใบได้ชุดฮาโลวีนฟรี วาดใหม่ทุกตัวในธีมที่เข้ากับตัวละคร เช่น ยมทูต แม่มด แวมไพร์ มัมมี่ อัศวินฟักทอง ใส่แล้วเพิ่มพลังชีวิต โจมตี ป้องกัน +8% เท่าชุดคอสตูมในร้าน (ใส่ได้ทีละชุด) เปลี่ยนชุดได้ที่หน้าการ์ด แท็บคอสตูม ครั้งแรกที่เปิดศึกการ์ดมีปุ่มใส่ชุดฮาโลวีนให้ทุกใบในครั้งเดียว ชุดเป็นของถาวร ได้การ์ด S หรือ SSS ใหม่เมื่อไรก็ใส่ได้ทันที", image: "hallocostume", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
     { tag: "อีเวนต์", title: "🎃 เทศกาลฮาโลวีน · 27 ต.ค. – 3 พ.ย.", text: "อีเวนต์จำกัดเวลาในศึกการ์ด ชนะการต่อสู้ทุกแบบ (ด่าน หอคอย ลานประลอง ด่านประจำวัน) ได้ลูกอม 🍬 4 (บอส 🍬 8) วันละไม่เกิน 100 กดรับลูกอมประจำวันได้อีกวันละ 20 และมังกรในด่านประจำวันกลายเป็นมังกรฟักทองรัตติกาล ตีได้ลูกอม 15 ต่อระยะ (คิดรอบดีที่สุดของวัน) เอาลูกอมไปแลกของที่แถบ 🎃 ด้านบนหน้าศึกการ์ด: การ์ด SSS นิลกาฬ (🍬 600) เศษการ์ดนิลกาฬ กล่องไอเทมมหากาพย์ขึ้นไป ปีกอัพดาว เพชร ผลึกดาว เหรียญ และแร่ ร้านเปิดแลกได้ถึง 5 พ.ย.", image: "halloween", open: () => { closeNews(); window.PupaCards?.open(); } },
     { tag: "ระบบใหม่", title: "🏆 อันดับตีมังกรประจำสัปดาห์", text: "เข้าสู่ระบบแล้วตีมังกรในด่านประจำวันจะนับเป็นรอบจัดอันดับ แข่งคะแนนสูงสุดของสัปดาห์กับผู้เล่นทุกคน (จันทร์–อาทิตย์ เวลาไทย) เซิร์ฟเวอร์จะเล่นรอบซ้ำเพื่อตรวจคะแนนทุกรอบ จบสัปดาห์ได้เพชรตามอันดับ: อันดับ 1 💎 3,000 · 2 💎 2,000 · 3 💎 1,500 · 4–10 💎 1,000 · 11–50 💎 500 · 51–100 💎 300 · ร่วมตี 💎 100 ดูอันดับได้ในกล่องรังมังกร รางวัลเข้าเมื่อเปิดหน้าอันดับในสัปดาห์ถัดไป ตีจัดอันดับได้วันละ 40 รอบ", image: "raid", open: () => { closeNews(); window.PupaCards?.openDaily(); } },
@@ -6724,6 +6727,23 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "formation") {
+      // the arrow formation, front row on top
+      const grid = document.createElement("div");
+      grid.className = "news-form";
+      const at = { 1: "thongkham", 3: "nilakan", 5: "chantra", 6: "asani", 8: "pupav2" };
+      for (let cell = 0; cell < 9; cell++) {
+        const spot = document.createElement("span");
+        if (at[cell]) {
+          const img = document.createElement("img");
+          img.src = `assets/${at[cell]}-hero.webp`;
+          img.alt = "";
+          spot.append(img);
+        }
+        grid.append(spot);
+      }
+      return grid;
     }
     if (kind === "hallocostume") {
       const row = document.createElement("div");

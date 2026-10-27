@@ -6,8 +6,8 @@
 // A battle is five cards against waves of monsters. Each hero turn the
 // player picks skills in the order they should go off; every hero that was
 // not given a skill makes a plain attack. Then each monster acts. Skills
-// have cooldowns counted in the owner's turns. Slots 0-1 are the front row,
-// 2-4 the back row: monsters hit the front row more often.
+// have cooldowns counted in the owner's turns. Where each slot stands (front,
+// middle or back row) is up to the formation: monsters hit the front most.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.PupaCardsEngine = factory();
@@ -1392,6 +1392,8 @@
     for (let slot = 0; slot < team.length; slot++) {
       const entry = team[slot];
       b.heroes[slot] = entry && CARDS[entry.id] ? makeUnit("hero", slot, entry.id, entry.lv, entry.row, entry.bonus || 0, entry.gear) : null;
+      // the formation's lane, for the page to stand the card in
+      if (b.heroes[slot] && entry.lane != null) b.heroes[slot].lane = entry.lane;
     }
     // bonds between the cards fielded together
     const ids = living(b.heroes).map(u => u.id);
@@ -1481,7 +1483,15 @@
       if (focus?.alive) return focus;
       return lowest(rowOf(foes, "front")) || lowest(living(foes));
     }
-    const front = rowOf(foes, "front"), back = rowOf(foes, "back");
+    const front = rowOf(foes, "front"), middle = rowOf(foes, "middle"), back = rowOf(foes, "back");
+    if (middle.length) {
+      // a formation with a middle row: the front half the time, the middle
+      // three in ten, the back one in five (of the rows still standing)
+      const rows = [[front, .5], [middle, .3], [back, .2]].filter(([row]) => row.length);
+      let roll = random(b) * rows.reduce((sum, [, w]) => sum + w, 0);
+      for (const [row, w] of rows) if ((roll -= w) < 0) return pick(b, row);
+      return pick(b, rows[rows.length - 1][0]);
+    }
     if (front.length && (!back.length || random(b) < .65)) return pick(b, front);
     return pick(b, back.length ? back : living(foes));
   }
@@ -1489,8 +1499,10 @@
   function targetsFor(b, from, skill) {
     const foes = other(b, from), friends = own(b, from);
     switch (skill.target) {
-      case "front": { const row = rowOf(foes, "front"); return row.length ? row : living(foes); }
-      case "back": { const row = rowOf(foes, "back"); return row.length ? row : living(foes); }
+      // the front row, the middle standing in once it falls; "back" dives
+      // past the front line, so a formation's middle row is hit with the back
+      case "front": { const row = rowOf(foes, "front"), mid = rowOf(foes, "middle"); return row.length ? row : mid.length ? mid : living(foes); }
+      case "back": { const row = [...rowOf(foes, "middle"), ...rowOf(foes, "back")]; return row.length ? row : living(foes); }
       case "all": return living(foes);
       case "ally": { const one = lowest(living(friends)); return one ? [one] : []; }
       case "allies": return living(friends);
@@ -1977,7 +1989,7 @@
   // no more than the clock allows; fewer if the player stopped to choose
   // skills). The score is the damage to the dragon in what was shown.
   // Bump RAID_RULES whenever a change would replay a run differently.
-  const RAID_RULES = 1;
+  const RAID_RULES = 2;
   function raidReplay({ team, stage, seed, turns = [], shown = Infinity }) {
     const b = createBattle({ team, stage, seed });
     const limit = (stage.time || RAID_TIME) * 1000;
@@ -1999,11 +2011,64 @@
     }
     return { score, shown: count, phase, turns: k };
   }
-  // The five a save fields, as the page and the server both build them.
-  const fielded = (cards) => Array.from({ length: TEAM_SIZE }, (_, n) => {
-    const id = cards?.team?.[n];
-    return id && CARDS[id] && cards.units?.[id] > 0 ? { id, lv: Math.min(cards.units[id], capFor(cards.awake?.[id] || 0)), bonus: cardBonus(cards, id), gear: gearBonus(cards, id) } : null;
-  });
+  // ---- Formations (แผนการยืน) ----
+  // The five stand on a 3x3 field, cell = row * 3 + lane: rows front,
+  // middle and back (ROWS), lanes top to bottom. A formation opens five
+  // cells, team slot n standing on its nth, and raises the whole team's
+  // stats (max: at FORM_MAX; a level-1 formation gives FORM_BASE of it).
+  // hp, atk and def are shares like gear's, spd and crit as gear's too.
+  // Monsters hit the front row most and the back row least (singleTarget).
+  // Later formations open as the story goes on (unlock: the stage to pass).
+  const ROWS = ["front", "middle", "back"];
+  const FORM_MAX = 30;
+  const FORM_BASE = .2;
+  const FORM_STYLES = { balance: { name: "สมดุล", icon: "⚖" }, defense: { name: "ตั้งรับ", icon: "🛡" }, attack: { name: "โจมตี", icon: "⚔" } };
+  const FORMATIONS = [
+    { id: "twin", name: "แผนสองแนว", icon: "⚖", style: "balance", cells: [0, 2, 6, 7, 8], unlock: 0, max: { hp: .1, atk: .1, def: .1 }, text: "แบบดั้งเดิมที่คุ้นเคย เพิ่มทุกค่าเท่ากัน" },
+    { id: "wall", name: "แผนกำแพงเหล็ก", icon: "🛡", style: "defense", cells: [0, 1, 2, 6, 8], unlock: 5, max: { hp: .15, def: .3 }, text: "แนวหน้า 3 ตัวรับแรงกระแทก ป้องกันสูงมาก" },
+    { id: "arrow", name: "แผนหัวลูกศร", icon: "🏹", style: "attack", cells: [1, 3, 5, 6, 8], unlock: 10, max: { atk: .25, crit: .08 }, text: "หัวหอกเดี่ยวนำ ปีกกลางกับหลังระดมโจมตี" },
+    { id: "star", name: "แผนดาวห้าแฉก", icon: "✴", style: "balance", cells: [0, 2, 4, 6, 8], unlock: 20, max: { hp: .12, atk: .12, def: .12, spd: 6 }, text: "ยืนครบสามแถว เพิ่มทุกค่าและความเร็ว" },
+    { id: "turtle", name: "แผนกระดองเต่า", icon: "🐢", style: "defense", cells: [1, 3, 4, 5, 7], unlock: 30, max: { hp: .3, def: .15 }, text: "ตั้งวงกลางสนาม พลังชีวิตสูงมาก" },
+    { id: "eagle", name: "แผนปีกอินทรี", icon: "🦅", style: "attack", cells: [0, 2, 3, 5, 7], unlock: 45, max: { atk: .18, spd: 15 }, text: "สองปีกโอบล้อม ตีแรงและเร็ว" }
+  ];
+  const FORM = Object.fromEntries(FORMATIONS.map(f => [f.id, f]));
+  const formOpen = (id, best) => Boolean(FORM[id]) && best >= FORM[id].unlock;
+  // the formation in use: the save's if it is open, else the first
+  const formOf = (cards) => (formOpen(cards?.form, bestStageOf(cards?.stars)) ? FORM[cards.form] : FORMATIONS[0]);
+  const formLevel = (cards, id) => Math.max(1, Math.min(FORM_MAX, Math.floor(Number(cards?.formLv?.[id]) || 1)));
+  function formBonus(id, lv) {
+    const share = FORM_BASE + (1 - FORM_BASE) * (Math.max(1, Math.min(FORM_MAX, lv)) - 1) / (FORM_MAX - 1);
+    const out = { hp: 0, atk: 0, def: 0, spd: 0, crit: 0 };
+    for (const [stat, v] of Object.entries(FORM[id]?.max || {})) out[stat] = stat === "spd" ? Math.round(v * share) : Math.round(v * share * 1000) / 1000;
+    return out;
+  }
+  // where team slot n stands: its row and lane
+  const formCell = (form, n) => ({ row: ROWS[Math.floor(form.cells[n] / 3)], lane: form.cells[n] % 3 });
+  // coins and ore to go from lv to lv + 1
+  const formCost = (lv) => ({ coins: 150 * lv + 100, ore: 1 + Math.floor(lv / 3) });
+  // Returns the coins left, or null when it cannot (locked, at the cap,
+  // short of ore or coins).
+  function upgradeForm(cards, id, coins) {
+    if (!formOpen(id, bestStageOf(cards.stars))) return null;
+    const lv = formLevel(cards, id), cost = formCost(lv);
+    if (lv >= FORM_MAX || (cards.ore || 0) < cost.ore || coins < cost.coins) return null;
+    cards.ore -= cost.ore;
+    cards.formLv = { ...(cards.formLv || {}), [id]: lv + 1 };
+    return coins - cost.coins;
+  }
+  const addGear = (a, b) => { const out = { ...a }; for (const [k, v] of Object.entries(b)) out[k] = (out[k] || 0) + v; return out; };
+  // a card's gear with the formation's bonus added, as it fights
+  const fieldGear = (cards, id) => { const form = formOf(cards); return addGear(gearBonus(cards, id), formBonus(form.id, formLevel(cards, form.id))); };
+
+  // The five a save fields, as the page and the server both build them:
+  // where the formation stands each, its bonus counted as gear.
+  const fielded = (cards) => {
+    const form = formOf(cards), extra = formBonus(form.id, formLevel(cards, form.id));
+    return Array.from({ length: TEAM_SIZE }, (_, n) => {
+      const id = cards?.team?.[n];
+      return id && CARDS[id] && cards.units?.[id] > 0 ? { id, lv: Math.min(cards.units[id], capFor(cards.awake?.[id] || 0)), ...formCell(form, n), bonus: cardBonus(cards, id), gear: addGear(gearBonus(cards, id), extra) } : null;
+    });
+  };
   // The furthest story stage with a star.
   const bestStageOf = (stars) => STAGES.reduce((best, s) => ((stars?.[s.num] || 0) > 0 ? s.num : best), 0);
 
@@ -2325,6 +2390,7 @@
     GACHA, DUPE_SHARDS, pull, MAX_AWAKE, MAX_AWAKE2, maxAwake, AWAKE2_BONUS, awakeBonus, BASE_CAP, capFor, AWAKE_SHARDS, AWAKE_COINS, AWAKE_BONUS, awakeCost, awaken, cardBonus,
     DUNGEONS, dungeon, RAID_TIME, RAID_RISE, raid, raidCoins,
     EVENT_DELAY, CRIT_DELAY, CUTIN_MS, CUTIN_HOLD, RAID_PACE, bigAct, eventTime, RAID_RULES, raidReplay, fielded, bestStageOf,
+    ROWS, FORM_MAX, FORM_STYLES, FORMATIONS, formOpen, formOf, formLevel, formBonus, formCell, formCost, upgradeForm, fieldGear,
     HALLO_RARITY, hasHallo, costumeOn, HALLOWEEN, HALLOWEEN_SHOP, halloweenOn, halloweenShopOpen, candyLeft, winCandy, raidCandy,
     xpNeed, giveXp, stageXp, IDLE_HOURS, idleReward, DAILY, COSTUME_PRICE, COSTUME_BONUS, ARENA_SIZE, arenaTier, arenaTeam,
     BOSS_PAR, FOE_EASE, parFor, FAV_ATK, favsOf, favAtk, teamPowerOf, boosted, GEAR_SLOTS, GEAR_STAT_NAMES, GEAR_TIERS, GEAR_STEP, ORE_GIFT, gearKey, gearOf, gearGives, gearBonus, ITEM_RARITY, ITEM_EXTRAS, BAG_SIZE, SALVAGE_ORE, itemParts, itemStats, itemScore, rollItem, ITEM_GACHA, pullItems, equipItem, unequipItem, salvageItems, stageLoot, cardPower, enhanceCost, reforgeCost, enhanceGear, reforgeGear, stageOre, BONDS, activeBonds, bondAtk, bondsOf, MAX_TURNS, TOWER_FLOORS, towerFloor, TOWER_ZONES, UNIQUE_BOSSES, NEW_FOES, ARENA_FRONT, MAX_LEVEL, TEAM_SIZE, FRONT_SLOTS, ROLES, CARDS, CARD_IDS, STARTER, STARTER_TEAM, FOES, STAGES, CHAPTERS,

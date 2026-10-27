@@ -333,10 +333,14 @@
       const t = one.t.slice(0, E.TEAM_SIZE).map(id => (typeof id === "string" && units[id] ? id : ""));
       while (t.length < E.TEAM_SIZE) t.push("");
       t.forEach((id, n) => { if (id && t.indexOf(id) !== n) t[n] = ""; });
-      return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t };
+      return { n: typeof one.n === "string" ? one.n.trim().slice(0, SET_NAME_MAX) : "", t, ...(E.FORMATIONS.some(f => f.id === one.f) ? { f: one.f } : {}) };
     });
+    // the formation in use and each one's level (see E.formOf)
+    const form = E.FORMATIONS.some(f => f.id === raw.form) ? raw.form : E.FORMATIONS[0].id;
+    const formLv = {};
+    for (const f of E.FORMATIONS) { const n = Math.min(E.FORM_MAX, Math.floor(Number(raw.formLv?.[f.id]) || 0)); if (n > 1) formLv[f.id] = n; }
     const set = Math.min(TEAM_SETS - 1, Math.max(0, Math.floor(Number(raw.set) || 0)));
-    s.cards = { units, team, sets, set, stars: best, xp, outfit, hallo, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, event, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
+    s.cards = { units, team, sets, set, form, formLv, stars: best, xp, outfit, hallo, idleAt, daily, dungeon, awake, shards, dust, ore, gear, items, gone, wings, wingComp: true, quest, achv, arenaPick, arenaFront, tower: Math.min(E.TOWER_FLOORS, Math.max(0, Math.floor(Number(raw.tower) || 0))), starPaid, arena: Math.max(1, Math.floor(Number(raw.arena) || 1)), raid, event, auto: Boolean(raw.auto), fast: Boolean(raw.fast) };
     return s.cards;
   }
   let wingGift = 0; // wings given back on this visit, shown once
@@ -399,7 +403,8 @@
   }
   // a card as the power numbers see it: level, stars, costume and gear
   const powerEntry = (id) => ({ id, lv: cards().units[id], bonus: E.cardBonus(cards(), id), gear: E.gearBonus(cards(), id) });
-  const teamPower = () => E.teamPowerOf(cards().team.filter(Boolean).map(powerEntry));
+  // the team as it fights: with the formation's bonus
+  const teamPower = () => E.teamPowerOf(E.fielded(cards()).filter(Boolean));
 
   // ---- Recommended cards ----
   // Three cards per stage and tower floor (E.favsOf); each one in the team
@@ -464,16 +469,17 @@
   const TEAM_SETS = 5, SET_NAME_MAX = 16;
   const setName = (c, k) => c.sets?.[k]?.n || `ทีม ${k + 1}`;
   const setTeamOf = (c, k) => (k === c.set ? c.team : c.sets?.[k]?.t || null);
-  const setPower = (c, k) => E.teamPowerOf((setTeamOf(c, k) || []).filter(id => id && c.units[id]).map(powerEntry));
+  const setPower = (c, k) => (k === c.set ? teamPower() : E.teamPowerOf(E.fielded({ ...c, team: setTeamOf(c, k) || [], form: c.sets?.[k]?.f || c.form }).filter(Boolean)));
   function pickSet(k, after) {
     const c = cards();
     if (k === c.set) return;
     if (!Array.isArray(c.sets)) c.sets = Array(TEAM_SETS).fill(null);
     // the team as it stands goes back into its own set
-    c.sets[c.set] = { n: c.sets[c.set]?.n || "", t: [...c.team] };
+    // (each set keeps its formation too)
+    c.sets[c.set] = { n: c.sets[c.set]?.n || "", t: [...c.team], f: E.formOf(c).id };
     const saved = c.sets[k], fresh = !saved?.t?.some(id => id && c.units[id]);
-    if (fresh) c.sets[k] = { n: saved?.n || "", t: [...c.team] };
-    else c.team = saved.t.map(id => (id && c.units[id] ? id : ""));
+    if (fresh) c.sets[k] = { n: saved?.n || "", t: [...c.team], f: E.formOf(c).id };
+    else { c.team = saved.t.map(id => (id && c.units[id] ? id : "")); if (saved.f) c.form = saved.f; }
     c.set = k;
     store();
     [587, 784].forEach((note, i) => tone(note, .06, "triangle", .04, i * .05));
@@ -514,7 +520,7 @@
     const done = () => {
       const now = cards();
       if (!Array.isArray(now.sets)) now.sets = Array(TEAM_SETS).fill(null);
-      now.sets[k] = { n: input.value.trim().slice(0, SET_NAME_MAX), t: [...(k === now.set ? now.team : now.sets[k]?.t || now.team)] };
+      now.sets[k] = { n: input.value.trim().slice(0, SET_NAME_MAX), t: [...(k === now.set ? now.team : now.sets[k]?.t || now.team)], f: k === now.set ? E.formOf(now).id : now.sets[k]?.f || E.formOf(now).id };
       store();
       tone(660, .08, "triangle", .05);
       announce(`ตั้งชื่อเป็น ${setName(now, k)} แล้ว`);
@@ -1048,6 +1054,8 @@
     }
     // (gone elsewhere meanwhile: no run)
     if (!isShown || battle || tab !== "daily") return;
+    // a server on other rules than this page would not score the run the same
+    if (run && run.rules !== E.RAID_RULES) { run = null; why = RAID_WHY.old_rules; }
     if (run) startBattle(E.raid(run.best, { pumpkin: run.pumpkin }), run);
     else local(why);
   }
@@ -1651,14 +1659,103 @@
     });
   }
 
+  // ---- Formations (แผนการยืน, E.FORMATIONS) ----
+  const ROW_NAMES = { front: "แถวหน้า", middle: "แถวกลาง", back: "แถวหลัง" };
+  // a formation's bonus, as words: "ป้องกัน +6% · พลังชีวิต +3%"
+  const formText = (gives) => Object.entries(gives).filter(([, v]) => v > 0).map(([stat, v]) => `${E.GEAR_STAT_NAMES[stat]} +${stat === "spd" ? v : pct(v)}`).join(" · ");
+  // the 3x3 field in small, front row on top, its open cells lit
+  function miniForm(form) {
+    const box = el("span", `form-mini is-${form.style}`);
+    box.setAttribute("aria-hidden", "true");
+    for (let cell = 0; cell < 9; cell++) box.append(el("i", form.cells.includes(cell) ? "is-on" : ""));
+    return box;
+  }
+  function formSheet(note = "") {
+    const c = cards(), best = bestStage(), using = E.formOf(c).id;
+    const parts = [el("h3", "sheet-title", "📐 แผนการยืน"), el("p", "sheet-sub", `ทุกแผนเพิ่มค่าให้การ์ดทั้งทีม 5 ใบ อัปได้ถึง Lv ${E.FORM_MAX} · ใช้ในด่าน หอคอย และด่านประจำวัน (ลานประลองจัดแถวแยก)`)];
+    if (note) parts.push(el("p", "event-got", note));
+    parts.push(el("p", "form-wallet", `มี ● ${fmt(save().coins)} · ⛏ แร่ ${fmt(c.ore || 0)}`));
+    const list = el("div", "form-list");
+    for (const form of E.FORMATIONS) {
+      const open = E.formOpen(form.id, best), lv = E.formLevel(c, form.id), on = form.id === using;
+      const row = el("div", `form-card is-${form.style}${on ? " is-on" : ""}${open ? "" : " is-locked"}`);
+      const words = el("div", "form-card-text");
+      const style = E.FORM_STYLES[form.style];
+      words.append(el("b", null, `${form.icon} ${form.name}`), el("span", `form-style is-${form.style}`, `${style.icon} ${style.name}`), el("small", "form-lv", open ? `Lv ${lv}/${E.FORM_MAX}` : `🔒 ผ่านด่าน ${form.unlock}`));
+      const rows = E.ROWS.map(key => form.cells.filter(cell => E.ROWS[Math.floor(cell / 3)] === key).length);
+      words.append(el("p", "form-desc", `${form.text} · หน้า ${rows[0]} กลาง ${rows[1]} หลัง ${rows[2]}`));
+      words.append(el("p", "form-gives", `ทั้งทีม ${formText(E.formBonus(form.id, lv))}`));
+      if (open && lv < E.FORM_MAX) words.append(el("p", "form-next", `Lv ${lv + 1}: ${formText(E.formBonus(form.id, lv + 1))}`));
+      else if (open) words.append(el("p", "form-next is-max", `เลเวลสูงสุดแล้ว (Lv ${E.FORM_MAX})`));
+      const actions = el("div", "form-actions");
+      if (open) {
+        const use = button(`shop-buy${on ? " is-owned" : ""}`, on ? "ใช้อยู่ ✓" : "ใช้แผนนี้", () => useForm(form.id), on ? `${form.name} ใช้อยู่` : `ใช้${form.name}`);
+        use.disabled = on;
+        actions.append(use);
+        if (lv < E.FORM_MAX) {
+          const cost = E.formCost(lv);
+          const up = button("shop-buy form-up", `อัป ● ${fmt(cost.coins)} ⛏ ${cost.ore}`, () => upForm(form.id, 1), `อัป${form.name}เป็นเลเวล ${lv + 1} ใช้ ${cost.coins} เหรียญ แร่ ${cost.ore}`);
+          up.disabled = save().coins < cost.coins || (c.ore || 0) < cost.ore;
+          const five = button("shop-buy form-up", "×5", () => upForm(form.id, 5), `อัป${form.name} 5 เลเวล`);
+          five.disabled = up.disabled;
+          actions.append(up, five);
+        }
+      }
+      row.append(miniForm(form), words, actions);
+      list.append(row);
+    }
+    parts.push(list);
+    openSheet(parts, "form-sheet");
+  }
+  function useForm(id) {
+    const c = cards();
+    if (!E.formOpen(id, bestStage())) return;
+    c.form = id;
+    store();
+    [587, 784].forEach((note, i) => tone(note, .06, "triangle", .04, i * .05));
+    const form = E.formOf(c);
+    announce(`ใช้${form.name} พลังทีม ${fmt(teamPower())}`);
+    closeSheet(true);
+    showHub();
+    formSheet(`ใช้${form.name}แล้ว การ์ดย้ายไปยืนตามแผนใหม่`);
+  }
+  function upForm(id, times) {
+    const c = cards();
+    let coins = save().coins, done = 0;
+    for (; done < times; done++) {
+      const left = E.upgradeForm(c, id, coins);
+      if (left == null) break;
+      coins = left;
+    }
+    if (!done) { tone(150, .12, "square", .05); return; }
+    save().coins = coins;
+    store(); showCoins();
+    [659, 784, 988].forEach((note, i) => tone(note, .08, "triangle", .05, i * .05));
+    const form = E.FORMATIONS.find(f => f.id === id), lv = E.formLevel(c, id);
+    announce(`${form.name} เลเวล ${lv}`);
+    closeSheet(true);
+    showHub();
+    formSheet(`${form.icon} ${form.name} อัปเป็น Lv ${lv} แล้ว`);
+  }
+
   function renderTeam(panel) {
     const c = cards();
-    const formation = el("div", "cards-formation");
-    for (const [label, from, to] of [["แถวหน้า", 0, E.FRONT_SLOTS], ["แถวหลัง", E.FRONT_SLOTS, E.TEAM_SIZE]]) {
+    // the formation's 3x3 field: its five open cells hold the team's slots
+    const form = E.formOf(c), lv = E.formLevel(c, form.id);
+    const formBar = button("form-bar", null, () => formSheet(), `แผนการยืน ${form.name} เลเวล ${lv} แตะเพื่อเปลี่ยนหรืออัปแผน`);
+    const words = el("span", "form-bar-text");
+    words.append(el("b", null, `${form.icon} ${form.name} · Lv ${lv}`), el("small", null, `${E.FORM_STYLES[form.style].icon} ${E.FORM_STYLES[form.style].name} · ทั้งทีม ${formText(E.formBonus(form.id, lv))}`));
+    formBar.append(miniForm(form), words, el("span", "form-bar-go", "เปลี่ยน/อัป ›"));
+    const formation = el("div", "cards-formation is-grid");
+    E.ROWS.forEach((rowKey, r) => {
+      const label = ROW_NAMES[rowKey];
       const row = el("div", "cards-row");
       row.append(el("span", "cards-row-label", label));
       const slots = el("div", "cards-slots");
-      for (let slot = from; slot < to; slot++) {
+      const open = [0, 1, 2].map(lane => form.cells.indexOf(r * 3 + lane));
+      if (open.every(n => n < 0)) { row.classList.add("is-shut"); slots.append(el("span", "cards-cell-off is-row", "แผนนี้ไม่ใช้แถวนี้")); }
+      else for (const slot of open) {
+        if (slot < 0) { const off = el("span", "cards-cell-off"); off.setAttribute("aria-hidden", "true"); slots.append(off); continue; }
         const id = c.team[slot];
         let node;
         if (id) { node = cardTile(id, () => cardSheet(id), "in-team"); node.dataset.card = id; }
@@ -1669,8 +1766,8 @@
       }
       row.append(slots);
       formation.append(row);
-    }
-    const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยกว่า ให้ตัวป้องกันยืนหน้า · ลากการ์ดไปวางในช่องทีมเพื่อใส่หรือสลับตัว`);
+    });
+    const sum = el("p", "cards-intro", `พลังทีม ${fmt(teamPower())} · แถวหน้าโดนตีบ่อยที่สุด แถวกลางรองลงมา ให้ตัวป้องกันยืนหน้า · ลากการ์ดไปวางในช่องทีมเพื่อใส่หรือสลับตัว`);
     const bonds = bondStrip(c.team);
     const head = el("div", "cards-sort-head");
     head.append(el("h3", "shop-heading", `การ์ดทั้งหมด ${Object.keys(c.units).length}/${E.CARD_IDS.length}`));
@@ -1702,7 +1799,7 @@
     chips();
     fill();
     head.append(sorter);
-    panel.append(setStrip(() => showHub()), formation, sum, bonds, head, grid);
+    panel.append(setStrip(() => showHub()), formBar, formation, sum, bonds, head, grid);
     teamDrag(panel);
   }
 
@@ -2247,7 +2344,10 @@
     const team = el("div", "codex-team");
     if (owned) {
       const slot = c.team.indexOf(id);
-      if (slot >= 0) team.append(el("span", "codex-in", slot < E.FRONT_SLOTS ? "ในทีม · แถวหน้า" : "ในทีม · แถวหลัง"), button("codex-chip", slot < E.FRONT_SLOTS ? "ย้ายไปแถวหลัง" : "ย้ายไปแถวหน้า", () => moveRow(id)), button("codex-chip", "ถอดจากทีม", () => setTeam(id, false)));
+      if (slot >= 0) {
+        const form = E.formOf(c), to = nextRow(form, slot);
+        team.append(el("span", "codex-in", `ในทีม · ${ROW_NAMES[E.formCell(form, slot).row]}`), ...(to ? [button("codex-chip", `ย้ายไป${ROW_NAMES[to]}`, () => moveRow(id))] : []), button("codex-chip", "ถอดจากทีม", () => setTeam(id, false)));
+      }
       else team.append(button("codex-chip is-gold", "ใส่ทีม", () => setTeam(id, true)));
     } else team.append(el("span", "codex-in", "🔒 ได้จากการสุ่มการ์ดเท่านั้น"), button("codex-chip is-gold", "🎴 ไปสุ่มการ์ด", () => { tab = "pulls"; closeSheet(); }));
     // level, power, EXP and the stats with gear (gear's share in green)
@@ -2397,10 +2497,18 @@
     cardSheet(id);
   }
 
-  // Swap the card into the other row, trading places if that row is full.
+  // The formation's next row back from a slot's (the back row's next is
+  // the front), or null when the formation has one row only.
+  function nextRow(form, slot) {
+    const rows = E.ROWS.filter(row => form.cells.some((_, n) => E.formCell(form, n).row === row));
+    const at = rows.indexOf(E.formCell(form, slot).row);
+    return rows.length > 1 ? rows[(at + 1) % rows.length] : null;
+  }
+  // Swap the card into the next row, trading places if that row is full.
   function moveRow(id) {
-    const team = cards().team, from = team.indexOf(id);
-    const range = from < E.FRONT_SLOTS ? [2, 3, 4] : [0, 1];
+    const c = cards(), team = c.team, from = team.indexOf(id), form = E.formOf(c), row = nextRow(form, from);
+    if (from < 0 || !row) return;
+    const range = [0, 1, 2, 3, 4].filter(n => E.formCell(form, n).row === row);
     const to = range.find(n => !team[n]) ?? range[0];
     [team[from], team[to]] = [team[to], team[from]];
     store();
@@ -2557,7 +2665,8 @@
   // Where each fighter stands, as a share of the field: heroes on the
   // left facing right, monsters on the right, front rows near the middle.
   // y is where the feet touch the ground.
-  const STAND_X = { hero: { front: 37, back: 15 }, foe: { front: 63, back: 85 } };
+  // (a formation's middle row between; its lanes top to bottom, see E.formCell)
+  const STAND_X = { hero: { front: 37, middle: 26, back: 15 }, foe: { front: 63, middle: 74, back: 85 } };
   function standAt(count, n) {
     if (count === 1) return 70;
     const top = 44, bottom = 90;
@@ -2571,15 +2680,17 @@
     const box = side === "hero" ? v.heroSide : v.foeSide;
     v.tiles[side] = [];
     const nodes = [];
-    for (const row of ["back", "front"]) {
+    for (const row of ["back", "middle", "front"]) {
       const inRow = list.filter(u => u && u.row === row);
+      // a formation's lanes, if every card in the row has one
+      const lanes = inRow.length && inRow.length <= 3 && inRow.every(u => u.lane != null);
       inRow.forEach((u, n) => {
         const i = list.indexOf(u);
         const tile = side === "foe" ? button("unit is-foe", null, () => setFocus(i)) : el("div", "unit");
         if (u.boss) tile.classList.add("is-boss");
         const crowd = inRow.length > 3;
-        const y = crowd ? standAt(Math.ceil(inRow.length / 2), Math.floor(n / 2)) + (n % 2) * 4 : standAt(inRow.length, n);
-        const shift = crowd ? (n % 2 ? 6 : -6) : inRow.length > 2 ? (n % 2 ? 3 : -3) : 0;
+        const y = lanes ? standAt(3, u.lane) : crowd ? standAt(Math.ceil(inRow.length / 2), Math.floor(n / 2)) + (n % 2) * 4 : standAt(inRow.length, n);
+        const shift = lanes ? (u.lane === 1 ? 3 : -3) * (row === "middle" ? 0 : 1) : crowd ? (n % 2 ? 6 : -6) : inRow.length > 2 ? (n % 2 ? 3 : -3) : 0;
         tile.style.left = `${STAND_X[side][row] + (shift || 0) * (side === "hero" ? 1 : -1)}%`;
         if (crowd) tile.classList.add("is-crowd");
         tile.style.top = `${y}%`;

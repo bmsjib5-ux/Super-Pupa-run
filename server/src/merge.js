@@ -72,10 +72,12 @@ function mergeItems(now, next) {
 
 // Saved team sets: five slots, each null or a name and five places.
 const TEAM_SETS = 5;
+// a formation's id (see the engine's FORMATIONS)
+const isForm = (v) => typeof v === "string" && /^[a-z]{1,12}$/.test(v);
 const cleanSets = (raw) => Array.from({ length: TEAM_SETS }, (_, k) => {
   const one = Array.isArray(raw) ? raw[k] : null;
   if (!one || typeof one !== "object" || !Array.isArray(one.t)) return null;
-  return { n: typeof one.n === "string" ? one.n.slice(0, 16) : "", t: one.t.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")) };
+  return { n: typeof one.n === "string" ? one.n.slice(0, 16) : "", t: one.t.slice(0, 5).map(id => (typeof id === "string" && /^[a-z0-9]{1,30}$/.test(id) ? id : "")), ...(isForm(one.f) ? { f: one.f } : {}) };
 });
 
 // The dragon raid: a day's best score and the coins paid for it, and the
@@ -113,7 +115,7 @@ const cleanCards = (raw) => {
   const daily = cards.daily && typeof cards.daily.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.daily.day) ? { day: cards.daily.day, streak: int(cards.daily.streak, 7) } : null;
   const units = intMap(cards.units, 200);
   return {
-    units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, sets: cleanSets(cards.sets), set: int(cards.set, TEAM_SETS - 1), arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
+    units, items: cleanItems(cards.items, units), gone: cleanGone(cards.gone), stars: intMap(cards.stars, 3), team, sets: cleanSets(cards.sets), set: int(cards.set, TEAM_SETS - 1), form: isForm(cards.form) ? cards.form : undefined, formLv: intMap(cards.formLv, 30), arenaPick: idList(cards.arenaPick).slice(0, 10), arenaFront: idList(cards.arenaFront).slice(0, 4), auto: cards.auto === true, fast: cards.fast === true,
     xp: intMap(cards.xp, 1_000_000), outfit: intMap(cards.outfit, 2), hallo: intMap(cards.hallo, 1), awake: intMap(cards.awake, 10), shards: intMap(cards.shards, 1_000_000), dust: int(cards.dust, 1_000_000), wings: cards.wings == null ? undefined : int(cards.wings, 1_000_000), ore: cards.ore == null ? undefined : int(cards.ore, 1_000_000), gear: intMap(cards.gear, 600), wingComp: cards.wingComp === true ? true : undefined, quest: cleanQuest(cards.quest), achv: idList(cards.achv), starPaid: numberList(cards.starPaid), arena: Math.max(1, int(cards.arena, 100_000)), tower: int(cards.tower, 1000), idleAt: int(cards.idleAt), daily,
     dungeon: cards.dungeon && typeof cards.dungeon.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(cards.dungeon.day) ? { day: cards.dungeon.day, exp: cards.dungeon.exp === true, coin: cards.dungeon.coin === true } : null,
     raid: cleanRaid(cards.raid),
@@ -151,6 +153,8 @@ function mergeCards(current, incoming) {
   const now = cleanCards(current), next = cleanCards(incoming);
   return {
     ...next, units: maxMap(now.units, next.units), stars: maxMap(now.stars, next.stars), team: next.team.some(Boolean) ? next.team : now.team,
+    // the formation stands with its team; levels only go up
+    form: next.team.some(Boolean) ? next.form : now.form, formLv: maxMap(now.formLv, next.formLv),
     // the device's team sets, unless it has none yet
     ...(next.sets.some(Boolean) ? { sets: next.sets, set: next.set } : { sets: now.sets, set: now.set }),
     xp: maxMap(now.xp, next.xp), outfit: maxMap(now.outfit, next.outfit), hallo: maxMap(now.hallo, next.hallo), awake: maxMap(now.awake, next.awake),

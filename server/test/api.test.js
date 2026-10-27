@@ -332,7 +332,7 @@ test("merge: card levels past 99 (second awakening) and the arena team survive a
 // ---- The weekly dragon raid ranking ----
 
 // A save whose team can fight the raid.
-const raider = (lv = 60) => device(0, { cards: { units: { thongkham: lv, phloeng: lv, chantra: lv, asani: lv, pupav2: lv }, awake: { thongkham: 3, phloeng: 3, chantra: 3, asani: 3, pupav2: 3 }, team: ["thongkham", "phloeng", "chantra", "asani", "pupav2"], stars: { 1: 3, 2: 3, 40: 2 } } });
+const raider = (lv = 60) => device(0, { cards: { units: { thongkham: lv, phloeng: lv, chantra: lv, asani: lv, pupav2: lv }, awake: { thongkham: 3, phloeng: 3, chantra: 3, asani: 3, pupav2: 3 }, team: ["thongkham", "phloeng", "chantra", "asani", "pupav2"], stars: { 1: 3, 2: 3, 40: 2 }, form: "arrow", formLv: { arrow: 12 } } });
 
 // Plays a ranked run as the page does (auto, the clock at the raid's pace)
 // and returns what the page would send.
@@ -365,6 +365,9 @@ test("raid: a ranked run is replayed on the server to the page's score", async (
     assert.equal(start.status, 200);
     const run = start.json;
     assert.ok(run.runId && run.seed > 0 && run.best === 40 && run.team.length === 5 && run.team[0].lv === 60 && run.rules === E.RAID_RULES);
+    // the synced formation: where each stands and its bonus
+    assert.deepEqual(run.team.map(t => t.row), ["front", "middle", "middle", "back", "back"]);
+    assert.ok(run.team.every(t => t.gear.atk >= E.formBonus("arrow", 12).atk));
     const page = playRun(run);
     const done = await call("POST", "/api/raid/finish", { body: { runId: run.runId, turns: page.turns, shown: page.shown } });
     assert.equal(done.status, 200);
@@ -445,6 +448,19 @@ test("merge: a worn Halloween costume is kept", () => {
   const a = mergeSave(null, cleanSave(device(0, { cards: { units: { asani: 5 }, team: ["asani", "", "", "", ""], hallo: { asani: 1, nope: 7 } } })), 0);
   assert.deepEqual(a.cards.hallo, { asani: 1, nope: 1 });
   assert.deepEqual(mergeSave(a, cleanSave(device(0, { cards: { units: { asani: 5 } } })), 0).cards.hallo, a.cards.hallo);
+});
+
+test("merge: the formation goes with the team, and formation levels only go up", () => {
+  const a = mergeSave(null, cleanSave(device(0, { cards: { units: { asani: 5 }, team: ["asani", "", "", "", ""], form: "wall", formLv: { wall: 7, arrow: 3, bad: 99 }, sets: [{ n: "x", t: ["asani"], f: "arrow" }] } })), 0);
+  assert.equal(a.cards.form, "wall");
+  assert.deepEqual(a.cards.formLv, { wall: 7, arrow: 3, bad: 30 });
+  assert.equal(a.cards.sets[0].f, "arrow");
+  // a device with a team brings its formation; levels keep the highest
+  const b = mergeSave(a, cleanSave(device(0, { cards: { units: { asani: 5 }, team: ["asani", "", "", "", ""], form: "twin", formLv: { wall: 2, arrow: 9 } } })), 0);
+  assert.equal(b.cards.form, "twin");
+  assert.deepEqual(b.cards.formLv, { wall: 7, arrow: 9, bad: 30 });
+  // one without a team keeps the account's
+  assert.equal(mergeSave(b, cleanSave(device(0, { cards: { units: { asani: 5 } } })), 0).cards.form, "twin");
 });
 
 test("merge: Halloween candy keeps what was earned and every buy, never more", () => {

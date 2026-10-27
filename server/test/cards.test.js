@@ -520,3 +520,67 @@ test("cards: every monster id is defined once", () => {
   assert.deepEqual(dupes, []);
   assert.ok(ids.length > 100);
 });
+
+test("cards: formations open five of nine cells, three rows, and grow to their max by level 30", () => {
+  const ids = new Set();
+  for (const f of E.FORMATIONS) {
+    assert.ok(!ids.has(f.id) && E.FORM_STYLES[f.style], f.id);
+    ids.add(f.id);
+    assert.equal(new Set(f.cells).size, E.TEAM_SIZE, f.id);
+    assert.ok(f.cells.every(c => Number.isInteger(c) && c >= 0 && c < 9), f.id);
+    // slots fill front to back, so slot 0 is never behind slot 4
+    const rows = f.cells.map(c => Math.floor(c / 3));
+    assert.deepEqual(rows, [...rows].sort((a, b) => a - b), f.id);
+    const low = E.formBonus(f.id, 1), high = E.formBonus(f.id, E.FORM_MAX), mid = E.formBonus(f.id, 15);
+    for (const [stat, v] of Object.entries(f.max)) {
+      assert.ok(Math.abs(high[stat] - v) < 1e-9, `${f.id} ${stat}`);
+      assert.ok(low[stat] > 0 && low[stat] < mid[stat] && mid[stat] < high[stat], `${f.id} ${stat}`);
+    }
+  }
+  assert.ok(new Set(E.FORMATIONS.map(f => f.style)).size === 3);
+  assert.equal(E.FORMATIONS[0].unlock, 0);
+  // the first formation is the old layout: two in front, three behind
+  assert.deepEqual([0, 1, 2, 3, 4].map(n => E.formCell(E.FORMATIONS[0], n).row), ["front", "front", "back", "back", "back"]);
+});
+
+test("cards: a formation opens with the story, levels up for coins and ore, and boosts the fielded team", () => {
+  const cards = { team: ["thongkham", "phloeng", "", "asani", "pupav2"], units: { thongkham: 50, phloeng: 50, asani: 50, pupav2: 50 }, stars: { 1: 3, 2: 3 }, ore: 1000, form: "wall" };
+  // stage 5 not passed: the wall is shut, the team stands in the first formation
+  assert.equal(E.formOf(cards).id, "twin");
+  assert.equal(E.upgradeForm(cards, "wall", 1e6), null);
+  for (let n = 3; n <= 5; n++) cards.stars[n] = 1;
+  assert.equal(E.formOf(cards).id, "wall");
+  const team = E.fielded(cards);
+  assert.deepEqual(team.map(t => t && t.row), ["front", "front", null, "back", "back"]);
+  assert.deepEqual(team.map(t => t && t.lane), [0, 1, null, 0, 2]);
+  assert.ok(Math.abs(team[0].gear.def - (E.gearBonus(cards, "thongkham").def + E.formBonus("wall", 1).def)) < 1e-9);
+  // levels cost coins and ore, and stop at the cap
+  const cost = E.formCost(1);
+  assert.equal(E.upgradeForm(cards, "wall", cost.coins - 1), null);
+  assert.equal(E.upgradeForm(cards, "wall", cost.coins), 0);
+  assert.equal(E.formLevel(cards, "wall"), 2);
+  assert.equal(cards.ore, 1000 - cost.ore);
+  let coins = 1e7;
+  while (true) { const left = E.upgradeForm(cards, "wall", coins); if (left == null) break; coins = left; }
+  assert.equal(E.formLevel(cards, "wall"), E.FORM_MAX);
+  const before = E.createBattle({ team: E.fielded({ ...cards, form: "twin" }), stage: E.STAGES[0], seed: 1 }).heroes[0];
+  const after = E.createBattle({ team: E.fielded(cards), stage: E.STAGES[0], seed: 1 }).heroes[0];
+  assert.ok(after.def > before.def && after.maxHp > before.maxHp, `${before.def} -> ${after.def}`);
+  assert.equal(after.lane, 0);
+  // in the arrow the middle row stands; monsters hit it less than the front
+  for (let n = 6; n <= 10; n++) cards.stars[n] = 1;
+  cards.form = "arrow";
+  cards.team = ["thongkham", "phloeng", "asani", "pupav2", "chantra"];
+  cards.units.chantra = 50;
+  const arrow = E.fielded(cards);
+  assert.deepEqual(arrow.map(t => t.row), ["front", "middle", "middle", "back", "back"]);
+  const hits = { front: 0, middle: 0, back: 0 };
+  for (let seed = 1; seed <= 60; seed++) {
+    const b = E.createBattle({ team: arrow.map(t => ({ ...t, lv: 20 })), stage: E.STAGES[30], seed });
+    for (let k = 0; k < 8 && b.phase !== "done"; k++) {
+      const events = b.phase === "hero" ? E.heroTurn(b, []) : E.enemyTurn(b);
+      for (const ev of events) if (ev.t === "hit" && ev.side === "hero") hits[b.heroes[ev.i].row]++;
+    }
+  }
+  assert.ok(hits.front > hits.back && hits.middle > 0 && hits.back > 0, JSON.stringify(hits));
+});
