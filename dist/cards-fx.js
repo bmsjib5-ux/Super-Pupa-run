@@ -38,6 +38,22 @@
     buff: { kind: "buff", colour: "#ffe58f", glow: "#ffb347" }
   };
 
+  // A card in its Halloween costume: the same moves, in pumpkin orange,
+  // ghost purple and witch green. Flying shots become jack-o'-lanterns
+  // (ghosts for magic orbs, bat swarms for wind and sound), hits leave
+  // purple smoke and ghosts, critical hits a grinning pumpkin and candy,
+  // heals rain candy; bats fly off at every skill.
+  const CANDY = ["#ff8a1f", "#b45cff", "#6dff9e", "#ffe14d", "#ff5fa8"];
+  const SPOOKY_PAINT = {
+    slash: ["#ffd9a8", "#ff7a1a"], bolt: ["#f4e8ff", "#a24dff"], fire: ["#d6b0ff", "#8a3dff"], wind: ["#eadbff", "#a24dff"],
+    sonic: ["#eadbff", "#a24dff"], stomp: ["#ffd9a8", "#a24dff"], heal: ["#ffd27a", "#ff8a1f"], shield: ["#ffd09a", "#ff8a1f"], buff: ["#ffb347", "#ff8a1f"]
+  };
+  function spookyLook(look) {
+    const [colour, glow] = SPOOKY_PAINT[look.kind] || ["#ffb347", "#ff7a1a"];
+    const shot = look.kind === "wind" || look.kind === "sonic" ? "bats" : look.kind === "orb" || look.kind === "spore" ? "ghost" : "pumpkin";
+    return { ...look, colour, glow, spooky: true, shot };
+  }
+
   // map: a backdrop for the stage map, without the battle's rune circle.
   function create(field, { chapter = 1, map = false } = {}) {
     const back = document.createElement("canvas");
@@ -661,6 +677,23 @@
     function ring(p, colour, grow = 2.4, life = .4, width = 4) { add({ life, x: p.x, y: p.y, r0: p.r * .5, r1: p.r * grow, colour, width, kind: "ring" }); }
     function glow(p, colour, life = .3, size = 2) { add({ life, x: p.x, y: p.y, r: p.r * size, colour, kind: "glow" }); }
 
+    // bats flapping off a point; candy flying up out of one
+    function bats(p, count, up = true) {
+      for (let k = 0; k < count; k++) {
+        const a = (up ? -Math.PI / 2 : 0) + rand(-1.3, 1.3), v = rand(90, 170);
+        add({ life: rand(.6, .95), delay: k * .03, x: p.x + rand(-p.r, p.r) * .4, y: p.y + rand(-p.r, p.r) * .3, vx: Math.cos(a) * v, vy: Math.sin(a) * v, gy: -20, r: rand(6, 10), seed: rand(0, TAU), kind: "bat" });
+      }
+    }
+    function candies(p, count, rise = false) {
+      for (let k = 0; k < count; k++) {
+        const a = rand(0, TAU), v = rand(60, 150);
+        add({ life: rand(.7, 1), delay: rise ? k * .04 : 0, x: p.x + (rise ? rand(-p.r, p.r) : 0), y: p.y + (rise ? rand(0, p.r) : 0), vx: rise ? rand(-12, 12) : Math.cos(a) * v, vy: rise ? rand(-80, -45) : Math.sin(a) * v - 60, gy: rise ? 0 : 220, r: rand(4, 6), spin: rand(0, TAU), vs: rand(-8, 8), colour: CANDY[k % CANDY.length], kind: "candy" });
+      }
+    }
+    function smoke(p, count = 4) {
+      for (let k = 0; k < count; k++) add({ life: rand(.5, .8), x: p.x + rand(-p.r, p.r) * .5, y: p.y + rand(-p.r, p.r) * .3, vx: rand(-30, 30), vy: rand(-40, -10), gy: 0, r: rand(6, 11), colour: "rgba(150,70,210,.42)", kind: "dust" });
+    }
+
     function travel(from, to, look, opts = {}) {
       add({ life: opts.life || .28, delay: opts.delay, from, to, look, arc: opts.arc ?? 0, kind: "travel" });
     }
@@ -670,9 +703,9 @@
     // `skill` is set for a named skill, `big` for a hero's second skill or
     // a boss's: a rune circle opens under the caster, a big one with a
     // pillar of light.
-    function cast(actor, targets, name, side, { skill = false, big = false } = {}) {
+    function cast(actor, targets, name, side, { skill = false, big = false, spooky = false } = {}) {
       if (!alive || still()) return;
-      const look = LOOKS[name] || LOOKS.slash;
+      const look = spooky ? spookyLook(LOOKS[name] || LOOKS.slash) : LOOKS[name] || LOOKS.slash;
       const from = at(actor);
       const ends = targets.map(at);
       glow(from, look.glow, .35, 1.6);
@@ -681,7 +714,15 @@
         add({ life: .7, x: from.x, y: from.y + from.r * .95, r: from.r * .9, colour: look.glow, kind: "pillar" });
         for (let k = 0; k < 10; k++) add({ life: rand(.5, .8), delay: k * .03, x: from.x + rand(-from.r, from.r) * .8, y: from.y + from.r * .8, vx: 0, vy: rand(-160, -90), gy: 0, r: rand(1.5, 3), colour: look.colour, kind: "spark" });
       }
-      switch (look.kind) {
+      if (look.spooky) {
+        if (skill || big) bats(from, big ? 8 : 4);
+        // a jack-o'-lantern grins over the caster's head
+        if (big) add({ life: .8, x: from.x, y: from.y - from.r * 1.45, r: Math.min(26, from.r * .5), kind: "jack", ghostly: true });
+        // a swarm of bats for wind and sound, every one to its target
+        if (look.shot === "bats") ends.forEach((to, n) => { for (let k = 0; k < 3; k++) travel(from, { ...to, x: to.x + rand(-14, 14), y: to.y + rand(-14, 14) }, look, { delay: n * .05 + k * .05, life: .34, arc: rand(-40, 40) }); });
+      }
+      if (look.shot === "bats" && look.kind === "sonic") for (let k = 0; k < 2; k++) add({ life: .45, delay: k * .1, x: from.x, y: from.y, r0: 10, r1: Math.hypot(w, h) * .4, colour: look.colour, width: 3, kind: "ring" });
+      switch (look.shot === "bats" ? "" : look.kind) {
         case "orb": case "ribbon": case "seed": case "spore": case "bite":
           ends.forEach((to, n) => travel(from, to, look, { delay: n * .04, arc: look.kind === "seed" ? -60 : look.kind === "ribbon" ? 40 : -25 }));
           break;
@@ -696,12 +737,14 @@
         case "sonic":
           for (let k = 0; k < 3; k++) add({ life: .45, delay: k * .08, x: from.x, y: from.y, r0: 10, r1: Math.hypot(w, h) * .45, colour: look.colour, width: 3, kind: "ring" });
           break;
-        case "star":
-          ends.forEach((to, n) => travel({ x: to.x + (side === "hero" ? -80 : 80), y: -20, r: 10 }, to, look, { delay: n * .06, life: .32 }));
-          break;
         case "stomp":
           ring({ ...from, y: from.y + from.r }, look.glow, 4, .45, 6);
           shake = Math.max(shake, 6);
+          // the ground cracks and ghosts climb out
+          if (look.spooky) for (let k = 0; k < 3; k++) add({ life: .9, delay: .05 + k * .06, x: from.x + (k - 1) * from.r * 1.2, y: from.y + from.r * .7, vx: rand(-10, 10), vy: -60, gy: 0, r: from.r * .35, seed: rand(0, TAU), kind: "ghost" });
+          break;
+        case "star":
+          ends.forEach((to, n) => travel({ x: to.x + (side === "hero" ? -80 : 80), y: -20, r: 10 }, to, look, { delay: n * .06, life: .32 }));
           break;
         case "heal": case "shield": case "buff":
           // shown on each friend when the heal / shield / effect lands
@@ -711,20 +754,27 @@
     }
 
     // A target is struck.
-    function impact(target, name, crit, boss) {
+    function impact(target, name, crit, boss, spooky = false) {
       if (!alive || still()) return;
-      const look = LOOKS[name] || LOOKS.slash;
+      const look = spooky ? spookyLook(LOOKS[name] || LOOKS.slash) : LOOKS[name] || LOOKS.slash;
       const p = at(target);
       if (look.kind === "bolt") {
         add({ life: .3, x: p.x, y: p.y, colour: look.colour, glowColour: look.glow, kind: "bolt", seed: Math.random() * 99 });
-        flash = .25; flashColour = "rgba(255,220,250,.35)";
+        flash = .25; flashColour = look.spooky ? "rgba(160,80,255,.35)" : "rgba(255,220,250,.35)";
       }
       if (look.kind === "slash") {
         const blades = look.many ? 3 : crit ? 2 : 1;
         for (let k = 0; k < blades; k++) add({ life: .24, delay: k * .06, x: p.x, y: p.y, r: p.r * 1.5, angle: rand(-.9, -.3) + k * .8, colour: look.colour, glowColour: look.glow, kind: "slash" });
       }
       if (look.kind === "bite") add({ life: .28, x: p.x, y: p.y, r: p.r, colour: look.colour, kind: "bite" });
-      if (look.kind === "fire") for (let k = 0; k < 8; k++) add({ life: rand(.4, .7), x: p.x + rand(-p.r, p.r) * .6, y: p.y + rand(-4, 8), vx: rand(-10, 10), vy: rand(-90, -50), gy: 0, r: rand(3, 6), colour: Math.random() < .5 ? "#ffb347" : "#ff6a2a", kind: "spark" });
+      // (ghost fire burns purple and green)
+      const flames = look.spooky ? ["#b06bff", "#6dff9e"] : ["#ffb347", "#ff6a2a"];
+      if (look.kind === "fire") for (let k = 0; k < 8; k++) add({ life: rand(.4, .7), x: p.x + rand(-p.r, p.r) * .6, y: p.y + rand(-4, 8), vx: rand(-10, 10), vy: rand(-90, -50), gy: 0, r: rand(3, 6), colour: flames[k % 2], kind: "spark" });
+      if (look.spooky) {
+        smoke(p);
+        if (crit || Math.random() < .45) add({ life: .9, x: p.x + rand(-8, 8), y: p.y, vx: rand(-15, 15), vy: -55, gy: 0, r: Math.min(18, p.r * .42), seed: rand(0, TAU), kind: "ghost" });
+        if (crit) { add({ life: .5, x: p.x, y: p.y, r: Math.min(52, p.r * .85), kind: "jack" }); candies(p, 8); }
+      }
       // the hit itself: a white star of light, sparks flying off it
       add({ life: crit ? .24 : .18, x: p.x + rand(-4, 4), y: p.y + rand(-4, 4), r: Math.min(crit ? 64 : 50, p.r * (crit ? .95 : .7)), colour: look.glow, spikes: crit ? 10 : 7, rot: rand(0, TAU), kind: "burst" });
       sparks(p, look.glow, crit ? 22 : 12, crit ? 300 : 210);
@@ -736,21 +786,23 @@
       if (crit) { flash = Math.max(flash, .15); flashColour = "rgba(255,240,180,.3)"; }
     }
 
-    function heal(target, leafy) {
+    function heal(target, leafy, spooky = false) {
       if (!alive || still()) return;
-      const look = leafy ? LOOKS.leaf : LOOKS.heal, p = at(target);
+      const look = spooky ? spookyLook(LOOKS.heal) : leafy ? LOOKS.leaf : LOOKS.heal, p = at(target);
       glow(p, look.glow, .5, 2);
       add({ life: .6, x: p.x, y: p.y + p.r * .95, r: p.r * .75, colour: look.glow, kind: "pillar" });
+      if (spooky) { candies(p, 9, true); return; }
       for (let k = 0; k < 9; k++) add({ life: rand(.6, .9), delay: k * .03, x: p.x + rand(-p.r, p.r), y: p.y + rand(0, p.r), vx: 0, vy: rand(-70, -40), gy: 0, r: rand(5, 8), colour: look.colour, kind: leafy ? "leaf" : "plus" });
     }
-    function shield(target) {
+    function shield(target, spooky = false) {
       if (!alive || still()) return;
-      const p = at(target);
-      add({ life: .7, x: p.x, y: p.y, r: p.r * 1.5, colour: LOOKS.shield.colour, glowColour: LOOKS.shield.glow, kind: "bubble" });
+      const p = at(target), look = spooky ? spookyLook(LOOKS.shield) : LOOKS.shield;
+      add({ life: .7, x: p.x, y: p.y, r: p.r * 1.5, colour: look.colour, glowColour: look.glow, tint: spooky, kind: "bubble" });
+      if (spooky) bats(p, 3, false);
     }
-    function buff(target, down) {
+    function buff(target, down, spooky = false) {
       if (!alive || still()) return;
-      const p = at(target), colour = down ? "#ff7a8a" : LOOKS.buff.colour;
+      const p = at(target), colour = down ? (spooky ? "#b45cff" : "#ff7a8a") : spooky ? "#ff8a1f" : LOOKS.buff.colour;
       for (let k = 0; k < 4; k++) add({ life: .7, delay: k * .07, x: p.x + (k - 1.5) * p.r * .5, y: p.y + p.r * .6, vx: 0, vy: down ? 50 : -60, gy: 0, r: 7, colour, down, kind: "arrow" });
     }
     function knockout(target) {
@@ -833,7 +885,7 @@
     requestAnimationFrame(frame);
 
     // A flying piece arrives: a small splash of its colour.
-    function landed(b) { sparks(b.to, b.look.glow, 6, 110); }
+    function landed(b) { sparks(b.to, b.look.glow, 6, 110); if (b.look.spooky && b.look.shot !== "bats") smoke(b.to, 2); }
 
     function drawBit(b, k, t) {
       g.save();
@@ -941,9 +993,27 @@
           const r = b.r * (k < .3 ? easeOut(k / .3) : 1);
           g.globalAlpha = k < .7 ? .9 : (1 - k) / .3;
           const grad = g.createRadialGradient(b.x - r * .3, b.y - r * .3, r * .1, b.x, b.y, r);
-          grad.addColorStop(0, "rgba(255,255,255,.35)"); grad.addColorStop(.7, "rgba(140,200,255,.12)"); grad.addColorStop(1, "rgba(140,200,255,.45)");
+          const tint = b.tint ? "255,140,40" : "140,200,255";
+          grad.addColorStop(0, "rgba(255,255,255,.35)"); grad.addColorStop(.7, `rgba(${tint},.12)`); grad.addColorStop(1, `rgba(${tint},.45)`);
           g.fillStyle = grad; g.beginPath(); g.arc(b.x, b.y, r, 0, TAU); g.fill();
           g.strokeStyle = b.colour; g.shadowColor = b.glowColour; g.shadowBlur = 10; g.lineWidth = 2; g.stroke(); break;
+        }
+        case "bat":
+          g.globalAlpha = k > .7 ? (1 - k) / .3 : 1; g.translate(b.x, b.y); g.scale(b.vx < 0 ? -1 : 1, 1);
+          bat(g, b.r, t * 26 + b.seed); break;
+        case "ghost":
+          // floating up, swaying, fading
+          g.globalAlpha = (k < .2 ? k / .2 : 1 - (k - .2) / .8) * .9; g.translate(b.x + Math.sin(t * 5 + b.seed) * 6, b.y);
+          ghost(g, b.r * (.8 + k * .3), t + b.seed); break;
+        case "candy":
+          g.globalAlpha = k > .75 ? (1 - k) / .25 : 1; g.translate(b.x, b.y); g.rotate(b.spin + b.vs * k);
+          candy(g, b.r, b.colour); break;
+        case "jack": {
+          // a grinning jack-o'-lantern pops out and fades
+          const grow = easeOut(Math.min(1, k * 3));
+          g.globalAlpha = k < .6 ? .95 : (1 - k) / .4; g.translate(b.x, b.y); g.scale(grow, grow);
+          if (b.ghostly) g.globalAlpha *= .85;
+          pumpkin(g, b.r, t, true); break;
         }
         case "plus":
           g.globalAlpha = 1 - k; g.fillStyle = b.colour; g.fillRect(b.x - b.r / 2, b.y - 1.5, b.r, 3); g.fillRect(b.x - 1.5, b.y - b.r / 2, 3, b.r); break;
@@ -968,6 +1038,13 @@
       g.fillStyle = halo; g.beginPath(); g.arc(0, 0, 18, 0, TAU); g.fill();
       g.globalCompositeOperation = "source-over";
       g.fillStyle = look.colour;
+      if (look.spooky && look.kind !== "fire") {
+        if (look.shot === "bats") { g.scale(Math.cos(angle) < 0 ? -1 : 1, 1); bat(g, 11, t * 30 + x * .05); }
+        else if (look.shot === "ghost") { g.scale(Math.cos(angle) < 0 ? -1 : 1, 1); g.rotate(.25); ghost(g, 14, t); }
+        else { g.rotate(Math.sin(t * 14) * .35); pumpkin(g, 13, t); }
+        g.restore();
+        return;
+      }
       switch (look.kind) {
         case "wind": {
           g.rotate(angle);
@@ -995,6 +1072,52 @@
     };
   }
 
+  // Halloween shapes, centred on 0,0 and about r across the middle.
+  function pumpkin(g, r, t, big = false) {
+    g.fillStyle = "#ff8a1f";
+    for (const [dx, sx] of [[-.42, .62], [.42, .62], [0, .74]]) { g.beginPath(); g.ellipse(dx * r, 0, r * sx, r * .82, 0, 0, TAU); g.fill(); }
+    g.strokeStyle = "rgba(150,55,0,.55)"; g.lineWidth = Math.max(1, r * .08);
+    for (const dx of [-.3, .3]) { g.beginPath(); g.ellipse(dx * r, 0, r * .28, r * .78, 0, 0, TAU); g.stroke(); }
+    g.fillStyle = "#3f8f3a"; g.fillRect(-r * .1, -r * 1.08, r * .2, r * .32);
+    // the carved face, lit from inside
+    const lit = big ? "#fff7b0" : `rgba(255,${230 + Math.round(Math.sin(t * 18) * 25)},120,1)`;
+    g.fillStyle = lit; g.shadowColor = "#ffd23a"; g.shadowBlur = big ? 14 : 6;
+    for (const s of [-1, 1]) { g.beginPath(); g.moveTo(s * r * .45, -r * .05); g.lineTo(s * r * .15, -r * .05); g.lineTo(s * r * .3, -r * .38); g.closePath(); g.fill(); }
+    g.beginPath(); g.moveTo(-r * .55, r * .2);
+    for (let n = 0; n <= 6; n++) g.lineTo(-r * .55 + n * r * .183, r * (n % 2 ? .3 : .2));
+    g.lineTo(r * .4, r * .5); g.lineTo(-r * .4, r * .5); g.closePath(); g.fill();
+    g.shadowBlur = 0;
+  }
+  function ghost(g, r, t) {
+    g.fillStyle = "rgba(244,236,255,.95)"; g.shadowColor = "#b45cff"; g.shadowBlur = 10;
+    g.beginPath(); g.arc(0, -r * .2, r * .72, Math.PI, 0); g.lineTo(r * .72, r * .62);
+    for (let n = 0; n < 4; n++) { const x0 = r * .72 - n * r * .36; g.quadraticCurveTo(x0 - r * .09, r * (.85 + Math.sin(t * 8 + n) * .08), x0 - r * .18, r * .62); g.quadraticCurveTo(x0 - r * .27, r * .42, x0 - r * .36, r * .62); }
+    g.closePath(); g.fill(); g.shadowBlur = 0;
+    g.fillStyle = "#2a1040";
+    for (const s of [-1, 1]) { g.beginPath(); g.ellipse(s * r * .25, -r * .25, r * .11, r * .17, 0, 0, TAU); g.fill(); }
+    g.beginPath(); g.ellipse(0, r * .1, r * .13, r * .09, 0, 0, TAU); g.fill();
+  }
+  function bat(g, r, beat) {
+    const flap = Math.sin(beat) * .55;
+    g.fillStyle = "#2a1040"; g.shadowColor = "#b45cff"; g.shadowBlur = 6;
+    for (const s of [-1, 1]) {
+      g.save(); g.scale(s, 1); g.rotate(-flap);
+      g.beginPath(); g.moveTo(r * .15, 0); g.quadraticCurveTo(r * .7, -r * .9, r * 1.5, -r * .35);
+      g.quadraticCurveTo(r * 1.15, -r * .05, r * 1.1, r * .2); g.quadraticCurveTo(r * .85, 0, r * .7, r * .25); g.quadraticCurveTo(r * .45, 0, r * .15, r * .2); g.closePath(); g.fill();
+      g.restore();
+    }
+    g.beginPath(); g.ellipse(0, 0, r * .28, r * .38, 0, 0, TAU); g.fill();
+    g.beginPath(); g.moveTo(-r * .22, -r * .25); g.lineTo(-r * .12, -r * .55); g.lineTo(-r * .02, -r * .3); g.moveTo(r * .22, -r * .25); g.lineTo(r * .12, -r * .55); g.lineTo(r * .02, -r * .3); g.fill();
+    g.shadowBlur = 0; g.fillStyle = "#ffb347";
+    for (const s of [-1, 1]) { g.beginPath(); g.arc(s * r * .1, -r * .12, r * .06, 0, TAU); g.fill(); }
+  }
+  function candy(g, r, colour) {
+    g.fillStyle = colour;
+    for (const s of [-1, 1]) { g.beginPath(); g.moveTo(s * r * .8, 0); g.lineTo(s * r * 1.5, -r * .55); g.lineTo(s * r * 1.5, r * .55); g.closePath(); g.fill(); }
+    g.beginPath(); g.arc(0, 0, r * .85, 0, TAU); g.fill();
+    g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = Math.max(1, r * .22);
+    g.beginPath(); g.arc(0, 0, r * .5, -.6, 1.2); g.stroke();
+  }
   function star(g, x, y, r, colour) {
     g.fillStyle = colour;
     g.beginPath();

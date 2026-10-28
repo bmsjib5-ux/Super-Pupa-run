@@ -1744,3 +1744,24 @@ button.unit { cursor: crosshair; }
 }
 .cards-formation.is-grid .cards-row-label { white-space: nowrap; }
 @media (orientation: portrait) { .cards-formation.is-grid .cards-row-label { width: 3.3rem; font-size: .7rem; } }
+/* the cut-in of a card in its Halloween costume: night purple and pumpkin, bats across */
+.battle-cutin.is-halloween .cutin-band {
+  --band: 150,60,220;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,160,60,.35) 0 2px, transparent 2px 46px),
+    linear-gradient(180deg, rgba(255,140,30,.75), transparent 20%, transparent 80%, rgba(255,140,30,.75)),
+    linear-gradient(180deg, transparent 38%, rgba(255,190,90,.45) 50%, transparent 62%),
+    linear-gradient(90deg, rgba(var(--band),0), rgba(var(--band),.7) 18%, rgba(60,10,90,.85) 50%, rgba(var(--band),.7) 82%, rgba(var(--band),0));
+  box-shadow: 0 0 2.4rem rgba(255,130,30,.6);
+}
+.battle-cutin.is-halloween .cutin-band::before, .battle-cutin.is-halloween .cutin-band::after {
+  position: absolute; top: 10%; font-size: clamp(1.1rem, 4vw, 2rem); letter-spacing: 1.6em; white-space: nowrap; opacity: .85;
+  animation: hallo-bats var(--time, 950ms) linear forwards;
+}
+.battle-cutin.is-halloween .cutin-band::before { content: "🦇 🎃 🦇 🦇 🎃 🦇"; left: 20%; }
+.battle-cutin.is-halloween .cutin-band::after { content: "🦇 🦇 🎃 🦇"; top: auto; bottom: 8%; left: 48%; animation-direction: reverse; }
+@keyframes hallo-bats { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+.battle-cutin.is-halloween .cutin-art { filter: drop-shadow(0 0 1rem rgba(255,140,30,.9)) drop-shadow(0 0 1.6rem rgba(160,70,255,.7)) drop-shadow(0 .4rem .4rem rgba(0,0,0,.5)); }
+.battle-cutin.is-halloween .cutin-words small { color: #fff3c4; background: linear-gradient(90deg, #ff7a1a, #8a2dd0); }
+.battle-cutin.is-halloween .cutin-words b { --stroke: #3a0a52; text-shadow: 3px 0 0 var(--stroke), -3px 0 0 var(--stroke), 0 3px 0 var(--stroke), 0 -3px 0 var(--stroke), 2px 2px 0 var(--stroke), -2px 2px 0 var(--stroke), 2px -2px 0 var(--stroke), -2px -2px 0 var(--stroke), 0 6px 0 rgba(0,0,0,.4), 0 0 1.4rem rgba(255,140,30,.95); }
+@media (prefers-reduced-motion: reduce) { .battle-cutin.is-halloween .cutin-band::before, .battle-cutin.is-halloween .cutin-band::after { animation: none; } }

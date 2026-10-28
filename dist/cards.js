@@ -2956,7 +2956,7 @@
     v.cutin.replaceChildren(el("span", "cutin-band"), art, words);
     const time = CUTIN_MS * speed();
     v.cutin.style.setProperty("--time", `${Math.round(time)}ms`);
-    v.cutin.className = `battle-cutin is-${side}`;
+    v.cutin.className = `battle-cutin is-${side}${side === "hero" && skinOf(u.id) === "halloween" ? " is-halloween" : ""}`;
     void v.cutin.offsetWidth;
     v.cutin.classList.add("is-on");
     setTimeout(() => v.cutin.classList.remove("is-on"), time);
@@ -2966,7 +2966,8 @@
 
   // Animate what happened, one event at a time.
   async function play(v, events) {
-    let look = "slash";
+    // spooky: the one acting wears its Halloween costume (cards-fx.js draws it so)
+    let look = "slash", spooky = false;
     for (const [index, ev] of events.entries()) {
       // the raid: only what is shown before time runs out counts
       if (v.token.stopped || v.raid?.over) return;
@@ -2978,6 +2979,7 @@
         case "act": {
           const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i];
           const skill = ev.s >= 0 ? u?.skills?.[ev.s] : null;
+          spooky = side === "hero" && Boolean(u) && skinOf(u.id) === "halloween";
           // a hero's second skill and every boss skill get the full show
           const big = !v.stage.arena && E.bigAct(v.state, ev);
           let held = big ? cutIn(v, u, side, skill) : 0;
@@ -2996,7 +2998,7 @@
               const node = v.tiles[next.side]?.[next.i];
               if (node && next.side !== side && !reached.includes(node)) reached.push(node);
             }
-            show.cast(tile, reached, look, side, { skill: ev.s >= 0, big });
+            show.cast(tile, reached, look, side, { skill: ev.s >= 0, big, spooky });
             if (MELEE.has(look) && reached.length === 1) dash(v, tile, reached[0]);
           }
           if (side === "hero" && ev.s >= 0) v.queue = v.queue.filter(q => q.i !== ev.i);
@@ -3010,14 +3012,14 @@
         case "hit":
           paintUnit(side, ev.i, ev.u);
           if (tile) { tile.classList.remove("is-hit", "is-crit-hit"); void tile.offsetWidth; tile.classList.add("is-hit"); if (ev.crit) tile.classList.add("is-crit-hit"); }
-          if (tile) show?.impact(tile, look, ev.crit, (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]?.boss);
+          if (tile) show?.impact(tile, look, ev.crit, (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]?.boss, spooky);
           pop(tile, fmt(ev.v), ev.crit ? "is-crit" : "is-dmg", ev.crit ? "คริติคอล!" : null);
           tone(ev.crit ? 180 : 140, .07, "square", ev.crit ? .06 : .04);
           if (ev.ko) { tone(110, .25, "sawtooth", .05); const u = (side === "hero" ? v.state.heroes : v.state.foes)[ev.i]; if (u) announce(`${u.name} ล้มแล้ว`); }
           break;
-        case "heal": paintUnit(side, ev.i, ev.u); if (tile) show?.heal(tile, look === "leaf"); if (ev.v > 0) { pop(tile, `+${fmt(ev.v)}`, "is-heal"); tone(880, .08, "sine", .04); } break;
-        case "shield": paintUnit(side, ev.i, ev.u); if (tile) show?.shield(tile); pop(tile, "เกราะ", "is-shield"); break;
-        case "fx": paintUnit(side, ev.i, ev.u); if (tile && ["atkUp", "defUp", "defDown"].includes(ev.k)) show?.buff(tile, ev.k === "defDown"); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
+        case "heal": paintUnit(side, ev.i, ev.u); if (tile) show?.heal(tile, look === "leaf", spooky); if (ev.v > 0) { pop(tile, `+${fmt(ev.v)}`, "is-heal"); tone(880, .08, "sine", .04); } break;
+        case "shield": paintUnit(side, ev.i, ev.u); if (tile) show?.shield(tile, spooky); pop(tile, "เกราะ", "is-shield"); break;
+        case "fx": paintUnit(side, ev.i, ev.u); if (tile && ["atkUp", "defUp", "defDown"].includes(ev.k)) show?.buff(tile, ev.k === "defDown", spooky); if (ev.k === "stun") pop(tile, "มึนงง", "is-miss"); else if (ev.k === "cleanse") pop(tile, "ล้างสถานะ", "is-heal"); break;
         case "burn": paintUnit(side, ev.i, ev.u); if (tile) show?.impact(tile, "fire", false, false); pop(tile, `🔥${fmt(ev.v)}`, "is-burn"); break;
         case "status": paintUnit(side, ev.i, ev.u); break;
         case "rise":
