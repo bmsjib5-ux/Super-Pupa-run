@@ -8595,8 +8595,16 @@
   for (const type of ["contextmenu", "selectstart", "dragstart", "dblclick", "gesturestart", "gesturechange"]) {
     shell.addEventListener(type, (event) => event.preventDefault());
   }
+  // A finger may still scroll anything that really scrolls (the mode list,
+  // level lists, sheets), but not the page or a board being played.
+  const scrolls = (node) => {
+    for (let el = node; el && el !== shell; el = el.parentElement) {
+      if (el.scrollHeight > el.clientHeight + 1 && /^(auto|scroll)$/.test(getComputedStyle(el).overflowY)) return true;
+    }
+    return false;
+  };
   shell.addEventListener("touchmove", (event) => {
-    if (event.cancelable && !event.target.closest(".shop-list, .news-list, .cards-scroll")) event.preventDefault();
+    if (event.cancelable && !event.target.closest(".shop-list, .news-list, .cards-scroll") && !scrolls(event.target)) event.preventDefault();
   }, { passive: false });
   let lastTouchEnd = 0;
   shell.addEventListener("touchend", (event) => {
