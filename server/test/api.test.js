@@ -247,6 +247,15 @@ test("merge: team sets come from the device, kept when a device has none", () =>
   assert.equal(c.cards.set, 1);
 });
 
+test("merge: the potion sort keeps each level's best stars", () => {
+  const a = mergeSave(null, cleanSave(device(0, { potion: { stars: { 1: 3, 2: 1, 3: 9 } } })), 0);
+  assert.deepEqual(a.potion, { stars: { 1: 3, 2: 1, 3: 3 } });
+  const b = mergeSave(a, cleanSave(device(0, { potion: { stars: { 1: 2, 2: 3, 4: 1 } } })), 0);
+  assert.deepEqual(b.potion.stars, { 1: 3, 2: 3, 3: 3, 4: 1 });
+  // a device without it keeps the account's
+  assert.deepEqual(mergeSave(b, cleanSave(device(0, {})), 0).potion.stars, b.potion.stars);
+});
+
 test("merge: the match mode keeps each level's best stars and score", () => {
   const a = mergeSave(null, cleanSave(device(0, { match: { stars: { 1: 3, 2: 1, "bad key": 9 }, best: { 1: 1500, 2: 400 } } })), 0);
   assert.deepEqual(a.match, { stars: { 1: 3, 2: 1 }, best: { 1: 1500, 2: 400 } });

@@ -13,20 +13,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261028a">
-    <link rel="stylesheet" href="cards.css?v=20261028a">
-    <link rel="stylesheet" href="match.css?v=20261028a">
-    <script src="cards-engine.js?v=20261028a" defer></script>
-    <script src="game.js?v=20261028a" defer></script>
-    <script src="cards-fx.js?v=20261028a" defer></script>
-    <script src="cards-3d.js?v=20261028a" defer></script>
-    <script src="cards.js?v=20261028a" defer></script>
-    <script src="match-engine.js?v=20261028a" defer></script>
-    <script src="match.js?v=20261028a" defer></script>
-    <script type="module" src="pupa3d.js?v=20261028a"></script>
+    <link rel="stylesheet" href="styles.css?v=20261101a">
+    <link rel="stylesheet" href="cards.css?v=20261101a">
+    <link rel="stylesheet" href="match.css?v=20261101a">
+    <link rel="stylesheet" href="potion.css?v=20261101a">
+    <script src="cards-engine.js?v=20261101a" defer></script>
+    <script src="game.js?v=20261101a" defer></script>
+    <script src="cards-fx.js?v=20261101a" defer></script>
+    <script src="cards-3d.js?v=20261101a" defer></script>
+    <script src="cards.js?v=20261101a" defer></script>
+    <script src="match-engine.js?v=20261101a" defer></script>
+    <script src="match.js?v=20261101a" defer></script>
+    <script src="potion-engine.js?v=20261101a" defer></script>
+    <script src="potion.js?v=20261101a" defer></script>
+    <script type="module" src="pupa3d.js?v=20261101a"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
     <script src="config.js?v=20261011a"></script>
-    <script type="module" src="account.js?v=20261028a"></script>
+    <script type="module" src="account.js?v=20261101a"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -221,6 +224,11 @@
                 <span class="mode-picture mode-tiles"><img src="assets/chantra-hero.webp" alt=""><img src="assets/chantra-hero.webp" alt=""><img src="assets/jibjib-hero.webp" alt=""><img src="assets/jibjib-hero.webp" alt=""></span>
                 <b>จับคู่การ์ด</b>
                 <span>จับคู่การ์ดหน้าเหมือนกันก่อนหมดเวลา 30 ด่าน</span>
+              </button>
+              <button class="mode-item mode-potion" type="button" data-mode="potion">
+                <span class="mode-picture mode-flasks" aria-hidden="true"><i style="--a:#ff5fae;--b:#47b8ff"></i><i style="--a:#ffd23a;--b:#ffd23a"></i><i style="--a:#3fe0a0;--b:#a35cff"></i></span>
+                <b>ห้องยาวิเศษ Pupa</b>
+                <span>เทน้ำยาเรียงสีให้ครบทุกขวด ใช้ความคิด 40 ด่าน</span>
                 <i class="mode-new">ใหม่!</i>
               </button>
             </div>
@@ -259,6 +267,8 @@
           </div>
         </div>
 
+        <!-- The potion sort: filled in by potion.js. -->
+        <div id="potionScreen" class="overlay shop-overlay potion-overlay" role="dialog" aria-modal="true" aria-labelledby="potionTitle" hidden></div>
         <!-- The match mode: filled in by match.js. -->
         <div id="matchScreen" class="overlay shop-overlay match-overlay" role="dialog" aria-modal="true" aria-labelledby="matchTitle" hidden></div>
 

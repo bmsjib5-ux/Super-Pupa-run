@@ -675,6 +675,7 @@ button { touch-action: manipulation; }
 .news-scene-7 b { color: #fff4c4; filter: none; text-shadow: 0 0 .8rem rgba(255,120,50,.95), 0 .15rem .6rem rgba(0,0,0,.65); }
 .news-scene-6 b { color: #fff4b0; filter: none; text-shadow: 0 0 .8rem rgba(255,127,204,.9), 0 .15rem .6rem rgba(0,0,0,.65); }
 .news-picture .news-boss { filter: drop-shadow(0 0 .8rem rgba(255,80,120,.7)); }
+.news-picture .news-flasks { width: 86%; height: 78%; }
 .news-picture .news-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4%; width: 86%; height: 86%; }
 .news-picture .news-form span { display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.18); border-radius: 12%; background: rgba(255,255,255,.04); }
 .news-picture .news-form span:has(img) { border: 1px solid rgba(255,215,106,.6); background: radial-gradient(circle, rgba(255,215,106,.22), transparent 70%); }
@@ -1159,11 +1160,12 @@ button { touch-action: manipulation; }
 
 /* ---- Choosing a mode ---- */
 .mode-overlay { z-index: 22; text-align: center; background: radial-gradient(circle at 50% 20%, rgba(99,56,125,.9), rgba(8,4,24,.94) 70%); }
-.mode-card { width: min(58rem, 100%); max-height: 100%; overflow-y: auto; padding: .5rem; }
+.mode-card { width: min(68rem, 100%); max-height: 100%; overflow-y: auto; padding: .5rem; }
 .mode-eyebrow { margin: 0; color: var(--gold); font-size: .75rem; letter-spacing: .2em; }
 .mode-card h2 { margin: .2rem 0 1rem; font-size: clamp(1.4rem, 4vw, 2.2rem); text-shadow: 0 .15em 0 #421244; }
-.mode-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.6rem, 2vw, 1.2rem); }
-@media (max-width: 52rem) { .mode-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mode-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(.6rem, 1.6vw, 1.1rem); }
+@media (max-width: 62rem) { .mode-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 46rem) { .mode-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mode-item {
   position: relative;
   display: flex;
@@ -1183,6 +1185,13 @@ button { touch-action: manipulation; }
 .mode-runner { --tint: rgba(90,168,255,.28); }
 .mode-cards { --tint: rgba(255,215,106,.28); border-color: rgba(255,215,106,.55); }
 .mode-match { --tint: rgba(127,227,255,.26); border-color: rgba(127,227,255,.55); }
+.mode-potion { --tint: rgba(195,110,255,.32); border-color: rgba(255,140,220,.6); }
+/* three glass flasks of layered potion */
+.mode-picture.mode-flasks { align-items: flex-end; gap: 9%; padding-bottom: .3rem; }
+.mode-flasks i { position: relative; width: 20%; height: 82%; border: 2px solid rgba(255,255,255,.75); border-top-width: 3px; border-radius: .4rem .4rem 1.4rem 1.4rem; background: linear-gradient(0deg, var(--a) 0 36%, var(--b) 36% 72%, rgba(255,255,255,.08) 72%); box-shadow: 0 0 1rem rgba(255,140,220,.4), inset 0 0 .5rem rgba(255,255,255,.25); }
+.mode-flasks i:nth-child(2) { height: 92%; box-shadow: 0 0 1.2rem rgba(255,215,80,.6), inset 0 0 .5rem rgba(255,255,255,.25); }
+.mode-flasks i::before { content: ""; position: absolute; top: -.55rem; left: 50%; width: 60%; height: .5rem; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #c98a52, #8a5428); transform: translateX(-50%); }
+.mode-flasks i::after { content: ""; position: absolute; top: 10%; bottom: 14%; left: 16%; width: 14%; border-radius: 999px; background: rgba(255,255,255,.45); }
 /* four picture tiles, two pairs */
 .mode-picture.mode-tiles { display: grid; grid-template-columns: repeat(2, auto); grid-template-rows: repeat(2, minmax(0, 1fr)); justify-content: center; align-items: center; gap: .35rem; padding: .3rem 0; }
 .mode-picture.mode-tiles img { width: auto; height: 100%; max-width: none; aspect-ratio: 1; object-fit: contain; border-radius: 18%; background: linear-gradient(160deg, #fffaf0, #f3e4ff); box-shadow: inset 0 0 0 2px rgba(255,255,255,.9), 0 3px 0 #8a6ab8; filter: none; }
