@@ -88,8 +88,13 @@
     showHome();
     tone(659, .07, "triangle", .04);
     homeButton.focus();
+    // the first visit shows how to play
+    let seen = true;
+    try { seen = localStorage.getItem(HELP_KEY) === "1"; } catch { /* no storage: show it each time */ seen = false; }
+    if (!seen) showHelp(true);
   }
   function goHome() {
+    closeHelp();
     stopPlay();
     isShown = false;
     screen.hidden = true;
@@ -99,7 +104,8 @@
   function key(event) {
     if (event.key !== "Escape") return;
     event.preventDefault();
-    if (play) leave();
+    if (help) closeHelp();
+    else if (play) leave();
     else goHome();
   }
 
@@ -130,6 +136,9 @@
       actions.append(button("primary-button logic-go", "▶ เล่นปริศนาวันนี้", () => startDaily(false)));
     }
     card.append(top, status, actions);
+    const how = el("div", "logic-how");
+    how.append(el("span", null, "ระบายช่องให้ตรงกับตัวเลขข้างแถวและบนคอลัมน์ ตัวเลข = จำนวนช่องระบายติดกัน แก้เสร็จจะได้ภาพตัวละคร"), button("logic-how-go", "❓ วิธีเล่น", () => showHelp(false)));
+    card.append(how);
     // the day's ranking
     const rank = el("div", "logic-rank");
     rank.append(el("b", "logic-rank-title", "🏆 อันดับวันนี้ (เวลาเร็วที่สุด)"));
@@ -206,7 +215,8 @@
     const cross = button("logic-tool logic-mode", "✖", () => setMode("cross"), "กากบาทช่องว่าง");
     const undo = button("logic-tool", "↶", () => useUndo(), "ย้อนกลับ");
     const hint = button("logic-tool", null, () => useHint(), "คำใบ้");
-    bar.append(name, time, pen, cross, undo, hint);
+    const ask = button("logic-tool", "❓", () => showHelp(false), "วิธีเล่น");
+    bar.append(name, time, pen, cross, undo, hint, ask);
     const wrap = el("div", "logic-wrap");
     const gridEl = el("div", "logic-grid");
     wrap.append(gridEl);
@@ -555,6 +565,86 @@
       host.append(bit);
       setTimeout(() => bit.remove(), 2600);
     }
+  }
+
+  // ---- How to play ----
+  // A sheet over the screen: what the numbers mean, worked on little
+  // rows, the two tricks that solve most lines, the controls, and what the
+  // daily puzzle and the practice ladder are.
+  const HELP_KEY = "superPupaLogicHelp";
+  let help = null;
+  // a row of example cells: "1" filled, "x" crossed, "s" sure (just found), "." blank
+  function sample(clue, cells, note) {
+    const row = el("div", "logic-ex");
+    const nums = el("span", "logic-ex-clue");
+    for (const v of clue) nums.append(el("b", null, String(v)));
+    const line = el("span", "logic-ex-cells");
+    for (const ch of cells) line.append(el("i", ch === "1" ? "is-filled" : ch === "x" ? "is-crossed" : ch === "s" ? "is-sure" : ""));
+    row.append(nums, line);
+    if (note) row.append(el("small", null, note));
+    return row;
+  }
+  function showHelp(first) {
+    closeHelp();
+    const sheet = el("div", "logic-help");
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    sheet.setAttribute("aria-label", "วิธีเล่น Pupa Logic");
+    const box = el("div", "logic-help-box");
+    const close = button("icon-button logic-help-close", "✕", () => closeHelp(), "ปิดวิธีเล่น");
+    const step = (no, titleText, ...parts) => {
+      const sec = el("section", "logic-help-step");
+      const h = el("h4");
+      h.append(el("span", "logic-help-no", String(no)), document.createTextNode(titleText));
+      sec.append(h, ...parts);
+      return sec;
+    };
+    const p = (text) => el("p", null, text);
+    const list = (className, items) => {
+      const ul = el("ul", className);
+      for (const [icon, text] of items) { const li = el("li"); li.append(el("b", null, icon), document.createTextNode(text)); ul.append(li); }
+      return ul;
+    };
+    box.append(close, el("h3", null, "❓ วิธีเล่น Pupa Logic"), p("ปริศนาภาพตัวเลข (โนโนแกรม): ระบายช่องในตารางให้ถูก แล้วภาพตัวละครในเกมจะปรากฏออกมา ใช้แค่เหตุผล ไม่ต้องเดา"),
+      step(1, "ตัวเลขคือกลุ่มช่องที่ระบายติดกัน",
+        p("ตัวเลขหน้าแถว (และบนคอลัมน์) บอกว่าแถวนั้นมีช่องระบายติดกันกี่ช่อง เรียงตามลำดับจากซ้ายไปขวา (หรือบนลงล่าง)"),
+        sample([3, 1], "111.1.", "3 ช่องติดกัน แล้วอีก 1 ช่อง"),
+        p("ถ้ามีหลายตัวเลข แต่ละกลุ่มต้องมีช่องว่างคั่นอย่างน้อย 1 ช่อง"),
+        sample([2, 2], "11x11", "2 กับ 2 ใน 5 ช่อง มีแบบเดียวพอดี"),
+        sample([0], "xxxxx", "เลข 0 = ทั้งแถวว่าง กากบาทได้เลย")),
+      step(2, "เทคนิค: ช่องที่ทับกัน",
+        p("ลองเลื่อนกลุ่มไปชิดซ้ายสุด และชิดขวาสุด ช่องที่ระบายตรงกันทั้งสองแบบ ระบายได้แน่นอน"),
+        sample([7], "1111111...", "ชิดซ้ายสุด"),
+        sample([7], "...1111111", "ชิดขวาสุด"),
+        sample([7], "...ssss...", "4 ช่องกลางระบายแน่นอน")),
+      step(3, "เทคนิค: กากบาทช่องที่ว่างแน่ ๆ",
+        p("เมื่อแถวไหนครบตามตัวเลขแล้ว ช่องที่เหลือในแถวนั้นว่างทั้งหมด ใส่ ✖ ไว้กันลืม แล้วใช้ข้อมูลนี้ไปช่วยแก้คอลัมน์ ตัวเลขที่ครบแล้วจะจางลงให้เห็น"),
+        sample([1, 2], "x1x11x", "ครบแล้ว ช่องอื่นว่างหมด")),
+      step(4, "วิธีกด",
+        list("logic-help-keys", [
+          ["✏️", "แตะเพื่อระบาย แตะซ้ำเพื่อลบ ลากนิ้วเพื่อระบายหลายช่องในแถวหรือคอลัมน์เดียว"],
+          ["✖", "สลับเป็นโหมดกากบาท ใช้มาร์กช่องที่ว่างแน่ ๆ (บนคอมคลิกขวาก็ได้)"],
+          ["↶", "ย้อนกลับ ไม่จำกัดครั้ง"],
+          ["💡", "คำใบ้ ระบายช่องที่ถูกให้ 1 ช่อง (ปริศนาประจำวันบวกเวลา 30 วินาที)"]
+        ])),
+      step(5, "ปริศนาประจำวัน และฝึกฝน",
+        p("📅 ปริศนาประจำวัน: วันละ 1 ข้อ ทุกคนได้โจทย์เดียวกัน (จันทร์–ศุกร์ 10×10 เสาร์–อาทิตย์ 15×15) เข้าสู่ระบบแล้วจับเวลาจัดอันดับคนแก้เร็วที่สุดของวัน เวลาเริ่มนับตั้งแต่เปิดโจทย์ เล่นทุกวันต่อเนื่องได้ 🔥 และเพชรเพิ่มขึ้น"),
+        p("🧩 ฝึกฝน: 30 ด่าน ตั้งแต่ 5×5 ไปจนถึง 15×15 ไม่ใช้คำใบ้ได้ ★★★ เริ่มจากด่านเล็กก่อนจะค่อย ๆ เข้าใจ")));
+    const actions = el("div", "title-actions");
+    if (first && !play) actions.append(button("primary-button", "ลองด่านฝึกแรก 5×5 ▶", () => { closeHelp(); startPractice(1); }));
+    actions.append(button(first && !play ? "secondary-button" : "primary-button", "เข้าใจแล้ว", () => closeHelp()));
+    box.append(actions);
+    sheet.append(box);
+    sheet.addEventListener("click", (event) => { if (event.target === sheet) closeHelp(); });
+    screen.append(sheet);
+    help = sheet;
+    try { localStorage.setItem(HELP_KEY, "1"); } catch { /* fine */ }
+    close.focus({ preventScroll: true });
+    tone(659, .06, "triangle", .04);
+  }
+  function closeHelp() {
+    help?.remove();
+    help = null;
   }
 
   // signing in or out changes the ranking shown
