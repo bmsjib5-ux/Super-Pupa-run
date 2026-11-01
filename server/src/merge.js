@@ -145,6 +145,8 @@ export function cleanSave(raw) {
     potion: { stars: intMap(raw.potion?.stars, 3) },
     // the block jam: best stars per level
     blocks: { stars: intMap(raw.blocks?.stars, 3) },
+    // the screw puzzle: best stars per level
+    screws: { stars: intMap(raw.screws?.stars, 3) },
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
@@ -217,6 +219,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     match: { stars: maxMap(current.match?.stars, incoming.match?.stars), best: maxMap(current.match?.best, incoming.match?.best) },
     potion: { stars: maxMap(current.potion?.stars, incoming.potion?.stars) },
     blocks: { stars: maxMap(current.blocks?.stars, incoming.blocks?.stars) },
+    screws: { stars: maxMap(current.screws?.stars, incoming.screws?.stars) },
     shop
   };
 }

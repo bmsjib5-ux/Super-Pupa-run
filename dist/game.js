@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen || matchOpen || potionOpen || blocksOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6017,6 +6017,8 @@
       if (remote.potion || potion) save.potion = { stars: most(potion?.stars, remote.potion?.stars) };
       // and the block jam's
       if (remote.blocks || blocks) save.blocks = { stars: most(blocks?.stars, remote.blocks?.stars) };
+      // and the screw puzzle's
+      if (remote.screws || screws) save.screws = { stars: most(screws?.stars, remote.screws?.stars) };
       // merged into the same object: the card screen's open buttons hold
       // it, and a tap after a sync must still land in the save
       const merged = mergeCards(cards, remote.cards, !full);
@@ -6065,6 +6067,13 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // and the screw puzzle (screws.js)
+    setScrewsOpen(open) {
+      screwsOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
@@ -6073,6 +6082,7 @@
   let matchOpen = false;
   let potionOpen = false;
   let blocksOpen = false;
+  let screwsOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6504,7 +6514,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards", "match", "potion", "blocks"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6544,6 +6554,7 @@
     if (mode === "match") { window.PupaMatch?.open(); return; }
     if (mode === "potion") { window.PupaPotion?.open(); return; }
     if (mode === "blocks") { window.PupaBlocks?.open(); return; }
+    if (mode === "screws") { window.PupaScrews?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6559,10 +6570,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-11-01b";
+  const NEWS_VERSION = "2026-11-01c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "🔩 คลายน็อตกลไก · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวคลายน็อตที่ติดชาร์ตปี 2026 แผ่นไม้และแผ่นทองเหลืองซ้อนกันหลายชั้น ยึดด้วยน็อตหลากสี แตะน็อตที่ไม่มีแผ่นด้านบนทับเพื่อคลายออก น็อตจะลงกล่องสีเดียวกัน (เปิดทีละ 2 กล่อง กล่องละ 3 ตัว กล่องเต็มแล้วกล่องถัดไปจะมาแทน) ถ้ายังไม่มีกล่องสีนั้นน็อตจะไปรอที่ช่องพัก 5 ช่อง ช่องพักเต็มเมื่อไรแพ้ แผ่นที่ไม่เหลือน็อตจะร่วงลง เคลียร์ให้หมดกระดาน คิดลำดับให้ดีว่าจะคลายตัวไหนก่อน ยิ่งด่านสูงแผ่นยิ่งเยอะ (สูงสุด 19 แผ่น น็อต 36 ตัว 6 สี) ทุกด่านแก้ได้แน่นอน มีย้อนกลับ ↶ 3 ครั้ง เพิ่มช่องพัก ➕ สว่าน 🪛 คลายน็อตที่ถูกทับ และคำใบ้ 💡 ไม่ใช้ตัวช่วยเลยได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "screws", open: () => { closeNews(); window.PupaScrews?.open(); } },
     { tag: "โหมดใหม่", title: "🧱 ปลดล็อกบล็อกเห็ด · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวลากบล็อกออกประตูสีที่ติดชาร์ตปี 2026 ลากบล็อกเยลลี่ทีละช่องผ่านช่องว่าง ไปออกประตูขอบกระดานที่สีเดียวกัน บล็อกต้องกว้างไม่เกินประตูและไม่มีอะไรขวางทางออก คิดลำดับให้ดีเพราะบล็อกขวางกันเอง ยิ่งด่านสูงกระดานยิ่งใหญ่ (สูงสุด 8×9 บล็อก 18 ชิ้น 7 สี) มีหินขวางทาง 🪨 บล็อกน้ำแข็ง ❄ ที่ละลายเมื่อบล็อกอื่นออกครบตามตัวเลข และบล็อกที่เลื่อนได้ทางเดียว ↔ ↕ ทุกด่านแก้ได้แน่นอน มีค้อน 🔨 ทุบบล็อก หยุดเวลา ❄ 15 วินาที และคำใบ้ 💡 เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "blocks", open: () => { closeNews(); window.PupaBlocks?.open(); } },
     { tag: "โหมดใหม่", title: "🧪 ห้องยาวิเศษ Pupa · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวเทน้ำยาเรียงสีที่มาแรงปี 2026 แตะขวดที่จะเท แล้วแตะขวดปลายทาง เทได้เฉพาะลงขวดว่างหรือบนน้ำยาสีเดียวกัน ทำให้ทุกขวดเหลือสีเดียว ขวดละ 4 ชั้น ยิ่งด่านสูงยิ่งมีสีมาก (สูงสุด 11 สี) บางด่านซ่อนชั้นล่างไว้ ❓ จนกว่าจะเทออก บางด่านมีขวดปิดจุก 🔒 ที่จะเปิดเมื่อเรียงสีที่กำหนดครบ 1 ขวด มีปุ่มย้อนกลับ ↶ 5 ครั้ง เพิ่มขวดเปล่า 🧪 1 ครั้ง และคำใบ้ 💡 3 ครั้งต่อด่าน ทุกด่านแก้ได้แน่นอน เทไม่เกินเป้าโดยไม่ใช้ขวดเสริมได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "potion", open: () => { closeNews(); window.PupaPotion?.open(); } },
     { tag: "เอฟเฟกต์ใหม่", title: "🎃 ชุดฮาโลวีน · เอฟเฟกต์สกิลธีมฮาโลวีน", text: "การ์ดที่ใส่ชุดฮาโลวีนได้เอฟเฟกต์สกิลชุดใหม่ทั้งหมด: กระสุนเวทกลายเป็นผีน้อยลอยไปหาศัตรู ดาวตกกลายเป็นฟักทองแจ็คโอแลนเทิร์น สกิลลมและคลื่นเสียงกลายเป็นฝูงค้างคาว สายฟ้าและวงเวทเป็นสีม่วงส้ม ไฟเป็นไฟผีสีม่วงเขียว ตีโดนแล้วมีควันม่วงกับผีลอยขึ้น คริติคอลมีฟักทองยิ้มกับลูกอมกระจาย ฮีลเป็นฝนลูกอม เกราะเป็นฟองสีส้มกับค้างคาว ทุกสกิลมีค้างคาวบินออกมา และสกิลพิเศษมีคัตอินแถบม่วงส้มพร้อมค้างคาวและฟักทอง ใส่ชุดได้ที่หน้าการ์ด แท็บคอสตูม", image: "hallocostume", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
@@ -6752,6 +6764,13 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "screws") {
+      // the mode picker's screwed-down bars, bigger
+      const pic = document.createElement("div");
+      pic.className = "mode-picture mode-screwpic news-screws";
+      pic.innerHTML = '<i class="is-a"><b style="--c:#ff4d5e"></b><b style="--c:#3d8bff"></b></i><i class="is-b"><b style="--c:#ffcc29"></b><b style="--c:#3fcf5a"></b></i><i class="is-disc"><b style="--c:#a35cff"></b></i>';
+      return pic;
     }
     if (kind === "blocks") {
       // jelly blocks on a little board, as on the mode picker
@@ -8535,6 +8554,7 @@
     if (matchOpen) { window.PupaMatch?.key?.(event); return; }
     if (potionOpen) { window.PupaPotion?.key?.(event); return; }
     if (blocksOpen) { window.PupaBlocks?.key?.(event); return; }
+    if (screwsOpen) { window.PupaScrews?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
