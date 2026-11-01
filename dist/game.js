@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen || matchOpen || potionOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen || potionOpen || blocksOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6015,6 +6015,8 @@
       if (remote.match || match) save.match = { stars: most(match?.stars, remote.match?.stars), best: most(match?.best, remote.match?.best) };
       // the potion sort's best stars, the higher of each
       if (remote.potion || potion) save.potion = { stars: most(potion?.stars, remote.potion?.stars) };
+      // and the block jam's
+      if (remote.blocks || blocks) save.blocks = { stars: most(blocks?.stars, remote.blocks?.stars) };
       // merged into the same object: the card screen's open buttons hold
       // it, and a tap after a sync must still land in the save
       const merged = mergeCards(cards, remote.cards, !full);
@@ -6056,6 +6058,13 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // and the block jam (blocks.js)
+    setBlocksOpen(open) {
+      blocksOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
@@ -6063,6 +6072,7 @@
   let cardsOpen = false;
   let matchOpen = false;
   let potionOpen = false;
+  let blocksOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6494,7 +6504,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards", "match", "potion"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match", "potion", "blocks"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6533,6 +6543,7 @@
     if (mode === "cards") { window.PupaCards?.open(); return; }
     if (mode === "match") { window.PupaMatch?.open(); return; }
     if (mode === "potion") { window.PupaPotion?.open(); return; }
+    if (mode === "blocks") { window.PupaBlocks?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6548,10 +6559,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-11-01a";
+  const NEWS_VERSION = "2026-11-01b";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "🧱 ปลดล็อกบล็อกเห็ด · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวลากบล็อกออกประตูสีที่ติดชาร์ตปี 2026 ลากบล็อกเยลลี่ทีละช่องผ่านช่องว่าง ไปออกประตูขอบกระดานที่สีเดียวกัน บล็อกต้องกว้างไม่เกินประตูและไม่มีอะไรขวางทางออก คิดลำดับให้ดีเพราะบล็อกขวางกันเอง ยิ่งด่านสูงกระดานยิ่งใหญ่ (สูงสุด 8×9 บล็อก 18 ชิ้น 7 สี) มีหินขวางทาง 🪨 บล็อกน้ำแข็ง ❄ ที่ละลายเมื่อบล็อกอื่นออกครบตามตัวเลข และบล็อกที่เลื่อนได้ทางเดียว ↔ ↕ ทุกด่านแก้ได้แน่นอน มีค้อน 🔨 ทุบบล็อก หยุดเวลา ❄ 15 วินาที และคำใบ้ 💡 เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "blocks", open: () => { closeNews(); window.PupaBlocks?.open(); } },
     { tag: "โหมดใหม่", title: "🧪 ห้องยาวิเศษ Pupa · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวเทน้ำยาเรียงสีที่มาแรงปี 2026 แตะขวดที่จะเท แล้วแตะขวดปลายทาง เทได้เฉพาะลงขวดว่างหรือบนน้ำยาสีเดียวกัน ทำให้ทุกขวดเหลือสีเดียว ขวดละ 4 ชั้น ยิ่งด่านสูงยิ่งมีสีมาก (สูงสุด 11 สี) บางด่านซ่อนชั้นล่างไว้ ❓ จนกว่าจะเทออก บางด่านมีขวดปิดจุก 🔒 ที่จะเปิดเมื่อเรียงสีที่กำหนดครบ 1 ขวด มีปุ่มย้อนกลับ ↶ 5 ครั้ง เพิ่มขวดเปล่า 🧪 1 ครั้ง และคำใบ้ 💡 3 ครั้งต่อด่าน ทุกด่านแก้ได้แน่นอน เทไม่เกินเป้าโดยไม่ใช้ขวดเสริมได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "potion", open: () => { closeNews(); window.PupaPotion?.open(); } },
     { tag: "เอฟเฟกต์ใหม่", title: "🎃 ชุดฮาโลวีน · เอฟเฟกต์สกิลธีมฮาโลวีน", text: "การ์ดที่ใส่ชุดฮาโลวีนได้เอฟเฟกต์สกิลชุดใหม่ทั้งหมด: กระสุนเวทกลายเป็นผีน้อยลอยไปหาศัตรู ดาวตกกลายเป็นฟักทองแจ็คโอแลนเทิร์น สกิลลมและคลื่นเสียงกลายเป็นฝูงค้างคาว สายฟ้าและวงเวทเป็นสีม่วงส้ม ไฟเป็นไฟผีสีม่วงเขียว ตีโดนแล้วมีควันม่วงกับผีลอยขึ้น คริติคอลมีฟักทองยิ้มกับลูกอมกระจาย ฮีลเป็นฝนลูกอม เกราะเป็นฟองสีส้มกับค้างคาว ทุกสกิลมีค้างคาวบินออกมา และสกิลพิเศษมีคัตอินแถบม่วงส้มพร้อมค้างคาวและฟักทอง ใส่ชุดได้ที่หน้าการ์ด แท็บคอสตูม", image: "hallocostume", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
     { tag: "ระบบใหม่", title: "📐 แผนการยืน 9 ช่อง · หน้า กลาง หลัง", text: "จัดทีมศึกการ์ดบนสนาม 3×3 ได้แล้ว เลือกแผนได้ 6 แบบ เน้นต่างกัน: สมดุล (แผนสองแนว แผนดาวห้าแฉก) ตั้งรับ (แผนกำแพงเหล็ก แผนกระดองเต่า) และโจมตี (แผนหัวลูกศร แผนปีกอินทรี) แต่ละแผนเปิดช่องยืนต่างกันและเพิ่มค่าให้การ์ดทั้งทีม เช่น พลังชีวิต โจมตี ป้องกัน ความเร็ว คริติคอล อัปเลเวลแผนได้ถึง Lv 30 ด้วยเหรียญและแร่ ยิ่งเลเวลสูงยิ่งเพิ่มมาก แถวหน้าโดนตีบ่อยที่สุด แถวกลางรองลงมา สกิลที่โจมตีแถวหลังจะโดนแถวกลางด้วย แผนใหม่เปิดตามด่านที่ผ่าน (ด่าน 5, 10, 20, 30, 45) ใช้ในด่าน หอคอย และด่านประจำวัน รวมถึงตีมังกรจัดอันดับ ทีมเซ็ตแต่ละทีมจำแผนของตัวเองไว้ด้วย", image: "formation", open: () => { closeNews(); window.PupaCards?.openTeam(); } },
@@ -6740,6 +6752,18 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "blocks") {
+      // jelly blocks on a little board, as on the mode picker
+      const board = document.createElement("div");
+      board.className = "mode-picture mode-jam news-jam";
+      for (const [c, area] of [["#ff4d5e", "1/1/2/3"], ["#3d8bff", "1/3/3/4"], ["#ffcc29", "2/1/3/2"], ["#3fcf5a", "2/2/4/3"], ["#a35cff", "3/3/4/4"]]) {
+        const block = document.createElement("i");
+        block.style.setProperty("--c", c);
+        block.style.gridArea = area;
+        board.append(block);
+      }
+      return board;
     }
     if (kind === "potion") {
       // three flasks of layered potion, as on the mode picker
@@ -8510,6 +8534,7 @@
     if (cardsOpen) { window.PupaCards?.key?.(event); return; }
     if (matchOpen) { window.PupaMatch?.key?.(event); return; }
     if (potionOpen) { window.PupaPotion?.key?.(event); return; }
+    if (blocksOpen) { window.PupaBlocks?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }

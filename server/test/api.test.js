@@ -254,6 +254,9 @@ test("merge: the potion sort keeps each level's best stars", () => {
   assert.deepEqual(b.potion.stars, { 1: 3, 2: 3, 3: 3, 4: 1 });
   // a device without it keeps the account's
   assert.deepEqual(mergeSave(b, cleanSave(device(0, {})), 0).potion.stars, b.potion.stars);
+  // the block jam's the same way
+  const c = mergeSave(b, cleanSave(device(0, { blocks: { stars: { 1: 2, 5: 3 } } })), 0);
+  assert.deepEqual(mergeSave(c, cleanSave(device(0, { blocks: { stars: { 1: 3, 5: 1 } } })), 0).blocks.stars, { 1: 3, 5: 3 });
 });
 
 test("merge: the match mode keeps each level's best stars and score", () => {
