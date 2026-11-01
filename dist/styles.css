@@ -679,6 +679,7 @@ button { touch-action: manipulation; }
 .news-picture .news-jam { width: auto; height: 78%; }
 .news-picture .news-screws { width: 90%; height: 80%; }
 .news-picture .news-nono { width: auto; height: 74%; }
+.news-picture .news-iso { width: 90%; height: 82%; }
 .news-picture .news-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4%; width: 86%; height: 86%; }
 .news-picture .news-form span { display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.18); border-radius: 12%; background: rgba(255,255,255,.04); }
 .news-picture .news-form span:has(img) { border: 1px solid rgba(255,215,106,.6); background: radial-gradient(circle, rgba(255,215,106,.22), transparent 70%); }
@@ -1194,6 +1195,10 @@ button { touch-action: manipulation; }
 .mode-blocks { --tint: rgba(110,220,130,.3); border-color: rgba(140,240,150,.6); }
 .mode-screws { --tint: rgba(230,160,80,.32); border-color: rgba(240,180,100,.65); }
 .mode-logic { --tint: rgba(90,120,255,.32); border-color: rgba(150,170,255,.65); }
+.mode-maze { --tint: rgba(255,170,210,.3); border-color: rgba(255,200,225,.65); }
+.mode-picture.mode-iso { align-items: center; }
+.mode-picture.mode-iso svg { height: 100%; max-width: 100%; filter: drop-shadow(0 .4rem .6rem rgba(0,0,0,.4)); }
+.mode-iso polygon { stroke: rgba(70,50,130,.45); stroke-width: .35; stroke-linejoin: round; }
 /* a little picture grid, a streak flame on it */
 .mode-picture.mode-nono { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); align-items: stretch; gap: 3px; width: auto; aspect-ratio: 1; margin: auto; padding: 6px; border-radius: 12px; background: #c9d2ff; box-shadow: 0 .4rem .8rem rgba(0,0,0,.35); }
 .mode-item > .mode-picture.mode-nono { height: clamp(5rem, 15vh, 8rem); margin: auto auto .4rem; }

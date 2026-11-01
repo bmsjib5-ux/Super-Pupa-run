@@ -160,6 +160,8 @@ export function cleanSave(raw) {
     blocks: { stars: intMap(raw.blocks?.stars, 3) },
     // the screw puzzle: best stars per level
     screws: { stars: intMap(raw.screws?.stars, 3) },
+    // the perspective maze: best stars per level
+    maze: { stars: intMap(raw.maze?.stars, 3) },
     // Pupa Logic: practice stars, and the daily streak (the last day solved)
     logic: cleanLogic(raw.logic),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
@@ -235,6 +237,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     potion: { stars: maxMap(current.potion?.stars, incoming.potion?.stars) },
     blocks: { stars: maxMap(current.blocks?.stars, incoming.blocks?.stars) },
     screws: { stars: maxMap(current.screws?.stars, incoming.screws?.stars) },
+    maze: { stars: maxMap(current.maze?.stars, incoming.maze?.stars) },
     logic: mergeLogic(current.logic, incoming.logic),
     shop
   };
