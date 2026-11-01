@@ -13,29 +13,33 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pupa Run">
-    <link rel="stylesheet" href="styles.css?v=20261101d">
-    <link rel="stylesheet" href="cards.css?v=20261101d">
-    <link rel="stylesheet" href="match.css?v=20261101d">
-    <link rel="stylesheet" href="potion.css?v=20261101d">
-    <link rel="stylesheet" href="blocks.css?v=20261101d">
-    <link rel="stylesheet" href="screws.css?v=20261101d">
-    <script src="cards-engine.js?v=20261101d" defer></script>
-    <script src="game.js?v=20261101d" defer></script>
-    <script src="cards-fx.js?v=20261101d" defer></script>
-    <script src="cards-3d.js?v=20261101d" defer></script>
-    <script src="cards.js?v=20261101d" defer></script>
-    <script src="match-engine.js?v=20261101d" defer></script>
-    <script src="match.js?v=20261101d" defer></script>
-    <script src="potion-engine.js?v=20261101d" defer></script>
-    <script src="potion.js?v=20261101d" defer></script>
-    <script src="blocks-engine.js?v=20261101d" defer></script>
-    <script src="blocks.js?v=20261101d" defer></script>
-    <script src="screws-engine.js?v=20261101d" defer></script>
-    <script src="screws.js?v=20261101d" defer></script>
-    <script type="module" src="pupa3d.js?v=20261101d"></script>
+    <link rel="stylesheet" href="styles.css?v=20261101e">
+    <link rel="stylesheet" href="cards.css?v=20261101e">
+    <link rel="stylesheet" href="match.css?v=20261101e">
+    <link rel="stylesheet" href="potion.css?v=20261101e">
+    <link rel="stylesheet" href="blocks.css?v=20261101e">
+    <link rel="stylesheet" href="screws.css?v=20261101e">
+    <link rel="stylesheet" href="logic.css?v=20261101e">
+    <script src="cards-engine.js?v=20261101e" defer></script>
+    <script src="game.js?v=20261101e" defer></script>
+    <script src="cards-fx.js?v=20261101e" defer></script>
+    <script src="cards-3d.js?v=20261101e" defer></script>
+    <script src="cards.js?v=20261101e" defer></script>
+    <script src="match-engine.js?v=20261101e" defer></script>
+    <script src="match.js?v=20261101e" defer></script>
+    <script src="potion-engine.js?v=20261101e" defer></script>
+    <script src="potion.js?v=20261101e" defer></script>
+    <script src="blocks-engine.js?v=20261101e" defer></script>
+    <script src="blocks.js?v=20261101e" defer></script>
+    <script src="screws-engine.js?v=20261101e" defer></script>
+    <script src="screws.js?v=20261101e" defer></script>
+    <script src="logic-puzzles.js?v=20261101e" defer></script>
+    <script src="logic-engine.js?v=20261101e" defer></script>
+    <script src="logic.js?v=20261101e" defer></script>
+    <script type="module" src="pupa3d.js?v=20261101e"></script>
     <!-- Online parts: sign-in, cloud save and coin top-ups. -->
     <script src="config.js?v=20261011a"></script>
-    <script type="module" src="account.js?v=20261101d"></script>
+    <script type="module" src="account.js?v=20261101e"></script>
   </head>
   <body>
     <a class="skip-link" href="#game">ข้ามไปยังเกม</a>
@@ -245,6 +249,11 @@
                 <span class="mode-picture mode-screwpic" aria-hidden="true"><i class="is-a"><b style="--c:#ff4d5e"></b><b style="--c:#3d8bff"></b></i><i class="is-b"><b style="--c:#ffcc29"></b><b style="--c:#3fcf5a"></b></i><i class="is-disc"><b style="--c:#a35cff"></b></i></span>
                 <b>คลายน็อตกลไก</b>
                 <span>คลายน็อตลงกล่องสีเดียวกัน ให้แผ่นไม้ร่วงหมด 40 ด่าน</span>
+              </button>
+              <button class="mode-item mode-logic" type="button" data-mode="logic">
+                <span class="mode-picture mode-nono" aria-hidden="true"><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><b>🔥</b></span>
+                <b>Pupa Logic · ปริศนาภาพ</b>
+                <span>ปริศนาตัวเลขประจำวัน จัดอันดับเวลา เฉลยเป็นตัวละคร</span>
                 <i class="mode-new">ใหม่!</i>
               </button>
             </div>
@@ -283,6 +292,8 @@
           </div>
         </div>
 
+        <!-- Pupa Logic: filled in by logic.js. -->
+        <div id="logicScreen" class="overlay shop-overlay logic-overlay" role="dialog" aria-modal="true" aria-labelledby="logicTitle" hidden></div>
         <!-- The screw puzzle: filled in by screws.js. -->
         <div id="screwsScreen" class="overlay shop-overlay screws-overlay" role="dialog" aria-modal="true" aria-labelledby="screwsTitle" hidden></div>
         <!-- The block jam: filled in by blocks.js. -->

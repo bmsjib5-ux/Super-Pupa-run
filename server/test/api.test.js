@@ -370,6 +370,29 @@ function playRun(run) {
   return { turns, shown, score };
 }
 
+test("logic: the daily routes start, hint, check and rank", async () => {
+  const { call, close } = boot();
+  try {
+    assert.equal((await call("POST", "/api/logic/start", { token: null })).status, 401);
+    const run = (await call("POST", "/api/logic/start")).json;
+    assert.ok(run.runId && run.day);
+    const hint = await call("POST", "/api/logic/hint", { body: { runId: run.runId } });
+    assert.equal(hint.status, 200);
+    assert.equal(hint.json.cell.length, 2);
+    assert.equal((await call("POST", "/api/logic/finish", { body: { runId: run.runId, rows: ["0101"] } })).status, 422);
+    assert.equal((await call("POST", "/api/logic/finish", { body: { runId: "nope", rows: ["0101"] } })).status, 409);
+    const { L } = await import("../src/logic.js");
+    const done = await call("POST", "/api/logic/finish", { body: { runId: run.runId, rows: L.dailyFor(run.day).rows } });
+    assert.equal(done.status, 200);
+    assert.equal(done.json.rank, 1);
+    assert.ok(done.json.ms >= L.HINT_PENALTY * 1000);
+    const board = (await call("GET", "/api/logic/board")).json;
+    assert.equal(board.places.length, 1);
+    assert.ok(board.places[0].me && board.me.rank === 1);
+    assert.equal((await call("POST", "/api/logic/start")).json.done.rank, 1);
+  } finally { close(); }
+});
+
 test("raid: a ranked run is replayed on the server to the page's score", async () => {
   const { call, close } = boot();
   try {

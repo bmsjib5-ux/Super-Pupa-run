@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen || logicOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws, logic = save.logic;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6019,6 +6019,12 @@
       if (remote.blocks || blocks) save.blocks = { stars: most(blocks?.stars, remote.blocks?.stars) };
       // and the screw puzzle's
       if (remote.screws || screws) save.screws = { stars: most(screws?.stars, remote.screws?.stars) };
+      // Pupa Logic: practice stars; the later day's streak (on the same day the longer)
+      if (remote.logic || logic) {
+        const a = logic || {}, b = remote.logic || {}, later = String(b.last || "") >= String(a.last || "") ? b : a;
+        const streak = a.last === b.last ? Math.max(Number(a.streak) || 0, Number(b.streak) || 0) : Number(later.streak) || 0;
+        save.logic = { stars: most(a.stars, b.stars), last: later.last || "", streak, best: Math.max(Number(a.best) || 0, Number(b.best) || 0, streak), days: Math.max(Number(a.days) || 0, Number(b.days) || 0) };
+      }
       // merged into the same object: the card screen's open buttons hold
       // it, and a tap after a sync must still land in the save
       const merged = mergeCards(cards, remote.cards, !full);
@@ -6074,6 +6080,13 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // and Pupa Logic (logic.js)
+    setLogicOpen(open) {
+      logicOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
@@ -6083,6 +6096,7 @@
   let potionOpen = false;
   let blocksOpen = false;
   let screwsOpen = false;
+  let logicOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6514,7 +6528,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws", "logic"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6555,6 +6569,7 @@
     if (mode === "potion") { window.PupaPotion?.open(); return; }
     if (mode === "blocks") { window.PupaBlocks?.open(); return; }
     if (mode === "screws") { window.PupaScrews?.open(); return; }
+    if (mode === "logic") { window.PupaLogic?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6570,10 +6585,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-11-01c";
+  const NEWS_VERSION = "2026-11-01d";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "📅 Pupa Logic · ปริศนาภาพประจำวัน", text: "โหมดใหม่ในหน้าเลือกโหมด เกมปริศนาภาพตัวเลข (โนโนแกรม) ตัวเลขข้างแถวและบนคอลัมน์บอกว่ามีช่องระบายติดกันกี่ช่องตามลำดับ ใช้เหตุผลระบายให้ตรงทุกแถวทุกคอลัมน์ แตะหรือลากนิ้วเพื่อระบาย สลับเป็น ✖ เพื่อกากบาทช่องว่าง แก้เสร็จแล้วภาพที่ได้คือตัวละครในเกม ทุกวันมีปริศนาประจำวัน 1 ข้อ ทุกคนได้โจทย์เดียวกัน (วันธรรมดา 10×10 เสาร์อาทิตย์ 15×15) เข้าสู่ระบบแล้วจับเวลาจัดอันดับคนแก้เร็วที่สุดของวัน คำใบ้บวกเวลา 30 วินาที เล่นทุกวันต่อเนื่องได้ 🔥 สถิติ และเพชรเพิ่มขึ้นตามจำนวนวัน รางวัลรายวัน ● 150 💎 20 ขึ้นไป (สุดสัปดาห์ ● 300 💎 40) ผลึกดาว ✧ และแร่ ⛏ และมีโหมดฝึกฝนอีก 30 ด่านตั้งแต่ 5×5 ถึง 15×15 ทุกข้อแก้ได้ด้วยเหตุผลล้วน ๆ ไม่ต้องเดา", image: "logic", open: () => { closeNews(); window.PupaLogic?.open(); } },
     { tag: "โหมดใหม่", title: "🔩 คลายน็อตกลไก · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวคลายน็อตที่ติดชาร์ตปี 2026 แผ่นไม้และแผ่นทองเหลืองซ้อนกันหลายชั้น ยึดด้วยน็อตหลากสี แตะน็อตที่ไม่มีแผ่นด้านบนทับเพื่อคลายออก น็อตจะลงกล่องสีเดียวกัน (เปิดทีละ 2 กล่อง กล่องละ 3 ตัว กล่องเต็มแล้วกล่องถัดไปจะมาแทน) ถ้ายังไม่มีกล่องสีนั้นน็อตจะไปรอที่ช่องพัก 5 ช่อง ช่องพักเต็มเมื่อไรแพ้ แผ่นที่ไม่เหลือน็อตจะร่วงลง เคลียร์ให้หมดกระดาน คิดลำดับให้ดีว่าจะคลายตัวไหนก่อน ยิ่งด่านสูงแผ่นยิ่งเยอะ (สูงสุด 19 แผ่น น็อต 36 ตัว 6 สี) ทุกด่านแก้ได้แน่นอน มีย้อนกลับ ↶ 3 ครั้ง เพิ่มช่องพัก ➕ สว่าน 🪛 คลายน็อตที่ถูกทับ และคำใบ้ 💡 ไม่ใช้ตัวช่วยเลยได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "screws", open: () => { closeNews(); window.PupaScrews?.open(); } },
     { tag: "โหมดใหม่", title: "🧱 ปลดล็อกบล็อกเห็ด · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวลากบล็อกออกประตูสีที่ติดชาร์ตปี 2026 ลากบล็อกเยลลี่ทีละช่องผ่านช่องว่าง ไปออกประตูขอบกระดานที่สีเดียวกัน บล็อกต้องกว้างไม่เกินประตูและไม่มีอะไรขวางทางออก คิดลำดับให้ดีเพราะบล็อกขวางกันเอง ยิ่งด่านสูงกระดานยิ่งใหญ่ (สูงสุด 8×9 บล็อก 18 ชิ้น 7 สี) มีหินขวางทาง 🪨 บล็อกน้ำแข็ง ❄ ที่ละลายเมื่อบล็อกอื่นออกครบตามตัวเลข และบล็อกที่เลื่อนได้ทางเดียว ↔ ↕ ทุกด่านแก้ได้แน่นอน มีค้อน 🔨 ทุบบล็อก หยุดเวลา ❄ 15 วินาที และคำใบ้ 💡 เหลือเวลา 35% ได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "blocks", open: () => { closeNews(); window.PupaBlocks?.open(); } },
     { tag: "โหมดใหม่", title: "🧪 ห้องยาวิเศษ Pupa · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวเทน้ำยาเรียงสีที่มาแรงปี 2026 แตะขวดที่จะเท แล้วแตะขวดปลายทาง เทได้เฉพาะลงขวดว่างหรือบนน้ำยาสีเดียวกัน ทำให้ทุกขวดเหลือสีเดียว ขวดละ 4 ชั้น ยิ่งด่านสูงยิ่งมีสีมาก (สูงสุด 11 สี) บางด่านซ่อนชั้นล่างไว้ ❓ จนกว่าจะเทออก บางด่านมีขวดปิดจุก 🔒 ที่จะเปิดเมื่อเรียงสีที่กำหนดครบ 1 ขวด มีปุ่มย้อนกลับ ↶ 5 ครั้ง เพิ่มขวดเปล่า 🧪 1 ครั้ง และคำใบ้ 💡 3 ครั้งต่อด่าน ทุกด่านแก้ได้แน่นอน เทไม่เกินเป้าโดยไม่ใช้ขวดเสริมได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "potion", open: () => { closeNews(); window.PupaPotion?.open(); } },
@@ -6764,6 +6780,13 @@
         row.append(img);
       }
       return row;
+    }
+    if (kind === "logic") {
+      // the mode picker's little picture grid
+      const pic = document.createElement("div");
+      pic.className = "mode-picture mode-nono news-nono";
+      pic.innerHTML = "<i></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i></i><i></i><i class=\"on\"></i><b>🔥</b>";
+      return pic;
     }
     if (kind === "screws") {
       // the mode picker's screwed-down bars, bigger
@@ -8555,6 +8578,7 @@
     if (potionOpen) { window.PupaPotion?.key?.(event); return; }
     if (blocksOpen) { window.PupaBlocks?.key?.(event); return; }
     if (screwsOpen) { window.PupaScrews?.key?.(event); return; }
+    if (logicOpen) { window.PupaLogic?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }

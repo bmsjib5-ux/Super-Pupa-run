@@ -8,9 +8,12 @@
 // The dragon raid ranking keeps each player's best score of a week,
 // { uid, name, score, phase, at }, per week (see raid.js); a user also holds
 // its open ranked run (raidRun), its runs that day and the last week paid.
+// Pupa Logic's daily ranking keeps each player's first solve of a day,
+// { uid, name, ms, hints, at }, per day (see logic.js); a user holds its
+// open daily run (logicRun).
 
 export class MemoryStore {
-  constructor() { this.users = new Map(); this.orders = new Map(); this.raid = new Map(); }
+  constructor() { this.users = new Map(); this.orders = new Map(); this.raid = new Map(); this.logic = new Map(); }
   async getUser(uid) { return this.users.get(uid) ?? null; }
   // Read-modify-write under a lock per user, so two requests cannot both
   // start from the same balance.
@@ -45,6 +48,16 @@ export class MemoryStore {
   }
   async raidTop(week, count) { return [...(this.raid.get(week)?.values() ?? [])].sort((a, b) => b.score - a.score || a.at - b.at).slice(0, count).map(e => structuredClone(e)); }
   async raidRank(week, score) { return 1 + [...(this.raid.get(week)?.values() ?? [])].filter(e => e.score > score).length; }
+  async logicScore(day, uid) { const entry = this.logic.get(day)?.get(uid); return entry ? structuredClone(entry) : null; }
+  // Keeps the first solve of the day.
+  async putLogicScore(day, entry) {
+    if (!this.logic.has(day)) this.logic.set(day, new Map());
+    const scores = this.logic.get(day), old = scores.get(entry.uid);
+    if (!old) scores.set(entry.uid, { ...entry });
+    return structuredClone(scores.get(entry.uid));
+  }
+  async logicTop(day, count) { return [...(this.logic.get(day)?.values() ?? [])].sort((a, b) => a.ms - b.ms || a.at - b.at).slice(0, count).map(e => structuredClone(e)); }
+  async logicRank(day, ms) { return 1 + [...(this.logic.get(day)?.values() ?? [])].filter(e => e.ms < ms).length; }
 }
 
 export class FirestoreStore {
@@ -99,6 +112,20 @@ export class FirestoreStore {
   }
   async raidTop(week, count) { const snap = await this.raidScores(week).orderBy("score", "desc").limit(count).get(); return snap.docs.map(d => d.data()); }
   async raidRank(week, score) { const snap = await this.raidScores(week).where("score", ">", score).count().get(); return 1 + snap.data().count; }
+  // logicDays/<day>/scores/<uid>, the same way
+  logicScores(day) { return this.db.collection("logicDays").doc(day).collection("scores"); }
+  async logicScore(day, uid) { const doc = await this.logicScores(day).doc(uid).get(); return doc.exists ? doc.data() : null; }
+  async putLogicScore(day, entry) {
+    const ref = this.logicScores(day).doc(entry.uid);
+    return this.db.runTransaction(async tx => {
+      const doc = await tx.get(ref);
+      if (doc.exists) return doc.data();
+      tx.set(ref, entry);
+      return entry;
+    });
+  }
+  async logicTop(day, count) { const snap = await this.logicScores(day).orderBy("ms", "asc").limit(count).get(); return snap.docs.map(d => d.data()); }
+  async logicRank(day, ms) { const snap = await this.logicScores(day).where("ms", "<", ms).count().get(); return 1 + snap.data().count; }
 }
 
 // Add an order's coins to the account. The coins wait in the save even if

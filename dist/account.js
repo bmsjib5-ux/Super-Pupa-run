@@ -172,6 +172,13 @@ export const raidStart = (ms = 12000) => timed(api("/api/raid/start", { method: 
 export const raidFinish = (body, ms = 15000) => timed(api("/api/raid/finish", { method: "POST", body }), ms);
 export const raidBoard = (ms = 15000) => timed(api("/api/raid/board"), ms);
 
+// ---- Pupa Logic's daily ranking ----
+// Today's timed run (or today's solve), a hint, the grid to check, the ranking.
+export const logicStart = (ms = 12000) => timed(api("/api/logic/start", { method: "POST" }), ms);
+export const logicHint = (body, ms = 12000) => timed(api("/api/logic/hint", { method: "POST", body }), ms);
+export const logicFinish = (body, ms = 15000) => timed(api("/api/logic/finish", { method: "POST", body }), ms);
+export const logicBoard = (ms = 15000) => timed(api("/api/logic/board"), ms);
+
 // ---- Top-ups ----
 
 export const PACKS = [
@@ -255,5 +262,5 @@ async function start() {
   window.addEventListener("pagehide", flushSync);
 }
 
-window.PupaAccount = { state, signIn, signOut, sync, createTopup, getOrder, watchOrder, raidStart, raidFinish, raidBoard, PACKS, devAuth: DEV_AUTH };
+window.PupaAccount = { state, signIn, signOut, sync, createTopup, getOrder, watchOrder, raidStart, raidFinish, raidBoard, logicStart, logicHint, logicFinish, logicBoard, PACKS, devAuth: DEV_AUTH };
 start();

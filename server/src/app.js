@@ -11,6 +11,10 @@
 //   POST /api/raid/start          a ranked dragon raid run: seed and team
 //   POST /api/raid/finish         the run's turns, replayed for its score
 //   GET  /api/raid/board          this week's ranking (pays last week's place)
+//   POST /api/logic/start         today's Pupa Logic run (or today's solve)
+//   POST /api/logic/hint          a cell of today's answer (adds time)
+//   POST /api/logic/finish        today's grid, checked, timed and ranked
+//   GET  /api/logic/board         today's Pupa Logic ranking
 
 import { randomUUID } from "node:crypto";
 import express from "express";
@@ -20,6 +24,7 @@ import { cleanSave, mergeSave, grantGift } from "./merge.js";
 import { chargeOutcome, OmiseError } from "./omise.js";
 import { requireUser } from "./auth.js";
 import { startRun, finishRun, board } from "./raid.js";
+import { startLogic, hintLogic, finishLogic, boardLogic } from "./logic.js";
 
 const MAX_PENDING_ORDERS = 5;
 const PHONE = /^0[689]\d{8}$/;
@@ -130,6 +135,22 @@ export function createApp({ store, omise, verify, origins, devMode = false, retu
   });
   app.get("/api/raid/board", ready, auth, async (req, res, next) => {
     try { res.json(await board(store, req.user)); } catch (error) { next(error); }
+  });
+
+  // Pupa Logic's daily ranking (logic.js).
+  const LOGIC_STATUS = { bad_run: 400, no_run: 409, run_expired: 410, no_hints: 429, wrong: 422 };
+  const logicAnswer = (res, out) => (out.error ? res.status(LOGIC_STATUS[out.error] || 400).json(out) : res.json(out));
+  app.post("/api/logic/start", ready, auth, async (req, res, next) => {
+    try { logicAnswer(res, await startLogic(store, req.user)); } catch (error) { next(error); }
+  });
+  app.post("/api/logic/hint", ready, auth, async (req, res, next) => {
+    try { logicAnswer(res, await hintLogic(store, req.user, req.body)); } catch (error) { next(error); }
+  });
+  app.post("/api/logic/finish", ready, auth, async (req, res, next) => {
+    try { logicAnswer(res, await finishLogic(store, req.user, req.body)); } catch (error) { next(error); }
+  });
+  app.get("/api/logic/board", ready, auth, async (req, res, next) => {
+    try { res.json(await boardLogic(store, req.user)); } catch (error) { next(error); }
   });
 
   // Opn posts { key: "charge.complete", data: <charge> }. The body is not

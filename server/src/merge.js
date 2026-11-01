@@ -107,6 +107,19 @@ function mergeEvent(now, next) {
   return { id: now.id, earned: Math.max(now.earned, next.earned), bought: maxMap(now.bought, next.bought), ...days };
 }
 
+// Pupa Logic: { stars: { level: best stars }, last: the last day's puzzle
+// solved, streak: days in a row up to it, best: the longest streak, days:
+// how many days solved }.
+const cleanLogic = (raw) => ({
+  stars: intMap(raw?.stars, 3), last: isDay(raw?.last) ? raw.last : "", streak: int(raw?.streak, 100_000), best: int(raw?.best, 100_000), days: int(raw?.days, 100_000)
+});
+// The later day's streak (on the same day the longer); the rest the higher.
+function mergeLogic(now = cleanLogic(null), next = cleanLogic(null)) {
+  const later = (next.last || "") >= (now.last || "") ? next : now;
+  const streak = now.last === next.last ? Math.max(now.streak, next.streak) : later.streak;
+  return { stars: maxMap(now.stars, next.stars), last: later.last, streak, best: Math.max(now.best, next.best, streak), days: Math.max(now.days, next.days) };
+}
+
 // Card battles: each card's level, the best stars per stage, the team of
 // five ("" for an empty slot) and two switches.
 const cleanCards = (raw) => {
@@ -147,6 +160,8 @@ export function cleanSave(raw) {
     blocks: { stars: intMap(raw.blocks?.stars, 3) },
     // the screw puzzle: best stars per level
     screws: { stars: intMap(raw.screws?.stars, 3) },
+    // Pupa Logic: practice stars, and the daily streak (the last day solved)
+    logic: cleanLogic(raw.logic),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
   };
   for (const slot of SLOT_GROUPS) if (typeof shop[slot] === "string" && shop[slot].length <= 40) out.shop[slot] = shop[slot];
@@ -220,6 +235,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     potion: { stars: maxMap(current.potion?.stars, incoming.potion?.stars) },
     blocks: { stars: maxMap(current.blocks?.stars, incoming.blocks?.stars) },
     screws: { stars: maxMap(current.screws?.stars, incoming.screws?.stars) },
+    logic: mergeLogic(current.logic, incoming.logic),
     shop
   };
 }
