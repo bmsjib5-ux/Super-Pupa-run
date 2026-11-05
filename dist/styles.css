@@ -675,11 +675,6 @@ button { touch-action: manipulation; }
 .news-scene-7 b { color: #fff4c4; filter: none; text-shadow: 0 0 .8rem rgba(255,120,50,.95), 0 .15rem .6rem rgba(0,0,0,.65); }
 .news-scene-6 b { color: #fff4b0; filter: none; text-shadow: 0 0 .8rem rgba(255,127,204,.9), 0 .15rem .6rem rgba(0,0,0,.65); }
 .news-picture .news-boss { filter: drop-shadow(0 0 .8rem rgba(255,80,120,.7)); }
-.news-picture .news-flasks { width: 86%; height: 78%; }
-.news-picture .news-jam { width: auto; height: 78%; }
-.news-picture .news-screws { width: 90%; height: 80%; }
-.news-picture .news-nono { width: auto; height: 74%; }
-.news-picture .news-iso { width: 90%; height: 82%; }
 .news-picture .news-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4%; width: 86%; height: 86%; }
 .news-picture .news-form span { display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.18); border-radius: 12%; background: rgba(255,255,255,.04); }
 .news-picture .news-form span:has(img) { border: 1px solid rgba(255,215,106,.6); background: radial-gradient(circle, rgba(255,215,106,.22), transparent 70%); }
@@ -1196,34 +1191,6 @@ button { touch-action: manipulation; }
 .mode-screws { --tint: rgba(230,160,80,.32); border-color: rgba(240,180,100,.65); }
 .mode-logic { --tint: rgba(90,120,255,.32); border-color: rgba(150,170,255,.65); }
 .mode-maze { --tint: rgba(255,170,210,.3); border-color: rgba(255,200,225,.65); }
-.mode-picture.mode-iso { align-items: center; }
-.mode-picture.mode-iso svg { height: 100%; max-width: 100%; filter: drop-shadow(0 .4rem .6rem rgba(0,0,0,.4)); }
-.mode-iso polygon { stroke: rgba(70,50,130,.45); stroke-width: .35; stroke-linejoin: round; }
-/* a little picture grid, a streak flame on it */
-.mode-picture.mode-nono { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); align-items: stretch; gap: 3px; width: auto; aspect-ratio: 1; margin: auto; padding: 6px; border-radius: 12px; background: #c9d2ff; box-shadow: 0 .4rem .8rem rgba(0,0,0,.35); }
-.mode-item > .mode-picture.mode-nono { height: clamp(5rem, 15vh, 8rem); margin: auto auto .4rem; }
-@media (max-width: 40rem) and (orientation: portrait) { .mode-item > .mode-picture.mode-nono { height: 5.2rem; margin: auto; } }
-.mode-nono i { border-radius: 3px; background: #f6f2ff; }
-.mode-nono i.on { background: linear-gradient(160deg, #3a4cb8, #1c2468); }
-.mode-nono b { position: absolute; right: -.6rem; bottom: -.5rem; font-size: 1.6rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
-/* two wooden bars and a brass disc, screwed down */
-.mode-picture.mode-screwpic { position: relative; }
-.mode-screwpic i { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; justify-content: space-between; width: 72%; height: 22%; padding: 0 4%; border-radius: 999px; background: linear-gradient(180deg, #f2c98a, #c98b4a 55%, #8a5428); box-shadow: inset 0 0 0 1px rgba(60,30,5,.4), 0 .25rem .4rem rgba(0,0,0,.45); transform: translate(-50%, -50%) rotate(-18deg); }
-.mode-screwpic i.is-b { background: linear-gradient(180deg, #c98a5a, #9a5a30 55%, #5e3216); transform: translate(-50%, -20%) rotate(22deg); }
-.mode-screwpic i.is-disc { width: 30%; height: auto; aspect-ratio: 1; justify-content: center; padding: 0; border-radius: 50%; background: linear-gradient(135deg, #f6d77a, #c9a03a 55%, #7a5a12); transform: translate(-90%, -95%); }
-.mode-screwpic b { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 8%, var(--c) 30%, color-mix(in srgb, var(--c) 55%, #000)); box-shadow: 0 1px 2px rgba(0,0,0,.5); }
-.mode-screwpic b::after { content: "+"; display: grid; place-items: center; height: 100%; color: rgba(255,255,255,.85); font-size: .9rem; font-weight: 900; line-height: 1; }
-/* jelly blocks packed on a little board */
-.mode-picture.mode-jam { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); align-items: stretch; gap: 4px; width: auto; aspect-ratio: 1; margin: 0 auto; padding: 6px; border-radius: 14px; background: linear-gradient(180deg, #efe2c8, #d6c09a); box-shadow: inset 0 0 0 2px rgba(255,255,255,.6), 0 .4rem .8rem rgba(0,0,0,.35); }
-.mode-item > .mode-picture.mode-jam { height: clamp(5rem, 16vh, 8.4rem); margin: auto auto .4rem; }
-@media (max-width: 40rem) and (orientation: portrait) { .mode-item > .mode-picture.mode-jam { height: 5.2rem; margin: auto; } }
-.mode-jam i { border-radius: 9px; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 45%, color-mix(in srgb, var(--c) 75%, #000)); box-shadow: inset 0 3px 0 rgba(255,255,255,.45), inset 0 -3px 0 rgba(0,0,0,.18); }
-/* three glass flasks of layered potion */
-.mode-picture.mode-flasks { align-items: flex-end; gap: 9%; padding-bottom: .3rem; }
-.mode-flasks i { position: relative; width: 20%; height: 82%; border: 2px solid rgba(255,255,255,.75); border-top-width: 3px; border-radius: .4rem .4rem 1.4rem 1.4rem; background: linear-gradient(0deg, var(--a) 0 36%, var(--b) 36% 72%, rgba(255,255,255,.08) 72%); box-shadow: 0 0 1rem rgba(255,140,220,.4), inset 0 0 .5rem rgba(255,255,255,.25); }
-.mode-flasks i:nth-child(2) { height: 92%; box-shadow: 0 0 1.2rem rgba(255,215,80,.6), inset 0 0 .5rem rgba(255,255,255,.25); }
-.mode-flasks i::before { content: ""; position: absolute; top: -.55rem; left: 50%; width: 60%; height: .5rem; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #c98a52, #8a5428); transform: translateX(-50%); }
-.mode-flasks i::after { content: ""; position: absolute; top: 10%; bottom: 14%; left: 16%; width: 14%; border-radius: 999px; background: rgba(255,255,255,.45); }
 /* four picture tiles, two pairs */
 .mode-picture.mode-tiles { display: grid; grid-template-columns: repeat(2, auto); grid-template-rows: repeat(2, minmax(0, 1fr)); justify-content: center; align-items: center; gap: .35rem; padding: .3rem 0; }
 .mode-picture.mode-tiles img { width: auto; height: 100%; max-width: none; aspect-ratio: 1; object-fit: contain; border-radius: 18%; background: linear-gradient(160deg, #fffaf0, #f3e4ff); box-shadow: inset 0 0 0 2px rgba(255,255,255,.9), 0 3px 0 #8a6ab8; filter: none; }

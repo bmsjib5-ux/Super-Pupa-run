@@ -6793,49 +6793,13 @@
       }
       return row;
     }
-    if (kind === "maze") {
-      // the mode picker's little tower and portal
-      const pic = document.querySelector(".mode-maze .mode-iso")?.cloneNode(true) ?? document.createElement("span");
-      pic.classList.add("news-iso");
-      return pic;
-    }
-    if (kind === "logic") {
-      // the mode picker's little picture grid
-      const pic = document.createElement("div");
-      pic.className = "mode-picture mode-nono news-nono";
-      pic.innerHTML = "<i></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i class=\"on\"></i><i></i><i></i><i class=\"on\"></i><b>🔥</b>";
-      return pic;
-    }
-    if (kind === "screws") {
-      // the mode picker's screwed-down bars, bigger
-      const pic = document.createElement("div");
-      pic.className = "mode-picture mode-screwpic news-screws";
-      pic.innerHTML = '<i class="is-a"><b style="--c:#ff4d5e"></b><b style="--c:#3d8bff"></b></i><i class="is-b"><b style="--c:#ffcc29"></b><b style="--c:#3fcf5a"></b></i><i class="is-disc"><b style="--c:#a35cff"></b></i>';
-      return pic;
-    }
-    if (kind === "blocks") {
-      // jelly blocks on a little board, as on the mode picker
-      const board = document.createElement("div");
-      board.className = "mode-picture mode-jam news-jam";
-      for (const [c, area] of [["#ff4d5e", "1/1/2/3"], ["#3d8bff", "1/3/3/4"], ["#ffcc29", "2/1/3/2"], ["#3fcf5a", "2/2/4/3"], ["#a35cff", "3/3/4/4"]]) {
-        const block = document.createElement("i");
-        block.style.setProperty("--c", c);
-        block.style.gridArea = area;
-        board.append(block);
-      }
-      return board;
-    }
-    if (kind === "potion") {
-      // three flasks of layered potion, as on the mode picker
-      const row = document.createElement("div");
-      row.className = "mode-picture mode-flasks news-flasks";
-      for (const [a, b] of [["#ff5fae", "#47b8ff"], ["#ffd23a", "#ffd23a"], ["#3fe0a0", "#a35cff"]]) {
-        const flask = document.createElement("i");
-        flask.style.setProperty("--a", a);
-        flask.style.setProperty("--b", b);
-        row.append(flask);
-      }
-      return row;
+    if (kind === "potion" || kind === "blocks" || kind === "screws" || kind === "logic" || kind === "maze") {
+      // the puzzle mode's picture from the mode picker
+      const img = document.createElement("img");
+      img.src = `assets/mode-${kind}.webp`;
+      img.alt = "";
+      img.className = "news-mode";
+      return img;
     }
     if (kind === "formation") {
       // the arrow formation, front row on top
