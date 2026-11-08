@@ -6592,6 +6592,32 @@
     document.querySelectorAll("[data-open-modes]").forEach(button => onTap(button, () => showModes()));
   }
 
+  // ---- Christmas ----
+  // Until 7 January (Bangkok time) the mode pictures wear their Christmas
+  // art, the tiles get a cap of snow and snow falls behind them.
+  // ?season=xmas or ?season=none shows either look on any day.
+  const XMAS = { from: "2026-11-01", to: "2027-01-07" };
+  const XMAS_ART = {
+    "pupa-hero-3d": "xmas-pupa", "pupav2-hero": "xmas-pupav2", "ikuya-hero": "xmas-ikuya", "pangji-hero": "xmas-pangji",
+    "baitoey-hero": "xmas-baitoey", "chantra-hero": "xmas-pangji", "jibjib-hero": "xmas-jibjib",
+    "mode-potion": "xmas-potion", "mode-blocks": "xmas-blocks", "mode-screws": "xmas-screws", "mode-logic": "xmas-logic", "mode-maze": "xmas-maze",
+  };
+  function xmasOn() {
+    const asked = new URLSearchParams(location.search).get("season");
+    if (asked) return asked === "xmas";
+    const day = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+    return day >= XMAS.from && day <= XMAS.to;
+  }
+  if (modeUi.screen && xmasOn()) {
+    modeUi.screen.classList.add("is-xmas");
+    const eyebrow = modeUi.screen.querySelector(".mode-eyebrow");
+    if (eyebrow) eyebrow.textContent = "🎄 SUPER PUPA RUN 🎄";
+    for (const img of modeUi.screen.querySelectorAll(".mode-picture img")) {
+      const name = img.getAttribute("src").match(/^assets\/(.+)\.webp$/)?.[1];
+      if (XMAS_ART[name]) img.src = `assets/${XMAS_ART[name]}.webp`;
+    }
+  }
+
   // ---- What's new ----
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing

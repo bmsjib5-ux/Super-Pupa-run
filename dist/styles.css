@@ -1202,6 +1202,15 @@ button { touch-action: manipulation; }
 .mode-item b { font-size: clamp(1rem, 2.4vw, 1.3rem); }
 .mode-item > span:not(.mode-picture) { color: #cfc4e2; font-size: .78rem; line-height: 1.35; }
 .mode-new { position: absolute; top: .6rem; right: .6rem; padding: .1rem .55rem; border-radius: 999px; color: #30102d; font-size: .7rem; font-style: normal; font-weight: 900; background: linear-gradient(180deg, #fff3a6, #ffbd63); }
+/* Christmas (game.js adds .is-xmas in season): a cranberry night, snow falling behind the tiles and a cap of snow on each */
+.mode-overlay.is-xmas { background: radial-gradient(circle at 50% 18%, rgba(140,36,70,.9), rgba(10,8,30,.95) 70%); }
+.mode-overlay.is-xmas::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .7; background-image: radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(3px 3px at 90px 120px, #fff, transparent), radial-gradient(2px 2px at 150px 60px, #fff, transparent), radial-gradient(2.5px 2.5px at 60px 170px, #fff, transparent), radial-gradient(1.5px 1.5px at 180px 190px, #fff, transparent); background-size: 200px 200px; animation: xmas-snow 14s linear infinite; }
+@keyframes xmas-snow { to { background-position: 30px 200px; } }
+.mode-overlay.is-xmas .mode-card { position: relative; z-index: 1; }
+.is-xmas .mode-item::before { content: ""; position: absolute; top: -4px; left: 6%; right: 6%; height: 13px; border-radius: 999px 999px 0 0; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 0 7px, transparent 7.5px) 0 2px / 22px 100% repeat-x, linear-gradient(#fff, #f2f6ff) 0 0 / 100% 6px no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.is-xmas .mode-tiles img:nth-child(-n+2) { background: linear-gradient(160deg, #fff0f0, #ffb9b9); }
+.is-xmas .mode-tiles img:nth-child(n+3) { background: linear-gradient(160deg, #effff1, #a9e3b3); }
+@media (prefers-reduced-motion: reduce) { .mode-overlay.is-xmas::before { animation: none; } }
 @media (max-width: 40rem) and (orientation: portrait) {
   .mode-list > .mode-item { flex-basis: 100%; }
   .mode-item { display: grid; grid-template-columns: 6rem 1fr; grid-template-rows: auto auto; text-align: left; column-gap: .8rem; padding: .6rem .8rem; }
