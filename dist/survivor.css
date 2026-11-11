@@ -106,6 +106,7 @@
   .survivor-offer { width: 100%; min-height: 0; grid-template-columns: 2.6rem 1fr; grid-template-rows: auto auto auto; justify-items: start; column-gap: .6rem; text-align: left; padding: .55rem .7rem; }
   .survivor-offer-icon { grid-row: span 3; align-self: center; justify-self: center; }
   .survivor-offers { flex-direction: column; width: 100%; }
+  .survivor-offer kbd { display: none; }
   .survivor-cover h3 { font-size: 1.3rem; }
   .survivor-kit { max-width: 70%; }
   .survivor-boss { top: 5.6rem; width: 80%; }

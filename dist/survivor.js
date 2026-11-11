@@ -520,6 +520,7 @@
       g.font = `${it.k === "chest" ? 30 : 22}px system-ui, sans-serif`;
       g.fillStyle = "rgba(255,255,255,.25)";
       g.beginPath(); g.arc(it.x, it.y + bob, it.k === "chest" ? 22 : 15, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#fff";   // a see-through fill would fade the emoji too
       g.fillText(it.k === "chest" ? "🎁" : it.k === "heal" ? "❤️" : "🧲", it.x, it.y + bob);
     }
     // monsters and Pupa, back to front
@@ -603,6 +604,7 @@
         const a = w.angle + i / st.count * Math.PI * 2, x = p.x + Math.cos(a) * R, y = p.y + Math.sin(a) * R;
         g.fillStyle = "rgba(255,236,150,.28)"; g.beginPath(); g.arc(x, y, 20 * p.area, 0, Math.PI * 2); g.fill();
         g.font = `${Math.round(26 * p.area)}px system-ui, sans-serif`;
+        g.fillStyle = "#fff";
         g.fillText("🌙", x, y);
       }
     }
@@ -759,7 +761,7 @@
     const got = S.starsFor(s), before = rec.stars[n] || 0, sum = S.summary(s);
     const first = got >= 2 && before < 2;
     const reward = S.rewardFor(n, sum, first, got, before);
-    rec.stars[n] = Math.max(before, got);
+    if (got > before) rec.stars[n] = got;
     rec.best[n] = Math.max(rec.best[n] || 0, Math.min(3600, sum.time));
     save().coins += reward.coins;
     save().gems = (save().gems || 0) + reward.gems;

@@ -119,8 +119,8 @@ test("survivor: stars and rewards", () => {
   s.player.hp = s.player.maxHp * .6;
   assert.equal(S.starsFor(s), 3);
   // coins by kills and time, more on later stages; a first clear brings gems, dust and ore
-  assert.deepEqual(S.rewardFor(1, { kills: 100, time: 100 }, true, 1), { coins: 55, gems: 0, dust: 0, ore: 0 });
-  assert.deepEqual(S.rewardFor(1, { kills: 100, time: 100 }, true, 2), { coins: 55, gems: 20, dust: 5, ore: 8 });
-  assert.deepEqual(S.rewardFor(3, { kills: 100, time: 100, bonus: 25 }, false, 3, 2), { coins: 108, gems: 10, dust: 0, ore: 0 });
-  assert.deepEqual(S.rewardFor(3, { kills: 100, time: 100 }, false, 3, 3), { coins: 83, gems: 0, dust: 0, ore: 0 });
+  assert.deepEqual(S.rewardFor(1, { kills: 100, time: 100 }, true, 1), { coins: 36, gems: 0, dust: 0, ore: 0 });
+  assert.deepEqual(S.rewardFor(1, { kills: 100, time: 100 }, true, 2), { coins: 36, gems: 20, dust: 5, ore: 8 });
+  assert.deepEqual(S.rewardFor(3, { kills: 100, time: 100, bonus: 25 }, false, 3, 2), { coins: 79, gems: 10, dust: 0, ore: 0 });
+  assert.deepEqual(S.rewardFor(3, { kills: 100, time: 100 }, false, 3, 3), { coins: 54, gems: 0, dust: 0, ore: 0 });
 });

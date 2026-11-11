@@ -572,7 +572,7 @@
     return s.t >= BOSS_AT ? 1 : 0;
   }
   function rewardFor(stage, run, first, stars, before = 0) {
-    const coins = Math.round(((run.kills || 0) * .3 + (run.time || 0) * .25) * (1 + .25 * (stage - 1)) + (run.bonus || 0));
+    const coins = Math.round(((run.kills || 0) * .06 + (run.time || 0) * .3) * (1 + .25 * (stage - 1)) + (run.bonus || 0));
     const won = stars >= 2;
     const gems = (won && first ? 20 : 0) + (stars === 3 && before < 3 ? 10 : 0);
     return { coins, gems, dust: won && first ? 5 : 0, ore: won && first ? 8 : 0 };
