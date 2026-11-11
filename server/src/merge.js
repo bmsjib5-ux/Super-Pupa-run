@@ -162,6 +162,8 @@ export function cleanSave(raw) {
     screws: { stars: intMap(raw.screws?.stars, 3) },
     // the perspective maze: best stars per level
     maze: { stars: intMap(raw.maze?.stars, 3) },
+    // Pupa the survivor: best stars and longest time per stage, blessing levels
+    survivor: { stars: intMap(raw.survivor?.stars, 3), best: intMap(raw.survivor?.best, 3600), perks: intMap(raw.survivor?.perks, 5) },
     // Pupa Logic: practice stars, and the daily streak (the last day solved)
     logic: cleanLogic(raw.logic),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
@@ -238,6 +240,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     blocks: { stars: maxMap(current.blocks?.stars, incoming.blocks?.stars) },
     screws: { stars: maxMap(current.screws?.stars, incoming.screws?.stars) },
     maze: { stars: maxMap(current.maze?.stars, incoming.maze?.stars) },
+    survivor: { stars: maxMap(current.survivor?.stars, incoming.survivor?.stars), best: maxMap(current.survivor?.best, incoming.survivor?.best), perks: maxMap(current.survivor?.perks, incoming.survivor?.perks) },
     logic: mergeLogic(current.logic, incoming.logic),
     shop
   };

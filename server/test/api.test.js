@@ -263,6 +263,11 @@ test("merge: the potion sort keeps each level's best stars", () => {
   // and the screw puzzle's
   const d = mergeSave(c, cleanSave(device(0, { screws: { stars: { 2: 1, 7: 3 } } })), 0);
   assert.deepEqual(mergeSave(d, cleanSave(device(0, { screws: { stars: { 2: 3 } } })), 0).screws.stars, { 2: 3, 7: 3 });
+  // and the survivor's stars, longest times and blessings, the higher of each
+  const v = mergeSave(c, cleanSave(device(0, { survivor: { stars: { 1: 3, 2: 1 }, best: { 1: 262, 2: 180 }, perks: { hp: 2, atk: 9, "x y": 1 } } })), 0);
+  assert.deepEqual(v.survivor, { stars: { 1: 3, 2: 1 }, best: { 1: 262, 2: 180 }, perks: { hp: 2, atk: 5 } });
+  const w = mergeSave(v, cleanSave(device(0, { survivor: { stars: { 2: 2 }, best: { 2: 150, 3: 90 }, perks: { hp: 1, xp: 3 } } })), 0);
+  assert.deepEqual(w.survivor, { stars: { 1: 3, 2: 2 }, best: { 1: 262, 2: 180, 3: 90 }, perks: { hp: 2, atk: 5, xp: 3 } });
 });
 
 test("merge: the match mode keeps each level's best stars and score", () => {

@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen || logicOpen || mazeOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen || logicOpen || mazeOpen || survivorOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws, logic = save.logic, maze = save.maze;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws, logic = save.logic, maze = save.maze, survivor = save.survivor;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6021,6 +6021,8 @@
       if (remote.screws || screws) save.screws = { stars: most(screws?.stars, remote.screws?.stars) };
       // the perspective maze's best stars, the higher of each
       if (remote.maze || maze) save.maze = { stars: most(maze?.stars, remote.maze?.stars) };
+      // Pupa the survivor: best stars and times, blessings (the hero last played stays this device's)
+      if (remote.survivor || survivor) save.survivor = { stars: most(survivor?.stars, remote.survivor?.stars), best: most(survivor?.best, remote.survivor?.best), perks: most(survivor?.perks, remote.survivor?.perks), hero: survivor?.hero || remote.survivor?.hero || "pupa" };
       // Pupa Logic: practice stars; the later day's streak (on the same day the longer)
       if (remote.logic || logic) {
         const a = logic || {}, b = remote.logic || {}, later = String(b.last || "") >= String(a.last || "") ? b : a;
@@ -6096,6 +6098,13 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // and Pupa the survivor (survivor.js)
+    setSurvivorOpen(open) {
+      survivorOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
@@ -6107,6 +6116,7 @@
   let screwsOpen = false;
   let logicOpen = false;
   let mazeOpen = false;
+  let survivorOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6538,7 +6548,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws", "logic", "maze"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws", "logic", "maze", "survivor"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6581,6 +6591,7 @@
     if (mode === "screws") { window.PupaScrews?.open(); return; }
     if (mode === "logic") { window.PupaLogic?.open(); return; }
     if (mode === "maze") { window.PupaMaze?.open(); return; }
+    if (mode === "survivor") { window.PupaSurvivor?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6600,7 +6611,7 @@
   const XMAS_ART = {
     "pupa-hero-3d": "xmas-pupa", "pupav2-hero": "xmas-pupav2", "ikuya-hero": "xmas-ikuya", "pangji-hero": "xmas-pangji",
     "baitoey-hero": "xmas-baitoey", "chantra-hero": "xmas-pangji", "jibjib-hero": "xmas-jibjib",
-    "mode-potion": "xmas-potion", "mode-blocks": "xmas-blocks", "mode-screws": "xmas-screws", "mode-logic": "xmas-logic", "mode-maze": "xmas-maze",
+    "mode-potion": "xmas-potion", "mode-blocks": "xmas-blocks", "mode-screws": "xmas-screws", "mode-logic": "xmas-logic", "mode-maze": "xmas-maze", "mode-survivor": "xmas-survivor",
   };
   function xmasOn() {
     const asked = new URLSearchParams(location.search).get("season");
@@ -6622,10 +6633,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-11-01e";
+  const NEWS_VERSION = "2026-11-11a";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "⚔️ Pupa ผู้รอดชีวิต · ฝ่าฝูงมอนสเตอร์ 5 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด ลากนิ้วบนจอ (หรือ WASD / ลูกศร) พา Pupa หลบฝูงมอนสเตอร์ที่รุมเข้ามาจากทุกทิศ อาวุธโจมตีเอง เก็บผลึก 💎 ให้เลเวลอัป แล้วเลือกพลัง 1 ใน 3 อย่าง: อาวุธใหม่ อัปอาวุธเดิม หรือเครื่องราง (อาวุธ 7 แบบ เครื่องราง 7 แบบ อย่างละ 5 ระดับ) ระวังฝูงที่ล้อมเข้ามา และมอนสเตอร์หัวหน้าที่ทิ้งหีบสมบัติ บอสมาที่นาที 4:00 ล้มบอสได้ผ่านด่าน เหลือพลังชีวิตครึ่งหนึ่งได้ ★★★ เลือกเล่นเป็นฮีโร่การ์ดที่มีได้ แต่ละสายมีอาวุธเริ่มต้นต่างกัน และเลเวลการ์ดช่วยเพิ่มพลัง ใช้เหรียญซื้อพรถาวร 5 อย่างให้เก่งขึ้นทุกรอบ ผ่านด่านครั้งแรกได้ 💎 20 ผลึกดาว ✧ 5 และแร่ ⛏ 8 ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "survivor", open: () => { closeNews(); window.PupaSurvivor?.open(); } },
     { tag: "โหมดใหม่", title: "🌙 เขาวงกตมุมมอง · เกมลวงตา 12 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด เกมปริศนาลวงตาแบบสามมิติ พา Pupa เดินไปถึงประตูมิติที่เรืองแสง แตะช่องที่อยากไปแล้ว Pupa จะเดินไปเอง ความลับของที่นี่คือ ทางที่ดูต่อกันบนจอเดินข้ามได้จริง แม้จะอยู่คนละความสูงก็ตาม! ใช้ปุ่มกลไกด้านล่าง หมุนสะพาน ⟳ เลื่อนแท่น และขึ้นลงลิฟต์ เพื่อให้ทางที่ขาดดูต่อกัน ถ้ายืนบนกลไกแล้วขยับ Pupa จะไปด้วย มีย้อนกลับ ↶ และคำใบ้ 💡 (ใช้คำใบ้ได้สูงสุด 2 ดาว) ขยับกลไกน้อยที่สุดได้ ★★★ ผ่านครั้งแรกได้ 💎 15 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "maze", open: () => { closeNews(); window.PupaMaze?.open(); } },
     { tag: "โหมดใหม่", title: "📅 Pupa Logic · ปริศนาภาพประจำวัน", text: "โหมดใหม่ในหน้าเลือกโหมด เกมปริศนาภาพตัวเลข (โนโนแกรม) ตัวเลขข้างแถวและบนคอลัมน์บอกว่ามีช่องระบายติดกันกี่ช่องตามลำดับ ใช้เหตุผลระบายให้ตรงทุกแถวทุกคอลัมน์ แตะหรือลากนิ้วเพื่อระบาย สลับเป็น ✖ เพื่อกากบาทช่องว่าง แก้เสร็จแล้วภาพที่ได้คือตัวละครในเกม ทุกวันมีปริศนาประจำวัน 1 ข้อ ทุกคนได้โจทย์เดียวกัน (วันธรรมดา 10×10 เสาร์อาทิตย์ 15×15) เข้าสู่ระบบแล้วจับเวลาจัดอันดับคนแก้เร็วที่สุดของวัน คำใบ้บวกเวลา 30 วินาที เล่นทุกวันต่อเนื่องได้ 🔥 สถิติ และเพชรเพิ่มขึ้นตามจำนวนวัน รางวัลรายวัน ● 150 💎 20 ขึ้นไป (สุดสัปดาห์ ● 300 💎 40) ผลึกดาว ✧ และแร่ ⛏ และมีโหมดฝึกฝนอีก 30 ด่านตั้งแต่ 5×5 ถึง 15×15 ทุกข้อแก้ได้ด้วยเหตุผลล้วน ๆ ไม่ต้องเดา", image: "logic", open: () => { closeNews(); window.PupaLogic?.open(); } },
     { tag: "โหมดใหม่", title: "🔩 คลายน็อตกลไก · เกมใช้ความคิด 40 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด แนวคลายน็อตที่ติดชาร์ตปี 2026 แผ่นไม้และแผ่นทองเหลืองซ้อนกันหลายชั้น ยึดด้วยน็อตหลากสี แตะน็อตที่ไม่มีแผ่นด้านบนทับเพื่อคลายออก น็อตจะลงกล่องสีเดียวกัน (เปิดทีละ 2 กล่อง กล่องละ 3 ตัว กล่องเต็มแล้วกล่องถัดไปจะมาแทน) ถ้ายังไม่มีกล่องสีนั้นน็อตจะไปรอที่ช่องพัก 5 ช่อง ช่องพักเต็มเมื่อไรแพ้ แผ่นที่ไม่เหลือน็อตจะร่วงลง เคลียร์ให้หมดกระดาน คิดลำดับให้ดีว่าจะคลายตัวไหนก่อน ยิ่งด่านสูงแผ่นยิ่งเยอะ (สูงสุด 19 แผ่น น็อต 36 ตัว 6 สี) ทุกด่านแก้ได้แน่นอน มีย้อนกลับ ↶ 3 ครั้ง เพิ่มช่องพัก ➕ สว่าน 🪛 คลายน็อตที่ถูกทับ และคำใบ้ 💡 ไม่ใช้ตัวช่วยเลยได้ ★★★ ผ่านครั้งแรกได้ 💎 10 ผลึกดาว ✧ 3 และแร่ ⛏ 5 ไว้ใช้ในศึกการ์ด ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "screws", open: () => { closeNews(); window.PupaScrews?.open(); } },
@@ -6819,7 +6831,7 @@
       }
       return row;
     }
-    if (kind === "potion" || kind === "blocks" || kind === "screws" || kind === "logic" || kind === "maze") {
+    if (kind === "potion" || kind === "blocks" || kind === "screws" || kind === "logic" || kind === "maze" || kind === "survivor") {
       // the puzzle mode's picture from the mode picker
       const img = document.createElement("img");
       img.src = `assets/mode-${kind}.webp`;
@@ -8588,6 +8600,7 @@
     if (screwsOpen) { window.PupaScrews?.key?.(event); return; }
     if (logicOpen) { window.PupaLogic?.key?.(event); return; }
     if (mazeOpen) { window.PupaMaze?.key?.(event); return; }
+    if (survivorOpen) { window.PupaSurvivor?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }
