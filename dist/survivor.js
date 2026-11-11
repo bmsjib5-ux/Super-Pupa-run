@@ -63,7 +63,8 @@
       if (id !== "pupa" && lv <= 0) continue;
       list.push({ id, name: c.name, role: c.role || "balance", rarity: c.rarity || 2, art: c.art || id, level: Math.max(1, Math.min(100, lv || 1)) });
     }
-    return list;
+    // Pupa first, then the strongest
+    return list.sort((a, b) => (a.id === "pupa" ? -1 : b.id === "pupa" ? 1 : b.level - a.level || b.rarity - a.rarity));
   }
   const heroArt = (h) => `assets/${h.art}-hero.webp`;
 
@@ -121,6 +122,9 @@
 
   // ---- The lobby: hero, stage, blessings ----
   function showLobby() {
+    // a pick redraws the lobby: keep it where it was scrolled to
+    const again = Boolean(body.querySelector(".survivor-cols"));
+    const keepTop = again ? body.scrollTop : 0, keepHeroes = again ? body.querySelector(".survivor-heroes")?.scrollTop || 0 : 0;
     stopRun();
     showCoins();
     frame.classList.remove("is-playing");
@@ -172,7 +176,7 @@
       tile.append(boss, el("b", null, `${n}. ${open ? def.name : "🔒"}`), el("small", "survivor-stars", open ? starText(have) : "ผ่านด่านก่อนหน้าเพื่อปลดล็อก"), el("small", null, open && r.best[n] ? `อยู่รอดนานสุด ${clock(r.best[n])}` : ""));
       list.append(tile);
     });
-    const go = button("primary-button survivor-go", `▶ เริ่มด่าน ${chosenStage}`, () => startRun(chosenStage, hero));
+    const go = button("primary-button survivor-go", `▶ เริ่มด่าน ${chosenStage} · ${hero.name}`, () => startRun(chosenStage, hero));
     stageBox.append(list, go);
 
     // blessings
@@ -197,6 +201,10 @@
     left.append(stageBox, heroBox);
     cols.append(left, perkBox);
     body.replaceChildren(intro, cols);
+    body.scrollTop = keepTop;
+    heroRow.scrollTop = keepHeroes;
+    // the chosen hero in sight within its list, on first showing
+    if (!again) { const on = heroRow.querySelector(".is-on"); if (on && on.offsetTop > heroRow.clientHeight) heroRow.scrollTop = on.offsetTop - heroRow.clientHeight / 2; }
   }
   function buyPerk(k) {
     const r = record(), lv = r.perks[k] || 0, cost = S.perkCost(lv);

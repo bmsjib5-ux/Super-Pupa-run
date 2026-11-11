@@ -23,8 +23,9 @@
 .survivor-col { display: grid; gap: .8rem; min-width: 0; }
 .survivor-box { min-width: 0; padding: .7rem .8rem .8rem; border: 1px solid rgba(255,255,255,.16); border-radius: 1rem; text-align: left; background: rgba(28,16,60,.78); }
 .survivor-box h3 { margin: 0 0 .55rem; color: #ffe6a8; font-size: .92rem; }
-.survivor-heroes { display: flex; gap: .45rem; overflow-x: auto; padding-bottom: .35rem; overscroll-behavior-x: contain; scrollbar-width: thin; }
-.survivor-hero { flex: none; display: grid; justify-items: center; gap: .1rem; width: 5.2rem; padding: .35rem .25rem .4rem; border: 2px solid rgba(255,255,255,.18); border-radius: .9rem; color: var(--ink); font: inherit; background: rgba(60,36,110,.75); cursor: pointer; }
+/* a grid that scrolls up and down (a sideways row lost its place on each pick, and swipes on it could be held back) */
+.survivor-heroes { position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(4.8rem, 1fr)); gap: .45rem; max-height: 15.5rem; overflow-y: auto; overscroll-behavior: contain; padding: .1rem .1rem .3rem; scrollbar-width: thin; }
+.survivor-hero { display: grid; justify-items: center; gap: .1rem; min-width: 0; padding: .35rem .25rem .4rem; border: 2px solid rgba(255,255,255,.18); border-radius: .9rem; color: var(--ink); font: inherit; background: rgba(60,36,110,.75); cursor: pointer; }
 .survivor-hero img { width: 3.4rem; height: 3.4rem; object-fit: contain; }
 .survivor-hero b { overflow: hidden; max-width: 100%; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
 .survivor-hero small { color: #d9ccf2; font-size: .62rem; }
