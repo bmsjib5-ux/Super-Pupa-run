@@ -7,6 +7,12 @@
 // other field is either "the biggest wins" (totals), "both" (things owned
 // or cleared) or "the device wins" (what is equipped).
 
+import { createRequire } from "node:module";
+
+// the merge garden's rules (dist/garden-engine.js): a board is kept whole
+const Garden = createRequire(import.meta.url)("../../dist/garden-engine.js");
+const cleanGarden = (raw) => (raw && typeof raw === "object" && Array.isArray(raw.board) && raw.board.length === Garden.SIZE ? Garden.clean(raw) : null);
+
 const SLOT_GROUPS = ["hero", "skin", "hat", "pet"];
 const MAX_SAVE_BYTES = 60_000;
 
@@ -164,6 +170,8 @@ export function cleanSave(raw) {
     maze: { stars: intMap(raw.maze?.stars, 3) },
     // Pupa the survivor: best stars and longest time per stage, blessing levels
     survivor: { stars: intMap(raw.survivor?.stars, 3), best: intMap(raw.survivor?.best, 3600), perks: intMap(raw.survivor?.perks, 5) },
+    // the merge garden: its board, energy, level and orders, as one piece
+    garden: cleanGarden(raw.garden),
     // Pupa Logic: practice stars, and the daily streak (the last day solved)
     logic: cleanLogic(raw.logic),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
@@ -241,6 +249,8 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     screws: { stars: maxMap(current.screws?.stars, incoming.screws?.stars) },
     maze: { stars: maxMap(current.maze?.stars, incoming.maze?.stars) },
     survivor: { stars: maxMap(current.survivor?.stars, incoming.survivor?.stars), best: maxMap(current.survivor?.best, incoming.survivor?.best), perks: maxMap(current.survivor?.perks, incoming.survivor?.perks) },
+    // the copy further along (level, then points, then changes) is kept whole
+    garden: Garden.newer(current.garden || null, incoming.garden || null),
     logic: mergeLogic(current.logic, incoming.logic),
     shop
   };
