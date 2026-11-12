@@ -4570,7 +4570,7 @@
     const dt = Math.min(.033, Math.max(0, (time - last) / 1000 || 0));
     last = time;
     // the card screen covers everything: leave the phone's time to it
-    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen || logicOpen || mazeOpen || survivorOpen || gardenOpen || defenseOpen) { requestAnimationFrame(frame); return; }
+    if (cardsOpen || matchOpen || potionOpen || blocksOpen || screwsOpen || logicOpen || mazeOpen || survivorOpen || gardenOpen || defenseOpen || rhythmOpen) { requestAnimationFrame(frame); return; }
     update(dt);
     render(time);
     drawShopPreview(time);
@@ -5993,7 +5993,7 @@
     // device's. Otherwise only the balance is corrected, keeping whatever
     // the coins did here while the request was out.
     applyCloudSave(remote, uid, sentCoins, full, sentGems = save.gems) {
-      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws, logic = save.logic, maze = save.maze, survivor = save.survivor, garden = save.garden, defense = save.defense;
+      const xp = save.shop.heroXp, stars = save.stars, rewards = save.worldRewards, cards = save.cards, match = save.match, potion = save.potion, blocks = save.blocks, screws = save.screws, logic = save.logic, maze = save.maze, survivor = save.survivor, garden = save.garden, defense = save.defense, rhythm = save.rhythm;
       if (full) {
         Object.assign(save, remote);
       } else {
@@ -6027,6 +6027,8 @@
       if (remote.garden || garden) save.garden = window.PupaGardenEngine?.newer(garden || null, remote.garden || null) ?? garden ?? remote.garden;
       // defending the cherry garden: best stars, most endless waves (the squad stays this device's)
       if (remote.defense || defense) save.defense = { stars: most(defense?.stars, remote.defense?.stars), endless: Math.max(Number(defense?.endless) || 0, Number(remote.defense?.endless) || 0), squad: defense?.squad || remote.defense?.squad || [] };
+      // Pupa's dance beat: each chart's best stars and score (the timing nudge stays this device's)
+      if (remote.rhythm || rhythm) save.rhythm = { stars: most(rhythm?.stars, remote.rhythm?.stars), best: most(rhythm?.best, remote.rhythm?.best), offset: Number(rhythm?.offset) || 0 };
       // Pupa Logic: practice stars; the later day's streak (on the same day the longer)
       if (remote.logic || logic) {
         const a = logic || {}, b = remote.logic || {}, later = String(b.last || "") >= String(a.last || "") ? b : a;
@@ -6123,6 +6125,13 @@
       if (open && state === "playing") togglePause(true);
       if (!open) renderLobby();
     },
+    // and Pupa's dance beat (rhythm.js)
+    setRhythmOpen(open) {
+      rhythmOpen = open;
+      document.body.classList.toggle("dialog-open", open);
+      if (open && state === "playing") togglePause(true);
+      if (!open) renderLobby();
+    },
     showModes() { showModes(); },
     resumeTopup(orderId, fromReturn) { openTopup(null, { orderId, fromReturn }); }
   };
@@ -6137,6 +6146,7 @@
   let survivorOpen = false;
   let gardenOpen = false;
   let defenseOpen = false;
+  let rhythmOpen = false;
 
   // Card progress from two copies of a save (see cards.js): every card at
   // the higher level, the best stars of each stage; the team comes from
@@ -6568,7 +6578,7 @@
   // (the lobby), the dodge run or the card battles. The lobby's
   // "เลือกโหมด" button comes back here.
   const modeUi = { screen: document.querySelector("#modeScreen") };
-  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws", "logic", "maze", "survivor", "garden", "defense"].some(key => new URLSearchParams(location.search).has(key));
+  const skipModes = ["level", "cards", "match", "potion", "blocks", "screws", "logic", "maze", "survivor", "garden", "defense", "rhythm"].some(key => new URLSearchParams(location.search).has(key));
   let newsWaiting = false;
   let modesOpen = false;
 
@@ -6614,6 +6624,7 @@
     if (mode === "survivor") { window.PupaSurvivor?.open(); return; }
     if (mode === "garden") { window.PupaGarden?.open(); return; }
     if (mode === "defense") { window.PupaDefense?.open(); return; }
+    if (mode === "rhythm") { window.PupaRhythm?.open(); return; }
     if (mode === "runner") openRunnerLevels();
     else ui.startBtn.focus();
     // what's new waits for the adventure, where it fits
@@ -6633,7 +6644,7 @@
   const XMAS_ART = {
     "pupa-hero-3d": "xmas-pupa", "pupav2-hero": "xmas-pupav2", "ikuya-hero": "xmas-ikuya", "pangji-hero": "xmas-pangji",
     "baitoey-hero": "xmas-baitoey", "chantra-hero": "xmas-pangji", "jibjib-hero": "xmas-jibjib",
-    "mode-potion": "xmas-potion", "mode-blocks": "xmas-blocks", "mode-screws": "xmas-screws", "mode-logic": "xmas-logic", "mode-maze": "xmas-maze", "mode-survivor": "xmas-survivor", "mode-garden": "xmas-garden", "mode-defense": "xmas-defense",
+    "mode-potion": "xmas-potion", "mode-blocks": "xmas-blocks", "mode-screws": "xmas-screws", "mode-logic": "xmas-logic", "mode-maze": "xmas-maze", "mode-survivor": "xmas-survivor", "mode-garden": "xmas-garden", "mode-defense": "xmas-defense", "mode-rhythm": "xmas-rhythm",
   };
   function xmasOn() {
     const asked = new URLSearchParams(location.search).get("season");
@@ -6655,10 +6666,11 @@
   // Shown each time the game opens until the player ticks "don't show"; a
   // new NEWS_VERSION brings it back. Each card jumps to where the new thing
   // lives. Add new entries at the top and bump NEWS_VERSION.
-  const NEWS_VERSION = "2026-11-12b";
+  const NEWS_VERSION = "2026-11-12c";
   const NEWS_DATE = "11 ต.ค. 2569";
   const NEWS_SEEN_KEY = "superPupaRunNewsSeen";
   const NEWS = [
+    { tag: "โหมดใหม่", title: "🎵 จังหวะเต้นของ Pupa · เกมดนตรี 6 เพลง", text: "โหมดใหม่ในหน้าเลือกโหมด โน้ตจะตกลงมาตาม 4 ช่อง แตะช่องนั้นตอนโน้ตถึงเส้น (คอมพิวเตอร์กด D F J K) ยิ่งตรงจังหวะยิ่งได้ PERFECT โน้ตคู่ให้แตะสองช่องพร้อมกัน Pupa เต้นไปตามเพลง ต่อคอมโบยาว ๆ แล้ว Pupa จะเรืองแสง เพลงทั้ง 6 เพลงแต่งขึ้นใหม่และเล่นสดในเกม: สวนซากุระยามเช้า, Pupa วิ่งเล่น, ราตรีแสงจันทร์, ป่าเห็ดเต้นระบำ, คืนหิมะระฆังทอง และเทศกาลดวงดาว แต่ละเพลงมี 3 ระดับ ง่าย ปกติ ยาก แม่นยำ 95% ขึ้นไปได้เกรด S ★★★ ผ่านเพลงครั้งแรกได้เพชร ผลึกดาว ✧ และแร่ ⛏ ถ้าเครื่องมีเสียงหน่วง ปรับจังหวะได้ในหน้าเลือกเพลง (ควรเปิดเสียงเล่น 🔊)", image: "rhythm", open: () => { closeNews(); window.PupaRhythm?.open(); } },
     { tag: "โหมดใหม่", title: "🏰 ปกป้องสวนเชอร์รี่ · วางฮีโร่กันมอนสเตอร์", text: "โหมดใหม่ในหน้าเลือกโหมด มอนสเตอร์เดินตามทางไปหาต้นเชอร์รี่ แตะการ์ดฮีโร่ด้านล่าง แล้วแตะช่องหญ้าว่างเพื่อวางฮีโร่ไว้ข้างทาง (ใช้กลีบซากุระ 🌸 ที่ได้จากการกำจัดมอนสเตอร์) แต่ละสายเก่งต่างกัน ⭐ สมดุล ยิงไกล ยิงถี่ · ⚔️ บุก ดาเมจแรง ติดคริ · 🔮 เวท ระเบิดเป็นวง · ❄️ ป้องกัน ทำให้ศัตรูช้าลง · 🔔 สนับสนุน เพื่อนรอบตัวตีแรงขึ้น แตะฮีโร่ที่วางแล้วเพื่ออัปเลเวล (สูงสุด 3) หรือขาย เลเวลการ์ดในศึกการ์ดยิ่งสูง ฮีโร่ยิ่งแรง เลือกทีมได้ 6 ตัว (ใช้สัตว์เลี้ยงได้ด้วย) มี 15 ด่านใน 5 แผนที่ เวฟสุดท้ายของแต่ละด่านมีบอส ต้นไม้มี ❤️ 20 เหลือ 15 ขึ้นไปได้ ★★★ ผ่านด่านแรกได้ 💎 15 ผลึกดาว ✧ 3 และแร่ ⛏ 5 และมีโหมดไม่สิ้นสุด ทุก 5 เวฟที่ทำลายสถิติได้ 💎 5 กดเรียกเวฟก่อนเวลาได้กลีบเพิ่ม และเร่งความเร็ว x2 ได้", image: "defense", open: () => { closeNews(); window.PupaDefense?.open(); } },
     { tag: "โหมดใหม่", title: "🌸 สวนรวมร่างของ Pupa · ปลูกสวนเล่นได้ทุกวัน", text: "โหมดใหม่ในหน้าเลือกโหมด แตะ 🧺 ตะกร้าเมล็ดพันธุ์เพื่อเสกเมล็ด (ใช้พลังงาน ⚡1) แล้วลากของที่เหมือนกันมาวางทับกันเพื่อรวมร่างเป็นขั้นถัดไป เมล็ด → ต้นกล้า → ... → ต้นซากุระยักษ์ (หรือแตะของ แล้วแตะอีกชิ้นที่เหมือนกัน) เพื่อน ๆ ในเกมจะมาสั่งของ ส่งครบได้เหรียญและแต้มสวน เลเวลสวนขึ้นได้เพชร พลังงาน ผลึกดาว ✧ และแร่ ⛏ เลเวล 3 ปลดล็อก 🥣 ร้านขนม เลเวล 6 ปลดล็อก ⛏️ เหมืองผลึก ได้ของขั้นใหม่ครั้งแรกได้เพชรเพิ่ม (ดูได้ในสมุดสะสม) ของขั้นสูงสุดเก็บเกี่ยวได้ ● 250 💎 5 พลังงานเพิ่มเอง 1 ทุก 2 นาที (สูงสุด 60) หรือเติมด้วยเพชร สวนบันทึกขึ้นคลาวด์ เล่นต่อได้ทุกเครื่อง", image: "garden", open: () => { closeNews(); window.PupaGarden?.open(); } },
     { tag: "โหมดใหม่", title: "⚔️ Pupa ผู้รอดชีวิต · ฝ่าฝูงมอนสเตอร์ 5 ด่าน", text: "โหมดใหม่ในหน้าเลือกโหมด ลากนิ้วบนจอ (หรือ WASD / ลูกศร) พา Pupa หลบฝูงมอนสเตอร์ที่รุมเข้ามาจากทุกทิศ อาวุธโจมตีเอง เก็บผลึก 💎 ให้เลเวลอัป แล้วเลือกพลัง 1 ใน 3 อย่าง: อาวุธใหม่ อัปอาวุธเดิม หรือเครื่องราง (อาวุธ 7 แบบ เครื่องราง 7 แบบ อย่างละ 5 ระดับ) ระวังฝูงที่ล้อมเข้ามา และมอนสเตอร์หัวหน้าที่ทิ้งหีบสมบัติ บอสมาที่นาที 4:00 ล้มบอสได้ผ่านด่าน เหลือพลังชีวิตครึ่งหนึ่งได้ ★★★ เลือกเล่นเป็นฮีโร่การ์ดที่มีได้ แต่ละสายมีอาวุธเริ่มต้นต่างกัน และเลเวลการ์ดช่วยเพิ่มพลัง ใช้เหรียญซื้อพรถาวร 5 อย่างให้เก่งขึ้นทุกรอบ ผ่านด่านครั้งแรกได้ 💎 20 ผลึกดาว ✧ 5 และแร่ ⛏ 8 ได้ 3 ดาวครั้งแรกได้อีก 💎 10", image: "survivor", open: () => { closeNews(); window.PupaSurvivor?.open(); } },
@@ -6855,7 +6867,7 @@
       }
       return row;
     }
-    if (kind === "potion" || kind === "blocks" || kind === "screws" || kind === "logic" || kind === "maze" || kind === "survivor" || kind === "garden" || kind === "defense") {
+    if (kind === "potion" || kind === "blocks" || kind === "screws" || kind === "logic" || kind === "maze" || kind === "survivor" || kind === "garden" || kind === "defense" || kind === "rhythm") {
       // the puzzle mode's picture from the mode picker
       const img = document.createElement("img");
       img.src = `assets/mode-${kind}.webp`;
@@ -8627,6 +8639,7 @@
     if (survivorOpen) { window.PupaSurvivor?.key?.(event); return; }
     if (gardenOpen) { window.PupaGarden?.key?.(event); return; }
     if (defenseOpen) { window.PupaDefense?.key?.(event); return; }
+    if (rhythmOpen) { window.PupaRhythm?.key?.(event); return; }
     if (modesOpen) return;
     if (shopOpen || levelsOpen) { if (event.key === "Escape") { event.preventDefault(); if (shopOpen) closeShop(); else closeLevels(); } return; }
     if (event.key === "Escape" || event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); return; }

@@ -174,6 +174,8 @@ export function cleanSave(raw) {
     garden: cleanGarden(raw.garden),
     // defending the cherry garden: best stars per stage, the most endless waves held
     defense: { stars: intMap(raw.defense?.stars, 3), endless: int(raw.defense?.endless, 1000) },
+    // Pupa's dance beat: best stars and score per chart ("3n": song 3, normal)
+    rhythm: { stars: intMap(raw.rhythm?.stars, 3), best: intMap(raw.rhythm?.best, 1_000_000) },
     // Pupa Logic: practice stars, and the daily streak (the last day solved)
     logic: cleanLogic(raw.logic),
     shop: { owned: idList(shop.owned), items: intMap(shop.items, 99), petLevels: intMap(shop.petLevels, 9), heroXp: intMap(shop.heroXp, 10_000_000), bring: {} }
@@ -254,6 +256,7 @@ export function mergeSave(current, incoming, baseCoins, baseGems = 0) {
     // the copy further along (level, then points, then changes) is kept whole
     garden: Garden.newer(current.garden || null, incoming.garden || null),
     defense: { stars: maxMap(current.defense?.stars, incoming.defense?.stars), endless: Math.max(current.defense?.endless || 0, incoming.defense?.endless || 0) },
+    rhythm: { stars: maxMap(current.rhythm?.stars, incoming.rhythm?.stars), best: maxMap(current.rhythm?.best, incoming.rhythm?.best) },
     logic: mergeLogic(current.logic, incoming.logic),
     shop
   };
