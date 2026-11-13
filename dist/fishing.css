@@ -1,0 +1,67 @@
+/* Moon lake fishing (fishing.js): the lake, its bar and covers: the catch, the album and the gear. */
+.fishing-overlay {
+  position: fixed;
+  z-index: 40;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: linear-gradient(180deg, #1e1f5e, #0a1238);
+}
+.fishing-overlay .fishing-card { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; max-width: none; max-height: none; border: 0; border-radius: 0; background: transparent; }
+.fishing-overlay .shop-head { background: rgba(10,14,50,.6); }
+.fishing-overlay .shop-head .fishing-home { order: -1; font-size: 1.2rem; }
+.fishing-overlay .shop-head h2 { flex: 1; margin: 0; text-align: left; }
+.fishing-body { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.fishing-bar { display: flex; align-items: center; gap: .4rem; padding: .35rem .6rem; background: rgba(10,14,50,.55); overflow: hidden; }
+.fishing-chip { flex: none; padding: .2rem .6rem; border-radius: 999px; color: #fff; font-size: .76rem; font-weight: 800; white-space: nowrap; background: rgba(255,255,255,.12); }
+.fishing-featured { flex: 1 1 auto; min-width: 0; overflow: hidden; color: #ffe08a; text-overflow: ellipsis; }
+.fishing-album-button, .fishing-gear-button { flex: none; min-width: 0; padding: .3rem .6rem; font-size: .74rem; }
+.fishing-stage { position: relative; flex: 1; min-height: 0; }
+.fishing-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; outline: none; }
+.fishing-say { position: absolute; left: 50%; bottom: .7rem; max-width: calc(100% - 1.5rem); margin: 0; padding: .45rem .9rem; border-radius: 999px; color: #fff; font-size: .82rem; font-weight: 800; text-align: center; background: rgba(10,14,50,.72); transform: translateX(-50%); pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+
+/* covers */
+.fishing-cover { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; padding: 1rem; background: rgba(5,8,30,.6); }
+.fishing-box { display: grid; justify-items: center; gap: .4rem; width: min(26rem, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 1rem 1.1rem; border: 2px solid rgba(180,210,255,.6); border-radius: 1.2rem; color: #fff; text-align: center; background: linear-gradient(180deg, rgba(40,60,130,.97), rgba(20,24,70,.97)); }
+.fishing-box h3 { margin: 0; font-size: 1.35rem; }
+.fishing-box p { margin: 0; color: #dce6ff; font-size: .8rem; }
+.fishing-box .title-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: .3rem; }
+.fishing-catch canvas { filter: drop-shadow(0 .5rem .8rem rgba(0,0,0,.4)); animation: fishing-flop .6s ease-in-out infinite alternate; }
+@keyframes fishing-flop { from { transform: rotate(-8deg); } to { transform: rotate(8deg) translateY(-4px); } }
+.fishing-rarity { font-weight: 900; }
+.fishing-rarity.is-r1 { color: #dce6ff !important; }
+.fishing-rarity.is-r2 { color: #7fd8ff !important; }
+.fishing-rarity.is-r3 { color: #d59bff !important; }
+.fishing-rarity.is-r4 { color: #ffd76a !important; text-shadow: 0 0 .6rem rgba(255,215,106,.7); }
+.fishing-box .fishing-size { color: #fff; font-size: 1.1rem; font-weight: 900; }
+.fishing-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; }
+.fishing-tag { padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 900; }
+.fishing-tag.is-new { color: #1a1030; background: #7dffb0; }
+.fishing-tag.is-record { color: #1a1030; background: #ffd76a; }
+.fishing-tag.is-feat { color: #1a1030; background: #ff9ec4; }
+.fishing-box .fishing-reward { color: #ffe08a; font-weight: 800; }
+.fishing-album { width: min(44rem, 100%); }
+.fishing-album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr)); gap: .4rem; width: 100%; }
+.fishing-album-card { display: grid; justify-items: center; gap: .05rem; padding: .35rem .25rem .4rem; border: 2px solid rgba(255,255,255,.14); border-radius: .8rem; background: rgba(255,255,255,.06); }
+.fishing-album-card b { font-size: .68rem; }
+.fishing-album-card small { color: #c8d4f2; font-size: .56rem; line-height: 1.3; }
+.fishing-album-card .fishing-album-stars { color: #ffd76a; }
+.fishing-album-card.is-r4 { border-color: rgba(255,215,106,.55); }
+.fishing-album-card.is-r3 { border-color: rgba(213,155,255,.5); }
+.fishing-album-card.is-unknown b { color: #9aa6c8; }
+.fishing-gear-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: .5rem; width: 100%; padding: .45rem .55rem; border-radius: .8rem; text-align: left; background: rgba(255,255,255,.07); }
+.fishing-gear-row b { display: block; font-size: .82rem; }
+.fishing-gear-row small { color: #c8d4f2; font-size: .66rem; }
+.fishing-dots { color: #ffd76a; font-size: .62rem; white-space: nowrap; }
+.fishing-buy { min-width: 4.8rem; padding: .35rem .55rem; font-size: .74rem; }
+
+.mode-fishing { --tint: rgba(110,150,255,.3); border-color: rgba(150,190,255,.65); }
+
+@media (max-width: 34rem) {
+  .fishing-bar { gap: .3rem; padding: .3rem .4rem; }
+  .fishing-chip { padding: .2rem .45rem; font-size: .68rem; }
+  .fishing-gear-button { font-size: 0; padding: .3rem .45rem; }
+  .fishing-gear-button::before { content: "🎒"; font-size: .9rem; }
+  .fishing-say { font-size: .74rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fishing-catch canvas { animation: none; }
+}

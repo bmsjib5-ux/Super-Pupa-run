@@ -1,6 +1,6 @@
 // Offline support for the installed game. Network first, so a new release is
 // picked up as soon as the device is online; the cache is only a fallback.
-const CACHE = "super-pupa-run-v100-rhythm";
+const CACHE = "super-pupa-run-v101-fishing";
 const APP_SHELL = [
   "./",
   "./index.html",
