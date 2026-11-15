@@ -2,17 +2,20 @@
 // test them too. Bottles hold up to CAP layers of potion. A pour moves the
 // top run of one colour into a bottle that is empty or shows that colour
 // on top, as much as fits. A level is done when every bottle is empty or
-// full of one colour. Some levels hide the lower layers ("?") until they
-// come to the top, and some cork a bottle until another bottle is filled
-// with the lock's colour. Every level is dealt from its own seed and
-// checked solvable, so it is the same on every device.
+// full of one colour. Twists come in as the levels go up: hidden layers
+// ("?") show when they come to the top; a corked bottle opens when another
+// is filled with the cork's colour; a frozen bottle thaws after so many
+// pours; small bottles hold less; a tinted bottle takes one colour only; a
+// drip bottle pours one layer at a time; a funnel takes potion but never
+// gives it back. Every level is dealt from its own seed and checked
+// solvable, so it is the same on every device.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.PupaPotionEngine = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const LEVELS = 40;
+  const LEVELS = 100;
   const CAP = 4;
   // per level: undos, an extra empty bottle, hints
   const UNDOS = 5, EXTRAS = 1, HINTS = 3;
@@ -31,15 +34,71 @@
     { name: "ฟ้าน้ำทะเล", hex: "#22d6d6", sign: "✚" },
     { name: "ขาวมุก", hex: "#f2ecff", sign: "◆" }
   ];
+  // The twists a level can have, in the order they come in.
+  const TWISTS = [
+    { key: "hidden", icon: "❓", name: "ซ่อนชั้น", text: "ชั้นล่างถูกซ่อนไว้ จะเห็นสีเมื่อเทชั้นบนออกจนมันขึ้นมาอยู่บนสุด" },
+    { key: "lock", icon: "🔒", name: "ขวดปิดจุก", text: "เทเข้าหรือออกไม่ได้ จุกจะเปิดเมื่อเรียงสีเดียวกับสีจุกครบ 1 ขวด" },
+    { key: "ice", icon: "❄️", name: "ขวดน้ำแข็ง", text: "แข็งตัวอยู่ เทเข้าหรือออกไม่ได้ ทุกครั้งที่เทขวดอื่น ตัวเลขจะลด 1 พอถึง 0 ก็ละลาย" },
+    { key: "small", icon: "🍶", name: "ขวดจิ๋ว", text: "จุได้แค่ 2–3 ชั้น ไว้พักน้ำยาชั่วคราว ตอนจบต้องเทออกให้ว่าง" },
+    { key: "only", icon: "🎨", name: "ขวดสีเฉพาะ", text: "รับเฉพาะน้ำยาสีเดียวกับขวด สีอื่นเทลงไม่ได้" },
+    { key: "drip", icon: "💧", name: "ขวดหยด", text: "ปากขวดแคบ เทออกได้ทีละ 1 ชั้นเท่านั้น" },
+    { key: "funnel", icon: "⏬", name: "ขวดกรวย", text: "เทเข้าได้อย่างเดียว เทออกไม่ได้ ใส่สีไหนแล้วต้องเติมสีนั้นให้ครบ 4 ชั้น" }
+  ];
+  // Ten levels a chapter after the first forty, each bringing in a twist.
+  const CHAPTERS = [
+    { from: 1, to: 20, name: "ห้องฝึกปรุงยา", icon: "🧪" },
+    { from: 21, to: 40, name: "ห้องสมุดเวทมนตร์", icon: "📚" },
+    { from: 41, to: 50, name: "ถ้ำน้ำแข็ง", icon: "❄️" },
+    { from: 51, to: 60, name: "ห้องขวดจิ๋ว", icon: "🍶" },
+    { from: 61, to: 70, name: "ห้องสีต้องมนตร์", icon: "🎨" },
+    { from: 71, to: 80, name: "หอหยดน้ำค้าง", icon: "💧" },
+    { from: 81, to: 90, name: "หอกรวยวิเศษ", icon: "⏬" },
+    { from: 91, to: 100, name: "หอคอยปรมาจารย์", icon: "👑" }
+  ];
+  const chapterOf = (n) => CHAPTERS.find(c => n >= c.from && n <= c.to) || CHAPTERS[0];
 
-  // A level: how many potion colours, empty bottles, and its twists.
+  // A level: how many potion colours, empty bottles, and its twists:
+  // hidden layers, a corked bottle, ice (frozen bottles and for how many
+  // pours), small bottles (their room), bottles for one colour only,
+  // drip bottles and funnels.
+  const STEP = [7, 8, 8, 9, 9, 10, 10, 11, 11, 11];
+  // the last chapter: a mix each level
+  const MASTER = [
+    { ice: 2, small: [3] },
+    { only: 1, drip: 2 },
+    { funnel: 1, ice: 1 },
+    { small: [3], only: 1 },
+    { drip: 2, funnel: 1 },
+    { ice: 2, only: 1 },
+    { small: [3, 2], drip: 2 },
+    { funnel: 1, only: 1 },
+    { ice: 2, drip: 2, small: [3] },
+    { ice: 2, only: 1, funnel: 1, drip: 1 }
+  ];
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
-    const colours = Math.min(COLOURS.length, 2 + Math.ceil(num / 3.5));
-    const hidden = num >= 6 && num % 3 === 0;
-    const lock = num >= 10 && num % 4 === 2;
-    return { num, colours, empties: 2, hidden, lock };
+    const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0 };
+    if (num <= 40) {
+      level.colours = Math.min(COLOURS.length, 2 + Math.ceil(num / 3.5));
+      level.hidden = num >= 6 && num % 3 === 0;
+      level.lock = num >= 10 && num % 4 === 2;
+      return level;
+    }
+    const k = (num - 41) % 10, chapter = Math.floor((num - 41) / 10);
+    level.colours = STEP[k];
+    level.hidden = num % 3 === 0;
+    level.lock = num % 4 === 2;
+    if (chapter === 0) { level.ice = k < 3 ? 1 : k < 7 ? 2 : 3; }
+    else if (chapter === 1) { level.empties = 1; level.small = k < 4 ? [3, 3] : k < 8 ? [3, 2] : [2, 2, 2]; }
+    else if (chapter === 2) { if (k >= 5) level.empties = 1; level.only = k < 5 ? 1 : 2; }
+    else if (chapter === 3) { level.drip = k < 4 ? 2 : 3; if (k % 3 === 2) level.ice = 1; }
+    else if (chapter === 4) { level.empties = 1; level.funnel = 1; if (k >= 5) level.small = [3]; if (k % 4 === 3) level.ice = 1; }
+    else Object.assign(level, { empties: 1 }, MASTER[k]);
+    if (level.ice) level.iceTurns = 4 + Math.floor(k / 2);
+    return level;
   }
+  // the twists a level has, as keys of TWISTS
+  const twistsOf = (level) => TWISTS.filter(t => t.key === "small" ? level.small.length > 0 : Boolean(level[t.key])).map(t => t.key);
 
   // A small seeded random source.
   function random(seed) {
@@ -49,9 +108,13 @@
 
   // ---- A board ----
   // { bottles: [{ layers: [colour, ...] bottom to top, hide: how many of
-  // the bottom layers are still hidden, lock: the colour that uncorks it,
-  // or -1 }] }
-  const clone = (state) => ({ bottles: state.bottles.map(b => ({ layers: b.layers.slice(), hide: b.hide, lock: b.lock })) });
+  // the bottom layers are still hidden, lock: the colour that uncorks it
+  // or -1, ice: pours left until it thaws, cap: its room, only: the one
+  // colour it takes or -1, drip: pours one layer at a time, funnel: takes
+  // potion but never gives it back }] }
+  const bottle = (layers = [], o = {}) => ({ layers: layers.slice(), hide: o.hide || 0, lock: o.lock ?? -1, ice: o.ice || 0, cap: o.cap || CAP, only: o.only ?? -1, drip: Boolean(o.drip), funnel: Boolean(o.funnel) });
+  const clone = (state) => ({ bottles: state.bottles.map(b => bottle(b.layers, b)) });
+  const capOf = (b) => b.cap || CAP;
   const top = (b) => b.layers[b.layers.length - 1];
   // how many layers of the top colour sit together on top
   function run(b) {
@@ -61,23 +124,30 @@
   }
   const isFull = (b) => b.layers.length === CAP && run(b) === CAP;
   const isSolved = (state) => state.bottles.every(b => !b.layers.length || isFull(b));
+  // what sort of bottle (the same sort, empty, is as good as another)
+  const kindOf = (b) => `${capOf(b) !== CAP ? `c${b.cap}` : ""}${(b.only ?? -1) >= 0 ? `o${b.only}` : ""}${b.drip ? "d" : ""}${b.funnel ? "f" : ""}`;
+  // how much a pour from a to b would move
+  const amountOf = (from, to) => Math.min(from.drip ? 1 : run(from), capOf(to) - to.layers.length);
 
   // Can the top of bottle a go into bottle b?
   function canPour(state, a, b) {
     const from = state.bottles[a], to = state.bottles[b];
-    if (!from || !to || a === b || !from.layers.length || to.layers.length >= CAP) return false;
-    if (from.lock >= 0 || to.lock >= 0 || isFull(from)) return false;
+    if (!from || !to || a === b || !from.layers.length || to.layers.length >= capOf(to)) return false;
+    if (from.lock >= 0 || to.lock >= 0 || from.ice > 0 || to.ice > 0 || from.funnel || isFull(from)) return false;
+    if ((to.only ?? -1) >= 0 && top(from) !== to.only) return false;
     return !to.layers.length || top(to) === top(from);
   }
   // Pour: how many layers moved (0 if it can't). Reveals the layer that
-  // comes to the top, and uncorks bottles once their colour is filled.
+  // comes to the top, thaws the ice a pour, and uncorks bottles once their
+  // colour is filled.
   function pour(state, a, b) {
     if (!canPour(state, a, b)) return 0;
     const from = state.bottles[a], to = state.bottles[b];
-    const amount = Math.min(run(from), CAP - to.layers.length);
+    const amount = amountOf(from, to);
     for (let k = 0; k < amount; k++) to.layers.push(from.layers.pop());
     if (from.layers.length && from.hide > from.layers.length - 1) from.hide = from.layers.length - 1;
     if (!from.layers.length) from.hide = 0;
+    for (const bottle of state.bottles) if (bottle.ice > 0) bottle.ice--;
     if (isFull(to)) for (const bottle of state.bottles) if (bottle.lock === top(to)) bottle.lock = -1;
     return amount;
   }
@@ -92,12 +162,13 @@
   // A depth-first search over boards, the likeliest pours first; boards
   // seen before are skipped (bottles in any order are the same board).
   // Returns the pours, or null (none, or more than `limit` boards).
-  const keyOf = (state) => state.bottles.map(b => b.layers.join(".") + (b.lock >= 0 ? `#${b.lock}` : "")).sort().join("|");
-  function worth(state, a, b) {
+  const keyOf = (state) => state.bottles.map(b => b.layers.join(".") + (b.lock >= 0 ? `#${b.lock}` : "") + (b.ice > 0 ? `*${b.ice}` : "") + kindOf(b)).sort().join("|");
+  function worth(state, a, b, waiting) {
     const from = state.bottles[a], to = state.bottles[b];
-    // pouring a bottle of one colour into an empty one changes nothing
-    if (!to.layers.length && run(from) === from.layers.length) return -1;
-    const amount = Math.min(run(from), CAP - to.layers.length);
+    // pouring a bottle of one colour into an empty one of the same sort
+    // changes nothing (but passes a pour while ice thaws)
+    if (!to.layers.length && run(from) === from.layers.length && kindOf(from) === kindOf(to)) return waiting ? 0 : -1;
+    const amount = amountOf(from, to);
     let score = amount;
     if (to.layers.length && to.layers.length + amount === CAP && run(to) === to.layers.length) score += 20; // fills a bottle
     if (to.layers.length) score += 8;                                                                    // onto its colour
@@ -115,12 +186,13 @@
       const key = keyOf(state);
       if (seen.has(key)) return false;
       seen.add(key);
-      let firstEmpty = -1;
+      const firstEmpty = new Map(), waiting = state.bottles.some(b => b.ice > 0);
       const list = [];
       for (const [a, b] of moves(state)) {
-        // one empty bottle is as good as another
-        if (!state.bottles[b].layers.length && state.bottles[b].lock < 0) { if (firstEmpty < 0) firstEmpty = b; else if (b !== firstEmpty) continue; }
-        const w = worth(state, a, b);
+        // one empty bottle is as good as another of its sort
+        const to = state.bottles[b];
+        if (!to.layers.length && to.lock < 0) { const kind = kindOf(to); if (!firstEmpty.has(kind)) firstEmpty.set(kind, b); else if (b !== firstEmpty.get(kind)) continue; }
+        const w = worth(state, a, b, waiting);
         if (w >= 0) list.push([w + (jitter ? jitter() * 3 : 0), a, b]);
       }
       list.sort((x, y) => y[0] - x[0]);
@@ -137,12 +209,13 @@
     return go(clone(start)) ? path : null;
   }
   // Shorten a found way: drop pours that come back to a board seen
-  // earlier on it.
+  // earlier on it (the same bottles in the same places).
+  const placeKey = (state) => state.bottles.map(b => b.layers.join(".") + (b.lock >= 0 ? `#${b.lock}` : "") + (b.ice > 0 ? `*${b.ice}` : "")).join("|");
   function tidy(start, path) {
     let best = path.slice();
-    const boards = [keyOf(start)];
+    const boards = [placeKey(start)];
     let state = clone(start);
-    for (const [a, b] of best) { pour(state, a, b); boards.push(keyOf(state)); }
+    for (const [a, b] of best) { pour(state, a, b); boards.push(placeKey(state)); }
     for (let i = 0; i < boards.length; i++) {
       const j = boards.lastIndexOf(boards[i]);
       if (j > i) { best.splice(i, j - i); boards.splice(i, j - i); }
@@ -153,18 +226,21 @@
   // ---- Dealing a level ----
   // The colours, CAP of each, shuffled into full bottles, then the empty
   // ones; hidden levels hide all but the top layer, a lock level corks a
-  // bottle with a colour it doesn't hold. Dealt again (next seed) until
-  // no bottle starts sorted and the level can be solved.
+  // bottle with a colour it doesn't hold; then the later twists: frozen
+  // and drip bottles among the full ones, and the small, one-colour and
+  // funnel bottles. Dealt again (next seed) until no bottle starts sorted
+  // and the level can be solved.
   function deal(level) {
+    const small = level.small || [];
     for (let attempt = 0; attempt < 400; attempt++) {
       const rnd = random(level.num * 7919 + attempt * 104729 + 17);
       const layers = [];
       for (let c = 0; c < level.colours; c++) for (let k = 0; k < CAP; k++) layers.push(c);
       for (let i = layers.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [layers[i], layers[j]] = [layers[j], layers[i]]; }
       const bottles = [];
-      for (let c = 0; c < level.colours; c++) bottles.push({ layers: layers.slice(c * CAP, c * CAP + CAP), hide: level.hidden ? CAP - 1 : 0, lock: -1 });
+      for (let c = 0; c < level.colours; c++) bottles.push(bottle(layers.slice(c * CAP, c * CAP + CAP), { hide: level.hidden ? CAP - 1 : 0 }));
       if (bottles.some(b => run(b) >= 3)) continue;
-      for (let e = 0; e < level.empties; e++) bottles.push({ layers: [], hide: 0, lock: -1 });
+      for (let e = 0; e < level.empties; e++) bottles.push(bottle());
       if (level.lock) {
         const which = Math.floor(rnd() * level.colours), held = new Set(bottles[which].layers);
         const free = [];
@@ -172,6 +248,21 @@
         if (!free.length) continue;
         bottles[which].lock = free[Math.floor(rnd() * free.length)];
       }
+      // the full bottles, in a shuffled order, for the frozen and drip ones
+      const order = [];
+      for (let c = 0; c < level.colours; c++) if (bottles[c].lock < 0) order.push(c);
+      for (let i = order.length - 1; i > 0 && (level.ice || level.drip); i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      for (let k = 0; k < (level.ice || 0); k++) bottles[order[k]].ice = level.iceTurns + Math.floor(rnd() * 5);
+      for (let k = 0; k < (level.drip || 0); k++) bottles[order[order.length - 1 - k]].drip = true;
+      for (const cap of small) bottles.push(bottle([], { cap }));
+      const tints = [];
+      for (let k = 0; k < (level.only || 0); k++) {
+        let c = Math.floor(rnd() * level.colours);
+        while (tints.includes(c)) c = (c + 1) % level.colours;
+        tints.push(c);
+        bottles.push(bottle([], { only: c }));
+      }
+      for (let k = 0; k < (level.funnel || 0); k++) bottles.push(bottle([], { funnel: true }));
       const state = { bottles };
       const way = solve(state);
       if (!way) continue;
@@ -181,7 +272,7 @@
         const other = solve(state, 60000, random(level.num * 31 + k * 977 + attempt));
         if (other && other.length < short.length) { const t = tidy(state, other); if (t.length < short.length) short = t; }
       }
-      return { state, par: short.length, way: short };
+      return { state, par: short.length, way: short, attempt };
     }
     throw new Error(`level ${level.num}: no solvable deal`);
   }
@@ -199,15 +290,16 @@
     return pours <= Math.ceil(par * 1.5) + 2 ? 2 : 1;
   }
   // Coins each clear (half on a replay); the first clear gems, star dust
-  // and ore for the card battles; three stars the first time more gems.
+  // and ore for the card battles; three stars the first time more gems,
+  // and the last level of a chapter, the first time, more again.
   function rewardFor(level, first, stars, before = 0) {
     const coins = Math.round((30 + 6 * level.num) * (first ? 1 : .5));
-    const gems = (first ? 10 : 0) + (stars >= 3 && before < 3 ? 10 : 0);
+    const gems = (first ? 10 : 0) + (stars >= 3 && before < 3 ? 10 : 0) + (first && level.num === chapterOf(level.num).to ? 20 : 0);
     return { coins, gems, dust: first ? 3 : 0, ore: first ? 5 : 0 };
   }
 
   return {
-    LEVELS, CAP, UNDOS, EXTRAS, HINTS, COLOURS,
-    levelOf, random, clone, top, run, isFull, isSolved, canPour, pour, moves, solve, tidy, deal, hint, starsFor, rewardFor
+    LEVELS, CAP, UNDOS, EXTRAS, HINTS, COLOURS, TWISTS, CHAPTERS,
+    levelOf, twistsOf, chapterOf, random, bottle, clone, capOf, top, run, isFull, isSolved, canPour, pour, moves, solve, tidy, deal, hint, starsFor, rewardFor
   };
 });

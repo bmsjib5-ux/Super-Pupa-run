@@ -2,11 +2,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 
 const P = createRequire(import.meta.url)("../../dist/potion-engine.js");
 
-// a board from bottles of colours, bottom to top
-const board = (...bottles) => ({ bottles: bottles.map(layers => ({ layers: layers.slice(), hide: 0, lock: -1 })) });
+// a board from bottles of colours, bottom to top (or [layers, twists])
+const board = (...bottles) => ({ bottles: bottles.map(b => Array.isArray(b[0]) ? P.bottle(b[0], b[1]) : P.bottle(b)) });
 
 test("potion: a pour moves the top run, as much as fits, onto its colour or into an empty bottle", () => {
   const s = board([0, 1, 1], [2, 1], [], [0, 0, 0, 2]);
@@ -41,15 +42,74 @@ test("potion: hidden layers show as they come to the top; a corked bottle opens 
   assert.equal(P.pour(c, 0, 3), 3);
 });
 
+test("potion: frozen bottles thaw a pour at a time; small bottles hold less; tinted ones take one colour", () => {
+  const s = board([[0, 1, 1], { ice: 2 }], [2, 2, 1], [1], []);
+  assert.equal(P.canPour(s, 0, 3), false);
+  assert.equal(P.canPour(s, 2, 0), false);
+  assert.equal(P.pour(s, 1, 3), 1);
+  assert.equal(s.bottles[0].ice, 1);
+  assert.equal(P.canPour(s, 2, 0), false);
+  P.pour(s, 3, 2);
+  assert.equal(s.bottles[0].ice, 0);
+  assert.equal(P.pour(s, 2, 0), 1, "the thawed bottle takes what fits");
+  assert.deepEqual(s.bottles[0].layers, [0, 1, 1, 1]);
+  // a small bottle: only what fits, then full
+  const v = board([1, 2, 2, 2], [[], { cap: 2 }]);
+  assert.equal(P.pour(v, 0, 1), 2);
+  assert.equal(P.canPour(v, 0, 1), false);
+  assert.equal(P.isSolved(board([0, 0, 0, 0], [[], { cap: 3 }])), true);
+  assert.equal(P.isSolved(board([0, 0], [[0, 0], { cap: 2 }])), false, "a small bottle can't finish a colour");
+  // a tinted bottle
+  const t = board([0, 3], [1, 0], [[], { only: 0 }]);
+  assert.equal(P.canPour(t, 0, 2), false);
+  assert.equal(P.pour(t, 1, 2), 1);
+  assert.deepEqual(t.bottles[2].layers, [0]);
+});
+
+test("potion: a drip bottle pours one layer at a time; a funnel takes potion but never gives it back", () => {
+  const d = board([[0, 1, 1, 1], { drip: true }], []);
+  assert.equal(P.pour(d, 0, 1), 1);
+  assert.equal(P.pour(d, 0, 1), 1);
+  assert.deepEqual(d.bottles[0].layers, [0, 1]);
+  const f = board([2, 1, 1], [[], { funnel: true }], []);
+  assert.equal(P.pour(f, 0, 1), 2);
+  assert.equal(P.canPour(f, 1, 2), false);
+  assert.equal(P.canPour(f, 0, 1), false, "only the funnel's colour goes on top");
+  // a solver that knows the twists: ice to wait out, then sorted
+  const w = board([[0, 1, 0, 1], { ice: 3 }], [1, 0, 1, 0], [], []);
+  const way = P.solve(w);
+  assert.ok(way);
+  for (const [a, b] of way) assert.ok(P.pour(w, a, b) > 0);
+  assert.ok(P.isSolved(w));
+});
+
+test("potion: levels 1–40 deal just as they did before the twists came in", () => {
+  const boards = [];
+  for (let n = 1; n <= 40; n++) boards.push(JSON.stringify(P.deal(P.levelOf(n)).state.bottles.map(b => [b.layers, b.hide, b.lock])));
+  assert.equal(createHash("sha256").update(boards.join("\n")).digest("hex").slice(0, 16), "f2368d00005e3bb6");
+});
+
+test("potion: 100 levels in chapters, each twist coming in along the way", () => {
+  assert.equal(P.LEVELS, 100);
+  let next = 1;
+  for (const c of P.CHAPTERS) { assert.equal(c.from, next); assert.ok(c.to >= c.from); next = c.to + 1; }
+  assert.equal(next, P.LEVELS + 1);
+  const seen = new Set();
+  for (let n = 1; n <= P.LEVELS; n++) for (const key of P.twistsOf(P.levelOf(n))) seen.add(key);
+  assert.deepEqual([...seen].sort(), P.TWISTS.map(t => t.key).sort());
+  // past level 40 every level has at least one of the new twists
+  for (let n = 41; n <= P.LEVELS; n++) assert.ok(P.twistsOf(P.levelOf(n)).some(k => !["hidden", "lock"].includes(k)), `level ${n}`);
+  assert.equal(P.levelOf(250).num, 100);
+});
+
 test("potion: every level deals the same each time, starts unsorted, and the found way solves it", () => {
-  let lastColours = 0;
   for (let n = 1; n <= P.LEVELS; n++) {
     const level = P.levelOf(n), dealt = P.deal(level), again = P.deal(level);
     assert.deepEqual(dealt.state, again.state, `level ${n}`);
-    assert.ok(level.colours >= lastColours && level.colours <= P.COLOURS.length, `level ${n}`);
-    lastColours = level.colours;
+    assert.ok(level.colours >= 3 && level.colours <= P.COLOURS.length, `level ${n}`);
+    if (n > 1 && n <= 40) assert.ok(level.colours >= P.levelOf(n - 1).colours, `level ${n}`);
     const { bottles } = dealt.state;
-    assert.equal(bottles.length, level.colours + level.empties);
+    assert.equal(bottles.length, level.colours + level.empties + level.small.length + level.only + level.funnel, `level ${n}`);
     assert.ok(!P.isSolved(dealt.state) && bottles.every(b => P.run(b) < 3), `level ${n} starts sorted`);
     // each colour CAP times
     const count = {};
@@ -57,6 +117,13 @@ test("potion: every level deals the same each time, starts unsorted, and the fou
     assert.ok(Object.values(count).every(v => v === P.CAP) && Object.keys(count).length === level.colours, `level ${n}`);
     assert.equal(bottles.some(b => b.lock >= 0), level.lock, `level ${n} lock`);
     assert.equal(bottles.some(b => b.hide > 0), level.hidden, `level ${n} hidden`);
+    assert.equal(bottles.filter(b => b.ice > 0).length, level.ice, `level ${n} ice`);
+    assert.equal(bottles.filter(b => b.drip).length, level.drip, `level ${n} drip`);
+    assert.equal(bottles.filter(b => b.funnel).length, level.funnel, `level ${n} funnel`);
+    assert.deepEqual(bottles.filter(b => b.cap < P.CAP).map(b => b.cap), level.small, `level ${n} small`);
+    assert.equal(new Set(bottles.filter(b => b.only >= 0).map(b => b.only)).size, level.only, `level ${n} tinted`);
+    // the twists only on the bottles they belong on
+    assert.ok(bottles.every(b => !(b.ice > 0 && b.lock >= 0) && (!b.funnel && b.only < 0 && b.cap === P.CAP || !b.layers.length)), `level ${n}`);
     const s = P.clone(dealt.state);
     for (const [a, b] of dealt.way) assert.ok(P.pour(s, a, b) > 0, `level ${n}`);
     assert.ok(P.isSolved(s) && dealt.par === dealt.way.length, `level ${n}`);
@@ -83,4 +150,7 @@ test("potion: stars by pours against par, and rewards", () => {
   const first = P.rewardFor(P.levelOf(10), true, 3, 0), again = P.rewardFor(P.levelOf(10), false, 3, 3);
   assert.deepEqual(first, { coins: 90, gems: 20, dust: 3, ore: 5 });
   assert.deepEqual(again, { coins: 45, gems: 0, dust: 0, ore: 0 });
+  // the last level of a chapter, the first time, 20 gems more
+  assert.deepEqual(P.rewardFor(P.levelOf(50), true, 1, 0), { coins: 330, gems: 30, dust: 3, ore: 5 });
+  assert.equal(P.rewardFor(P.levelOf(50), false, 3, 1).gems, 10);
 });

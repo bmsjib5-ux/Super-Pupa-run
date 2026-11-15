@@ -32,6 +32,10 @@
   };
   const stars = (n) => "★".repeat(n) + "☆".repeat(3 - n);
   const colourName = (c) => P.COLOURS[c].name;
+  const twist = (key) => P.TWISTS.find(t => t.key === key);
+  // the level each twist first comes in on
+  const firstOf = {};
+  for (let n = 1; n <= P.LEVELS; n++) for (const key of P.twistsOf(P.levelOf(n))) if (!firstOf[key]) firstOf[key] = n;
 
   // ---- The save ----
   function progress() {
@@ -46,7 +50,8 @@
   const isOpenLevel = (n) => n === 1 || (record().stars[n - 1] || 0) > 0;
   const nextLevel = () => { for (let n = 1; n <= P.LEVELS; n++) if (!record().stars[n]) return n; return P.LEVELS; };
   // a level's twists, as icons and words
-  const twistIcons = (level) => `${level.hidden ? "❓" : ""}${level.lock ? "🔒" : ""}`;
+  const twistIcons = (level) => P.twistsOf(level).map(key => twist(key).icon).join("");
+  const twistWords = (level) => P.twistsOf(level).map(key => twist(key).name).join(" · ");
 
   // ---- The frame ----
   const frame = el("div", "shop-card potion-card");
@@ -68,6 +73,7 @@
 
   let isShown = false;
   let play = null;   // the level being played, if any
+  const shownTwists = new Set();   // new-twist cards shown this visit
 
   function open() {
     if (!game()) return;
@@ -105,20 +111,37 @@
     pic.alt = "";
     const words = el("div", "potion-intro-words");
     words.append(el("b", null, "เทน้ำยาให้แต่ละขวดเหลือสีเดียว"),
-      el("span", null, `แตะขวดที่จะเท แล้วแตะขวดปลายทาง เทได้เฉพาะลงขวดว่าง หรือบนน้ำยาสีเดียวกัน ขวดละ ${P.CAP} ชั้น · ❓ บางด่านซ่อนชั้นล่างไว้จนกว่าจะเทออก · 🔒 ขวดปิดจุกจะเปิดเมื่อเรียงสีที่กำหนดครบ 1 ขวด · เทไม่เกินเป้าได้ ★★★`));
+      el("span", null, `แตะขวดที่จะเท แล้วแตะขวดปลายทาง เทได้เฉพาะลงขวดว่าง หรือบนน้ำยาสีเดียวกัน ขวดละ ${P.CAP} ชั้น เทไม่เกินเป้าได้ ★★★ · ${P.LEVELS} ด่าน ${P.CHAPTERS.length} บท ยิ่งสูงยิ่งมีลูกเล่นใหม่`));
     intro.append(pic, words);
+    // every twist, open to read
+    const guide = el("details", "potion-guide");
+    guide.append(el("summary", null, `ลูกเล่นในห้องยา (${P.TWISTS.length} แบบ)`));
+    const list = el("div", "potion-guide-list");
+    for (const t of P.TWISTS) {
+      const row = el("p", "potion-guide-row");
+      row.append(el("span", "potion-guide-icon", t.icon), el("b", null, t.name), el("small", null, `${t.text} · เริ่มด่าน ${firstOf[t.key]}`));
+      list.append(row);
+    }
+    guide.append(list);
     const go = button("primary-button potion-go", `▶ เล่นด่าน ${next}`, () => startLevel(next));
     const sum = el("p", "potion-sum", `★ ${got}/${P.LEVELS * 3} · ผ่านแล้ว ${Object.keys(r.stars).length}/${P.LEVELS} ด่าน`);
     const grid = el("div", "potion-levels");
-    for (let n = 1; n <= P.LEVELS; n++) {
-      const lv = P.levelOf(n), open = isOpenLevel(n), have = r.stars[n] || 0;
-      const tile = button(`potion-level${have ? " is-cleared" : open ? " is-next" : " is-locked"}`, null, () => startLevel(n),
-        `ด่าน ${n} ${open ? (have ? `ได้ ${have} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${lv.hidden ? " · ซ่อนชั้นล่าง" : ""}${lv.lock ? " · มีขวดปิดจุก" : ""}`);
-      tile.disabled = !open;
-      tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(have) : ""), el("small", "potion-level-info", `${lv.colours} สี ${twistIcons(lv)}`));
-      grid.append(tile);
+    for (const chapter of P.CHAPTERS) {
+      let have = 0;
+      for (let n = chapter.from; n <= chapter.to; n++) have += r.stars[n] || 0;
+      const headRow = el("h3", `potion-chapter${isOpenLevel(chapter.from) ? "" : " is-locked"}`);
+      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), el("small", null, `ด่าน ${chapter.from}–${chapter.to} · ★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
+      grid.append(headRow);
+      for (let n = chapter.from; n <= chapter.to; n++) {
+        const lv = P.levelOf(n), open = isOpenLevel(n), got = r.stars[n] || 0, words = twistWords(lv);
+        const tile = button(`potion-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}`, null, () => startLevel(n),
+          `ด่าน ${n} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
+        tile.disabled = !open;
+        tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(got) : ""), el("small", "potion-level-info", `${lv.colours} สี`), el("small", "potion-level-twists", twistIcons(lv)));
+        grid.append(tile);
+      }
     }
-    body.replaceChildren(intro, go, sum, grid);
+    body.replaceChildren(intro, guide, go, sum, grid);
     grid.querySelector(".is-next")?.scrollIntoView({ block: "nearest" });
   }
 
@@ -130,7 +153,7 @@
     const dealt = P.deal(level);
     const view = el("section", "potion-play");
     const bar = el("div", "potion-bar");
-    const name = el("b", "potion-name", `ด่าน ${n}${level.hidden ? " · ❓ ซ่อนชั้น" : ""}${level.lock ? " · 🔒 ปิดจุก" : ""}`);
+    const name = el("b", "potion-name", `ด่าน ${n}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
     const count = el("span", "potion-count");
     const undo = button("potion-tool", null, () => useUndo(), "ย้อนกลับ");
     const extra = button("potion-tool", null, () => useExtra(), "เพิ่มขวดเปล่า");
@@ -138,10 +161,16 @@
     const again = button("potion-tool", "⟲", () => restart(), "เริ่มด่านใหม่");
     bar.append(name, count, undo, extra, hint, again);
     const goal = el("p", "potion-goal");
+    // the level's twists: tap one to read it again
+    const twists = el("div", "potion-twists");
+    for (const key of P.twistsOf(level)) {
+      const t = twist(key);
+      twists.append(button("potion-twist", `${t.icon} ${t.name}`, () => say(`${t.icon} ${t.name}: ${t.text}`), `${t.name}: ${t.text}`));
+    }
     const shelf = el("div", "potion-shelf");
     const note = el("p", "potion-note");
     note.setAttribute("aria-live", "polite");
-    view.append(bar, goal, shelf, note);
+    view.append(bar, goal, twists, shelf, note);
     body.replaceChildren(view);
     play = { level, par: dealt.par, start: P.clone(dealt.state), state: P.clone(dealt.state), history: [], pours: 0,
       undos: P.UNDOS, extras: P.EXTRAS, hints: P.HINTS, usedExtra: false, pick: -1, busy: false, over: false,
@@ -150,6 +179,25 @@
     paintTools();
     announce(`ด่าน ${n} · น้ำยา ${level.colours} สี · เป้า ${dealt.par} ครั้ง`);
     tone(523, .08, "triangle", .05); tone(784, .1, "triangle", .05, .08);
+    // a twist that comes in on this level, the first time through
+    const fresh = P.twistsOf(level).filter(key => firstOf[key] === n && !shownTwists.has(key));
+    if (fresh.length && !record().stars[n]) { fresh.forEach(key => shownTwists.add(key)); showTwist(fresh); }
+  }
+  // A card for a twist new on this level, over the shelves.
+  function showTwist(keys) {
+    const p = play;
+    p.busy = true;
+    const box = el("div", "potion-cover potion-new-twist");
+    box.append(el("p", "potion-new-tag", "✨ ลูกเล่นใหม่!"));
+    for (const key of keys) {
+      const t = twist(key);
+      box.append(el("span", "potion-new-icon", t.icon), el("h3", null, t.name), el("p", null, t.text));
+    }
+    const ok = button("primary-button", "เข้าใจแล้ว ▶", () => { box.remove(); if (play === p) p.busy = false; });
+    box.append(ok);
+    p.view.append(box);
+    [659, 880, 1175].forEach((note, i) => tone(note, .08, "sine", .04, .2 + i * .08));
+    ok.focus();
   }
   function restart() {
     const p = play;
@@ -161,12 +209,21 @@
   // The bottles, a button each, in one row or two.
   function build() {
     const p = play;
-    p.nodes = p.state.bottles.map((_, i) => {
+    p.nodes = p.state.bottles.map((b, i) => {
       const node = button("potion-bottle", null, () => tap(i));
       const glass = el("span", "potion-glass");
-      for (let k = 0; k < P.CAP; k++) glass.append(el("span", "potion-layer"));
-      glass.append(el("span", "potion-shine"));
-      node.append(el("span", "potion-cork"), glass);
+      for (let k = 0; k < P.capOf(b); k++) glass.append(el("span", "potion-layer"));
+      glass.append(el("span", "potion-shine"), el("span", "potion-frost"));
+      node.style.setProperty("--cap", String(P.capOf(b)));
+      node.classList.toggle("is-small", P.capOf(b) < P.CAP);
+      node.classList.toggle("is-drip", b.drip);
+      node.classList.toggle("is-funnel", b.funnel);
+      node.classList.toggle("is-only", b.only >= 0);
+      if (b.only >= 0) node.style.setProperty("--o", P.COLOURS[b.only].hex);
+      node.append(el("span", "potion-mouth"), el("span", "potion-cork"), glass);
+      // what sort of bottle, on a badge
+      const badge = b.funnel ? "⏬" : b.drip ? "💧" : b.only >= 0 ? P.COLOURS[b.only].sign : P.capOf(b) < P.CAP ? String(P.capOf(b)) : "";
+      if (badge) node.append(el("span", `potion-badge${b.only >= 0 && !b.funnel && !b.drip ? " is-tint" : ""}`, badge));
       return node;
     });
     p.shelf.replaceChildren(...p.nodes);
@@ -207,6 +264,8 @@
       });
       const done = P.isFull(b);
       node.classList.toggle("is-done", done);
+      node.classList.toggle("is-ice", b.ice > 0);
+      node.querySelector(".potion-frost").textContent = b.ice > 0 ? `❄️${b.ice}` : "";
       node.classList.toggle("is-picked", p.pick === i);
       node.classList.toggle("is-locked", b.lock >= 0);
       const cork = node.querySelector(".potion-cork");
@@ -217,12 +276,24 @@
     p.count.textContent = `เท ${p.pours}`;
     p.goal.textContent = `เป้า ★★★: เทไม่เกิน ${p.par} ครั้ง${p.usedExtra ? " (ใช้ขวดเสริมแล้ว ได้สูงสุด ★★)" : ""}`;
   }
+  // the bottle's sort, in words
+  function sortOf(b) {
+    const out = [];
+    if (P.capOf(b) < P.CAP) out.push(`ขวดจิ๋วจุ ${P.capOf(b)} ชั้น`);
+    if (b.only >= 0) out.push(`รับเฉพาะสี${colourName(b.only)}`);
+    if (b.drip) out.push("ขวดหยด เทออกทีละชั้น");
+    if (b.funnel) out.push("ขวดกรวย เทออกไม่ได้");
+    if (b.ice > 0) out.push(`แข็งตัว ละลายเมื่อเทอีก ${b.ice} ครั้ง`);
+    if (b.lock >= 0) out.push(`ปิดจุก เปิดเมื่อเรียงสี${colourName(b.lock)}ครบ`);
+    return out.length ? ` (${out.join(", ")})` : "";
+  }
   function describe(b, i) {
-    if (!b.layers.length) return `ขวด ${i + 1} ว่าง`;
+    if (!b.layers.length) return `ขวด ${i + 1}${sortOf(b)} ว่าง`;
     const parts = [];
     for (let k = b.layers.length - 1; k >= 0; k--) parts.push(k < b.hide ? "ซ่อนอยู่" : colourName(b.layers[k]));
-    return `ขวด ${i + 1}${b.lock >= 0 ? ` ปิดจุก เปิดเมื่อเรียงสี${colourName(b.lock)}ครบ` : ""}${P.isFull(b) ? " เรียงครบแล้ว" : ""}: จากบนลงล่าง ${parts.join(", ")}`;
+    return `ขวด ${i + 1}${sortOf(b)}${P.isFull(b) ? " เรียงครบแล้ว" : ""}: จากบนลงล่าง ${parts.join(", ")}`;
   }
+  const iceWhy = (b) => `ขวดนี้แข็งตัวอยู่ ❄️ จะละลายเมื่อเทขวดอื่นอีก ${b.ice} ครั้ง`;
 
   function tap(i) {
     const p = play;
@@ -232,7 +303,9 @@
     if (p.pick < 0) {
       if (!b.layers.length) { nope(i, "เลือกขวดที่มีน้ำยาก่อน แล้วค่อยแตะขวดปลายทาง"); return; }
       if (b.lock >= 0) { nope(i, `ขวดนี้ปิดจุกอยู่ จะเปิดเมื่อเรียงสี${colourName(b.lock)}ครบ 1 ขวด`); return; }
+      if (b.ice > 0) { nope(i, iceWhy(b)); return; }
       if (P.isFull(b)) { nope(i, "ขวดนี้เรียงครบแล้ว"); return; }
+      if (b.funnel) { nope(i, "ขวดกรวยเทออกไม่ได้ ⏬ เติมสีเดิมลงไปให้ครบ 4 ชั้นแทน"); return; }
       p.pick = i;
       paint();
       tone(660, .04, "triangle", .03);
@@ -244,7 +317,9 @@
     // not here: pick this one instead if it can be poured from, else say why
     const to = p.state.bottles[i];
     if (to.lock >= 0) { nope(i, `ขวดนี้ปิดจุกอยู่ จะเปิดเมื่อเรียงสี${colourName(to.lock)}ครบ 1 ขวด`); return; }
-    if (to.layers.length >= P.CAP) { nope(i, "ขวดนี้เต็มแล้ว"); return; }
+    if (to.ice > 0) { nope(i, iceWhy(to)); return; }
+    if (to.layers.length >= P.capOf(to)) { nope(i, P.capOf(to) < P.CAP ? `ขวดจิ๋วนี้จุได้แค่ ${P.capOf(to)} ชั้น เต็มแล้ว` : "ขวดนี้เต็มแล้ว"); return; }
+    if (to.only >= 0 && P.top(p.state.bottles[from]) !== to.only) { nope(i, `ขวดนี้รับเฉพาะน้ำยาสี${colourName(to.only)} ${P.COLOURS[to.only].sign}`); return; }
     nope(i, `เทได้เฉพาะลงขวดว่าง หรือบนน้ำยาสีเดียวกัน (สี${colourName(P.top(p.state.bottles[from]))})`);
   }
   function nope(i, why) {
@@ -259,6 +334,7 @@
     p.history.push({ state: P.clone(p.state), pours: p.pours });
     const colour = P.top(p.state.bottles[a]);
     const locksBefore = p.state.bottles.filter(x => x.lock >= 0).length;
+    const iceBefore = p.state.bottles.filter(x => x.ice > 0).length;
     const before = p.state.bottles[b].layers.length;
     const amount = P.pour(p.state, a, b);
     p.pours++;
@@ -268,9 +344,11 @@
     if (!calm()) {
       // the bottle goes over the other and tips, its mouth just above the
       // other's (places from the layout, so a lifted bottle doesn't count)
+      // (a small bottle's mouth sits lower)
       const w = A.offsetWidth, h = A.offsetHeight, dir = B.offsetLeft >= A.offsetLeft ? 1 : -1, tilt = 72 * Math.PI / 180;
-      const mouthX = B.offsetLeft + w / 2, mouthY = B.offsetTop + h * .08 - w * .25;
-      const dx = mouthX - dir * Math.sin(tilt) * h / 2 - (A.offsetLeft + w / 2), dy = mouthY + Math.cos(tilt) * h / 2 - (A.offsetTop + h / 2);
+      const lowA = A.querySelector(".potion-glass").offsetTop - h * .08, lowB = B.querySelector(".potion-glass").offsetTop - h * .08;
+      const mouthX = B.offsetLeft + w / 2, mouthY = B.offsetTop + lowB + h * .08 - w * .25, reach = h / 2 - lowA;
+      const dx = mouthX - dir * Math.sin(tilt) * reach - (A.offsetLeft + w / 2), dy = mouthY + Math.cos(tilt) * reach - (A.offsetTop + h / 2);
       A.classList.remove("is-picked");
       A.classList.add("is-pouring");
       A.style.transform = `translate(${dx}px, ${dy}px) rotate(${dir * 72}deg)`;
@@ -300,6 +378,7 @@
     p.busy = false;
     if (P.isFull(p.state.bottles[b])) filled(b);
     if (p.state.bottles.filter(x => x.lock >= 0).length < locksBefore) uncorked();
+    if (p.state.bottles.filter(x => x.ice > 0).length < iceBefore) thawed();
     paintTools();
     if (P.isSolved(p.state)) { finish(); return; }
     if (!P.moves(p.state).length) say("ไม่มีที่ให้เทแล้ว ลองย้อนกลับ ↶ เพิ่มขวด หรือเริ่มใหม่ ⟲");
@@ -318,6 +397,10 @@
   function uncorked() {
     [659, 880].forEach((note, i) => tone(note, .08, "sine", .04, i * .07));
     say("ขวดปิดจุกเปิดแล้ว!");
+  }
+  function thawed() {
+    [1047, 1319, 1568].forEach((note, i) => tone(note, .06, "sine", .03, i * .05));
+    say("น้ำแข็งละลายแล้ว! ขวดนั้นเทได้แล้ว");
   }
 
   // ---- Tools ----
@@ -340,7 +423,7 @@
     p.extras--;
     p.usedExtra = true;
     // the extra bottle stays even when pours are taken back
-    const add = (state) => state.bottles.push({ layers: [], hide: 0, lock: -1 });
+    const add = (state) => state.bottles.push(P.bottle());
     add(p.state);
     for (const h of p.history) add(h.state);
     p.pick = -1;
@@ -418,9 +501,11 @@
     if (toCards && reward.dust) parts.push(`✧ ${reward.dust}`);
     if (toCards && reward.ore) parts.push(`⛏ ${reward.ore}`);
     const box = el("div", "potion-cover potion-result");
-    box.append(el("span", "potion-medal", "🏆"), el("h3", null, `ผ่านด่าน ${n}!`), el("p", "potion-stars", stars(got)),
+    const chapter = P.chapterOf(n), endsChapter = !before && n === chapter.to;
+    box.append(el("span", "potion-medal", endsChapter ? chapter.icon : "🏆"), el("h3", null, `ผ่านด่าน ${n}!`), el("p", "potion-stars", stars(got)),
       el("p", null, `เท ${p.pours} ครั้ง · เป้า ${p.par} ครั้ง${p.usedExtra ? " · ใช้ขวดเสริม" : ""}`),
       el("p", "potion-reward", `ได้รับ ${parts.join(" · ")}`),
+      ...(endsChapter ? [el("p", "potion-chapter-done", n === P.LEVELS ? `👑 จบครบ ${P.LEVELS} ด่าน! คุณคือปรมาจารย์ห้องยาแล้ว (โบนัส 💎 20)` : `🎉 จบบท ${chapter.name}! (โบนัส 💎 20)`)] : []),
       el("p", "potion-tip", got < 3 ? (p.usedExtra ? "ไม่ใช้ขวดเสริม และเทไม่เกินเป้า เพื่อได้ ★★★" : `เทไม่เกิน ${p.par} ครั้ง เพื่อได้ ★★★`) : "ได้ครบ 3 ดาว!"));
     const actions = el("div", "title-actions");
     if (n < P.LEVELS) actions.append(button("primary-button", `ด่าน ${n + 1} ▶`, () => startLevel(n + 1)));
