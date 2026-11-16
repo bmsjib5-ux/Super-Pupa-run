@@ -16,6 +16,8 @@
   const store = () => game().writeSave();
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
   const calm = () => Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  const PARAMS = new URLSearchParams(location.search);
+  const TEST_UNLOCK = PARAMS.has("unlock");
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -50,7 +52,7 @@
     return s.match;
   }
   const record = () => save().match;
-  const isOpenLevel = (n) => n === 1 || (record().stars[n - 1] || 0) > 0;
+  const isOpenLevel = (n) => TEST_UNLOCK || n === 1 || (record().stars[n - 1] || 0) > 0;
   const nextLevel = () => { for (let n = 1; n <= M.LEVELS; n++) if (!record().stars[n]) return n; return M.LEVELS; };
   const stars = (n) => "★".repeat(n) + "☆".repeat(3 - n);
 
@@ -137,7 +139,8 @@
       tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "match-level-stars", open ? stars(got) : ""), el("small", "match-level-info", `${lv.rows * lv.cols} ใบ${lv.gravity !== "none" ? ` · ${GRAVITY_ICON[lv.gravity]}` : ""}`));
       grid.append(tile);
     }
-    body.replaceChildren(intro, go, sum, grid);
+    const testNote = TEST_UNLOCK ? el("p", "match-test-mode", `🧪 โหมดทดสอบ · ปลดล็อกครบ ${M.LEVELS} ด่าน · ไม่แก้ความคืบหน้าในเซฟ`) : null;
+    body.replaceChildren(...(testNote ? [testNote] : []), intro, go, sum, grid);
     grid.querySelector(".is-next")?.scrollIntoView({ block: "nearest" });
   }
   const GRAVITY_ICON = { down: "⬇", up: "⬆", left: "⬅", right: "➡" };
@@ -475,5 +478,5 @@
 
   window.PupaMatch = { open, close: goHome, key, get isOpen() { return isShown; } };
   // Test link: ?match opens straight into the match mode.
-  if (new URLSearchParams(location.search).has("match")) setTimeout(() => open(), 400);
+  if (PARAMS.has("match") || TEST_UNLOCK) setTimeout(() => open(), 400);
 })();
