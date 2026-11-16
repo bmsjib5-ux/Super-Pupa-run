@@ -9,7 +9,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const LEVELS = 30;
+  const LEVELS = 40;
   // which way the tiles slide after a pair goes, level by level
   const GRAVITY = ["none", "down", "left", "up", "right"];
   const GRAVITY_NAMES = { none: "อยู่กับที่", down: "ไหลลง", up: "ไหลขึ้น", left: "ไหลซ้าย", right: "ไหลขวา" };
@@ -23,12 +23,21 @@
   // time allowed (a little less per pair as the levels climb).
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
-    const [rows, cols] = num <= 3 ? [6, 8] : num <= 6 ? [6, 10] : num <= 10 ? [7, 10] : num <= 15 ? [8, 10] : num <= 22 ? [8, 12] : [8, 14];
+    const [rows, cols] = num <= 3 ? [6, 8]
+      : num <= 6 ? [6, 10]
+      : num <= 10 ? [7, 10]
+      : num <= 15 ? [8, 10]
+      : num <= 22 ? [8, 12]
+      : num <= 30 ? [8, 14]
+      : num <= 35 ? [10, 12]
+      : [10, 14];
     const pairs = rows * cols / 2;
-    const types = Math.min(pairs, 10 + 2 * num, 40);
+    const types = Math.min(pairs, 10 + 2 * num, num <= 30 ? 40 : 48);
     const gravity = GRAVITY[(num - 1) % GRAVITY.length];
-    const time = Math.round(pairs * Math.max(4.6, 9 - (num - 1) * .16));
-    return { num, rows, cols, pairs, types, gravity, time };
+    const secondsPerPair = num <= 30 ? Math.max(4.6, 9 - (num - 1) * .16) : num <= 35 ? 4.4 : 4.2;
+    const time = Math.round(pairs * secondsPerPair);
+    const chapter = Math.ceil(num / 10);
+    return { num, rows, cols, pairs, types, gravity, time, chapter };
   }
 
   // A small seeded random source (a run of one level is repeatable in tests).
