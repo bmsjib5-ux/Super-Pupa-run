@@ -25,6 +25,7 @@
 .potion-level-stars { color: #ffd76a; font-size: .7rem; letter-spacing: -.05em; }
 .potion-level-info { color: #c9bde0; font-size: .58rem; }
 .potion-level-twists { min-height: .8rem; font-size: .62rem; line-height: 1; white-space: nowrap; }
+.potion-level-twists.is-many { font-size: .46rem; letter-spacing: -.08em; }
 .potion-chapter { display: flex; grid-column: 1 / -1; align-items: center; gap: .5rem; margin: .5rem 0 0; padding: .35rem .7rem; border-radius: .8rem; color: #ffe5a5; font-size: .92rem; text-align: left; background: linear-gradient(90deg, rgba(120,50,160,.75), rgba(40,18,80,.2)); }
 .potion-chapter:first-child { margin-top: 0; }
 .potion-chapter-icon { font-size: 1.15rem; }
@@ -196,6 +197,7 @@
   .potion-count { min-width: 3rem; font-size: .78rem; }
   .potion-chapter-range { display: none; }
   .potion-level-twists { font-size: .52rem; }
+  .potion-level-twists.is-many { font-size: .44rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .potion-bottle { transition: none; }

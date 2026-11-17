@@ -38,6 +38,7 @@
     { mark: "🔥", tag: "🔥 ยากพิเศษ", card: "🔥 บทท้าทาย!", words: "ยากพิเศษ" },
     { mark: "💀", tag: "💀 ยากสุดขีด", card: "💀 บทยากสุดขีด!", words: "ยากสุดขีด" },
     { mark: "🌀", tag: "🌀 ระดับตำนาน", card: "🌀 บทระดับตำนาน!", words: "ระดับตำนาน" }];
+  const tierOf = (hard) => TIERS[Number(hard)] || TIERS[1];
   // the level each twist first comes in on
   const firstOf = {};
   for (let n = 1; n <= P.LEVELS; n++) for (const key of P.twistsOf(P.levelOf(n))) if (!firstOf[key]) firstOf[key] = n;
@@ -135,15 +136,15 @@
       let have = 0;
       for (let n = chapter.from; n <= chapter.to; n++) have += r.stars[n] || 0;
       const headRow = el("h3", `potion-chapter${isOpenLevel(chapter.from) ? "" : " is-locked"}${chapter.hard ? " is-hard" : ""}`);
-      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), ...(chapter.hard ? [el("span", `potion-hard-tag is-tier${chapter.hard}`, TIERS[chapter.hard].tag)] : []), el("small", null, `★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
+      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), ...(chapter.hard ? [el("span", `potion-hard-tag is-tier${Number(chapter.hard)}`, tierOf(chapter.hard).tag)] : []), el("small", null, `★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
       headRow.lastChild.prepend(el("span", "potion-chapter-range", `ด่าน ${chapter.from}–${chapter.to} · `));
       grid.append(headRow);
       for (let n = chapter.from; n <= chapter.to; n++) {
         const lv = P.levelOf(n), open = isOpenLevel(n), got = r.stars[n] || 0, words = twistWords(lv);
         const tile = button(`potion-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}${lv.hard ? " is-hard" : ""}`, null, () => startLevel(n),
-          `ด่าน ${n}${lv.hard ? ` ${TIERS[lv.hard].words}` : ""} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
+          `ด่าน ${n}${lv.hard ? ` ${tierOf(lv.hard).words}` : ""} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
         tile.disabled = !open;
-        tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(got) : ""), el("small", "potion-level-info", `${lv.colours} สี`), el("small", "potion-level-twists", twistIcons(lv)));
+        tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(got) : ""), el("small", "potion-level-info", `${lv.colours} สี`), el("small", `potion-level-twists${P.twistsOf(lv).length >= 6 ? " is-many" : ""}`, twistIcons(lv)));
         grid.append(tile);
       }
     }
@@ -159,7 +160,7 @@
     const dealt = P.deal(level);
     const view = el("section", "potion-play");
     const bar = el("div", "potion-bar");
-    const name = el("b", "potion-name", `ด่าน ${n}${level.hard ? ` ${TIERS[level.hard].mark}` : ""}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
+    const name = el("b", "potion-name", `ด่าน ${n}${level.hard ? ` ${tierOf(level.hard).mark}` : ""}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
     const count = el("span", "potion-count");
     const undo = button("potion-tool", null, () => useUndo(), "ย้อนกลับ");
     const extra = button("potion-tool", null, () => useExtra(), "เพิ่มขวดเปล่า");
@@ -191,7 +192,7 @@
     const chapter = P.chapterOf(n), opens = chapter.note && chapter.from === n && !shownTwists.has(`chapter${n}`);
     if (record().stars[n]) return;
     if (fresh.length) { fresh.forEach(key => shownTwists.add(key)); showCard("✨ ลูกเล่นใหม่!", fresh.map(key => twist(key)).map(t => ({ icon: t.icon, name: t.name, text: t.text }))); }
-    else if (opens) { shownTwists.add(`chapter${n}`); showCard(TIERS[chapter.hard].card, [{ icon: chapter.icon, name: chapter.name, text: chapter.note }]); }
+    else if (opens) { shownTwists.add(`chapter${n}`); showCard(tierOf(chapter.hard).card, [{ icon: chapter.icon, name: chapter.name, text: chapter.note }]); }
   }
   // A card over the shelves: a twist new on this level, or a hard chapter.
   function showCard(tag, items) {

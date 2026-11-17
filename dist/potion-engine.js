@@ -7,9 +7,9 @@
 // is filled with the cork's colour; a frozen bottle thaws after so many
 // pours; small bottles hold less; a tinted bottle takes one colour only; a
 // drip bottle pours one layer at a time; a funnel takes potion but never
-// gives it back. The last forty levels are the hard ones: more colours,
-// one plain empty bottle (none at all at the very end), several twists at
-// once. Every level is dealt
+// gives it back. The last sixty levels are the hard ones: more colours,
+// one plain empty bottle (none at all from 131), several twists at once,
+// and from 141 every layer below the top hidden too. Every level is dealt
 // from its own seed and checked solvable, so it is the same on every
 // device.
 (function (root, factory) {
@@ -60,8 +60,8 @@
     { from: 71, to: 80, name: "หอหยดน้ำค้าง", icon: "💧" },
     { from: 81, to: 90, name: "หอกรวยวิเศษ", icon: "⏬" },
     { from: 91, to: 100, name: "หอคอยปรมาจารย์", icon: "👑" },
-    { from: 101, to: 110, name: "ห้องทดลองต้องห้าม", icon: "🔮", hard: true, note: "ด่านยากพิเศษ: น้ำยา 11–12 สี มีขวดว่างธรรมดาแค่ 1 ขวด ทุกด่านมีลูกเล่นหลายแบบพร้อมกัน และคัดกระดานที่ต้องเทมากที่สุดมาให้ มีสีใหม่ 🟤 น้ำตาลช็อกโกแลต ▼" },
-    { from: 111, to: 120, name: "บัลลังก์จอมเวท", icon: "🌌", hard: true, note: "บทสุดท้าย ยากที่สุด: น้ำยา 12–13 สี เพิ่มสี ⚪ เงินจันทร์ ✦ ลูกเล่นตั้งแต่ 3 แบบขึ้นไปพร้อมกัน ขวดว่างธรรมดาแค่ 1 ขวด คิดก่อนเททุกครั้ง!" },
+    { from: 101, to: 110, name: "ห้องทดลองต้องห้าม", icon: "🔮", hard: 1, note: "ด่านยากพิเศษ: น้ำยา 11–12 สี มีขวดว่างธรรมดาแค่ 1 ขวด ทุกด่านมีลูกเล่นหลายแบบพร้อมกัน และคัดกระดานที่ต้องเทมากที่สุดมาให้ มีสีใหม่ 🟤 น้ำตาลช็อกโกแลต ▼" },
+    { from: 111, to: 120, name: "บัลลังก์จอมเวท", icon: "🌌", hard: 1, note: "บทสุดท้าย ยากที่สุด: น้ำยา 12–13 สี เพิ่มสี ⚪ เงินจันทร์ ✦ ลูกเล่นตั้งแต่ 3 แบบขึ้นไปพร้อมกัน ขวดว่างธรรมดาแค่ 1 ขวด คิดก่อนเททุกครั้ง!" },
     { from: 121, to: 130, name: "ห้องหมอกมนตรา", icon: "🌫️", hard: 2, note: "ยากสุดขีด: หมอกปกคลุมทุกด่าน ทุกขวดซ่อนชั้นล่าง ❓ น้ำยา 12–13 สี ขวดว่างธรรมดาแค่ 1 ขวด ลูกเล่นซ้อนกัน 4–6 แบบ และเป้า ★★★ เข้มขึ้น (ใช้ทางที่สั้นที่สุดที่หาได้)" },
     { from: 131, to: 140, name: "วิหารจันทร์ดับ", icon: "🌑", hard: 2, note: "บทสุดท้ายที่โหดที่สุด: ไม่มีขวดว่างธรรมดาเลยสักขวด! ต้องพักน้ำยาในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวยเท่านั้น น้ำยา 12–13 สี และเป้า ★★★ เข้มขึ้น" },
     { from: 141, to: 150, name: "เขาวงกตหมอกจันทร์", icon: "🌘", hard: 3, note: "ระดับตำนาน: รวมสองอย่างที่โหดที่สุดไว้ด้วยกัน ทุกขวดซ่อนชั้นล่าง ❓ และไม่มีขวดว่างธรรมดาเลยสักขวด! น้ำยา 12–13 สี พักน้ำยาได้แค่ในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวย เป้า ★★★ เข้ม" },
@@ -158,10 +158,12 @@
     { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, ice: 3, drip: 3, lock: true }
   ];
   const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13,
-    11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37];
+    11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37,
+    59, 10, 6, 48, 24, 26, 33, 36, 57, 1, 52, 49, 31, 57, 51, 41, 57, 2, 6, 43];
   // From level 121, a searched-out shake of the solver that finds a short
   // way, so the three-star mark is tighter.
-  const JITS = [324, 53, 359, 340, 20, 256, 112, 239, 255, 151, 318, 391, 332, 154, 4, 123, 213, 301, 66, 70];
+  const JITS = [324, 53, 359, 340, 20, 256, 112, 239, 255, 151, 318, 391, 332, 154, 4, 123, 213, 301, 66, 70,
+    36, 94, 266, 301, 269, 264, 60, 1, 186, 216, 312, 254, 69, 111, 20, 202, 282, 26, 126, 5];
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
     const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
