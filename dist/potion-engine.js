@@ -7,15 +7,17 @@
 // is filled with the cork's colour; a frozen bottle thaws after so many
 // pours; small bottles hold less; a tinted bottle takes one colour only; a
 // drip bottle pours one layer at a time; a funnel takes potion but never
-// gives it back. Every level is dealt from its own seed and checked
-// solvable, so it is the same on every device.
+// gives it back. The last twenty levels are the hard ones: more colours,
+// one plain empty bottle, several twists at once. Every level is dealt
+// from its own seed and checked solvable, so it is the same on every
+// device.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.PupaPotionEngine = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const LEVELS = 100;
+  const LEVELS = 120;
   const CAP = 4;
   // per level: undos, an extra empty bottle, hints
   const UNDOS = 5, EXTRAS = 1, HINTS = 3;
@@ -32,7 +34,10 @@
     { name: "น้ำเงิน", hex: "#3550ff", sign: "■" },
     { name: "เขียวมะนาว", hex: "#a6f03c", sign: "✿" },
     { name: "ฟ้าน้ำทะเล", hex: "#22d6d6", sign: "✚" },
-    { name: "ขาวมุก", hex: "#f2ecff", sign: "◆" }
+    { name: "ขาวมุก", hex: "#f2ecff", sign: "◆" },
+    // the hard chapters' extra two
+    { name: "น้ำตาลช็อกโกแลต", hex: "#a8622c", sign: "▼" },
+    { name: "เงินจันทร์", hex: "#8f9bb3", sign: "✦" }
   ];
   // The twists a level can have, in the order they come in.
   const TWISTS = [
@@ -53,7 +58,9 @@
     { from: 61, to: 70, name: "ห้องสีต้องมนตร์", icon: "🎨" },
     { from: 71, to: 80, name: "หอหยดน้ำค้าง", icon: "💧" },
     { from: 81, to: 90, name: "หอกรวยวิเศษ", icon: "⏬" },
-    { from: 91, to: 100, name: "หอคอยปรมาจารย์", icon: "👑" }
+    { from: 91, to: 100, name: "หอคอยปรมาจารย์", icon: "👑" },
+    { from: 101, to: 110, name: "ห้องทดลองต้องห้าม", icon: "🔮", hard: true, note: "ด่านยากพิเศษ: น้ำยา 11–12 สี มีขวดว่างธรรมดาแค่ 1 ขวด ทุกด่านมีลูกเล่นหลายแบบพร้อมกัน และคัดกระดานที่ต้องเทมากที่สุดมาให้ มีสีใหม่ 🟤 น้ำตาลช็อกโกแลต ▼" },
+    { from: 111, to: 120, name: "บัลลังก์จอมเวท", icon: "🌌", hard: true, note: "บทสุดท้าย ยากที่สุด: น้ำยา 12–13 สี เพิ่มสี ⚪ เงินจันทร์ ✦ ลูกเล่นตั้งแต่ 3 แบบขึ้นไปพร้อมกัน ขวดว่างธรรมดาแค่ 1 ขวด คิดก่อนเททุกครั้ง!" }
   ];
   const chapterOf = (n) => CHAPTERS.find(c => n >= c.from && n <= c.to) || CHAPTERS[0];
 
@@ -75,11 +82,45 @@
     { ice: 2, drip: 2, small: [3] },
     { ice: 2, only: 1, funnel: 1, drip: 1 }
   ];
+  // Levels 101–120, the hard ones, one by one: more colours, one plain
+  // empty bottle, two to four twists at once. `seed` is the deal to start
+  // from: each was picked, from the first solvable ones, as the one
+  // needing the most pours.
+  const HARD = [
+    { colours: 11, hidden: true, ice: 2, only: 1 },
+    { colours: 11, small: [3], drip: 2, lock: true },
+    { colours: 12, funnel: 1, ice: 2 },
+    { colours: 12, hidden: true, only: 2, drip: 2 },
+    { colours: 12, small: [3, 2], ice: 1, lock: true },
+    { colours: 12, hidden: true, drip: 3, funnel: 1 },
+    { colours: 12, only: 1, ice: 3, drip: 1 },
+    { colours: 12, hidden: true, small: [3], funnel: 1, lock: true },
+    { colours: 12, drip: 2, only: 1, ice: 2 },
+    { colours: 12, hidden: true, small: [3], only: 1, funnel: 1 },
+    { colours: 12, hidden: true, ice: 3, drip: 2, small: [2] },
+    { colours: 13, only: 1, funnel: 1, lock: true },
+    { colours: 13, hidden: true, small: [3, 2], ice: 2 },
+    { colours: 13, drip: 3, only: 1, lock: true },
+    { colours: 13, hidden: true, funnel: 1, ice: 2, small: [3] },
+    { colours: 13, only: 2, drip: 2, ice: 1 },
+    { colours: 13, hidden: true, small: [3], funnel: 1, drip: 2, lock: true },
+    { colours: 13, ice: 3, only: 1, funnel: 1 },
+    { colours: 13, hidden: true, small: [3, 2], only: 1, drip: 2, lock: true },
+    { colours: 13, hidden: true, ice: 3, only: 1, funnel: 1, drip: 2, lock: true }
+  ];
+  const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13];
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
-    const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0 };
+    const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
+    if (num > 100) {
+      const k = num - 101;
+      Object.assign(level, { empties: 1, hard: true, seed: SEEDS[k] || 0 }, HARD[k]);
+      if (level.ice) level.iceTurns = 6 + Math.floor(k / 4);
+      return level;
+    }
     if (num <= 40) {
-      level.colours = Math.min(COLOURS.length, 2 + Math.ceil(num / 3.5));
+      // (the first forty were made with eleven colours at most)
+      level.colours = Math.min(11, 2 + Math.ceil(num / 3.5));
       level.hidden = num >= 6 && num % 3 === 0;
       level.lock = num >= 10 && num % 4 === 2;
       return level;
@@ -177,7 +218,8 @@
     return score;
   }
   // jitter: a random source that shakes up equal choices (another way)
-  function solve(start, limit = 200000, jitter = null) {
+  // stats, if given, gets how many boards the search looked at
+  function solve(start, limit = 200000, jitter = null, stats = null) {
     const seen = new Set(), path = [];
     let boards = 0, gaveUp = false;
     const go = (state) => {
@@ -206,7 +248,9 @@
       }
       return false;
     };
-    return go(clone(start)) ? path : null;
+    const found = go(clone(start));
+    if (stats) stats.boards = boards;
+    return found ? path : null;
   }
   // Shorten a found way: drop pours that come back to a board seen
   // earlier on it (the same bottles in the same places).
@@ -232,7 +276,7 @@
   // and the level can be solved.
   function deal(level) {
     const small = level.small || [];
-    for (let attempt = 0; attempt < 400; attempt++) {
+    for (let attempt = level.seed || 0; attempt < (level.seed || 0) + 400; attempt++) {
       const rnd = random(level.num * 7919 + attempt * 104729 + 17);
       const layers = [];
       for (let c = 0; c < level.colours; c++) for (let k = 0; k < CAP; k++) layers.push(c);

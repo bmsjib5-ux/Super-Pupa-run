@@ -129,13 +129,14 @@
     for (const chapter of P.CHAPTERS) {
       let have = 0;
       for (let n = chapter.from; n <= chapter.to; n++) have += r.stars[n] || 0;
-      const headRow = el("h3", `potion-chapter${isOpenLevel(chapter.from) ? "" : " is-locked"}`);
-      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), el("small", null, `ด่าน ${chapter.from}–${chapter.to} · ★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
+      const headRow = el("h3", `potion-chapter${isOpenLevel(chapter.from) ? "" : " is-locked"}${chapter.hard ? " is-hard" : ""}`);
+      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), ...(chapter.hard ? [el("span", "potion-hard-tag", "🔥 ยากพิเศษ")] : []), el("small", null, `★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
+      headRow.lastChild.prepend(el("span", "potion-chapter-range", `ด่าน ${chapter.from}–${chapter.to} · `));
       grid.append(headRow);
       for (let n = chapter.from; n <= chapter.to; n++) {
         const lv = P.levelOf(n), open = isOpenLevel(n), got = r.stars[n] || 0, words = twistWords(lv);
-        const tile = button(`potion-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}`, null, () => startLevel(n),
-          `ด่าน ${n} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
+        const tile = button(`potion-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}${lv.hard ? " is-hard" : ""}`, null, () => startLevel(n),
+          `ด่าน ${n}${lv.hard ? " ยากพิเศษ" : ""} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
         tile.disabled = !open;
         tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(got) : ""), el("small", "potion-level-info", `${lv.colours} สี`), el("small", "potion-level-twists", twistIcons(lv)));
         grid.append(tile);
@@ -153,7 +154,7 @@
     const dealt = P.deal(level);
     const view = el("section", "potion-play");
     const bar = el("div", "potion-bar");
-    const name = el("b", "potion-name", `ด่าน ${n}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
+    const name = el("b", "potion-name", `ด่าน ${n}${level.hard ? " 🔥" : ""}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
     const count = el("span", "potion-count");
     const undo = button("potion-tool", null, () => useUndo(), "ย้อนกลับ");
     const extra = button("potion-tool", null, () => useExtra(), "เพิ่มขวดเปล่า");
@@ -180,19 +181,20 @@
     announce(`ด่าน ${n} · น้ำยา ${level.colours} สี · เป้า ${dealt.par} ครั้ง`);
     tone(523, .08, "triangle", .05); tone(784, .1, "triangle", .05, .08);
     // a twist that comes in on this level, the first time through
+    // (or a hard chapter's first level: what makes it hard)
     const fresh = P.twistsOf(level).filter(key => firstOf[key] === n && !shownTwists.has(key));
-    if (fresh.length && !record().stars[n]) { fresh.forEach(key => shownTwists.add(key)); showTwist(fresh); }
+    const chapter = P.chapterOf(n), opens = chapter.note && chapter.from === n && !shownTwists.has(`chapter${n}`);
+    if (record().stars[n]) return;
+    if (fresh.length) { fresh.forEach(key => shownTwists.add(key)); showCard("✨ ลูกเล่นใหม่!", fresh.map(key => twist(key)).map(t => ({ icon: t.icon, name: t.name, text: t.text }))); }
+    else if (opens) { shownTwists.add(`chapter${n}`); showCard("🔥 บทท้าทาย!", [{ icon: chapter.icon, name: chapter.name, text: chapter.note }]); }
   }
-  // A card for a twist new on this level, over the shelves.
-  function showTwist(keys) {
+  // A card over the shelves: a twist new on this level, or a hard chapter.
+  function showCard(tag, items) {
     const p = play;
     p.busy = true;
     const box = el("div", "potion-cover potion-new-twist");
-    box.append(el("p", "potion-new-tag", "✨ ลูกเล่นใหม่!"));
-    for (const key of keys) {
-      const t = twist(key);
-      box.append(el("span", "potion-new-icon", t.icon), el("h3", null, t.name), el("p", null, t.text));
-    }
+    box.append(el("p", "potion-new-tag", tag));
+    for (const t of items) box.append(el("span", "potion-new-icon", t.icon), el("h3", null, t.name), el("p", null, t.text));
     const ok = button("primary-button", "เข้าใจแล้ว ▶", () => { box.remove(); if (play === p) p.busy = false; });
     box.append(ok);
     p.view.append(box);

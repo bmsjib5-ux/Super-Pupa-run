@@ -89,8 +89,35 @@ test("potion: levels 1–40 deal just as they did before the twists came in", ()
   assert.equal(createHash("sha256").update(boards.join("\n")).digest("hex").slice(0, 16), "f2368d00005e3bb6");
 });
 
-test("potion: 100 levels in chapters, each twist coming in along the way", () => {
-  assert.equal(P.LEVELS, 100);
+test("potion: levels 41–100 deal just as they did before the hard chapters came in", () => {
+  const boards = [];
+  for (let n = 41; n <= 100; n++) { const d = P.deal(P.levelOf(n)); boards.push(JSON.stringify(d.state) + d.par); }
+  assert.equal(createHash("sha256").update(boards.join("\n")).digest("hex").slice(0, 16), "12afa8e6a37c88e9");
+});
+
+test("potion: levels 101–120 are harder: more colours, one plain empty bottle, twists stacked, the longest deals", () => {
+  const pars = (from, to) => { let sum = 0; for (let n = from; n <= to; n++) sum += P.deal(P.levelOf(n)).par; return sum / (to - from + 1); };
+  for (let n = 101; n <= P.LEVELS; n++) {
+    const level = P.levelOf(n), dealt = P.deal(level);
+    assert.ok(level.hard && P.chapterOf(n).hard, `level ${n}`);
+    assert.equal(level.empties, 1, `level ${n}`);
+    assert.ok(level.colours >= (n > 110 ? 12 : 11), `level ${n} colours`);
+    assert.ok(P.twistsOf(level).filter(k => k !== "hidden").length >= 2, `level ${n} twists`);
+    // the picked deal is the one used, and a hint comes quickly from the start
+    assert.equal(dealt.attempt, level.seed, `level ${n} seed`);
+    const stats = {};
+    assert.ok(P.solve(dealt.state, 60000, null, stats) && stats.boards <= 15000, `level ${n} effort`);
+  }
+  // every colour has its own look
+  assert.equal(new Set(P.COLOURS.map(c => c.hex)).size, P.COLOURS.length);
+  assert.equal(new Set(P.COLOURS.map(c => c.sign)).size, P.COLOURS.length);
+  assert.ok(P.levelOf(120).colours === P.COLOURS.length);
+  const before = pars(91, 100), hard = pars(101, 110), hardest = pars(111, 120);
+  assert.ok(hard > before + 10 && hardest > hard, `average pours ${before} / ${hard} / ${hardest}`);
+});
+
+test("potion: 120 levels in chapters, each twist coming in along the way", () => {
+  assert.equal(P.LEVELS, 120);
   let next = 1;
   for (const c of P.CHAPTERS) { assert.equal(c.from, next); assert.ok(c.to >= c.from); next = c.to + 1; }
   assert.equal(next, P.LEVELS + 1);
@@ -99,7 +126,7 @@ test("potion: 100 levels in chapters, each twist coming in along the way", () =>
   assert.deepEqual([...seen].sort(), P.TWISTS.map(t => t.key).sort());
   // past level 40 every level has at least one of the new twists
   for (let n = 41; n <= P.LEVELS; n++) assert.ok(P.twistsOf(P.levelOf(n)).some(k => !["hidden", "lock"].includes(k)), `level ${n}`);
-  assert.equal(P.levelOf(250).num, 100);
+  assert.equal(P.levelOf(250).num, 120);
 });
 
 test("potion: every level deals the same each time, starts unsorted, and the found way solves it", () => {
@@ -153,4 +180,6 @@ test("potion: stars by pours against par, and rewards", () => {
   // the last level of a chapter, the first time, 20 gems more
   assert.deepEqual(P.rewardFor(P.levelOf(50), true, 1, 0), { coins: 330, gems: 30, dust: 3, ore: 5 });
   assert.equal(P.rewardFor(P.levelOf(50), false, 3, 1).gems, 10);
+  assert.equal(P.rewardFor(P.levelOf(120), true, 1, 0).gems, 30);
+  assert.equal(P.rewardFor(P.levelOf(119), true, 1, 0).gems, 10);
 });
