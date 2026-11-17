@@ -1808,21 +1808,27 @@
     });
   }
 
-  // ---- Dodge-run stages (levels 101-105) ----
-  // Played by the dodge-run mode further down (see makeRunner); they borrow
-  // painted scenes from the worlds and are open from the start.
+  // ---- Dodge-run stages (levels 101-110) ----
+  // Played by the dodge-run mode further down (see makeRunner). Each stage
+  // borrows a painted world backdrop, then gives the road its own palette
+  // and roadside landmarks through the runner look.
   const MAIN_LEVELS = levels.length;
   const RUNNER_FIRST = MAIN_LEVELS + 1;
   levels.push(...[
-    { title: "วิ่งฝ่าสวนซากุระ", from: 51, length: 700, speed: [13, 16], density: .35 },
-    { title: "ซิ่งทุ่งสายไหม", from: 71, length: 900, speed: [14, 18], density: .5 },
-    { title: "ตะลุยอ่าวโจรสลัด", from: 81, length: 1100, speed: [15, 20], density: .62 },
-    { title: "สไลด์ธารน้ำแข็งไฟ", from: 66, length: 1300, speed: [16, 22], density: .74 },
-    { title: "หนีลาวาราชาทีเร็กซ์", from: 95, length: 1500, speed: [17, 24], density: .86 }
+    { title: "วิ่งฝ่าสวนซากุระ", from: 51, length: 700, speed: [13, 16], density: .35, look: "sakura" },
+    { title: "ซิ่งทุ่งสายไหม", from: 71, length: 900, speed: [14, 18], density: .5, look: "candy" },
+    { title: "ตะลุยอ่าวโจรสลัด", from: 81, length: 1100, speed: [15, 20], density: .62, look: "pirate" },
+    { title: "สไลด์ธารน้ำแข็งไฟ", from: 66, length: 1300, speed: [16, 22], density: .74, look: "frost" },
+    { title: "หนีลาวาราชาทีเร็กซ์", from: 95, length: 1500, speed: [17, 24], density: .86, look: "lava" },
+    { title: "นครซากุระนีออน", from: 53, length: 1700, speed: [18, 25], density: .9, look: "neon" },
+    { title: "สะพานคริสตัลเหนือเมฆ", from: 58, length: 1850, speed: [19, 26], density: .93, look: "crystal" },
+    { title: "ทางช้างเผือกจันทร์แก้ว", from: 79, length: 2000, speed: [20, 27], density: .96, look: "moon" },
+    { title: "วิหารแสงเหนือ", from: 59, length: 2150, speed: [21, 28], density: .98, look: "aurora" },
+    { title: "ราชวังดวงดาวนิรันดร์", from: 100, length: 2350, speed: [22, 30], density: 1, look: "cosmos" }
   ].map((stage, i) => ({
     name: `ด่าน ${RUNNER_FIRST + i} · ${stage.title}`,
     theme: { ...levels[stage.from - 1].theme },
-    runner: { length: stage.length, speed: stage.speed, density: stage.density },
+    runner: { length: stage.length, speed: stage.speed, density: stage.density, look: stage.look },
     platforms: [], cherries: [], enemies: [], blocks: [],
     width: 2000, goalX: Infinity, checkpointX: Infinity
   })));
@@ -8511,7 +8517,7 @@
   };
   let levelsOpen = false;
   let levelsOpener = null;
-  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90], ["โลก 10 · หุบเขาไดโนเสาร์", 91, 100], ["โลกพิเศษ · วิ่งหลบ", 101, 105]];
+  const WORLDS = [["โลก 1 · คืนจันทร์เชอร์รี่", 1, 10], ["โลก 2 · ดินแดนสายรุ้ง", 11, 20], ["โลก 3 · ภาพวาดแห่งความฝัน", 21, 30], ["โลก 4 · ฟ้าสีใหม่", 31, 40], ["โลก 5 · ดินแดนดาวรุ่ง", 41, 50], ["โลก 6 · สวนสวรรค์จักรวาล", 51, 60], ["โลก 7 · อาณาจักรเปลวสุริยะ", 61, 70], ["โลก 8 · อาณาจักรขนมหวาน", 71, 80], ["โลก 9 · ทะเลโจรสลัด", 81, 90], ["โลก 10 · หุบเขาไดโนเสาร์", 91, 100], ["โลกพิเศษ · วิ่งหลบ", 101, 110]];
 
   const isCleared = (num) => save.cleared.includes(num);
   // The first dodge-run stage is open from the start, like level 1.
@@ -8773,6 +8779,19 @@
     hurt: 1.4,        // grace after a hit
     hurdle: .75, barLow: 1.05, barHigh: 2.7, wall: 3.4, monster: .95
   };
+  const RUN_LOOKS = {
+    sakura: { road: ["#25142f", "#542447"], lane: "rgba(255,220,241,.38)", edge: "#ff9fd2", decor: "sakura" },
+    candy: { road: ["#472241", "#7a3b68"], lane: "rgba(255,250,219,.42)", edge: "#9ff0ff", decor: "candy" },
+    pirate: { road: ["#261d22", "#533626"], lane: "rgba(255,226,154,.34)", edge: "#ffd76a", decor: "palm" },
+    frost: { road: ["#172447", "#31527a"], lane: "rgba(230,252,255,.42)", edge: "#8fe8ff", decor: "crystal" },
+    lava: { road: ["#270d18", "#5a1d24"], lane: "rgba(255,214,144,.38)", edge: "#ff7a3d", decor: "flame" },
+    neon: { road: ["#120d38", "#30216c"], lane: "rgba(157,246,255,.46)", edge: "#ff79d8", decor: "neon" },
+    crystal: { road: ["#17183f", "#3b3478"], lane: "rgba(235,225,255,.44)", edge: "#bfa4ff", decor: "crystal" },
+    moon: { road: ["#0d1233", "#242c64"], lane: "rgba(221,237,255,.42)", edge: "#d5e5ff", decor: "moon" },
+    aurora: { road: ["#092936", "#165260"], lane: "rgba(222,255,244,.4)", edge: "#75ffd0", decor: "aurora" },
+    cosmos: { road: ["#08091d", "#231744"], lane: "rgba(255,242,188,.42)", edge: "#ffe27a", decor: "star" }
+  };
+
   let runner = null;
   let runSwipe = null;
 
@@ -9010,6 +9029,7 @@
   function drawRunner(time) {
     const R = runner;
     const theme = level.theme;
+    const runStyle = RUN_LOOKS[R.spec.look] || RUN_LOOKS.sakura;
     const w = viewWidth, h = viewHeight;
     const horizon = worldOffsetY + 290;
     const base = Math.min(h - 24, worldOffsetY + WORLD.ground + 30);
@@ -9050,7 +9070,7 @@
     // the road
     const edge = (side, z) => proj(side * 1.62, z);
     const far = RUN.view, nearZ = -RUN.focal * .69;
-    const roadFill = vgrad(horizon, h, ["rgba(20,12,36,.9)", "rgba(36,22,58,.96)"]);
+    const roadFill = vgrad(horizon, h, runStyle.road);
     ctx.fillStyle = roadFill;
     ctx.beginPath();
     { const a = edge(-1, far), b = edge(1, far), c = edge(1, nearZ), d = edge(-1, nearZ); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); }
@@ -9063,7 +9083,7 @@
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.fill();
     }
     // lane dashes
-    ctx.fillStyle = "rgba(255,255,255,.28)";
+    ctx.fillStyle = runStyle.lane;
     for (const side of [-.5, .5]) {
       for (let k = -1; k < 26; k++) {
         const z0 = k * 5 - (R.dist % 5), z1 = z0 + 2.2;
@@ -9074,8 +9094,8 @@
       }
     }
     // glowing kerbs
-    ctx.strokeStyle = theme.top; ctx.lineWidth = 3;
-    ctx.shadowColor = theme.shine; ctx.shadowBlur = 10;
+    ctx.strokeStyle = runStyle.edge; ctx.lineWidth = 3;
+    ctx.shadowColor = runStyle.edge; ctx.shadowBlur = 12;
     for (const side of [-1, 1]) { const a = edge(side, far), b = edge(side, nearZ); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
     ctx.shadowBlur = 0;
 
@@ -9090,6 +9110,10 @@
     for (let k = 0; k < 18; k++) {   // lamps along both sides
       const z = k * 9 - (R.dist % 9) + 2;
       list.push([z, { type: "lamp", lane: -2.15 }], [z + 4.5, { type: "lamp", lane: 2.15 }]);
+    }
+    for (let k = 0; k < 12; k++) {   // theme landmarks, farther from the road
+      const z = k * 14 - (R.dist % 14) + 6;
+      list.push([z, { type: "scenery", lane: k % 2 ? -2.72 : 2.72 }]);
     }
     list.sort((a, b) => b[0] - a[0]);
     let heroDrawn = false;
@@ -9137,8 +9161,64 @@
     return { x0: f0.x, x1: f1.x, y: f0.y, top: f0.y - ft, ppm: f0.ppm };
   }
 
+  function drawRunScenery(t, z, proj, time) {
+    const style = RUN_LOOKS[runner.spec.look] || RUN_LOOKS.sakura;
+    const p = proj(t.lane, z);
+    if (p.s < .045) return;
+    const sway = calmMotion ? 0 : Math.sin(time * .0018 + z * .17) * 5;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.scale(p.s, p.s);
+    ctx.globalAlpha = Math.min(1, .35 + p.s * 1.8);
+    if (style.decor === "sakura") {
+      ctx.fillStyle = "#553148"; roundedRect(-10, -100, 20, 104, 9); ctx.fill();
+      ctx.fillStyle = "#ff9fcf";
+      for (const [x, y, r] of [[-28,-106,33],[13,-126,38],[39,-99,30],[-4,-82,34]]) { ctx.beginPath(); ctx.arc(x + sway * .18, y, r, 0, TAU); ctx.fill(); }
+      ctx.fillStyle = "#fff1f8"; for (let i = 0; i < 6; i++) { const a=i*1.7; ctx.beginPath(); ctx.ellipse(Math.cos(a)*34+sway, -105+Math.sin(a)*28, 5, 2.5, a, 0, TAU); ctx.fill(); }
+    } else if (style.decor === "candy") {
+      ctx.strokeStyle = "#fff5df"; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -95); ctx.stroke();
+      ctx.strokeStyle = "#ff78b5"; ctx.lineWidth = 5; for (let y=-6;y>-94;y-=20) { ctx.beginPath(); ctx.moveTo(-6,y); ctx.lineTo(6,y-12); ctx.stroke(); }
+      ctx.fillStyle = "#9ff0ff"; ctx.beginPath(); ctx.arc(0, -116, 35, 0, TAU); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, -116, 20, -.5, 4.9); ctx.stroke();
+    } else if (style.decor === "palm") {
+      ctx.strokeStyle = "#8a5a34"; ctx.lineWidth = 18; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sway, -55, 8, -115); ctx.stroke();
+      ctx.fillStyle = "#55bd75"; for (let i=0;i<7;i++) { const a=-2.8+i*.85; ctx.save(); ctx.translate(8,-115); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(35,0,40,10,0,0,TAU); ctx.fill(); ctx.restore(); }
+    } else if (style.decor === "crystal") {
+      ctx.shadowColor = style.edge; ctx.shadowBlur = 16; ctx.fillStyle = style.edge;
+      for (const [x,h,w] of [[-24,74,22],[0,118,30],[28,88,24]]) { ctx.beginPath(); ctx.moveTo(x-w/2,0); ctx.lineTo(x,-h); ctx.lineTo(x+w/2,0); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = "rgba(255,255,255,.58)"; ctx.beginPath(); ctx.moveTo(-5,-108); ctx.lineTo(3,-84); ctx.lineTo(3,-20); ctx.lineTo(-5,-35); ctx.closePath(); ctx.fill();
+    } else if (style.decor === "flame") {
+      ctx.fillStyle = "#3b1b26"; roundedRect(-20,-88,40,90,8); ctx.fill();
+      ctx.shadowColor = "#ff8a3d"; ctx.shadowBlur = 22; ctx.fillStyle = "#ff7a3d";
+      ctx.beginPath(); ctx.moveTo(0,-122-sway*.2); ctx.quadraticCurveTo(30,-83,13,-53); ctx.quadraticCurveTo(0,-35,-16,-55); ctx.quadraticCurveTo(-31,-84,0,-122-sway*.2); ctx.fill();
+      ctx.fillStyle = "#ffe27a"; ctx.beginPath(); ctx.moveTo(0,-99); ctx.quadraticCurveTo(12,-75,0,-60); ctx.quadraticCurveTo(-11,-76,0,-99); ctx.fill();
+    } else if (style.decor === "neon") {
+      ctx.shadowColor = style.edge; ctx.shadowBlur = 20; ctx.strokeStyle = style.edge; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.moveTo(-24,0); ctx.lineTo(-24,-104); ctx.quadraticCurveTo(0,-135,24,-104); ctx.lineTo(24,0); ctx.stroke();
+      ctx.strokeStyle = "#8ff5ff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-12,-8); ctx.lineTo(-12,-98); ctx.quadraticCurveTo(0,-113,12,-98); ctx.lineTo(12,-8); ctx.stroke();
+    } else if (style.decor === "moon") {
+      ctx.fillStyle = "#d9e8ff"; ctx.shadowColor = "#b9d8ff"; ctx.shadowBlur = 20;
+      ctx.beginPath(); ctx.arc(0,-78,43,0,TAU); ctx.fill();
+      ctx.fillStyle = "#273365"; ctx.beginPath(); ctx.arc(18,-91,39,0,TAU); ctx.fill();
+      ctx.strokeStyle = "#d9e8ff"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0,-35); ctx.lineTo(0,0); ctx.stroke();
+    } else if (style.decor === "aurora") {
+      ctx.fillStyle = "#183f49"; roundedRect(-12,-92,24,94,8); ctx.fill();
+      ctx.shadowColor = "#75ffd0"; ctx.shadowBlur = 24;
+      const g = ctx.createRadialGradient(-8,-104,2,0,-96,34); g.addColorStop(0,"#fff"); g.addColorStop(.35,"#75ffd0"); g.addColorStop(1,"#5a7dff");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,-96+sway*.08,29,0,TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0,-96,44,12,time*.0004,0,TAU); ctx.stroke();
+    } else {
+      ctx.shadowColor = "#ffe27a"; ctx.shadowBlur = 24; ctx.fillStyle = "#ffe27a";
+      ctx.beginPath(); for (let i=0;i<10;i++) { const r=i%2?18:43,a=-Math.PI/2+i*Math.PI/5; ctx.lineTo(Math.cos(a)*r,-82+Math.sin(a)*r); } ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(0,-82,8,0,TAU); ctx.fill();
+      ctx.fillStyle = "#33245d"; roundedRect(-7,-42,14,44,6); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawRunThing(t, z, proj, time) {
     const theme = level.theme;
+    if (t.type === "scenery") { drawRunScenery(t, z, proj, time); return; }
     if (t.type === "lamp") {
       const p = proj(t.lane, z), top = proj(t.lane, z, 3.2);
       ctx.strokeStyle = theme.body[2]; ctx.lineWidth = Math.max(1.5, 8 * p.s);

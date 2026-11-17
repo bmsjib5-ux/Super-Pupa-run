@@ -16,6 +16,8 @@
   const store = () => game().writeSave();
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
   const calm = () => Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  const PARAMS = new URLSearchParams(location.search);
+  const TEST_UNLOCK = PARAMS.has("unlock");
   const el = (tag, className, text) => {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -50,7 +52,7 @@
     return s.match;
   }
   const record = () => save().match;
-  const isOpenLevel = (n) => n === 1 || (record().stars[n - 1] || 0) > 0;
+  const isOpenLevel = (n) => TEST_UNLOCK || n === 1 || (record().stars[n - 1] || 0) > 0;
   const nextLevel = () => { for (let n = 1; n <= M.LEVELS; n++) if (!record().stars[n]) return n; return M.LEVELS; };
   const stars = (n) => "★".repeat(n) + "☆".repeat(3 - n);
 
@@ -115,14 +117,30 @@
     const go = button("primary-button match-go", `▶ เล่นด่าน ${next}`, () => startLevel(next));
     const sum = el("p", "match-sum", `★ ${got}/${M.LEVELS * 3} · ผ่านแล้ว ${Object.keys(r.stars).length}/${M.LEVELS} ด่าน`);
     const grid = el("div", "match-levels");
+    const chapters = [
+      ["สวนเริ่มต้น", "🌱"],
+      ["ถ้ำมหัศจรรย์", "💎"],
+      ["ปราสาทเวทมนตร์", "🏰"],
+      ["แดนดวงดาว", "🌌"]
+    ];
     for (let n = 1; n <= M.LEVELS; n++) {
+      if ((n - 1) % 10 === 0) {
+        const chapterNumber = Math.ceil(n / 10);
+        const [chapterName, chapterIcon] = chapters[chapterNumber - 1] || [`บทที่ ${chapterNumber}`, "✨"];
+        const chapter = el("div", `match-level-chapter chapter-${chapterNumber}`);
+        chapter.append(el("span", "match-chapter-icon", chapterIcon), el("b", null, `บทที่ ${chapterNumber} · ${chapterName}`), el("small", null, `ด่าน ${n}–${Math.min(n + 9, M.LEVELS)}`));
+        grid.append(chapter);
+      }
       const lv = M.levelOf(n), open = isOpenLevel(n), got = r.stars[n] || 0;
-      const tile = button(`match-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}`, null, () => startLevel(n), `ด่าน ${n} ${open ? `${got ? `ได้ ${got} ดาว` : "เล่นได้"}` : "ล็อกอยู่"} · ${lv.rows}×${lv.cols} · ${M.GRAVITY_NAMES[lv.gravity]}`);
+      const cosmic = n >= 31 ? " is-cosmic" : "";
+      const tile = button(`match-level${cosmic}${got ? " is-cleared" : open ? " is-next" : " is-locked"}`, null, () => startLevel(n), `ด่าน ${n} ${open ? `${got ? `ได้ ${got} ดาว` : "เล่นได้"}` : "ล็อกอยู่"} · ${lv.rows}×${lv.cols} · ${M.GRAVITY_NAMES[lv.gravity]}`);
       tile.disabled = !open;
+      if (n === 31) tile.append(el("span", "match-new-badge", "ใหม่"));
       tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "match-level-stars", open ? stars(got) : ""), el("small", "match-level-info", `${lv.rows * lv.cols} ใบ${lv.gravity !== "none" ? ` · ${GRAVITY_ICON[lv.gravity]}` : ""}`));
       grid.append(tile);
     }
-    body.replaceChildren(intro, go, sum, grid);
+    const testNote = TEST_UNLOCK ? el("p", "match-test-mode", `🧪 โหมดทดสอบ · ปลดล็อกครบ ${M.LEVELS} ด่าน · ไม่แก้ความคืบหน้าในเซฟ`) : null;
+    body.replaceChildren(...(testNote ? [testNote] : []), intro, go, sum, grid);
     grid.querySelector(".is-next")?.scrollIntoView({ block: "nearest" });
   }
   const GRAVITY_ICON = { down: "⬇", up: "⬆", left: "⬅", right: "➡" };
@@ -460,5 +478,5 @@
 
   window.PupaMatch = { open, close: goHome, key, get isOpen() { return isShown; } };
   // Test link: ?match opens straight into the match mode.
-  if (new URLSearchParams(location.search).has("match")) setTimeout(() => open(), 400);
+  if (PARAMS.has("match") || TEST_UNLOCK) setTimeout(() => open(), 400);
 })();
