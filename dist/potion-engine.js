@@ -18,7 +18,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const LEVELS = 140;
+  const LEVELS = 160;
   const CAP = 4;
   // per level: undos, an extra empty bottle, hints
   const UNDOS = 5, EXTRAS = 1, HINTS = 3;
@@ -63,7 +63,9 @@
     { from: 101, to: 110, name: "ห้องทดลองต้องห้าม", icon: "🔮", hard: true, note: "ด่านยากพิเศษ: น้ำยา 11–12 สี มีขวดว่างธรรมดาแค่ 1 ขวด ทุกด่านมีลูกเล่นหลายแบบพร้อมกัน และคัดกระดานที่ต้องเทมากที่สุดมาให้ มีสีใหม่ 🟤 น้ำตาลช็อกโกแลต ▼" },
     { from: 111, to: 120, name: "บัลลังก์จอมเวท", icon: "🌌", hard: true, note: "บทสุดท้าย ยากที่สุด: น้ำยา 12–13 สี เพิ่มสี ⚪ เงินจันทร์ ✦ ลูกเล่นตั้งแต่ 3 แบบขึ้นไปพร้อมกัน ขวดว่างธรรมดาแค่ 1 ขวด คิดก่อนเททุกครั้ง!" },
     { from: 121, to: 130, name: "ห้องหมอกมนตรา", icon: "🌫️", hard: 2, note: "ยากสุดขีด: หมอกปกคลุมทุกด่าน ทุกขวดซ่อนชั้นล่าง ❓ น้ำยา 12–13 สี ขวดว่างธรรมดาแค่ 1 ขวด ลูกเล่นซ้อนกัน 4–6 แบบ และเป้า ★★★ เข้มขึ้น (ใช้ทางที่สั้นที่สุดที่หาได้)" },
-    { from: 131, to: 140, name: "วิหารจันทร์ดับ", icon: "🌑", hard: 2, note: "บทสุดท้ายที่โหดที่สุด: ไม่มีขวดว่างธรรมดาเลยสักขวด! ต้องพักน้ำยาในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวยเท่านั้น น้ำยา 12–13 สี และเป้า ★★★ เข้มขึ้น" }
+    { from: 131, to: 140, name: "วิหารจันทร์ดับ", icon: "🌑", hard: 2, note: "บทสุดท้ายที่โหดที่สุด: ไม่มีขวดว่างธรรมดาเลยสักขวด! ต้องพักน้ำยาในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวยเท่านั้น น้ำยา 12–13 สี และเป้า ★★★ เข้มขึ้น" },
+    { from: 141, to: 150, name: "เขาวงกตหมอกจันทร์", icon: "🌘", hard: 3, note: "ระดับตำนาน: รวมสองอย่างที่โหดที่สุดไว้ด้วยกัน ทุกขวดซ่อนชั้นล่าง ❓ และไม่มีขวดว่างธรรมดาเลยสักขวด! น้ำยา 12–13 สี พักน้ำยาได้แค่ในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวย เป้า ★★★ เข้ม" },
+    { from: 151, to: 160, name: "ประตูมิติสุดท้าย", icon: "🌀", hard: 3, note: "บทสุดท้ายระดับตำนาน: ซ่อนชั้นทุกขวด ไม่มีขวดว่างธรรมดา ที่พักน้ำยาน้อยลงอีก (บางด่านมีขวดจิ๋วแค่ 2 ชั้น) น้ำแข็งแข็งตัวนานขึ้น และลูกเล่นซ้อนกัน 5–7 แบบ น้ำยา 13 สี" }
   ];
   const chapterOf = (n) => CHAPTERS.find(c => n >= c.from && n <= c.to) || CHAPTERS[0];
 
@@ -131,7 +133,29 @@
     { colours: 13, empties: 0, small: [3], only: 1, funnel: 1, hidden: true, ice: 2 },
     { colours: 13, empties: 0, small: [3, 3], drip: 3, lock: true, hidden: true },
     { colours: 13, empties: 0, small: [3, 2], only: 1, funnel: 1, ice: 2, drip: 2 },
-    { colours: 13, empties: 0, small: [3, 3], only: 1, funnel: 1, ice: 3, drip: 2, lock: true, hidden: true }
+    { colours: 13, empties: 0, small: [3, 3], only: 1, funnel: 1, ice: 3, drip: 2, lock: true, hidden: true },
+    // 141–150: fog over every layer and no plain empty bottle, both at once
+    { colours: 12, empties: 0, hidden: true, small: [3, 3], only: 1, drip: 2 },
+    { colours: 12, empties: 0, hidden: true, small: [3, 2], funnel: 1, ice: 2 },
+    { colours: 12, empties: 0, hidden: true, small: [3, 3], lock: true, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 2, ice: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], funnel: 1, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, lock: true, ice: 1 },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, drip: 3 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], ice: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, funnel: 1, ice: 2, drip: 1 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], only: 1, drip: 2, lock: true, ice: 2 },
+    // 151–160: the same, with fewer bottles to park in and more twists
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, ice: 3, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [2, 2], funnel: 1, lock: true, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3], funnel: 1, only: 1, ice: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], drip: 3, ice: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, only: 2, funnel: 1, drip: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2], only: 1, funnel: 1, ice: 3, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 2, drip: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], funnel: 1, ice: 3, drip: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2], only: 1, funnel: 1, ice: 3, drip: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, ice: 3, drip: 3, lock: true }
   ];
   const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13,
     11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37];
@@ -143,7 +167,7 @@
     const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
     if (num > 100) {
       const k = num - 101;
-      Object.assign(level, { empties: 1, hard: k >= 20 ? 2 : 1, seed: SEEDS[k] || 0, jit: JITS[k - 20] || 0 }, HARD[k]);
+      Object.assign(level, { empties: 1, hard: k >= 40 ? 3 : k >= 20 ? 2 : 1, seed: SEEDS[k] || 0, jit: JITS[k - 20] || 0 }, HARD[k]);
       if (level.ice) level.iceTurns = 6 + Math.floor(k / 4);
       return level;
     }
