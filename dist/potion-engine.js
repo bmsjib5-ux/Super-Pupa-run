@@ -133,10 +133,11 @@
     { colours: 13, empties: 0, small: [3, 2], only: 1, funnel: 1, ice: 2, drip: 2 },
     { colours: 13, empties: 0, small: [3, 3], only: 1, funnel: 1, ice: 3, drip: 2, lock: true, hidden: true }
   ];
-  const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13];
+  const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13,
+    11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37];
   // From level 121, a searched-out shake of the solver that finds a short
   // way, so the three-star mark is tighter.
-  const JITS = [];
+  const JITS = [324, 53, 359, 340, 20, 256, 112, 239, 255, 151, 318, 391, 332, 154, 4, 123, 213, 301, 66, 70];
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
     const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
@@ -339,8 +340,9 @@
       const way = solve(state);
       if (!way) continue;
       // a few more searches, each shaken differently, for a shorter way
+      // (a level with a searched-out shake has it beat them all already)
       let short = tidy(state, way);
-      for (let k = 0; k < 6; k++) {
+      for (let k = 0; k < (level.jit ? 0 : 6); k++) {
         const other = solve(state, 60000, random(level.num * 31 + k * 977 + attempt));
         if (other && other.length < short.length) { const t = tidy(state, other); if (t.length < short.length) short = t; }
       }
