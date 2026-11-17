@@ -130,13 +130,13 @@
       let have = 0;
       for (let n = chapter.from; n <= chapter.to; n++) have += r.stars[n] || 0;
       const headRow = el("h3", `potion-chapter${isOpenLevel(chapter.from) ? "" : " is-locked"}${chapter.hard ? " is-hard" : ""}`);
-      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), ...(chapter.hard ? [el("span", "potion-hard-tag", "🔥 ยากพิเศษ")] : []), el("small", null, `★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
+      headRow.append(el("span", "potion-chapter-icon", chapter.icon), el("b", null, chapter.name), ...(chapter.hard ? [el("span", `potion-hard-tag${chapter.hard > 1 ? " is-top" : ""}`, chapter.hard > 1 ? "💀 ยากสุดขีด" : "🔥 ยากพิเศษ")] : []), el("small", null, `★ ${have}/${(chapter.to - chapter.from + 1) * 3}`));
       headRow.lastChild.prepend(el("span", "potion-chapter-range", `ด่าน ${chapter.from}–${chapter.to} · `));
       grid.append(headRow);
       for (let n = chapter.from; n <= chapter.to; n++) {
         const lv = P.levelOf(n), open = isOpenLevel(n), got = r.stars[n] || 0, words = twistWords(lv);
         const tile = button(`potion-level${got ? " is-cleared" : open ? " is-next" : " is-locked"}${lv.hard ? " is-hard" : ""}`, null, () => startLevel(n),
-          `ด่าน ${n}${lv.hard ? " ยากพิเศษ" : ""} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
+          `ด่าน ${n}${lv.hard ? (lv.hard > 1 ? " ยากสุดขีด" : " ยากพิเศษ") : ""} ${open ? (got ? `ได้ ${got} ดาว` : "เล่นได้") : "ล็อกอยู่"} · น้ำยา ${lv.colours} สี${words ? ` · ${words}` : ""}`);
         tile.disabled = !open;
         tile.append(el("b", null, open ? String(n) : "🔒"), el("small", "potion-level-stars", open ? stars(got) : ""), el("small", "potion-level-info", `${lv.colours} สี`), el("small", "potion-level-twists", twistIcons(lv)));
         grid.append(tile);
@@ -154,7 +154,7 @@
     const dealt = P.deal(level);
     const view = el("section", "potion-play");
     const bar = el("div", "potion-bar");
-    const name = el("b", "potion-name", `ด่าน ${n}${level.hard ? " 🔥" : ""}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
+    const name = el("b", "potion-name", `ด่าน ${n}${level.hard ? (level.hard > 1 ? " 💀" : " 🔥") : ""}${twistIcons(level) ? ` · ${twistIcons(level)}` : ""}`);
     const count = el("span", "potion-count");
     const undo = button("potion-tool", null, () => useUndo(), "ย้อนกลับ");
     const extra = button("potion-tool", null, () => useExtra(), "เพิ่มขวดเปล่า");
@@ -186,7 +186,7 @@
     const chapter = P.chapterOf(n), opens = chapter.note && chapter.from === n && !shownTwists.has(`chapter${n}`);
     if (record().stars[n]) return;
     if (fresh.length) { fresh.forEach(key => shownTwists.add(key)); showCard("✨ ลูกเล่นใหม่!", fresh.map(key => twist(key)).map(t => ({ icon: t.icon, name: t.name, text: t.text }))); }
-    else if (opens) { shownTwists.add(`chapter${n}`); showCard("🔥 บทท้าทาย!", [{ icon: chapter.icon, name: chapter.name, text: chapter.note }]); }
+    else if (opens) { shownTwists.add(`chapter${n}`); showCard(chapter.hard > 1 ? "💀 บทยากสุดขีด!" : "🔥 บทท้าทาย!", [{ icon: chapter.icon, name: chapter.name, text: chapter.note }]); }
   }
   // A card over the shelves: a twist new on this level, or a hard chapter.
   function showCard(tag, items) {
