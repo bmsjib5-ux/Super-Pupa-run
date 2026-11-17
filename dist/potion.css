@@ -25,6 +25,7 @@
 .potion-level-stars { color: #ffd76a; font-size: .7rem; letter-spacing: -.05em; }
 .potion-level-info { color: #c9bde0; font-size: .58rem; }
 .potion-level-twists { min-height: .8rem; font-size: .62rem; line-height: 1; white-space: nowrap; }
+.potion-level-twists.is-many { font-size: .46rem; letter-spacing: -.08em; }
 .potion-chapter { display: flex; grid-column: 1 / -1; align-items: center; gap: .5rem; margin: .5rem 0 0; padding: .35rem .7rem; border-radius: .8rem; color: #ffe5a5; font-size: .92rem; text-align: left; background: linear-gradient(90deg, rgba(120,50,160,.75), rgba(40,18,80,.2)); }
 .potion-chapter:first-child { margin-top: 0; }
 .potion-chapter-icon { font-size: 1.15rem; }
@@ -32,7 +33,9 @@
 .potion-chapter.is-locked { opacity: .6; }
 .potion-chapter.is-hard { background: linear-gradient(90deg, rgba(170,40,70,.8), rgba(60,14,50,.25)); box-shadow: inset 0 0 0 1px rgba(255,140,120,.45); }
 .potion-hard-tag { flex: none; padding: .05rem .45rem; border-radius: 999px; color: #fff; font-size: .62rem; font-weight: 900; background: linear-gradient(90deg, #ff5a3c, #ff2f7a); }
-.potion-hard-tag.is-top { background: linear-gradient(90deg, #6b1fd1, #1a0b3a); box-shadow: 0 0 .5rem rgba(160,90,255,.6); }
+.potion-hard-tag.is-tier2 { background: linear-gradient(90deg, #6b1fd1, #1a0b3a); box-shadow: 0 0 .5rem rgba(160,90,255,.6); }
+.potion-hard-tag.is-tier3 { color: #1a0b3a; background: linear-gradient(90deg, #7ff0ff, #ffd76a, #ff8ad8); box-shadow: 0 0 .6rem rgba(255,215,106,.7); }
+.potion-chapter.is-hard:has(.is-tier3) { background: linear-gradient(90deg, rgba(40,90,170,.85), rgba(110,40,150,.6), rgba(30,14,60,.25)); box-shadow: inset 0 0 0 1px rgba(255,215,106,.55); }
 .potion-level.is-hard { border-color: rgba(255,120,110,.5); }
 .potion-level.is-hard.is-cleared { background: rgba(150,40,80,.5); }
 .potion-guide { align-self: center; width: 100%; max-width: 46rem; margin: 0 auto .6rem; border: 1px solid rgba(255,215,106,.3); border-radius: .9rem; text-align: left; background: rgba(30,14,60,.7); }
@@ -194,6 +197,7 @@
   .potion-count { min-width: 3rem; font-size: .78rem; }
   .potion-chapter-range { display: none; }
   .potion-level-twists { font-size: .52rem; }
+  .potion-level-twists.is-many { font-size: .44rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .potion-bottle { transition: none; }
