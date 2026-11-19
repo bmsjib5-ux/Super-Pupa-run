@@ -7,9 +7,10 @@
 // is filled with the cork's colour; a frozen bottle thaws after so many
 // pours; small bottles hold less; a tinted bottle takes one colour only; a
 // drip bottle pours one layer at a time; a funnel takes potion but never
-// gives it back. The last sixty levels are the hard ones: more colours,
-// one plain empty bottle (none at all from 131), several twists at once,
-// and from 141 every layer below the top hidden too. Every level is dealt
+// gives it back. The last hundred levels are the hard ones: more colours
+// (fourteen at the very end), one plain empty bottle (none at all from
+// 131), several twists at once, and from 141 every layer below the top
+// hidden too. Every level is dealt
 // from its own seed and checked solvable, so it is the same on every
 // device.
 (function (root, factory) {
@@ -210,11 +211,15 @@
   ];
   const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13,
     11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37,
-    59, 10, 6, 48, 24, 26, 33, 36, 57, 1, 52, 49, 31, 57, 51, 41, 57, 2, 6, 43];
+    59, 10, 6, 48, 24, 26, 33, 36, 57, 1, 52, 49, 31, 57, 51, 41, 57, 2, 6, 43,
+    2, 1, 12, 18, 14, 13, 6, 30, 9, 13, 13, 6, 8, 31, 4, 14, 26, 19, 2, 20,
+    18, 0, 17, 29, 24, 34, 11, 1, 1, 37, 21, 22, 38, 16, 34, 30, 27, 38, 35, 24];
   // From level 121, a searched-out shake of the solver that finds a short
   // way, so the three-star mark is tighter.
   const JITS = [324, 53, 359, 340, 20, 256, 112, 239, 255, 151, 318, 391, 332, 154, 4, 123, 213, 301, 66, 70,
-    36, 94, 266, 301, 269, 264, 60, 1, 186, 216, 312, 254, 69, 111, 20, 202, 282, 26, 126, 5];
+    36, 94, 266, 301, 269, 264, 60, 1, 186, 216, 312, 254, 69, 111, 20, 202, 282, 26, 126, 5,
+    187, 194, 102, 41, 52, 197, 36, 79, 168, 276, 199, 35, 162, 115, 183, 264, 194, 31, 147, 168,
+    53, 13, 3, 261, 4, 199, 245, 290, 11, 257, 20, 45, 37, 176, 48, 236, 101, 150, 147, 68];
   function levelOf(n) {
     const num = Math.max(1, Math.min(LEVELS, Math.floor(n) || 1));
     const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
