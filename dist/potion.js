@@ -37,7 +37,8 @@
   const TIERS = [null,
     { mark: "🔥", tag: "🔥 ยากพิเศษ", card: "🔥 บทท้าทาย!", words: "ยากพิเศษ" },
     { mark: "💀", tag: "💀 ยากสุดขีด", card: "💀 บทยากสุดขีด!", words: "ยากสุดขีด" },
-    { mark: "🌀", tag: "🌀 ระดับตำนาน", card: "🌀 บทระดับตำนาน!", words: "ระดับตำนาน" }];
+    { mark: "🌀", tag: "🌀 ระดับตำนาน", card: "🌀 บทระดับตำนาน!", words: "ระดับตำนาน" },
+    { mark: "👑", tag: "👑 ราชันย์", card: "👑 บทราชันย์แห่งยา!", words: "ระดับราชันย์" }];
   const tierOf = (hard) => TIERS[Number(hard)] || TIERS[1];
   // the level each twist first comes in on
   const firstOf = {};

@@ -18,7 +18,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const LEVELS = 160;
+  const LEVELS = 200;
   const CAP = 4;
   // per level: undos, an extra empty bottle, hints
   const UNDOS = 5, EXTRAS = 1, HINTS = 3;
@@ -38,7 +38,9 @@
     { name: "ขาวมุก", hex: "#f2ecff", sign: "◆" },
     // the hard chapters' extra two
     { name: "น้ำตาลช็อกโกแลต", hex: "#a8622c", sign: "▼" },
-    { name: "เงินจันทร์", hex: "#8f9bb3", sign: "✦" }
+    { name: "เงินจันทร์", hex: "#8f9bb3", sign: "✦" },
+    // and the finale's one more
+    { name: "ไวน์ทับทิม", hex: "#a3184f", sign: "♠" }
   ];
   // The twists a level can have, in the order they come in.
   const TWISTS = [
@@ -65,7 +67,11 @@
     { from: 121, to: 130, name: "ห้องหมอกมนตรา", icon: "🌫️", hard: 2, note: "ยากสุดขีด: หมอกปกคลุมทุกด่าน ทุกขวดซ่อนชั้นล่าง ❓ น้ำยา 12–13 สี ขวดว่างธรรมดาแค่ 1 ขวด ลูกเล่นซ้อนกัน 4–6 แบบ และเป้า ★★★ เข้มขึ้น (ใช้ทางที่สั้นที่สุดที่หาได้)" },
     { from: 131, to: 140, name: "วิหารจันทร์ดับ", icon: "🌑", hard: 2, note: "บทสุดท้ายที่โหดที่สุด: ไม่มีขวดว่างธรรมดาเลยสักขวด! ต้องพักน้ำยาในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวยเท่านั้น น้ำยา 12–13 สี และเป้า ★★★ เข้มขึ้น" },
     { from: 141, to: 150, name: "เขาวงกตหมอกจันทร์", icon: "🌘", hard: 3, note: "ระดับตำนาน: รวมสองอย่างที่โหดที่สุดไว้ด้วยกัน ทุกขวดซ่อนชั้นล่าง ❓ และไม่มีขวดว่างธรรมดาเลยสักขวด! น้ำยา 12–13 สี พักน้ำยาได้แค่ในขวดจิ๋ว ขวดสีเฉพาะ หรือขวดกรวย เป้า ★★★ เข้ม" },
-    { from: 151, to: 160, name: "ประตูมิติสุดท้าย", icon: "🌀", hard: 3, note: "บทสุดท้ายระดับตำนาน: ซ่อนชั้นทุกขวด ไม่มีขวดว่างธรรมดา ที่พักน้ำยาน้อยลงอีก (บางด่านมีขวดจิ๋วแค่ 2 ชั้น) น้ำแข็งแข็งตัวนานขึ้น และลูกเล่นซ้อนกัน 5–7 แบบ น้ำยา 13 สี" }
+    { from: 151, to: 160, name: "ประตูมิติสุดท้าย", icon: "🌀", hard: 3, note: "บทสุดท้ายระดับตำนาน: ซ่อนชั้นทุกขวด ไม่มีขวดว่างธรรมดา ที่พักน้ำยาน้อยลงอีก (บางด่านมีขวดจิ๋วแค่ 2 ชั้น) น้ำแข็งแข็งตัวนานขึ้น และลูกเล่นซ้อนกัน 5–7 แบบ น้ำยา 13 สี" },
+    { from: 161, to: 170, name: "ธารน้ำแข็งนิรันดร์", icon: "🧊", hard: 3, note: "ระดับตำนาน: ซ่อนชั้นทุกขวด ไม่มีขวดว่างธรรมดา และขวดแข็งตัวมากถึง 4–6 ขวดพร้อมกัน ต้องวางแผนเทขวดที่เหลือให้ดีระหว่างรอน้ำแข็งละลาย" },
+    { from: 171, to: 180, name: "ม่านฝนจันทรา", icon: "🌧️", hard: 3, note: "ระดับตำนาน: ขวดหยดมากถึง 4–6 ขวด เทออกได้ทีละชั้น ที่พักส่วนใหญ่เป็นขวดจิ๋ว 2 ชั้น ซ่อนชั้นทุกขวด และไม่มีขวดว่างธรรมดา" },
+    { from: 181, to: 190, name: "หอศิลป์ต้องสาป", icon: "🖼️", hard: 3, note: "ระดับตำนาน: แทบไม่มีขวดจิ๋วเลย มีที่พักน้ำยาแค่ 3 ขวด ส่วนใหญ่เป็นขวดสีเฉพาะและขวดกรวย ใส่ผิดสีลงขวดกรวยแล้วเอาออกไม่ได้! ทั้งยังมีน้ำแข็ง ขวดหยด และขวดปิดจุกซ้อน" },
+    { from: 191, to: 200, name: "บัลลังก์ราชันย์แห่งยา", icon: "👑", hard: 4, note: "บทสุดท้ายของห้องยา: น้ำยา 14 สี เพิ่มสีใหม่ 🍷 ไวน์ทับทิม ♠ ทุกลูกเล่นมาพร้อมกัน ซ่อนชั้นทุกขวด ไม่มีขวดว่างธรรมดา ผ่านครบ 200 ด่านคือราชันย์แห่งห้องยา!" }
   ];
   const chapterOf = (n) => CHAPTERS.find(c => n >= c.from && n <= c.to) || CHAPTERS[0];
 
@@ -155,7 +161,52 @@
     { colours: 13, empties: 0, hidden: true, small: [3], only: 2, drip: 3, lock: true },
     { colours: 13, empties: 0, hidden: true, small: [3, 2], funnel: 1, ice: 3, drip: 2, lock: true },
     { colours: 13, empties: 0, hidden: true, small: [2], only: 1, funnel: 1, ice: 3, drip: 3, lock: true },
-    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, ice: 3, drip: 3, lock: true }
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, ice: 3, drip: 3, lock: true },
+    // 161–170: fog, no plain empty bottle, and many frozen bottles
+    { colours: 12, empties: 0, hidden: true, small: [3, 3], only: 1, ice: 4 },
+    { colours: 12, empties: 0, hidden: true, small: [3, 2], funnel: 1, ice: 4, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], ice: 4, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 2, ice: 4 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], funnel: 1, ice: 5 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, ice: 5, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3], only: 1, funnel: 1, ice: 5, drip: 1 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], ice: 6, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, funnel: 1, ice: 5, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 3], only: 1, ice: 6, drip: 2, lock: true },
+    // 171–180: drip bottles everywhere, and two-layer bottles to park in
+    { colours: 12, empties: 0, hidden: true, small: [2, 2, 2], drip: 4 },
+    { colours: 12, empties: 0, hidden: true, small: [2, 2], only: 1, drip: 4, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], funnel: 1, drip: 5 },
+    { colours: 13, empties: 0, hidden: true, small: [2, 2, 2], ice: 2, drip: 4 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, drip: 5, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2, 2], funnel: 1, only: 1, drip: 5 },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2, 2], ice: 3, drip: 5, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2, 2], only: 1, funnel: 1, ice: 2, drip: 5 },
+    { colours: 13, empties: 0, hidden: true, small: [2, 2, 2], only: 1, drip: 6, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [3, 2], only: 1, funnel: 1, ice: 3, drip: 6, lock: true },
+    // 181–190: tinted bottles and funnels, hardly a small bottle, three
+    // places to park at most
+    { colours: 12, empties: 0, hidden: true, only: 2, funnel: 1, drip: 2 },
+    { colours: 12, empties: 0, hidden: true, only: 2, funnel: 1, ice: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2], only: 1, funnel: 1, ice: 3 },
+    { colours: 13, empties: 0, hidden: true, only: 2, funnel: 1, drip: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2], only: 2, ice: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, only: 2, funnel: 1, ice: 3, drip: 2 },
+    { colours: 13, empties: 0, hidden: true, only: 1, funnel: 2, ice: 2, drip: 2, lock: true },
+    { colours: 13, empties: 0, hidden: true, only: 2, funnel: 1, drip: 4, lock: true },
+    { colours: 13, empties: 0, hidden: true, small: [2], only: 1, funnel: 1, ice: 3, drip: 3, lock: true },
+    { colours: 13, empties: 0, hidden: true, only: 2, funnel: 1, ice: 4, drip: 3, lock: true },
+    // 191–200: the finale, fourteen colours and everything at once
+    { colours: 14, empties: 0, hidden: true, small: [3, 3], only: 1, ice: 3, drip: 2 },
+    { colours: 14, empties: 0, hidden: true, small: [3, 2], funnel: 1, only: 1, drip: 3, lock: true },
+    { colours: 14, empties: 0, hidden: true, small: [3], only: 2, funnel: 1, ice: 3 },
+    { colours: 14, empties: 0, hidden: true, small: [2, 2], only: 1, funnel: 1, drip: 4, lock: true },
+    { colours: 14, empties: 0, hidden: true, small: [3, 2], only: 2, ice: 4, drip: 2 },
+    { colours: 14, empties: 0, hidden: true, small: [3], only: 1, funnel: 2, ice: 3, drip: 3, lock: true },
+    { colours: 14, empties: 0, hidden: true, small: [2, 2], only: 2, funnel: 1, ice: 4, drip: 3 },
+    { colours: 14, empties: 0, hidden: true, small: [3], only: 2, funnel: 1, ice: 4, drip: 4, lock: true },
+    { colours: 14, empties: 0, hidden: true, small: [2], only: 2, funnel: 2, ice: 4, drip: 4, lock: true },
+    { colours: 14, empties: 0, hidden: true, small: [3], only: 2, funnel: 1, ice: 5, drip: 4, lock: true }
   ];
   const SEEDS = [4, 16, 44, 27, 50, 3, 28, 47, 18, 57, 45, 32, 30, 53, 15, 13, 36, 45, 2, 13,
     11, 34, 26, 21, 26, 40, 57, 45, 51, 27, 22, 33, 4, 27, 50, 8, 43, 50, 15, 37,
@@ -169,8 +220,8 @@
     const level = { num, colours: 0, empties: 2, hidden: false, lock: false, ice: 0, iceTurns: 0, small: [], only: 0, drip: 0, funnel: 0, seed: 0, hard: false };
     if (num > 100) {
       const k = num - 101;
-      Object.assign(level, { empties: 1, hard: k >= 40 ? 3 : k >= 20 ? 2 : 1, seed: SEEDS[k] || 0, jit: JITS[k - 20] || 0 }, HARD[k]);
-      if (level.ice) level.iceTurns = 6 + Math.floor(k / 4);
+      Object.assign(level, { empties: 1, hard: k >= 90 ? 4 : k >= 40 ? 3 : k >= 20 ? 2 : 1, seed: SEEDS[k] || 0, jit: JITS[k - 20] || 0 }, HARD[k]);
+      if (level.ice) level.iceTurns = Math.min(20, 6 + Math.floor(k / 4));
       return level;
     }
     if (num <= 40) {
