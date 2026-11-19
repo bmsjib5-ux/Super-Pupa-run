@@ -117,7 +117,7 @@ test("potion: levels 101–140 are harder: more colours, one plain empty bottle 
   // every colour has its own look
   assert.equal(new Set(P.COLOURS.map(c => c.hex)).size, P.COLOURS.length);
   assert.equal(new Set(P.COLOURS.map(c => c.sign)).size, P.COLOURS.length);
-  assert.ok(P.levelOf(120).colours === P.COLOURS.length);
+  assert.ok(P.levelOf(200).colours === P.COLOURS.length);
   const before = pars(91, 100), hard = pars(101, 110), hardest = pars(111, 120);
   assert.ok(hard > before + 10 && hardest > hard, `average pours ${before} / ${hard} / ${hardest}`);
 });
@@ -128,8 +128,32 @@ test("potion: levels 121–140 deal just as they did before the legend chapters 
   assert.equal(createHash("sha256").update(boards.join("\n")).digest("hex").slice(0, 16), "ef0e6d4e54686650");
 });
 
+test("potion: levels 141–160 deal just as they did before the last forty came in", () => {
+  const boards = [];
+  for (let n = 141; n <= 160; n++) { const d = P.deal(P.levelOf(n)); boards.push(JSON.stringify(d.state) + d.par); }
+  assert.equal(createHash("sha256").update(boards.join("\n")).digest("hex").slice(0, 16), "f5f98a975637eb9b");
+});
+
+test("potion: levels 161–200, four chapters each leaning on one twist, then fourteen colours at the end", () => {
+  const count = (bottles, f) => bottles.filter(f).length;
+  for (let n = 161; n <= P.LEVELS; n++) {
+    const level = P.levelOf(n), bottles = P.deal(level).state.bottles;
+    assert.equal(level.hard, n > 190 ? 4 : 3, `level ${n}`);
+    assert.equal(P.chapterOf(n).hard, level.hard, `level ${n}`);
+    assert.ok(bottles.every(b => !b.layers.length || b.hide === P.CAP - 1), `level ${n} fog`);
+    assert.ok(!bottles.some(b => !b.layers.length && b.cap === P.CAP && b.only < 0 && !b.funnel), `level ${n} has a plain empty bottle`);
+    if (n <= 170) assert.ok(count(bottles, b => b.ice > 0) >= 4, `level ${n} ice`);
+    else if (n <= 180) assert.ok(count(bottles, b => b.drip) >= 4 && bottles.filter(b => b.cap < P.CAP).every(b => b.cap <= 3), `level ${n} drip`);
+    else if (n <= 190) assert.ok(level.small.length + level.only + level.funnel <= 3 && level.only + level.funnel >= 2, `level ${n} tints and funnels`);
+    else assert.ok(level.colours === 14 && P.twistsOf(level).length >= 5, `level ${n} finale`);
+  }
+  // the fourteenth colour looks like no other
+  const wine = P.COLOURS[13];
+  assert.ok(wine && P.COLOURS.slice(0, 13).every(c => c.hex !== wine.hex && c.sign !== wine.sign));
+});
+
 test("potion: levels 141–160, the legend chapters: fog and no plain empty bottle together, more twists, a tighter mark", () => {
-  for (let n = 141; n <= P.LEVELS; n++) {
+  for (let n = 141; n <= 160; n++) {
     const level = P.levelOf(n), bottles = P.deal(level).state.bottles;
     assert.equal(level.hard, 3, `level ${n}`);
     assert.equal(P.chapterOf(n).hard, 3, `level ${n}`);
@@ -139,10 +163,10 @@ test("potion: levels 141–160, the legend chapters: fog and no plain empty bott
   }
 });
 
-test("potion: levels 121–160 are the hardest: fog over every layer, then no plain empty bottle, and a tighter three-star mark", () => {
+test("potion: levels 121–200 are the hardest: fog over every layer, then no plain empty bottle, and a tighter three-star mark", () => {
   for (let n = 121; n <= P.LEVELS; n++) {
     const level = P.levelOf(n), dealt = P.deal(level), bottles = dealt.state.bottles;
-    assert.equal(level.hard, n > 140 ? 3 : 2, `level ${n}`);
+    assert.equal(level.hard, n > 190 ? 4 : n > 140 ? 3 : 2, `level ${n}`);
     if (n <= 130) assert.ok(level.hidden && P.twistsOf(level).length >= 4, `level ${n} fog`);
     else assert.ok(!bottles.some(b => !b.layers.length && b.cap === P.CAP && b.only < 0 && !b.funnel), `level ${n} has a plain empty bottle`);
     // the searched-out shake finds a shorter way than the plain searches
@@ -151,8 +175,8 @@ test("potion: levels 121–160 are the hardest: fog over every layer, then no pl
   }
 });
 
-test("potion: 160 levels in chapters, each twist coming in along the way", () => {
-  assert.equal(P.LEVELS, 160);
+test("potion: 200 levels in chapters, each twist coming in along the way", () => {
+  assert.equal(P.LEVELS, 200);
   let next = 1;
   for (const c of P.CHAPTERS) { assert.equal(c.from, next); assert.ok(c.to >= c.from); next = c.to + 1; }
   assert.equal(next, P.LEVELS + 1);
@@ -161,7 +185,7 @@ test("potion: 160 levels in chapters, each twist coming in along the way", () =>
   assert.deepEqual([...seen].sort(), P.TWISTS.map(t => t.key).sort());
   // past level 40 every level has at least one of the new twists
   for (let n = 41; n <= P.LEVELS; n++) assert.ok(P.twistsOf(P.levelOf(n)).some(k => !["hidden", "lock"].includes(k)), `level ${n}`);
-  assert.equal(P.levelOf(250).num, 160);
+  assert.equal(P.levelOf(250).num, 200);
 });
 
 test("potion: every level deals the same each time, starts unsorted, and the found way solves it", () => {

@@ -37,7 +37,8 @@
   const TIERS = [null,
     { mark: "🔥", tag: "🔥 ยากพิเศษ", card: "🔥 บทท้าทาย!", words: "ยากพิเศษ" },
     { mark: "💀", tag: "💀 ยากสุดขีด", card: "💀 บทยากสุดขีด!", words: "ยากสุดขีด" },
-    { mark: "🌀", tag: "🌀 ระดับตำนาน", card: "🌀 บทระดับตำนาน!", words: "ระดับตำนาน" }];
+    { mark: "🌀", tag: "🌀 ระดับตำนาน", card: "🌀 บทระดับตำนาน!", words: "ระดับตำนาน" },
+    { mark: "👑", tag: "👑 ราชันย์", card: "👑 บทราชันย์แห่งยา!", words: "ระดับราชันย์" }];
   const tierOf = (hard) => TIERS[Number(hard)] || TIERS[1];
   // the level each twist first comes in on
   const firstOf = {};
@@ -513,7 +514,7 @@
     box.append(el("span", "potion-medal", endsChapter ? chapter.icon : "🏆"), el("h3", null, `ผ่านด่าน ${n}!`), el("p", "potion-stars", stars(got)),
       el("p", null, `เท ${p.pours} ครั้ง · เป้า ${p.par} ครั้ง${p.usedExtra ? " · ใช้ขวดเสริม" : ""}`),
       el("p", "potion-reward", `ได้รับ ${parts.join(" · ")}`),
-      ...(endsChapter ? [el("p", "potion-chapter-done", n === P.LEVELS ? `👑 จบครบ ${P.LEVELS} ด่าน! คุณคือปรมาจารย์ห้องยาแล้ว (โบนัส 💎 20)` : `🎉 จบบท ${chapter.name}! (โบนัส 💎 20)`)] : []),
+      ...(endsChapter ? [el("p", "potion-chapter-done", n === P.LEVELS ? `👑 จบครบ ${P.LEVELS} ด่าน! คุณคือราชันย์แห่งห้องยาแล้ว (โบนัส 💎 20)` : `🎉 จบบท ${chapter.name}! (โบนัส 💎 20)`)] : []),
       el("p", "potion-tip", got < 3 ? (p.usedExtra ? "ไม่ใช้ขวดเสริม และเทไม่เกินเป้า เพื่อได้ ★★★" : `เทไม่เกิน ${p.par} ครั้ง เพื่อได้ ★★★`) : "ได้ครบ 3 ดาว!"));
     const actions = el("div", "title-actions");
     if (n < P.LEVELS) actions.append(button("primary-button", `ด่าน ${n + 1} ▶`, () => startLevel(n + 1)));
